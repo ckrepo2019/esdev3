@@ -1,5 +1,12 @@
 
 @php
+
+      $check_refid = DB::table('usertype')
+        ->where('id', Session::get('currentPortal'))
+        ->select('refid', 'resourcepath')
+        ->first();
+
+
       if(auth()->user()->type == 17){
             $extend = 'superadmin.layouts.app2';
       }else if(auth()->user()->type == 2 || Session::get('currentPortal') == 2){
@@ -8,6 +15,8 @@
             $extend = 'registrar.layouts.app';
       }else if(auth()->user()->type == 6 || Session::get('currentPortal') == 6){
             $extend = 'adminPortal.layouts.app2';
+      }else if($check_refid->refid == 35){
+            $extend = 'tesda.layouts.app2';
       }
 
 @endphp
@@ -127,6 +136,7 @@
                               <thead>
                                     <tr>
                                           <th width="100%">Student Name</th>
+                                          <th width="100%">Contact No.</th>
                                     </tr>
                               </thead>
                         </table>
@@ -818,19 +828,40 @@
 
                   function student_list_modal(data){
 
+                        console.log('STUDLIST',data);
+                       
+                        if ($('#modal_1_title').text() == 'Valid Student Contact Number') {
+                              $("#student_list").DataTable({
+                                    destroy: true,
+                                    data:data,
+                                    lengthChange : false,
+                                    autoWidth: false,
+                                    bInfo: false,
+                                    columns: [
+                                                { "data": "student" },
+                                                { "data": "contactno" },
+                                          ],
+                                    
+                                    
+                              });
+                              
+                        }else{
+                              $("#student_list").DataTable({
+                                    destroy: true,
+                                    data:data,
+                                    lengthChange : false,
+                                    autoWidth: false,
+                                    bInfo: false,
+                                    columns: [
+                                                { "data": "student" },
+                                                { "data": "contactNumber" },
+                                          ],
+                                    
+                                    
+                              });
 
-                        $("#student_list").DataTable({
-                              destroy: true,
-                              data:data,
-                              lengthChange : false,
-                              autoWidth: false,
-                              bInfo: false,
-                              columns: [
-                                          { "data": "student" },
-                                    ],
-                              
-                              
-                        });
+                        }
+                        
 
                   }
 

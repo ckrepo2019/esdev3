@@ -425,7 +425,10 @@
                         <td style="text-align: center;">{{ $studentinfo->dob }}</td>
                         <td style="text-align: center;">{{ $studentinfo->age }}</td>
                         <td style="text-align: center;">
-                            @if ($forms[0]->levelid == 1 || $forms[0]->levelid == 5 || $forms[0]->levelid == 6)
+                            {{-- @if ($forms[0]->levelid == 1 || $forms[0]->levelid == 5 || $forms[0]->levelid == 6)
+                                {{ ucwords(strtolower($studentinfo->mtname)) }}
+                            @endif --}}
+                            @if ($studentinfo->mtname)
                                 {{ ucwords(strtolower($studentinfo->mtname)) }}
                             @endif
                         </td>
@@ -549,7 +552,10 @@
                         <td style="text-align: center;">{{ $studentinfo->dob }}</td>
                         <td style="text-align: center;">{{ $studentinfo->age }}</td>
                         <td style="text-align: center;">
-                            @if ($forms[0]->levelid == 1 || $forms[0]->levelid == 5 || $forms[0]->levelid == 6)
+                            {{-- @if ($forms[0]->levelid == 1 || $forms[0]->levelid == 5 || $forms[0]->levelid == 6)
+                                {{ ucwords(strtolower($studentinfo->mtname)) }}
+                            @endif --}}
+                            @if ($studentinfo->mtname)
                                 {{ ucwords(strtolower($studentinfo->mtname)) }}
                             @endif
                         </td>
@@ -902,6 +908,7 @@
             <td style="width: 1%;  padding: 0px;"></td>
             <td style="width: 19% vertical-align: top !important;  padding: 0px;">
                 <table style="width: 100%;">
+                    {{-- <p> {{ $signatoriesv2 }} </p> --}}
                     @if (count($signatoriesv2) == 0)
                         <tr>
                             <td style="font-size: 10px; ">Certified Correct:</td>
@@ -935,7 +942,8 @@
                     @else
                         @foreach ($signatoriesv2 as $signatory)
                             <tr>
-                                <td style="font-size: 10px; vertical-align: top;">{{ $signatory->title }}</td>
+                                <td style="font-size: 10px; vertical-align: top;">
+                                    {{ $signatory->title ?? 'Title Not Specified' }}</td>
                             </tr>
                             <tr>
                                 <td style="font-size: 10px; border-bottom: 1px solid black; text-align: center;">
@@ -945,7 +953,7 @@
                             </tr>
                             <tr>
                                 <td style="font-size: 10px; text-align: center; padding-top:5px;">
-                                    <sup>{{ $signatory->description }}</sup>
+                                    <sup>{{ $signatory->description ?? 'Not Specified' }}</sup>
                                 </td>
                             </tr>
                         @endforeach

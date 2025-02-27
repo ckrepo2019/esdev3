@@ -70,6 +70,35 @@
                     </a>
                 </li>
 
+                @if (isset(DB::table('schoolinfo')->first()->withschoolfolder))
+                    @if (DB::table('schoolinfo')->first()->withschoolfolder == 1)
+                        <li class="nav-item">
+                            <a class="{{ Request::url() == url('/schoolfolderv2/index') ? 'active' : '' }} nav-link"
+                                href="/schoolfolderv2/index">
+                                <i class="nav-icon fa fa-folder"></i>
+                                <p>
+                                    @if (strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'bct')
+                                        BCT Commons
+                                    @else
+                                        File Directory
+                                    @endif
+                                </p>
+                            </a>
+                        </li>
+                    @endif
+                @endif
+
+                <li class="nav-item">
+                    <a href="/hr/settings/notification/index"
+                        class="nav-link {{ Request::url() == url('/hr/settings/notification/index') ? 'active' : '' }}">
+                        <i class="nav-icon  fas fa-exclamation"></i>
+                        <p>
+                            Notification & Request
+                            {{-- <span class="ml-2 badge badge-primary">2</span> --}}
+                        </p>
+                    </a>
+                </li>
+
                 @if (DB::table('schoolinfo')->first()->admission == 1)
                     <li class="nav-header">SETUP</li>
                     <li class="nav-item">
@@ -220,6 +249,28 @@
                     </a>
                 </li>
 
+                <li class="nav-header text-warning">Employee Requirements</li>
+                <li class="nav-item">
+                    <a href="/hr/requirements/employee"
+                        class="nav-link {{ Request::fullUrl() === url('/hr/requirements/employee') ? 'active' : '' }}">
+                        <i class="nav-icon fa fa-folder-open"></i>
+                        <p>
+                            My Requirements
+                        </p>
+                    </a>
+                </li>
+
+
+                <li class="nav-header text-warning">My Applications</li>
+                <li class="nav-item">
+                    <a href="/hr/leaves/index?action=myleave"
+                        class="nav-link {{ Request::fullUrl() === url('/hr/leaves/index?action=myleave') ? 'active' : '' }}">
+                        <i class="nav-icon fa fa-calendar-alt"></i>
+                        <p>
+                            Leave Applications
+                        </p>
+                    </a>
+                </li>
 
 
                 <li class="nav-header text-warning">Your Portal</li>

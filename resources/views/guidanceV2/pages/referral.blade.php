@@ -1,8 +1,7 @@
-{{-- @extends('guidanceV2.layouts.app2') --}}
-
 @php
     $check_refid = DB::table('usertype')
         ->where('id', Session::get('currentPortal'))
+        ->where('deleted', 0)
         ->select('refid', 'resourcepath')
         ->first();
 
@@ -34,6 +33,8 @@
         if (isset($check_refid->refid)) {
             if ($check_refid->resourcepath == null) {
                 $extend = 'general.defaultportal.layouts.app';
+            } elseif ($check_refid->refid == 26) {
+                $extend = 'hr.layouts.app';
             } elseif ($check_refid->refid == 27) {
                 $extend = 'academiccoor.layouts.app2';
             } elseif ($check_refid->refid == 22) {
@@ -233,7 +234,7 @@
     </div>
 
     <!-- Content Header (Page header) -->
-    <div class="content-header">
+    {{-- <div class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
@@ -247,7 +248,7 @@
                 </div><!-- /.col -->
             </div><!-- /.row -->
         </div><!-- /.container-fluid -->
-    </div>
+    </div> --}}
 
     <div class="content">
         <div class="container-fluid">
@@ -287,7 +288,12 @@
 @section('footerjavascript')
     <script>
         var jsonData = {!! json_encode($jsonData) !!};
-
+        var Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000
+        });
         $(document).ready(function() {
             console.log(jsonData);
             load_referral_datatable(jsonData);
@@ -574,6 +580,13 @@
                         }
                     },
                 ],
+            });
+        }
+
+        function notify(status, message) {
+            Toast.fire({
+                type: status,
+                title: message,
             });
         }
     </script>

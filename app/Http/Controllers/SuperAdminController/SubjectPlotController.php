@@ -454,8 +454,8 @@ class SubjectPlotController extends \App\Http\Controllers\Controller
             $acadprog = $request->get('acadprog');
             $setupid = $request->get('setupid');
             $isforsp = $request->get('isforsp');
-            
-            return self::create($subjid, $levelid, $sort, $syid, $semid, $strandid, $setupid, $isforsp);
+            $subjcoor = $request->get('subjcoor');
+            return self::create($subjid, $levelid, $sort, $syid, $semid, $strandid, $setupid, $isforsp, $subjcoor);
       }
       public static function update_ajax(Request $request){
             $id = $request->get('id');
@@ -490,10 +490,10 @@ class SubjectPlotController extends \App\Http\Controllers\Controller
             $strandid = null,
             $setupid = null,
             $isforsp = null,
+            $subjcoor = null,
             $copyto = false
       ){
             try{
-
                   $count = '';
 
                   if($levelid == 14 || $levelid == 15){
@@ -525,6 +525,7 @@ class SubjectPlotController extends \App\Http\Controllers\Controller
                               'plotsort'=>$sort.$count,
                               'levelid'=>$levelid,
                               'gradessetup'=>$setupid,
+                              'subjcoor'=>$subjcoor,
                               'createdby'=>auth()->user()->id,
                               'createddatetime'=>\Carbon\Carbon::now('Asia/Manila')
                         ]);
@@ -863,14 +864,19 @@ class SubjectPlotController extends \App\Http\Controllers\Controller
                   }
                   
                   self::create_logs($message,$id);
-                  $temp_info = self::list($id,null,$levelid);
-                
-                  $info = self::list(null,null,$temp_info[0]->levelid,null,$temp_info[0]->syid,$temp_info[0]->semid,$temp_info[0]->strandid);
 
+                  $temp_info = self::list($id, null, $levelid);
+                  // return $temp_info;
+                  
+                  $temp_info_first = $temp_info->first() ?? null;
+                  $info = [];
+                  if ($temp_info_first) {
+                      $info = self::list(null, null, $temp_info_first->levelid, null, $temp_info_first->syid, $temp_info_first->semid, $temp_info_first->strandid);
+                  } 
                   return array((object)[
                         'status'=>1,
                         'data'=>'Updated Successfully!',
-                        'info'=>$info
+                        'info'=> count($info) > 0 ? $info :  []
                   ]);
 
             }catch(\Exception $e){
@@ -1114,7 +1120,6 @@ class SubjectPlotController extends \App\Http\Controllers\Controller
             $issp = false,
             $acadprog = null
       ){
-
             $subjectplot = DB::table('subject_plot')
                               ->leftJoin('subject_gradessetup',function($join){
                                     $join->on('subject_plot.gradessetup','=','subject_gradessetup.id');

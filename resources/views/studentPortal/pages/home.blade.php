@@ -126,7 +126,8 @@
             <div class="col-md-8">
                 
                 <div class="row">
-                    <div class="col-md-6" hidden id="current_sched_card">
+                    {{-- change/commetn august 4 2024 --}}
+                    {{-- <div class="col-md-6" hidden id="current_sched_card">
                         <div class="card shadow">
                             <div class="card-header pl-3 pr-3 pt-2 pb-2 border-0 bg-success" >
                                 <h3 style="font-size:15px !important" class="mb-0">
@@ -172,6 +173,19 @@
                                 <span class="description m-0">
                                     <i>No available class for today.</i>
                                 </span>
+                            </div>
+                        </div>
+                    </div> --}}
+
+                    <div class="col-md-12">
+                        <div class="card shadow">
+                            <div class="card-header pl-3 pr-3 pt-2 pb-2 border-0 bg-secondary" >
+                                <h3 style="font-size:15px !important" class="mb-0">
+                                    <i class="fas fa-clipboard-list"></i>
+                                    Class Schedule <i class="float-right">{{\Carbon\Carbon::now('Asia/Manila')->format('l')}}</i>
+                                </h3>
+                            </div>
+                            <div class="card-body user-block student_sched_div text-center">
                             </div>
                         </div>
                     </div>
@@ -326,7 +340,7 @@
                         }
 
 
-                        if(data[0].acadprogid == 6){
+                        if(data[0].acadprogid == 6 || data[0].acadprogid == 8){
                             $('#course_holder').removeAttr('hidden')
                             $('#course')[0].innerHTML = data[0].courseabrv
                         }else{
@@ -382,31 +396,76 @@
                         month:month,
                     },
                 success:function(data) {
+                    console.log(data, 'schedules');
 
-                    var current_sched = data.filter(x=>x.sched == "current");
-                    if(current_sched.length > 0){
-                        $('#curr_sched_subj').text(current_sched[0].subject)
-                        $('#curr_sched_time').text(current_sched[0].time)
-                        $('#curr_sched_teacher').text(current_sched[0].teacher)
-                        $('#current_sched_card').removeAttr('hidden')
-                    }else{
-                        $('#curr_sched_subj').text('No schedule')
+                    // var current_sched = data.filter(x=>x.sched == "current");
+                    // if(current_sched.length > 0){
+                    //     $('#curr_sched_subj').text(current_sched[0].subject)
+                    //     $('#curr_sched_time').text(current_sched[0].time)
+                    //     $('#curr_sched_teacher').text(current_sched[0].teacher)
+                    //     $('#current_sched_card').removeAttr('hidden')
+                    // }else{
+                    //     $('#curr_sched_subj').text('No schedule')
+                    // }
+
+                    // var next_sched = data.filter(x=>x.sched == "next");
+                    // if(next_sched.length > 0){
+                    //     $('#next_sched_subj').text(next_sched[0].subject)
+                    //     $('#next_sched_time').text(next_sched[0].time)
+                    //     $('#next_sched_teacher').text(next_sched[0].teacher)
+                    //     $('#next_sched_card').removeAttr('hidden')
+                    // }else{
+                    //     $('#next_sched_subj').text('No schedule')
+                    // }
+
+                    // $('#links').removeAttr('hidden')
+                    // if( current_sched.length == 0 && next_sched == 0){
+                    //     $('#no_sched_card').removeAttr('hidden')
+                    // }
+
+                    if(data.length == 0){
+                        $('.student_sched_div').append("<span>No Schedule Available</span>");
+                    } else {
+                        // Create the table structure
+                                            
+                        var tableHtml = '<table class="table table-bordered" style="font-size:.8rem">' +
+                                            '<thead>' +
+                                                '<tr>' +
+                                                    '<th>Subject</th>' +
+                                                    '<th class="text-center">Teacher</th>' +
+                                                    '<th class="text-center">Time</th>' +
+                                                    '<th class="text-center">Status</th>' +
+                                                '</tr>' +
+                                            '</thead>' +
+                                            '<tbody>';
+
+                                        // Append data rows
+                                        data.forEach(function(item) {
+                                            var statusClass = '';
+                                            if (item.sched === 'current') {
+                                                statusClass = 'current';
+                                            } else if (item.sched === 'next') {
+                                                statusClass = 'next';
+                                            } else if (item.sched === 'previous') {
+                                                statusClass = 'previous';
+                                            }
+
+                                            tableHtml += '<tr class="' + statusClass + '">' +
+                                                '<td>' + item.subject + '</td>' +
+                                                '<td class="text-center">' + (item.teacher === null ? 'Not Assigned' : item.teacher) + '</td>' +
+                                                '<td class="text-center">' + (item.time === null ? 'Not Assigned' : item.time) + '</td>' +
+                                                '<td class="text-center" style="text-transform: uppercase!important;"><span class="badge ' + (item.sched === 'current' ? 'badge-success' : (item.sched === 'previous' ? 'badge-dark' : 'badge-warning')) + '">' + item.sched + '</span></td>' +
+                                                '</tr>';
+                                        });
+
+                                        tableHtml += '</tbody></table>';
+
+                                        // Append the table to the student_sched_div
+                                        $('.student_sched_div').html(tableHtml);
                     }
 
-                    var next_sched = data.filter(x=>x.sched == "next");
-                    if(next_sched.length > 0){
-                        $('#next_sched_subj').text(next_sched[0].subject)
-                        $('#next_sched_time').text(next_sched[0].time)
-                        $('#next_sched_teacher').text(next_sched[0].teacher)
-                        $('#next_sched_card').removeAttr('hidden')
-                    }else{
-                        $('#next_sched_subj').text('No schedule')
-                    }
 
-                    $('#links').removeAttr('hidden')
-                    if( current_sched.length == 0 && next_sched == 0){
-                        $('#no_sched_card').removeAttr('hidden')
-                    }
+                   
 
                 }
             })

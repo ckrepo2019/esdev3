@@ -1,201 +1,175 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-	<title>Prescription</title>
-	<style type="text/css">
-		body {
-			font-family: Arial, sans-serif;
-			margin: 0;
-			padding: 0;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prescription</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header img {
+            max-width: 80px;
+            max-height: 80px;
+            border-radius: 50%;
+        }
+
+        .school-info, .doctor-info {
+            width: 45%;
+        }
+
+        .doctor-info {
+            text-align: left;
+            font-size: 14px;
+        }
+        .school-info {
+            text-align: right;
+		margin-left: auto;
+        }
+
+        .doctor-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .doctor-info p {
+            margin: 2px 0;
+        }
+
+        .patient-info {
+            margin-top: 30px;
+            font-size: 16px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 10px;
+        }
+
+        .patient-info p {
+            margin: 5px 0;
+        }
+
+        h4 {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .table {
             width: 100%;
-			height: 100%;
-		}
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 14px;
+        }
 
-		.doctor-info {
-			clear: both;
-			text-align: left;
-			width: 50%;
-			font-size: 20px;
-			line-height: 0.1;
-		}
+        .table th, .table td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
 
-		.doctor-name {
-			font-size: 15px;
-			color: rgba(0, 0, 0, 0.493);
-			font-weight: bold;
-			margin-b: 0;
-		} */
-		.degree,
-		.reg-no,
-		.phone,
-		.email {
-			font-size: 15px;
-			line-height: 0.2;
-		}
+        .table th {
+            background-color: #f0f0f0;
+        }
 
-		.school-info {
-			text-align: left;
-			/* padding-left: 300px */
-			width: 50%;
-			font-size: 20px;
-			line-height: 0.2;
-		}
+        .table td {
+            text-align: center;
+        }
 
-		
+        .additional-instructions {
+            margin-top: 20px;
+            font-size: 14px;
+        }
 
-		.medication-info {
-			clear: both;
-			margin-top: 0px;
-			font-size: 12px;
-		}
+        .signature {
+            margin-top: 30px;
+            text-align: right;
+        }
 
-		.date{
-			clear: both;
-			padding-top: 20px !important;
-		}
-
-		.patient-info {
-			margin-top: 30px;
-			font-size: 15px;
-		}
-
-		.patient-name,
-		.date {
-			width: 50%;
-			font-size: 15px;
-			line-height: 0.5;
-		}
-
-
-		.signature {
-			margin-top: 50px;
-			text-align: left;
-		}
-
-		.signature p {
-			margin-left: 45px ;
-		}
-		.table-bordered td, .table-bordered th {
-			border: 2px solid #3d3d3d;
-		}
-
-		.table {
-			width: 100%;
-			margin-bottom: 1rem;
-			background-color: transparent;
-			font-size:15px ;
-		}
-
-
-		.p-1{
-			padding: .25rem !important;
-			font-size:15px ;
-		}
-
-		table {
-			border-collapse: collapse;
-		}
-			.table td, .table th {
-			padding: .75rem;
-			vertical-align: top;
-		}
-		.table td, .table th {
-			padding: .75rem;
-			vertical-align: top;
-		}
-		.image-container {
-			/* display: flex;
-			justify-content: center; */
-			height: 20px;
-			width: 20px;
-			padding-left: 550px
-						}
-
-		#dosage{
-			text-align: center;
-		}
-
-	</style>
+        .signature img {
+            max-width: 150px;
+            max-height: 150px;
+        }
+      
+    </style>
 </head>
 <body>
-		<div class="image-container">
-			
-			<img src="{{asset(DB::table('schoolinfo')->first()->picurl)}}"
-            class="brand-image img-circle elevation-3"
-            style="opacity: .8; max-width: 100px; max-height: 100px; border-radius: 90% ">
-		</div>
-		<p class="date">Date: {{date('d-M-Y, h:m A', strtotime($data[0]->createddatetime))}} </p>
-
-
-		<div class="school-info">
-			<p class="School-name">{{DB::table('schoolinfo')->first()->abbreviation}} Clinic</p>
-			<p class="schoolid">School ID: {{DB::table('schoolinfo')->first()->schoolid}}</p>
-		</div>
-
-
+    <div class="container">
+        <div class="header">
 		<div class="doctor-info">
 			<p class="doctor-name">{{$data[0]->doctorname}}</p>
-            <p class="degree">{{$doctor->degree}} | {{$doctor->specialty}}</p>
-			<p class="reg-no">Registration Number: {{$doctor->regnum}}</p>
-			<p class="phone">Mobile Number: {{$doctor->phone}}</p>
-			<p class="phone">Address: {{$doctor->address}}</p>
-			<p class="email">Email: {{$doctor->email}}</p>
+			<p>{{$doctor->degree}} | {{$doctor->specialty}}</p>
+			<p>Reg. No: {{$doctor->regnum}}</p>
+			<p>Phone: {{$doctor->phone}}</p>
+			<p>Address: {{$doctor->address}}</p>
+			<p>Email: {{$doctor->email}}</p>
 		</div>
-
-		<hr>
-
-		<div class="patient-info">
-			@if($complaint->benefeciaryname =="" || $complaint->benefeciaryname ==NULL)
-			<a class="patient-name">Patient Name:
-                        {{$complaint->name_showlast}}<br/>  
-                    </a>
-			<a class="patient-complaints">Complaint:
-                        {{$complaint->description}}  </a>
-			@else
-			<a class="patient-name">Patient Name:  
-                        {{$complaint->benefeciaryname}} </a><br/>
-			<a class="patient-complaints">Complaints: 
-                        {{$complaint->description}} </a>
-			@endif
+		<div class="school-info">
+			<img src="{{asset(DB::table('schoolinfo')->first()->picurl)}}" alt="School Logo">
+			<p><strong>{{DB::table('schoolinfo')->first()->abbreviation}} Clinic</strong></p>
+			<p>School ID: {{DB::table('schoolinfo')->first()->schoolid}}</p>
 		</div>
-		<h4>R<h4>
-		<div class="medication-info">
-		<table width="100%"  class="table table-bordered mb-0">
-			<tbody>
-				<tr>
-						<th  class="p-1 text-left">Medicine Name</th>
-						<th class="p-1 text-left">Dosage</th>
-						<th class="p-1 text-center">Duration</th>
-				</tr>
+        </div>
 
-						@foreach($data as $dat)
+        <div class="patient-info">
+            <p><strong>Patient Name:</strong> 
+                {{ $complaint->benefeciaryname ? $complaint->benefeciaryname : $details->name_showlast ?? 'Not Specified' }}
+            </p>
+            <p><strong>Complaint:</strong> {{$complaint->description}}</p>
+            <p><strong>Date:</strong> {{date('d-M-Y, h:m A', strtotime($data[0]->createddatetime))}}</p>
+        </div>
 
-							<tr>
+        <h4>Prescription</h4>
 
-								<td class="p-1" width="8%" >
-									{{$dat->medicinename}}
-								</td>
-								
-								<td class="p-1" id="dosage" width="8%" >
-									{{$dat->dosage}}
-								</td>
-								<td class="p-1" width="8%" >
-									{{$dat->duration}} Days &nbsp; <br/> (Total:{{$dat->quantity}} Medicine)
-								</td>
-							</tr>
-						@endforeach
+        <div class="medication-info">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Medicine Name</th>
+                        <th>Dosage</th>
+                        <th>Duration</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($data as $dat)
+                    <tr>
+                        <td>{{$dat->medicinename}}</td>
+                        <td>{{$dat->dosage}}</td>
+                        <td>{{$dat->duration}} Days (Total: {{$dat->quantity}})</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
 
-				
-				</tbody>
-		</table>
+        <p class="additional-instructions"><strong>Additional Advice:</strong> {{$data[0]->advice}}</p>
+        <p class="additional-instructions"><strong>Follow-up:</strong> {{date('M d, Y', strtotime($data[0]->followup))}}</p>
 
-		</div>
-			<strong class="additional-instructions">Additional Advice Given:</strong>
-			<p class="additional-instructions">*{{$data[0]->advice}}</p>
-			<strong class="additional-instructions">Follow up: {{date('M d, Y', strtotime($data[0]->followup))}}</strong>
-		<div class="signature">
-			<img  src="{{asset('storage/' . $doctor->signature)}}" alt="Signature" style="max-width: 200px; max-height: 200px;"><br/>
-			<p class= "sig1">Doctor's signature</p>
-		</div>
-	</div>
+        <div class="signature">
+            @if (Storage::exists($doctor->signature))
+                <img src="{{asset('storage/' . $doctor->signature)}}" alt="Doctor's Signature">
+            @endif
+            <p>Doctor's Signature</p>
+        </div>
+    </div>
 </body>
+</html>

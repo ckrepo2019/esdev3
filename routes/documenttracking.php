@@ -15,5 +15,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/close-document', 'DocumentTrackingController\TrackingController@closeDocument')->name('close.document');
     Route::get('/docutrackview', 'DocumentTrackingController\TrackingController@docutrackview');
     Route::get('/get-all-docs', 'DocumentTrackingController\TrackingController@getAllDocsForTruncate');
+    Route::post('/updatedocument', 'DocumentTrackingController\TrackingController@updateDocument')->name('update.document');
 
 });

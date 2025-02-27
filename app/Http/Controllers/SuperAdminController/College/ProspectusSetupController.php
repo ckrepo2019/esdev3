@@ -37,6 +37,8 @@ class ProspectusSetupController extends \App\Http\Controllers\Controller
                                     'college_subjects.subjDesc',
                                     'college_prospectus.lecunits',
                                     'college_prospectus.labunits',
+                                    'college_prospectus.credunits',
+                                   
                                     DB::raw("CONCAT(college_subjects.subjCode,' - ',college_subjects.subjDesc) as text")
                               )
                         
@@ -82,7 +84,7 @@ class ProspectusSetupController extends \App\Http\Controllers\Controller
             $semester = DB::table('semester')->get();
 
             $yearlevel = DB::table('gradelevel')
-                              ->where('acadprogid',6)
+                              ->whereIn('acadprogid',[6,8])
                               ->where('deleted',0)
                               ->select(
                                     'id',
@@ -155,34 +157,174 @@ class ProspectusSetupController extends \App\Http\Controllers\Controller
 
       }
 
+      // public static function courses(Request $request){
+
+      //       //Fetch Courses for a Teacher
+      //       // if(Session::get('currentPortal') == 16){
+
+                  
+      //       //       $teacher = DB::table('teacher')
+      //       //                         ->where('userid',auth()->user()->id)
+      //       //                         ->first();
+
+      //       //       $courses = DB::table('teacherprogramhead')
+      //       //                         ->where('teacherprogramhead.deleted',0)
+      //       //                         ->where('teacherid',$teacher->id)
+      //       //                         ->join('college_courses',function($join){
+      //       //                               $join->on('teacherprogramhead.courseid','=','college_courses.id');
+      //       //                               $join->where('college_courses.deleted',0);
+      //       //                         })
+      //       //                         ->distinct('teacherprogramhead.courseid')
+      //       //                         ->select(
+      //       //                               'college_courses.id',
+      //       //                               'college_courses.courseDesc',
+      //       //                               'college_courses.courseabrv'
+      //       //                         )
+      //       //                         ->get();
+
+      //       // //Fetch Courses via College Dean
+      //       // }else if(Session::get('currentPortal') == 14){
+
+      //             $teacher = DB::table('teacher')
+      //                               ->where('userid',auth()->user()->id)
+      //                               ->first();
+
+      //             $courses = DB::table('teacherdean')
+      //                         ->where('teacherdean.deleted',0)
+      //                         ->where('teacherid',$teacher->id)
+      //                         ->join('college_colleges',function($join){
+      //                               $join->on('teacherdean.collegeid','=','college_colleges.id');
+      //                               $join->where('college_colleges.deleted',0);
+      //                         })
+      //                         ->join('college_courses',function($join){
+      //                               $join->on('college_colleges.id','=','college_courses.collegeid');
+      //                               $join->where('college_courses.deleted',0);
+      //                         })
+      //                         // ->distinct('teacherdean.collegeid')
+      //                         ->select(
+      //                               'college_courses.id',
+      //                               'college_courses.courseDesc',
+      //                               'college_courses.courseabrv',
+      //                               'college_colleges.collegeDesc'
+      //                         )
+      //                         ->get();
+      //       // }else{
+
+      //       // return $courses;
+
+      //             if ($courses->isEmpty()) {
+      //                   $courses = DB::table('college_courses')
+      //                         ->where('college_courses.deleted',0)
+      //                         ->where('college_colleges.deleted',0)
+      //                         ->join('college_colleges', 'college_courses.collegeid', '=', 'college_colleges.id')
+      //                         ->select(
+      //                               'college_courses.id',
+      //                               'college_courses.courseDesc',
+      //                               'college_courses.courseabrv',
+      //                               'college_colleges.collegeDesc'
+      //                               )
+      //                         ->get();
+      //             }
+
+      //       // }
+
+      //       foreach($courses as $item){
+      //             $cirriculum = DB::table('college_curriculum')
+      //                               ->where('courseID',$item->id)
+      //                               ->where('deleted', 0) //exclude deleted curriculum entries
+      //                               ->count();
+
+      //             $item->curriculumcount = $cirriculum;
+      //       }
+
+      //       return $courses;
+
+      // }
+
       public static function courses(Request $request){
+            // return auth()->user()->id;
+            // return Session::get('currentPortal');
+            if(Session::get('currentPortal') == 16 ){
+                  
+                  // $teacher = DB::table('teacher')
+                  //                   ->where('userid',auth()->user()->id)
+                  //                   ->first();
 
-            if(Session::get('currentPortal') == 16){
+                              // dd($teacher) ;
 
+                        $courses = DB::table('teacherprogramhead')
+                        ->where('teacherprogramhead.deleted', 0)
+                        //->where('teacherprogramhead.semid',$semid)
+                        ->join('teacher', function ($join) {
+                              $join->on('teacherprogramhead.teacherid', '=', 'teacher.id');
+                              $join->where('teacher.deleted', 0);
+                              $join->where('teacher.userid', auth()->user()->id);
+                        })
+                        ->join('college_courses',function($join){
+                              $join->on('teacherprogramhead.courseid','=','college_courses.id');
+                              $join->where('college_courses.deleted',0);
+                        })
+                        ->join('college_colleges', 'college_courses.collegeid', '=', 'college_colleges.id')
+                        ->where('college_colleges.deleted', 0)
+                        ->select(
+                              'teacher.id',
+                              'firstname',
+                              'lastname',
+                              'middlename',
+                              'acadtitle',
+                              'suffix',
+                              'type',
+                              'college_courses.id',
+                              'college_courses.courseDesc',
+                              'college_courses.courseabrv',
+                              'college_colleges.collegeDesc',
+                              'college_colleges.acadprogid'
+
+                        )
+                        ->get();
+
+                  // $courses = DB::table('teacherdean')
+                  //             ->where('teacherdean.deleted',0)
+                  //             ->where('teacherid',$teacher->id)
+                  //             ->join('college_colleges',function($join){
+                  //                   $join->on('teacherdean.collegeid','=','college_colleges.id');
+                  //                   $join->where('college_colleges.deleted',0);
+                  //             })
+                  //             ->join('college_courses',function($join){
+                  //                   $join->on('college_colleges.id','=','college_courses.collegeid');
+                  //                   $join->where('college_courses.deleted',0);
+                  //             })
+                  //             // ->distinct('teacherdean.collegeid')
+                  //             ->select(
+                  //                   'college_courses.id',
+                  //                   'college_courses.courseDesc',
+                  //                   'college_courses.courseabrv',
+                  //                   'college_colleges.collegeDesc'
+                  //             )
+                  //             ->get();
+
+                              foreach($courses as $item){
+                                    $cirriculum = DB::table('college_curriculum')
+                                                      ->where('courseID',$item->id)
+                                                      ->where('deleted', 0) //exclude deleted curriculum entries
+                                                      ->count();
+                  
+                                    $item->curriculumcount = $cirriculum;
+                              }
+                  
+                              return $courses;
+            }
+
+
+
+          else if(Session::get('currentPortal') == 14 ){
+
+          
                   $teacher = DB::table('teacher')
                                     ->where('userid',auth()->user()->id)
                                     ->first();
 
-                  $courses = DB::table('teacherprogramhead')
-                                    ->where('teacherprogramhead.deleted',0)
-                                    ->where('teacherid',$teacher->id)
-                                    ->join('college_courses',function($join){
-                                          $join->on('teacherprogramhead.courseid','=','college_courses.id');
-                                          $join->where('college_courses.deleted',0);
-                                    })
-                                    ->distinct('teacherprogramhead.courseid')
-                                    ->select(
-                                          'college_courses.id',
-                                          'college_courses.courseDesc',
-                                          'college_courses.courseabrv'
-                                    )
-                                    ->get();
-
-            }else if(Session::get('currentPortal') == 14){
-
-                  $teacher = DB::table('teacher')
-                                    ->where('userid',auth()->user()->id)
-                                    ->first();
+                              // dd($teacher) ;
 
                   $courses = DB::table('teacherdean')
                               ->where('teacherdean.deleted',0)
@@ -195,43 +337,95 @@ class ProspectusSetupController extends \App\Http\Controllers\Controller
                                     $join->on('college_colleges.id','=','college_courses.collegeid');
                                     $join->where('college_courses.deleted',0);
                               })
-                              ->distinct('teacherprogramhead.courseid')
+                              // ->distinct('teacherdean.collegeid')
+                              ->groupBy('college_courses.id')
                               ->select(
                                     'college_courses.id',
                                     'college_courses.courseDesc',
-                                    'college_courses.courseabrv'
+                                    'college_courses.courseabrv',
+                                    'college_colleges.collegeDesc',
+                                    'college_colleges.acadprogid'
                               )
                               ->get();
-            }else{
 
-                  $courses = DB::table('college_courses')
-                                    ->where('deleted',0)
-                                    ->select(
-                                          'college_courses.id',
-                                          'college_courses.courseDesc',
-                                          'college_courses.courseabrv'
+                              foreach($courses as $item){
+                                    $cirriculum = DB::table('college_curriculum')
+                                                      ->where('courseID',$item->id)
+                                                      ->where('deleted', 0) //exclude deleted curriculum entries
+                                                      ->count();
+                  
+                                    $item->curriculumcount = $cirriculum;
+                              }
+                  
+                              return $courses;
+            }
+            
+            else if(Session::get('currentPortal') == 3){
+
+            // return $courses;
+                  $teacher = DB::table('teacher')
+                                    ->where('userid',auth()->user()->id)
+                                    ->first();
+
+                  $courses = DB::table('teacherdean')
+                              ->where('teacherdean.deleted',0)
+                              // ->where('teacherid',$teacher->id)
+                              ->join('college_colleges',function($join){
+                                    $join->on('teacherdean.collegeid','=','college_colleges.id');
+                                    $join->where('college_colleges.deleted',0);
+                              })
+                              ->join('college_courses',function($join){
+                                    $join->on('college_colleges.id','=','college_courses.collegeid');
+                                    $join->where('college_courses.deleted',0);
+                              })
+                              ->groupBy('college_courses.id')
+                              // ->distinct('teacherdean.collegeid')
+                              ->select(
+                                    'college_courses.id',
+                                    'college_courses.courseDesc',
+                                    'college_courses.courseabrv',
+                                    'college_colleges.collegeDesc',
+                                    'college_colleges.acadprogid'
+
+                              )
+                              ->get();
+
+                  if ($courses->isEmpty()) {
+                        $courses = DB::table('college_courses')
+                              ->where('college_courses.deleted',0)
+                              ->where('college_colleges.deleted',0)
+                              ->join('college_colleges', 'college_courses.collegeid', '=', 'college_colleges.id')
+                              ->groupBy('college_courses.id')
+                              ->select(
+                                    'college_courses.id',
+                                    'college_courses.courseDesc',
+                                    'college_courses.courseabrv',
+                                    'college_colleges.collegeDesc',
+                                    'college_colleges.acadprogid'
+
                                     )
-                                    ->get();
-
-
-
-            }
-
-            foreach($courses as $item){
-                  $cirriculum = DB::table('college_curriculum')
-                                    ->where('courseID',$item->id)
-                                    ->count();
-
-                  $item->curriculumcount = $cirriculum;
-
-
-            }
+                              ->get();
+                  }
 
             
 
-            return $courses;
+                              foreach($courses as $item){
+                                    $cirriculum = DB::table('college_curriculum')
+                                                      ->where('courseID',$item->id)
+                                                      ->where('deleted', 0) //exclude deleted curriculum entries
+                                                      ->count();
+
+                                    $item->curriculumcount = $cirriculum;
+                              }
+
+                              return $courses;
+            }
+
+           
 
       }
+
+    
 
       public static function course_curriculum(Request $request){
 
@@ -248,127 +442,38 @@ class ProspectusSetupController extends \App\Http\Controllers\Controller
                         )
                         ->get();
 
+                        return response()->json($curriculum);
+
+            return $curriculum;
+      }
+
+      public static function course_curriculum2(Request $request){
+
+            $courseid = $request->get('courseid');
+
+
+            $curriculum = DB::table('college_curriculum')
+                        ->where('deleted',0)
+                        ->where('courseID',$courseid)
+                        ->where('deleted',0)
+                        ->select(
+                              'id',
+                              'curriculumname as text'
+                        )
+                        ->get();
+
+                        return response()->json($curriculum);
+
             return $curriculum;
       }
 
 
+
       //curiculum
-      public static function create_curriculum(Request $request){
+   
+      
 
-            try{
-                  $curriculum_name = $request->get('curriculumname');
-                  $courseid = $request->get('courseid');
-
-                  $check = DB::table('college_curriculum')
-                              ->where('curriculumname',$curriculum_name)
-                              ->where('courseID',$courseid)
-                              ->where('deleted',0)
-                              ->count();
-
-                  if($check > 0){
-                        return array((object)[
-                              'status'=>2,
-                              'message'=>'Curriculum Already Exist'
-                        ]);
-                  }
-
-                  DB::table('college_curriculum')
-                        ->insert([
-                              'curriculumname'=>$curriculum_name,
-                              'courseid'=>$courseid,
-                              'createdby'=>auth()->user()->id,
-                              'createddatetime'=>\Carbon\Carbon::now('Asia/Manila')
-                        ]);
-
-                  return array((object)[
-                        'status'=>1,
-                        'message'=>'Curriculum Created'
-                  ]);
-
-
-            }catch(\Exception $e){
-                  return self::store_error($e);
-            }
-      }
-
-      public static function update_curriculum(Request $request){
-
-            try{
-                  $curid = $request->get('id');
-                  $curriculum_name = $request->get('curriculumname');
-                  $courseid = $request->get('courseid');
-
-                  $check = DB::table('college_curriculum')
-                              ->where('curriculumname',$curriculum_name)
-                              ->where('deleted',0)
-                              ->count();
-
-                  //if($check > 0){
-                        //return array((object)[
-                              //'status'=>2,
-                              //'message'=>'Curriculum Already Exist'
-                        //]);
-                  //}
-
-                  DB::table('college_curriculum')
-                        ->where('id',$curid)
-                        ->where('courseid',$courseid)
-                        ->take(1)
-                        ->update([
-                              'curriculumname'=>$curriculum_name,
-                              'updatedby'=>auth()->user()->id,
-                              'updateddatetime'=>\Carbon\Carbon::now('Asia/Manila')
-                        ]);
-
-                  return array((object)[
-                        'status'=>1,
-                        'message'=>'Curriculum Updated'
-                  ]);
-
-
-            }catch(\Exception $e){
-                  return self::store_error($e);
-            }
-      }
-
-      public static function delete_curriculum(Request $request){
-
-            try{
-                  $curid = $request->get('id');
-                  $courseid = $request->get('courseid');
-                  
-                  $check = DB::table('college_prospectus')
-                              ->where('curriculumid',$curid)
-                              ->where('deleted',0)
-                              ->count();
-
-                  if($check > 0){
-                        return array((object)[
-                              'status'=>2,
-                              'message'=>'Contains Subject'
-                        ]);
-                  }
-
-                  DB::table('college_curriculum')
-                        ->where('id',$curid)
-                        ->where('courseid',$courseid)
-                        ->take(1)
-                        ->update([
-                              'deleted'=>1,
-                              'deletedby'=>auth()->user()->id,
-                              'deleteddatetime'=>\Carbon\Carbon::now('Asia/Manila')
-                        ]);
-
-                  return array((object)[
-                        'status'=>1,
-                        'message'=>'Curriculum Deleted'
-                  ]);
-
-
-            }catch(\Exception $e){
-                  return self::store_error($e);
-            }
-      }
+      
 
       public static function update_subjectgroup(Request $request){
 
@@ -405,6 +510,7 @@ class ProspectusSetupController extends \App\Http\Controllers\Controller
                   $subjcode = $request->get('subjcode');
                   $labunit = $request->get('labunit');
                   $lecunit = $request->get('lecunit');
+                  $credunit = $request->get('credunit');
                   $courseid = $request->get('courseid');
                   $curriculumid = $request->get('curriculumid');
                   $semesterID = $request->get('semid');
@@ -517,8 +623,10 @@ class ProspectusSetupController extends \App\Http\Controllers\Controller
                               ->update([
                                     'psubjsort'=>$sort,
                                     // 'subjectID'=>$subjectId,
-                                    // 'lecunits'=>$lecunit,
-                                    // 'labunits'=>$labunit,
+                                    'subjgroup'=>$subjgroup,
+                                    'lecunits'=>$lecunit,
+                                    'labunits'=>$labunit,
+                                    'credunits'=>$credunit,
                                     // 'subjDesc'=>$subjdesc,
                                     // 'subjCode'=>$subjcode,
                                     'updatedby'=>auth()->user()->id,
@@ -637,9 +745,9 @@ class ProspectusSetupController extends \App\Http\Controllers\Controller
 
                   $check = DB::table('college_subjects')
                               ->where('subjDesc',$subjdesc)
-                              ->where('subjCode',$subjcode)
-                              ->where('labunits',$labunit)
-                              ->where('lecunits',$lecunit)
+                              // ->where('subjCode',$subjcode)
+                              // ->where('labunits',$labunit)
+                              // ->where('lecunits',$lecunit)
                               ->where('deleted',0)
                               ->count();
 
@@ -711,7 +819,13 @@ class ProspectusSetupController extends \App\Http\Controllers\Controller
                   $curriculumid = $request->get('curriculumid');
                   $semesterID = $request->get('semid');
                   $levelid = $request->get('levelid');
-
+                  $subjDesc = $request->get('subjDesc');
+                  $subjCode = $request->get('subjCode');
+                  $lecUnits = $request->get('lecUnits');
+                  $labUnits = $request->get('labUnits');
+                  $credUnits = $request->get('credUnits');
+                  $subjGroup = $request->get('subjGroup');
+                  $preReq = $request->get('prereq');
 
                   if($courseid == "" || $courseid == null || $curriculumid == "" || $curriculumid == null || $semesterID == "" || $semesterID == null || $levelid == "" || $levelid == null){
                         return array((object)[
@@ -730,13 +844,13 @@ class ProspectusSetupController extends \App\Http\Controllers\Controller
                   if($check > 0){
                         return array((object)[
                               'status'=>2,
-                              'message'=>'Subject exits in prospectus.'
+                              'message'=>'Subject exists in prospectus.'
                         ]);
                   }
 
-                  $subject_info = DB::table('college_subjects')
-                                    ->where('id',$subjectid)
-                                    ->first();
+                  // $subject_info = DB::table('college_subjects')
+                  //                   ->where('id',$subjectid)
+                  //                   ->first();
 
                   $temp_id = DB::table('college_prospectus')
                         ->insertGetId([
@@ -745,15 +859,34 @@ class ProspectusSetupController extends \App\Http\Controllers\Controller
                               'semesterID'=>$semesterID,
                               'yearID'=>$levelid,
                               'deleted'=>0,
-                              'lecunits'=>$subject_info->lecunits,
-                              'labunits'=>$subject_info->labunits,
-                              'subjDesc'=>$subject_info->subjDesc,
-                              'subjCode'=>$subject_info->subjCode,
-                              'subjClass'=>$subject_info->subjClass,
+                              'subjDesc'=>$subjDesc,
+                              'subjCode'=>$subjCode,
+                              'lecunits'=>$lecUnits,
+                              'labunits'=>$labUnits,
+                              'credunits'=>$credUnits,
+                              'subjgroup'=>$subjGroup,
+                              // 'lecunits'=>$subject_info->lecunits,
+                              // 'labunits'=>$subject_info->labunits,
+                              // 'subjDesc'=>$subject_info->subjDesc,
+                              // 'subjCode'=>$subject_info->subjCode,
+                              // 'subjClass'=>$subject_info->subjClass,
                               'curriculumID'=>$curriculumid,
                               'createdby'=>auth()->user()->id,
                               'createddatetime'=>\Carbon\Carbon::now('Asia/Manila')
                         ]);
+
+                  // Add prerequisites //new code
+                  if ($preReq && is_array($preReq)) {
+                        foreach ($preReq as $prereqId) {
+                              DB::table('college_subjprereq')->insert([
+                                    'subjid' => $temp_id,
+                                    'prereqsubjID' => $prereqId,
+                                    'deleted' => 0,
+                                    'createdby' => auth()->user()->id,
+                                    'createddatetime' => \Carbon\Carbon::now('Asia/Manila')
+                              ]);
+                        }
+                  }
 
                   $temp_subj_info = DB::table('college_prospectus')
                         ->where('id',$temp_id)
@@ -783,7 +916,6 @@ class ProspectusSetupController extends \App\Http\Controllers\Controller
             }catch(\Exception $e){
                   return self::store_error($e);
             }
-
       }
 
       public static function delete_prospectus(Request $request){
@@ -799,9 +931,9 @@ class ProspectusSetupController extends \App\Http\Controllers\Controller
                                     $join->on('college_prospectus.id','=','college_classsched.subjectID');
                                     $join->where('college_classsched.deleted',0);
                               })
-                              ->join('college_studsched',function($join){
-                                    $join->on('college_classsched.id','=','college_studsched.schedid');
-                                    $join->where('college_studsched.deleted',0);
+                              ->join('college_loadsubject',function($join){
+                                    $join->on('college_classsched.id','=','college_loadsubject.schedid');
+                                    $join->where('college_loadsubject.deleted',0);
                               })
                               ->where('college_prospectus.id',$id)
                               ->where('college_prospectus.curriculumID',$curriculumid)
@@ -811,7 +943,7 @@ class ProspectusSetupController extends \App\Http\Controllers\Controller
                   if($check > 0){
                         return array((object)[
                               'status'=>2,
-                              'message'=>'Contains Enrolled stdudents'
+                              'message'=>'Contains Enrolled students'
                         ]);
                   }
 
@@ -878,6 +1010,81 @@ class ProspectusSetupController extends \App\Http\Controllers\Controller
             }
             
       }
+//working v2
+//       public function updateSubject(Request $request) {     
+          
+//             try {
+//                   $check_sched = DB::table('college_classsched')
+//                   ->where('subjectID',$request['id'])
+//                   ->where('deleted',0)
+//                   ->count();
+
+
+//             if($check_sched > 0){
+//                   return array((object)[
+//                         'status'=>0,
+//                         'message'=>'Unable to update. Subject is already used.'
+//                   ]);
+
+
+// }
+
+//             DB::table('college_subjects')
+//                     ->where('id', $request['id'])
+//                     ->update([
+//                         'subjDesc' => $request['subj_desc'],
+//                         'subjCode' => $request['subj_code'],
+//                         'labunits' => $request['labunit']
+//             ]);
+        
+//                 return response()->json(['success' => true]);
+//             } catch (\Exception $e) {
+//                 return response()->json(['success' => false, 'message' => 'Update failed: ' . $e->getMessage()], 500);
+//             }
+//         }
+
+        public function updateSubject(Request $request) {
+
+            $check_sched = DB::table('college_classsched')
+                  ->where('subjectID', $request['id'])
+                  ->where('deleted', 0)
+                  ->count();
+
+            if ($check_sched > 0) {
+                  // return array((object)[
+                  //       'status' => 0,
+                  //       'message' => 'Unable to update. Subject is already used.'
+                  // ]);
+                  return response()->json(['success' => false, 'message' => 'Subject is already used.']);
+            }
+
+            DB::table('college_subjects')
+                  ->where('id', $request['id'])
+                  ->update([
+                        'subjDesc' => $request['subj_desc'],
+                        'subjCode' => $request['subj_code'],
+                        'labunits' => $request['labunit']
+                  ]);
+
+            return response()->json(['success' => true]);
+        }
+
+
+
+        public function getSubjectById(Request $request) {
+            return response()->json(
+                DB::table('college_subjects')
+                    ->where('id', $request->route('id'))
+                    ->where('deleted', 0)
+                    ->first()
+            );
+        }
+        
+
+      
+
+        
+        
 
       public static function available_subject(Request $request){
 
@@ -1012,4 +1219,138 @@ class ProspectusSetupController extends \App\Http\Controllers\Controller
                   'message'=>'Something went wrong!'
             ]);
       }
+
+      public static function subjects(Request $request){
+
+            $subj = DB::table('college_subjects')
+                              ->where('deleted',0)
+                              ->select(
+                                    'subjDesc as desc',
+                                    'id as id',
+                                    'subjCode as code',
+                                    'labunits',
+                                    'lecunits'
+                              )
+                              ->get();
+                 
+                  return response()->json($subj);                
+                  
+        }
+
+  
+
+      public static function curriculum_subjects_201($courseid = '', $curriculumid = '', $schedule = ''){
+
+            // Fetch subject groups
+            $subjectGroups = DB::table('setup_subjgroups')
+                              ->where('deleted', 0)
+                              ->select('id', 'description as subject_group_name')
+                              ->get();
+
+            $subjects = Db::table('college_prospectus')
+                              ->where('college_prospectus.deleted',0)
+                              ->where('college_prospectus.courseID',$courseid)
+                              ->where('college_prospectus.curriculumID',$curriculumid)
+                              ->leftJoin('setup_subjgroups', 'college_prospectus.subjgroup', '=', 'setup_subjgroups.id')
+                              ->select(
+                                    'college_prospectus.id',
+                                    'college_prospectus.courseID',
+                                    'college_prospectus.subjectID',
+                                    'college_prospectus.semesterID',
+                                    'college_prospectus.yearID',
+                                    'college_prospectus.lecunits',
+                                    'college_prospectus.labunits',
+                                    'college_prospectus.credunits',
+                                    'college_prospectus.subjDesc',
+                                    'college_prospectus.subjCode',
+                                    'college_prospectus.subjgroup',
+                                    'college_prospectus.subjClass',
+                                    'college_prospectus.curriculumID',
+                                    'college_prospectus.psubjsort',
+                                    'setup_subjgroups.description as subject_group_name',
+                                    DB::raw("CONCAT(college_prospectus.subjCode,' - ',college_prospectus.subjDesc) as text")
+                              )
+                              ->get();
+
+            
+            $prereq = Db::table('college_prospectus')
+                              ->where('college_prospectus.deleted',0)
+                              ->where('college_prospectus.courseID',$courseid)
+                              ->where('college_prospectus.curriculumID',$curriculumid)
+                              ->join('college_subjprereq',function($join){
+                                    $join->on('college_prospectus.id','=','college_subjprereq.subjID');
+                                    $join->where('college_subjprereq.deleted',0);
+                              })
+                              ->selecT(
+                                    'subjID',
+                                    'prereqsubjID'
+                              )
+                              ->get();
+
+
+
+            return array([
+                  'subjects'=>$subjects,
+                  'prereq'=>$prereq,
+                  'subjectGroups'=>$subjectGroups
+            ]);
+
+      }
+
+
+      // public static function curriculum_subjects_201($courseid = '', $curriculumid = '', $schedule = ''){
+
+      //       // $courseid = $request->get('courseid');
+      //       // $curriculumid = $request->get('curriculumid');
+
+      //       $subjects = Db::table('college_prospectus')
+      //                         ->where('deleted',0)
+      //                         ->where('courseID',$courseid)
+      //                         ->where('curriculumID',$curriculumid)
+      //                         ->select(
+      //                               'id',
+      //                               'courseID',
+      //                               'subjectID',
+      //                               'semesterID',
+      //                               'yearID',
+      //                               'lecunits',
+      //                               'labunits',
+      //                               'credunits',
+      //                               'subjDesc',
+      //                               'subjCode',
+      //                               'subjgroup',
+      //                               'subjClass',
+      //                               'curriculumID',
+      //                               'psubjsort',
+      //                               DB::raw("CONCAT(college_prospectus.subjCode,' - ',college_prospectus.subjDesc) as text")
+      //                         )
+      //                         ->get();
+
+            
+      //       $prereq = Db::table('college_prospectus')
+      //                         ->where('college_prospectus.deleted',0)
+      //                         ->where('college_prospectus.courseID',$courseid)
+      //                         ->where('college_prospectus.curriculumID',$curriculumid)
+      //                         ->join('college_subjprereq',function($join){
+      //                               $join->on('college_prospectus.id','=','college_subjprereq.subjID');
+      //                               $join->where('college_subjprereq.deleted',0);
+      //                         })
+      //                         ->selecT(
+      //                               'subjID',
+      //                               'prereqsubjID'
+      //                         )
+      //                         ->get();
+
+
+
+      //       return array([
+      //             'subjects'=>$subjects,
+      //             'prereq'=>$prereq
+      //       ]);
+
+      // }
+
+
+   
+    
 }

@@ -35,15 +35,17 @@ class HRDeductions extends Model
 
         // return $deductionid;
         $monthlypayroll = DB::table('hr_payrollv2')
-            ->select('hr_payrollv2history.*','hr_payrollv2.datefrom','hr_payrollv2.dateto')
-            ->join('hr_payrollv2history','hr_payrollv2.id','=','hr_payrollv2history.payrollid')
+            ->select('hr_payrollv2history.*', 'hr_payrollv2.datefrom', 'hr_payrollv2.dateto')
+            ->join('hr_payrollv2history', 'hr_payrollv2.id', '=', 'hr_payrollv2history.payrollid')
             ->where(function($query) use ($payrollmonth) {
                 $query->whereMonth('hr_payrollv2.dateto', $payrollmonth)
                     ->orWhereMonth('hr_payrollv2.datefrom', $payrollmonth);
             })
-            ->where('hr_payrollv2.deleted','0')
-            ->where('hr_payrollv2history.deleted','0')
-            ->where('hr_payrollv2history.employeeid',$employeeid)
+            ->where('hr_payrollv2.deleted', '0')
+            ->where('hr_payrollv2history.deleted', '0')
+            ->where('hr_payrollv2history.employeeid', $employeeid)
+            // ->distinct() // Ensure distinct records are returned
+            ->groupBy('hr_payrollv2history.payrollid') // Group by key fields
             ->get();
                     
             
@@ -107,7 +109,6 @@ class HRDeductions extends Model
         }
         elseif(count($monthlypayroll) == 1)
         {
-            
             if($historyinfo)
             {
 
@@ -133,11 +134,10 @@ class HRDeductions extends Model
                             {
                                 $paidforthismonth = 1;
                             }
-                        // if($payrollinfo->dateto > date('Y-m-15', strtotime($payrollinfo->dateto)))
-                        // {
-                        //     $lock = 1;
-                        // }
-                        // $lock = 1;
+                        if($payrollinfo->dateto > date('Y-m-15', strtotime($payrollinfo->dateto)))
+                        {
+                            $lock = 1;
+                        }
                         $paidstatus = $deductinfo->paidstatus;
                     }
                     else{
@@ -357,8 +357,8 @@ class HRDeductions extends Model
                     $amounttopay = $deductioninfo->eesamount;
                     $totalamount = $deductioninfo->eesamount;
                     $lock        = 1;
-                    $paidstatus = $deductinfo->paidstatus;
-                    // $paidstatus = 1;
+                    // $paidstatus = $deductinfo->paidstatus;
+                    $paidstatus = 0;
                 }
             }
 

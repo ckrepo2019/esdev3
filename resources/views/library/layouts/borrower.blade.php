@@ -262,16 +262,24 @@
                         </li>
 
                         <li class="nav-main-item">
-                            <a class="nav-main-link{{ request()->is('cataloging') ? ' active' : '' }}"
-                                href="/cataloging">
+                            <a class="nav-main-link{{ request()->is('library/homeborrower') ? ' active' : '' }}"
+                                href="/library/homeborrower">
+                                <i class="nav-main-link-icon far fa-chart-bar"></i>
+                                <span class="nav-main-link-name">Dash</span>
+                            </a>
+                        </li>
+
+                        <li class="nav-main-item">
+                            <a class="nav-main-link{{ request()->is('library/cataloging') ? ' active' : '' }}"
+                                href="/library/cataloging">
                                 <i class="nav-main-link-icon si si-puzzle"></i>
                                 <span class="nav-main-link-name">Cataloging</span>
                             </a>
                         </li>
 
                         <li class="nav-main-item">
-                            <a class="nav-main-link{{ request()->is('view/profile') ? ' active' : '' }}"
-                                href="/view/profile">
+                            <a class="nav-main-link{{ request()->is('library/view/profile') ? ' active' : '' }}"
+                                href="/library/view/profile">
                                 <i class="nav-main-link-icon far fa-user"></i>
                                 <span class="nav-main-link-name">Profile</span>
                             </a>
@@ -348,7 +356,7 @@
                             <div class="p-2">
                                 {{-- Profile --}}
                                 <a class="dropdown-item d-flex align-items-center justify-content-between"
-                                    href="/view/profile">
+                                    href="/library/view/profile">
                                     <span class="font-size-sm font-w500">Profile</span>
                                     <span class="badge badge-pill badge-primary ml-2">1</span>
                                 </a>

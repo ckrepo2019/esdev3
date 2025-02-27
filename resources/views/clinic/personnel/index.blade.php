@@ -28,6 +28,45 @@
     </div>
 
     <section class="content">
+
+      <div class="modal fade" id="availabilityModal" tabindex="-1" role="dialog" aria-labelledby="availabilityModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="availabilityModalLabel">Weekly Availability</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              @foreach ($personnel as $person)
+              <div class="card mb-3">
+                  <div class="card-header">
+                      <h3>{{ $person->name }}</h3> <!-- Display personnel name -->
+                  </div>
+                  <div class="card-body">
+                    <h5>Weekly Schedule:</h5>
+                    <ul class="list-group">
+                        @forelse ($person->weeklySchedule as $schedule)
+                            <li class="list-group-item list-group-item-success">
+                                {{ \Carbon\Carbon::parse($schedule->scheddate)->format('F d, Y') }} - {{ $schedule->timefrom }}: {{ $schedule->description }}
+                            </li>
+                        @empty
+                            <li>No schedule available for this week.</li>
+                        @endforelse
+                    </ul>
+                </div>
+                
+              </div>
+          @endforeach
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
         <div class="row d-flex align-items-stretch">
             @if(count($personnel)>0)
                 @foreach($personnel as $person)
@@ -69,7 +108,7 @@
                                   <i class="fa fa-calendar" aria-hidden="true"></i>
                                 </a>
                                 @endif
-                                <button type="button" class="btn btn-default p-1">
+                                <button type="button" class="btn btn-default p-1 btn_show_availability">
                                     @if($person->loggedIn == 1 && $person->loggedOut == 0)
                                     Status : <span class="badge badge-success">Active</span>
                                     @else
@@ -149,6 +188,12 @@
                 $('#btn-addtype').on('click', function(){
                     $('#modal-addtype').modal('show')
                 })
+
+                $('.btn_show_availability').on('click', function(){
+                 $('#availabilityModal').modal()
+                })
             })
+            
         </script>
+      
     @endsection

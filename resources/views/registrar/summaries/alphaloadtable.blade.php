@@ -230,50 +230,45 @@
                                @endif
                            </tr>
                        </thead>
-                       <tbody class="studentscontainer" style="font-size: 12px;">
-                        @if(count($allschedules) > 0)
-                            @php
-                                $schoolAbbreviation = strtolower(DB::table('schoolinfo')->first()->abbreviation);
-                            @endphp
-                            @foreach($allschedules as $schedule)
-                                @php
-                                    // Filter sched_group_detail by schedid
-                                    $filtered_groups = $sched_group_detail->where('schedid', $schedule->schedid);
-                                @endphp
-                                @if ($filtered_groups->count() > 0)
-                                    @foreach ($filtered_groups as $sched_group)
-                                        <tr>
-                                            <td></td>
-                                            <td>
-                                                <a href="#" class="each-btn-export" data-schedid="{{ $schedule->schedid }}">
-                                                    {{ $schedule->subjectname }}<br/>
-                                                    <span class="text-muted">{{ $schedule->subjcode }}</span>
-                                                </a>
-                                            </td>
-                                            <td>{{ $schedule->courseabrv }}</td>
-                                            <td>{{ $schedule->courseabrv }} - {{ $schedule->levelid - 16 }} {{ $sched_group->schedgroupdesc }}</td>
-                                            <td>
-                                                {{ $schedule->description }} - {{ $schedule->starttime ?? $schedule->stime }} - {{ $schedule->endtime ?? $schedule->etime }}<br/>
-                                                <span class="muted">Room: {{ $schedule->roomname }}</span>
-                                            </td>
-                                            <td>
-                                                Units: {{ $schedule->units }}<br/>
-                                                Enrolled: {{ $schedule->numstudents ?? count($schedule->students) }}
-                                            </td>
-                                            <td>{{ $schedule->teachername ?? $schedule->lastname . ', ' . $schedule->firstname ?? '' }}</td>
-                                            @if ($schoolAbbreviation == 'sbc')
-                                                <td>
-                                                    <a href="#" class="btn-block each-btn-export-gs" data-schedid="{{ $schedule->id ?? $schedule->schedid }}">
-                                                        <u>Grade Sheet</u>
-                                                    </a>
-                                                </td>
-                                            @endif
-                                        </tr>
-                                    @endforeach
-                                @endif
-                            @endforeach
-                        @endif
-                    </tbody>
+                       <tbody class="studentscontainer"  style="font-size: 12px;">
+                           @if(count($allschedules)>0)
+                               @foreach($allschedules as $schedule)
+                                   <tr>
+                                    {{-- <a href="#" class="each-btn-export" data-schedid="{{$schedule->schedid}}">> <u>Class List</u></a> --}}
+                                       <td></td>
+                                       <td><a href="#" class="each-btn-export" data-schedid="{{$schedule->schedid}}">{{$schedule->subjectname}}<br/><span class="text-muted">{{$schedule->subjcode}}</span></a></td>
+                                       {{-- <td>{{$schedule->subjectname}}</td> --}}
+                                       <td>{{$schedule->courseabrv}}</td>
+                                       <td>{{$schedule->sectionname}}</td>
+                                       <td>{{$schedule->description}} - {{$schedule->starttime ?? $schedule->stime}} - {{$schedule->endtime ?? $schedule->etime}}<br/><span class="muted">Room: {{$schedule->roomname}}</span></td>
+                                       {{-- <td>{{$schedule->endtime ?? $schedule->etime}}</td> --}}
+                                       {{-- <td>
+                                           {{$schedule->description}} --}}
+                                           {{-- @if(isset($schedule->days))
+                                               @if(in_array('M', $schedule->days))M @endif
+                                               @if(in_array('T', $schedule->days))T @endif
+                                               @if(in_array('W', $schedule->days)) W @endif
+                                               @if(in_array('Th', $schedule->days))Th @endif
+                                               @if(in_array('F', $schedule->days))F @endif
+                                               @if(in_array('Sat', $schedule->days))Sat @endif
+                                               @if(in_array('Sun', $schedule->days))Sun @endif
+                                           @endif --}}
+                                       {{-- </td> --}}
+                                       {{-- <td>{{$schedule->roomname}}</td> --}}
+                                       <td>Units: {{$schedule->units}}<br/>Enrolled:{{$schedule->numstudents ?? count($schedule->students)}}</td>
+                                       {{-- <td>{{$schedule->numstudents ?? count($schedule->students)}}</td> --}}
+                                       <td>{{$schedule->teachername ?? $schedule->lastname.', '.$schedule->firstname ?? ''}}</td>
+                                       @if(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'sbc')
+                                       <td>
+                                           @if(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'sbc')
+                                           <a href="#" class="btn-block each-btn-export-gs" data-schedid="{{$schedule->id ?? $schedule->schedid}}">> <u>Grade Sheet</u></a>
+                                           @endif
+                                       </td>
+                                       @endif
+                                   </tr>
+                               @endforeach
+                           @endif
+                       </tbody>
                    </table>
                    @endif
                </div>

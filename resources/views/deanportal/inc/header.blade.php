@@ -1,6 +1,6 @@
 <div class="app-header header-shadow header-text-light" style="background-color:#2bbf74">
     <div class="app-header__logo">
-        
+
         <div class="header__pane ml-auto">
             <div>
                 <button type="button" class="hamburger close-sidebar-btn hamburger--elastic" data-class="closed-sidebar">
@@ -28,11 +28,11 @@
                 </span>
             </button>
         </span>
-    </div>    
+    </div>
     <div class="app-header__content">
         <div class="app-header-left">
-                
+
         </div>
-        
+
     </div>
 </div>

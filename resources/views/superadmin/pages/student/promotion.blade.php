@@ -213,12 +213,17 @@
                                     </div>
                               </div>
                               <div class="row">
-                                    <div class="col-md-4 ">
-                                          <button class="btn btn-primary btn-sm" id="button_filter"><i class="fas fa-filter"></i> Filter</button>
+                                    <div class="col-md-2 col-12 ">
+                                          <div class="row ml-md-1">
+                                                <button class="btn btn-primary btn-sm w-100 col-12 " id="button_filter"><i class="fas fa-filter"></i> Filter</button>
+                                          </div>
                                     </div>
-                                    <div class="col-md-8 text-right">
-                                          <button class="btn btn-danger btn-sm" id="button_unpromote" disabled><i class="fas fa-caret-square-up" ></i> Unpromote All</button>
-                                          <button class="btn btn-primary btn-sm" id="button_promote" disabled><i class="fas fa-caret-square-up" ></i> Promote All</button>
+                                    <div class="col-md-4 col-12"></div>
+                                    <div class="col-md-6  col-12 text-right ">
+                                          <div class="row justify-content-end mt-md-0 mt-1">
+                                                <button class="btn btn-danger btn-sm col-sm-5 col-12" style="white-space: nowrap;" id="button_unpromote" disabled><i class="fas fa-caret-square-up" ></i> Unpromote All</button>
+                                                <button class="btn btn-primary btn-sm ml-md-1 col-sm-5 col-12 mt-md-0 mt-1" id="button_promote" disabled style="white-space: nowrap;"><i class="fas fa-caret-square-up" ></i> Promote All</button>
+                                          </div>
                                     </div>
                               </div>
                           </div>
@@ -769,7 +774,7 @@
                               $('.tbh2').text('END OF SEMESTER STATUS (Complete/ Incomplete)')
                               $('.tbh3').text('END OF SCHOOL YEAR STATUS (Regular/ Irregular)')
 
-                        }else if($(this).val() == 17 || $(this).val() == 18 || $(this).val() == 19 || $(this).val() == 20 || $(this).val() == 21){
+                        }else if($(this).val() == 17 || $(this).val() == 18 || $(this).val() == 19 || $(this).val() == 20 || $(this).val() == 21 || $(this).val() >= 22){
                               $('#filter_semid').removeAttr('disabled')
                               $('#withg').attr('disabled','disabled')
                               $('input[value="2"]').prop('checked',true)
@@ -1033,9 +1038,14 @@
                               $('.end_total[data-id="total"]').text(all_students.length)
                         }
 
+                        var glevelid = $('#filter_gradelevel').val();
+
                         $("#students_male").DataTable({
                               destroy: true,
                               scrollX: true,
+                              'language': {
+                                    'emptyTable': glevelid ? 'No entries available. Please check your filters or search again.' : 'It looks like you haven&#39;t set any filters yet. Start filtering to see data.'
+                              },
                               autoWidth: false,
                               data:all_students.filter(x=>x.gender.toUpperCase() == 'MALE'),
                               columns: [
@@ -1151,10 +1161,14 @@
                                     },
                               ]
                         });
+                        var glevelid = $('#filter_gradelevel').val();
 
                         $("#students_female").DataTable({
                               destroy: true,
                               scrollX: true,
+                              'language': {
+                                    'emptyTable': glevelid ? 'No entries available. Please check your filters or search again.' : 'It looks like you haven&#39;t set any filters yet. Start filtering to see data.'
+                              },
                               autoWidth: false,
                               data:all_students.filter(x=>x.gender.toUpperCase() == 'FEMALE'),
                               columns: [

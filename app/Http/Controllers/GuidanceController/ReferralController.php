@@ -27,6 +27,27 @@ class ReferralController extends \App\Http\Controllers\Controller
             ]
         );
     }
+    public function referralViewTeaher(Request $request)
+    {
+        $currentUser = DB::table('teacher')->where('userid', auth()->user()->id)->first();
+        return view(
+            'guidanceV2.pages.referralteacher',
+            [
+                'current_page' => 'Referral Page',
+                'jsonData' => DB::table('guidance_referral')
+                    ->where('guidance_referral.deleted', 0)
+                    ->where('guidance_referral.referredby', $currentUser->id)
+                    ->join('teacher', 'guidance_referral.referredby', '=', 'teacher.id')
+                    ->select(
+                        'guidance_referral.*',
+                        DB::raw('CONCAT(teacher.lastname, " ", teacher.firstname) AS referredby_fullname'),
+                        DB::raw('DATE_FORMAT(guidance_referral.filleddate, "%M %e, %Y") as formatted_filleddate'),
+                        DB::raw('DATE_FORMAT(guidance_referral.counselingdate, "%M %e, %Y") as formatted_counselingdate')
+                    )
+                    ->get()
+            ]
+        );
+    }
     public function referral_form(Request $request)
     {
 

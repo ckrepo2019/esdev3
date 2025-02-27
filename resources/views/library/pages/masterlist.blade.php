@@ -75,15 +75,15 @@
 
                         <div class="block-content font-size-sm pb-3">
                             <div class="row">
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <div class="block">
                                         <div class="block-content">
                                             <img src="" alt="Cover Image" id="cover_img"
-                                                style="width:100%; height: 280px;">
+                                                style="height: 270px; width: 100%; object-fit: contain; object-position: center; ">
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <strong>ISBN</strong>
                                     <p class="font-w600 text-primary" id="visbn"></p>
                                     <strong>Author</strong>
@@ -95,27 +95,31 @@
                                     <strong>Date Received</strong>
                                     <p class="text-muted" id="vdatereceived"></p>
                                 </div>
-                                <div class="col-md-3">
-                                    <strong>Title</strong>
-                                    <p class="text-muted" id="vtitle"></p>
-                                    <strong>Edition</strong>
-                                    <p class="text-muted" id="vedition"></p>
-                                    <strong>Copyright</strong>
-                                    <p class="text-muted" id="vcopyright"></p>
-                                    <strong>Category</strong>
-                                    <p class="text-muted" id="vcategory"></p>
-                                    <strong>Call Number</strong>
-                                    <p class="text-muted" id="vcallnumber"></p>
-                                </div>
-                                <div class="col-md-3">
-                                    <strong>Price</strong>
-                                    <p class="text-muted" id="vprice"></p>
-                                    <strong>Quantity</strong>
-                                    <p class="text-muted" id="vquantity"></p>
-                                    <strong>Available</strong>
-                                    <p class="text-muted" id="vavailable"></p>
-                                    <strong>Description</strong>
-                                    <p class="text-muted pr-1" id="vdescription"></p>
+                                <div class="col-md-12">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <strong>Title</strong>
+                                            <p class="text-muted" id="vtitle"></p>
+                                            <strong>Edition</strong>
+                                            <p class="text-muted" id="vedition"></p>
+                                            <strong>Copyright</strong>
+                                            <p class="text-muted" id="vcopyright"></p>
+                                            <strong>Category</strong>
+                                            <p class="text-muted" id="vcategory"></p>
+                                            <strong>Call Number</strong>
+                                            <p class="text-muted" id="vcallnumber"></p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <strong>Price</strong>
+                                            <p class="text-muted" id="vprice"></p>
+                                            <strong>Quantity</strong>
+                                            <p class="text-muted" id="vquantity"></p>
+                                            <strong>Available</strong>
+                                            <p class="text-muted" id="vavailable"></p>
+                                            <strong>Description</strong>
+                                            <p class="text-muted pr-1" id="vdescription"></p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -208,8 +212,7 @@
 
                                     <div class="form-group">
                                         <label class="mb-1">Date Received</label>
-                                        <input type="text"
-                                            class="js-flatpickr font-size-sm form-control form-control-alt"
+                                        <input type="date" class="font-size-sm form-control form-control-alt"
                                             id="datereceived" name="datereceived" placeholder="Y-m-d"
                                             data-date-format="Y-m-d">
                                         <span class="invalid-feedback" role="alert">
@@ -403,14 +406,14 @@
                         id="DataTables_Table_1" style="width: 100%;">
                         <thead class="thead-dark">
                             <tr>
-                                <th width="10%"></th>
-                                <th width="20%">Book Title</th>
+                                <th width="12%"></th>
+                                <th width="30%">Book Title</th>
                                 <th hidden>Book Author</th>
                                 <th hidden>Book Publisher</th>
                                 <th width="12%">Genre</th>
                                 <th width="12%">Category</th>
-                                <th width="12%">Quantity</th>
-                                <th width="12%">Available</th>
+                                <th width="12%">QTY</th>
+                                {{-- <th width="12%">Available</th> --}}
                                 <th width="12%">Price</th>
                                 <th width="10%">Action</th>
                             </tr>
@@ -424,7 +427,7 @@
 @endsection
 
 @section('js_after')
-    <script src="{{ asset('js/plugins/select2/js/select2.full.min.js') }}"></script>
+    {{-- <script src="{{ asset('js/plugins/select2/js/select2.full.min.js') }}"></script>
     <script src="{{ asset('js/plugins/datatables/jquery.dataTables.min.js') }}"></script>
     <script src="{{ asset('js/plugins/datatables/dataTables.bootstrap4.min.js') }}"></script>
     <script src="{{ asset('js/plugins/datatables/buttons/dataTables.buttons.min.js') }}"></script>
@@ -440,14 +443,14 @@
     <script src="{{ asset('js/plugins/jquery.maskedinput/jquery.maskedinput.min.js') }}"></script>
     <script src="{{ asset('js/plugins/ion-rangeslider/js/ion.rangeSlider.min.js') }}"></script>
     <script src="{{ asset('js/plugins/dropzone/dropzone.min.js') }}"></script>
-    <script src="{{ asset('js/plugins/flatpickr/flatpickr.min.js') }}"></script>
-    <script>
+    <script src="{{ asset('js/plugins/flatpickr/flatpickr.min.js') }}"></script> --}}
+    {{-- <script>
         jQuery(function() {
             One.helpers(['flatpickr', 'datepicker', 'colorpicker', 'maxlength', 'select2', 'masked-inputs',
                 'rangeslider'
             ]);
         });
-    </script>
+    </script> --}}
     <script>
         var purpose = '';
         var currentId;
@@ -471,6 +474,7 @@
 
             $('#select-library').select2()
             $('#select-library').on('change', function() {
+                console.log('logging...');
                 books($(this).val());
             })
 
@@ -582,7 +586,9 @@
 
                         if (data.book_img) {
                             $('#book_cover').prop('hidden', false);
-                            $('#book_cover').attr('src', data.book_img);
+                            $('#book_cover').attr('src', data.book_img).attr('onerror',
+                                "this.onerror=null;this.src='/assets/lms/lost.png';"
+                            );
                         }
 
 
@@ -620,7 +626,9 @@
                     success: function(data) {
                         console.log(data)
                         $('.modal-title-view').text(data.book_title);
-                        $('#cover_img').attr('src', data.book_img);
+                        $('#cover_img').attr('src', data.book_img).attr('onerror',
+                            "this.onerror=null;this.src='/assets/lms/lost.png';"
+                        );
                         $('#visbn').text(data.book_isbn ?? '--');
                         $('#vtitle').text(data.book_title ?? '--');
                         $('#vauthor').text(data.book_author ?? '--');
@@ -867,7 +875,7 @@
 
         function delete_book(id) {
             Swal.fire({
-                icon: 'warning',
+                type: 'warning',
                 title: 'You want to delete this book?',
                 text: `You can't undo this process.`,
                 showCancelButton: true,
@@ -900,9 +908,9 @@
                     action: 'getall',
                     params: params ?? null
                 },
-                url: '{{ route('books') }}',
+                url: '{{ route('lib.books') }}',
                 success: function(data) {
-                    console.log(data)
+                    console.log('books...', data)
                     load_books_datatable(data);
                 }
             });
@@ -917,32 +925,21 @@
                 columns: [{
                         data: "book_img",
                         sortable: false,
+                        orderable: false,
                         className: 'text-center',
                         render: function(data, type, row) {
                             var img =
-                                `<img class="shadow" src="${row.book_img}" style="height:60px; width:50px;object-fit: cover;"/>`
+                                `<img class="shadow" src="/${row.book_img}" style="height:60px; width:60px;object-fit: cover;" onerror="this.onerror=null;this.src='{{ asset('assets/lms/lost.png') }}';"/>`
                             return img;
                         }
                     },
                     {
                         data: "book_title",
                         render: function(data, type, row) {
-                            var capitalizeFirstLetter = function(string) {
-                                return string.toLowerCase().replace(/\b\w/g, function(match) {
-                                    return match.toUpperCase();
-                                });
-                            };
-
-                            var author =
-                                `<div class="mt-1"><a class="font-size-sm">Author: ${capitalizeFirstLetter(row.book_author)}</a></div>`;
-                            var publisher =
-                                `<div><a class="font-size-sm">Publisher: ${capitalizeFirstLetter(row.book_publisher)}</a></div>`;
-                            var title = `
-                                <div><a href="#" class="font-w600 text-dark text-nowrap">${capitalizeFirstLetter(row.book_title)}</a></div>
-                                ${author}
-                                ${publisher}
+                            return `
+                                <div class="font-w600" style="margin: 0; padding: 0; font-size: 14px;"><a href="#" class="text-dark view_book" data-id="${row.id}">${row.book_title}</a></div>
+                              <em> <a class="d-block small" style="margin: 0; padding: 0; font-size: 12px;">${row.book_author}, ${row.book_publisher}</a></em> 
                             `;
-                            return title;
                         }
                     },
                     {
@@ -973,30 +970,29 @@
                     },
                     {
                         data: "book_qty",
-                        className: 'text-right',
+                        className: 'text-center',
                         render: function(data, type, row) {
                             var renderHtml =
-                                `<span class="font-size-sm font-w600 ${ row.book_qty === 0 ? 'text-danger' : 'text-dark'}"> ${row.book_qty} </span>`;
+                                `<span class="font-size-sm font-w600 ${ row.book_qty === 0 ? 'text-danger' : 'text-dark'}"> ${row.book_qty ?? 0}/${row.book_available ?? 0} </span>`;
                             return renderHtml;
                         }
                     },
-                    {
-                        data: "book_available",
-                        className: 'text-right',
-                        render: function(data, type, row) {
-                            var renderHtml =
-                                `<span class="font-size-sm font-w600 ${ row.book_available === 0 ? 'text-danger' : 'text-dark'}"> ${row.book_available} </span>`;
-                            return renderHtml;
-                        }
-                    },
+                    // {
+                    //     data: "book_available",
+                    //     className: 'text-right',
+                    //     render: function(data, type, row) {
+                    //         var renderHtml =
+                    //             `<span class="font-size-sm font-w600 ${ row.book_available === 0 ? 'text-danger' : 'text-dark'}"> ${row.book_available} </span>`;
+                    //         return renderHtml;
+                    //     }
+                    // },
                     {
                         data: "book_price",
                         className: 'text-right',
                         render: function(data, type, row) {
                             var bookPrice = parseFloat(row.book_price).toFixed(2);
                             var renderHtml =
-                                `<span class="text-success font-size-sm font-w600">₱${bookPrice}  
-                                </span>`;
+                                `<button type="button" class="btn btn-outline-success font-size-sm font-w600">₱${bookPrice}</button>`;
 
                             return renderHtml;
                         }
@@ -1004,7 +1000,7 @@
                     {
                         data: null,
                         orderable: false,
-                        className: 'text-right',
+                        className: 'text-center',
                         render: function(type, data, row) {
                             var renderHtml = ` <div class="btn-group">
                                                         <button type="button" class="btn btn-sm btn-alt-primary view_book" data-id="${row.id}" data-toggle="tooltip" title="View Book">
@@ -1026,7 +1022,7 @@
 
         function showError(message) {
             Swal.fire({
-                icon: 'error',
+                type: 'error',
                 title: 'Please fill all fields!',
                 text: message,
                 // showCancelButton: true,

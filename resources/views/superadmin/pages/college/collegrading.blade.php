@@ -44,6 +44,10 @@
                   height: 10px;
                   visibility: hidden;
             }
+            .py-special{
+                  padding-top: 0.15rem !important;
+                  padding-bottom: 0.15rem !important;
+            }
       </style>
       <style>
             .tableFixHead thead th {
@@ -128,15 +132,47 @@
                   </div>
                   <div class="modal-body pt-0" style="font-size:.9rem">
                        <div class="row">
-                              <div class="col-md-12">
-                                    <table class="table table-bordered table-sm" id="datatable_1">
+                              <div class="col-md-12" style="height: 500px!important; max-height: 500px!important; overflow-y: scroll; scrollbar-width: none; -ms-overflow-style: none;">
+                                    <table class="table table-bordered table-sm" style="font-size: 12px!important;" id="datatable_1">
                                           <thead>
                                                 <tr>
-                                                      <td width="70%">Student</td>
-                                                      <td width="30%"></td>
+                                                      <th width="30%">Section</th>
+                                                      <th width="70%">Student</td>
                                                 </tr>
                                           </thead>
                                           <tbody>
+
+                                          </tbody>
+                                    </table>
+                              </div>
+                       </div>
+                  </div>
+            </div>
+      </div>
+</div>   
+
+<div class="modal fade" id="modal_1_5" style="display: none;" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                  <div class="modal-header pb-2 pt-2 border-0">
+                        <h4 class="modal-title-1-5"></h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">×</span></button>
+                  </div>
+                  <div class="modal-body pt-0" style="font-size:.9rem">
+                       <div class="row">
+                              <div class="col-md-12" style="height: 500px!important; max-height: 500px!important; overflow-y: scroll; scrollbar-width: none; -ms-overflow-style: none;">
+                                    <table class="table table-bordered table-sm" style="font-size: 12px!important" id="new_datatable">
+                                          <thead>
+                                                <tr>
+                                                      <th width="15%">Section</th>
+                                                      <th width="30%">Subject</th>
+                                                      <th width="10%">Term Grade</th>
+                                                      <th width="10%">Remarks</th>
+                                                      <th width="35%">Action</th>
+                                                <tr>     
+                                          </thead>
+                                          <tbody id="data_1_5">
 
                                           </tbody>
                                     </table>
@@ -230,16 +266,14 @@
                   <div class="modal-body " style="font-size:.9rem">
                        <div class="row">
                               <div class="col-md-12">
-                                    <table class="table table-bordered table-sm" id="datatable_4">
+                                    <table class="table table-bordered table-sm" style="font-size: 12px!important" id="datatable_4">
                                           <thead>
                                                 <tr>
-                                                      <td width="80s%">Section</td>
-                                                      <td width="20%"></td>
+                                                      <th width="20%">Section</th>
+                                                      <th width="40%">Teacher</th>
+                                                      <th width="40%">Subject</th>
                                                 </tr>
                                           </thead>
-                                          <tbody>
-
-                                          </tbody>
                                     </table>
                               </div>
                        </div>
@@ -507,6 +541,23 @@
                                                                   @endforeach
                                                             </select>
                                                       </div>
+                                                      <div class="col-md-3 form-group mb-2" >
+                                                            <label for="">Course</label>
+                                                            <select class="form-control  select2" id="filter_course">
+                                                                  <option value="">Select Course</option>
+                                                                  @foreach ($courses as $item)
+                                                                        <option value="{{$item->id}}">{{$item->courseDesc}}</option>
+                                                                  @endforeach
+                                                            </select>
+                                                      </div>
+                                                      <div class="col-md-2 form-group mb-2" >
+                                                            <label for="">Academic Level</label>
+                                                            <select class="form-control  select2" id="filter_gradelevel">
+                                                                  {{-- @foreach ($semester as $item)
+                                                                        <option value="{{$item->id}}">{{$item->semester}}</option>
+                                                                  @endforeach --}}
+                                                            </select>
+                                                      </div>
                                                 </div>
                                           </div>
                                     </div>
@@ -563,6 +614,13 @@
                                                       <td width="10%" class="section_pending text-center" data-term="2" {{strtoupper($schoolinfo) == 'GBBC' ? 'hidden="hidden"' : ''}}></td>
                                                       <td width="10%" class="section_pending text-center" data-term="3" {{strtoupper($schoolinfo) == 'GBBC' ? 'hidden="hidden"' : ''}}></td>
                                                       <td width="10%" class="section_pending text-center" data-term="4"></td>
+                                                </tr>
+                                                <tr>
+                                                      <td width="60%">Posted</td>
+                                                      <td width="10%" class="section_posted text-center" data-term="1" {{strtoupper($schoolinfo) == 'GBBC' ? 'hidden="hidden"' : ''}}></td>
+                                                      <td width="10%" class="section_posted text-center" data-term="2" {{strtoupper($schoolinfo) == 'GBBC' ? 'hidden="hidden"' : ''}}></td>
+                                                      <td width="10%" class="section_posted text-center" data-term="3" {{strtoupper($schoolinfo) == 'GBBC' ? 'hidden="hidden"' : ''}}></td>
+                                                      <td width="10%" class="section_posted text-center" data-term="4"></td>
                                                 </tr>
                                                 <tr>
                                                       <td width="60%">INC</td>
@@ -624,6 +682,13 @@
                                                       <td width="10%" class="pending text-center" data-term="4"></td>
                                                 </tr>
                                                 <tr>
+                                                      <td width="60%">Posted</td>
+                                                      <td width="10%" class="posted text-center" data-term="1" {{strtoupper($schoolinfo) == 'GBBC' ? 'hidden="hidden"' : ''}}></td>
+                                                      <td width="10%" class="posted text-center" data-term="2" {{strtoupper($schoolinfo) == 'GBBC' ? 'hidden="hidden"' : ''}}></td>
+                                                      <td width="10%" class="posted text-center" data-term="3" {{strtoupper($schoolinfo) == 'GBBC' ? 'hidden="hidden"' : ''}}></td>
+                                                      <td width="10%" class="posted text-center" data-term="4"></td>
+                                                </tr>
+                                                <tr>
                                                       <td width="60%">INC</td>
                                                       <td width="10%" class="inc text-center" data-term="1" {{strtoupper($schoolinfo) == 'GBBC' ? 'hidden="hidden"' : ''}}></td>
                                                       <td width="10%" class="inc text-center" data-term="2" {{strtoupper($schoolinfo) == 'GBBC' ? 'hidden="hidden"' : ''}}></td>
@@ -650,24 +715,29 @@
                                     <div class="row">
                                           <div class="col-md-2">
                                                 <label for="">Grades Status (Subject)</label>
-                                                <select name="" class="form-control form-control-sm select2" id="filter_status_by_subject">
+                                                {{-- <select name="" class="form-control form-control-sm select2" id="filter_status_by_subject">
                                                       <option value="uns">Unsubmitted</option>
                                                       <option value="sub">Submitted</option>
                                                       <option value="app">Approved</option>
                                                       <option value="pen">Pending</option>
                                                       <option value="inc">INC</option>
                                                       <option value="drop">Dropped</option>
-                                                </select>
+                                                </select> --}}
                                           </div>
                                     </div>
                                     <div class="row">
                                           <div class="col-md-12">
-                                                <table class="table table-sm" id="datatable_7">
+                                                <table class="table table-sm table-bordered" id="datatable_7">
                                                       <thead>
                                                             <tr>
-                                                                  <th width="90%">Subject</th>
+                                                                  <th width="10%">Section</th>
+                                                                  <th width="25%">Teacher</th>
+                                                                  <th width="25%">Subject</th>
                                                                   {{-- <th width="10%">Course</th> --}}
-                                                                  <th width="10%"  class="text-center p-0 align-middle" >Students</th>
+                                                                  <th width="10%"  class="text-center p-0 align-middle" >Prelim</th>
+                                                                  <th width="10%"  class="text-center p-0 align-middle" >Midterm</th>
+                                                                  <th width="10%"  class="text-center p-0 align-middle" >Semi-Final</th>
+                                                                  <th width="10%"  class="text-center p-0 align-middle" >Final</th>
                                                                   {{-- <th width="10%" class="text-center p-0 align-middle" {{strtoupper($schoolinfo) == 'GBBC' ? 'hidden="hidden"' : ''}}>Prelim</th>
                                                                   <th width="10%" class="text-center p-0 align-middle" {{strtoupper($schoolinfo) == 'GBBC' ? 'hidden="hidden"' : ''}}>Midterm</th>
                                                                   <th width="10%" class="text-center p-0 align-middle" {{strtoupper($schoolinfo) == 'GBBC' ? 'hidden="hidden"' : ''}}>PreFinal</th>
@@ -685,6 +755,98 @@
             </div>
       </div>
 </section>
+
+<div class="modal fade" id="gradeStatusSubject" aria-hidden="true" data-backdrop="static" >
+      <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                  <div class="modal-header pb-2 pt-2 border-0 bg-secondary">
+                        <h6 class="modal-title  mb-0 gradeStatusSubject_title"></h6>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">×</span></button>
+                  </div>
+                  <div class="modal-body pt-3" >
+                        <div class="row" style="font-size:.7rem">
+                              <div class="col-md-2">
+                                    <label for="" class="mb-0 p-0"><i class="fa fa-book"></i> Teacher</label>
+                                    <p class="mb-0" id="teacherName"></p>
+                              </div>
+                              <div class="col-md-3">
+                                    <label for="" class="mb-0 p-0"><i class="fa fa-book"></i> Subject</label>
+                                    <p class="mb-0" id="subjectDesc"></p>
+                              </div>
+                              <div class="col-md-2">
+                                    <label for="" class="mb-0 p-0"><i class="fa fa-book"></i> Level</label>
+                                    <p class="mb-0" id="levelName"></p>
+                              </div>
+                              <div class="col-md-3">
+                                    <label for="" class="mb-0 p-0"><i class="fa fa-book"></i> Section</label>
+                                    <p class="mb-0" id="sectionName"></p>
+                              </div>
+                              <div class="col-md-2">
+                                    <label for="" class="mb-0 p-0"><i class="fa fa-book"></i> Grade Status</label>
+                                    <br>
+                                    <p class="mb-0" id="gradeStatus"></p>
+                              </div>
+                        </div>
+                        <div class="row mt-5">
+                              <div class="col-md-3">
+                                    <select class="form-control form-control-sm select2" id="select_term" width="">
+                                          <option value="">Select Term</option>
+                                          <option value="Prelim">Prelim</option>
+                                          <option value="Midterm">Midterm</option>
+                                          <option value="Pre-Final">Pre-Finals</option>
+                                          <option value="Final">Finals</option>
+                                    </select>
+                              </div>
+                              <div class="col-md-3"></div>
+                              <div class="col-md-6 row">
+                                    <div class="col-md-3 text-center">
+                                          <button class="btn btn-sm btn-primary w-100 py-special subject_status_button" id="subject_approve_button" data-id="2">Approve</button>
+                                    </div>
+                                    <div class="col-md-3 text-center">
+                                          <button class="btn btn-sm btn-info w-100 py-special subject_status_button" id="subject_post_button" data-id="5">Post</button>
+                                    </div>
+                                    <div class="col-md-3 text-center">
+                                          <button class="btn btn-sm btn-warning w-100 py-special subject_status_button" id="subject_pending_button" data-id="6">Pending</button>
+                                    </div>
+                                    <div class="col-md-3 text-center">
+                                          <button class="btn btn-sm btn-danger w-100 py-special subject_status_button" id="subject_unpost_button" data-id="2">Unpost</button>
+                                    </div>
+                              </div>
+                        </div>
+                        <div id="ecr_table_container" class="table-responsive">
+                              
+                        </div>
+                        <div class="row mt-3" style="font-size:.7rem">
+                              <div class="col-md-3"></div>
+                              <div class="col-md-3">
+                                    <label for="" class="mb-0 p-0"><i class="fa fa-book"></i> Number of Students Enrolled</label>
+                                    <div>Male: <span id="maleCount" class="font-weight-bold"></span></div>
+                                    <div>Female: <span id="femaleCount"  class="font-weight-bold"></span></div>
+                                    <div>Total: <span id="totalCount"  class="font-weight-bold"></span></div>
+                              </div>
+                              <div class="col-md-3">
+                                    <label for="" class="mb-0 p-0"><i class="fa fa-book"></i> Grade Remarks</label>
+                                    <div>Passed: <span id="passedCount"  class="font-weight-bold">0</span></div>
+                                    <div>Failed: <span id="failedCount"  class="font-weight-bold">0</span></div>
+                              </div>
+                              <div class="col-md-3">
+                                    <label for="" class="mb-0 p-0"><i class="fa fa-book"></i> Grade Status</label>
+                                    <div class="row">
+                                          <div class="col-md-6">Not Submitted: <span id="notSubmittedCount"  class="font-weight-bold">0</span></div>
+                                          <div class="col-md-6">Pending: <span id="pendingCount"  class="font-weight-bold">0</span></div>
+                                    </div>
+                                    <div class="row">
+                                          <div class="col-md-6">Submitted: <span id="submittedCount"  class="font-weight-bold">0</span></div>
+                                          <div class="col-md-6">Posted: <span id="postedCount"  class="font-weight-bold">0</span></div>
+                                    </div>
+                                    <div>Approved: <span id="approvedCount"  class="font-weight-bold">0</span></div>
+                              </div>
+                        </div>
+                  </div>
+            </div>
+      </div>
+</div>   
 
 @endsection
 
@@ -707,6 +869,16 @@
                   });
                   
                   $('.select2').select2()
+
+                  $('#filter_course').select2({
+                        placeholder: 'Select Course',
+                        allowClear: true
+                  })
+
+                  $('#filter_gradelevel').select2({
+                        placeholder: 'Select Grade Level',
+                        allowClear: true
+                  })
 
                   const Toast = Swal.mixin({
                         toast: true,
@@ -890,6 +1062,7 @@
                                     })
                               }
                         })
+                        grade_status()
                   }
 
                   function update_data(term){
@@ -1017,39 +1190,86 @@
                         var data = []
                         if(term == 1){
                               if(status == 1){ data = sub_stud_1 }
-                              else if(status == 7){ data = app_stud_1 }
-                              else if(status == 3){ data = pen_stud_1 }
+                              else if(status == 2){ data = app_stud_1 }
+                              else if(status == 6){ data = pen_stud_1 }
                               else if(status == 0){ data = uns_stud_1 }
-                              else if(status == 8){ data = inc_stud_1 }
-                              else if(status == 9){ data = drop_stud_1 }
+                              else if(status == 7){ data = inc_stud_1 }
+                              else if(status == 8){ data = drop_stud_1 }
                               else{ data = uns_stud_1 }
                         }else if(term == 2){
                               if(status == 1){ data = sub_stud_2 }
-                              else if(status == 7){ data = app_stud_2 }
-                              else if(status == 3){ data = pen_stud_2 }
+                              else if(status == 2){ data = app_stud_2 }
+                              else if(status == 6){ data = pen_stud_2 }
                               else if(status == 0){ data = uns_stud_2 }
-                              else if(status == 8){ data = inc_stud_2 }
-                              else if(status == 9){ data = drop_stud_2 }
+                              else if(status == 7){ data = inc_stud_2 }
+                              else if(status == 8){ data = drop_stud_2 }
                               else{ data = uns_stud_2 }
                         }else if(term == 3){
                               if(status == 1){ data = sub_stud_3 }
-                              else if(status == 7){ data = app_stud_3 }
-                              else if(status == 3){ data = pen_stud_3 }
+                              else if(status == 2){ data = app_stud_3 }
+                              else if(status == 6){ data = pen_stud_3 }
                               else if(status == 0){ data = uns_stud_3 }
-                              else if(status == 8){ data = inc_stud_3 }
-                              else if(status == 9){ data = drop_stud_3 }
+                              else if(status == 7){ data = inc_stud_3 }
+                              else if(status == 8){ data = drop_stud_3 }
                               else{ data = uns_stud_3 }
                         }else if(term == 4){
                               if(status == 1){ data = sub_stud_4 }
-                              else if(status == 7){ data = app_stud_4 }
-                              else if(status == 3){ data = pen_stud_4 }
+                              else if(status == 2){ data = app_stud_4 }
+                              else if(status == 6){ data = pen_stud_4 }
                               else if(status == 0){ data = uns_stud_4 }
-                              else if(status == 8){ data = inc_stud_4 }
-                              else if(status == 9){ data = drop_stud_4 }
+                              else if(status == 7){ data = inc_stud_4 }
+                              else if(status == 8){ data = drop_stud_4 }
                               else{ data = uns_stud_4 }
                         }
                         return data;
 
+                  }
+                  get_gradelvl()
+                  function get_gradelvl() {
+
+                        $('#no_acad_holder').attr('hidden', 'hidden')
+
+                        $.ajax({
+                              type: 'GET',
+                              url: '/student/preregistration/getgradelevel',
+                              data: {
+                                    syid: $('#filter_sy').val()
+                              },
+                              success: function(data) {
+                                    if (data.length > 0) {
+                                          gradelevel = data
+                                          $("#filter_gradelevel").empty();
+                                          $('#filter_gradelevel').append('<option value="">All</option>')
+                                          $("#filter_gradelevel").select2({
+                                          data: gradelevel,
+                                          allowClear: true,
+                                          placeholder: "All",
+                                          dropdownCssClass: "myFont"
+                                          })
+                                    } else {
+                                          $("#filter_gradelevel").empty();
+                                          $("#filter_gradelevel").empty();
+                                          $('#filter_gradelevel').append('<option value="">All</option>')
+                                          $("#filter_gradelevel").select2({
+                                          data: [],
+                                          allowClear: true,
+                                          placeholder: "All",
+                                          dropdownCssClass: "myFont"
+                                          })
+                                          $('#no_acad_holder').removeAttr('hidden')
+                                          Toast.fire({
+                                          type: 'error',
+                                          title: 'No academic program assigned'
+                                          })
+                                    }
+                              },
+                              error: function() {
+                                    Toast.fire({
+                                          type: 'error',
+                                          title: 'Something went wrong!'
+                                    })
+                              }
+                        })
                   }
 
                   get_enrolled()
@@ -1061,9 +1281,12 @@
                               data:{
                                     syid:$('#filter_sy').val(),
                                     semid:$('#filter_semester').val(),
+                                    courseid : $('#filter_course').val(),
+                                    gradelevel : $('#filter_gradelevel').val()
                               },
                               success:function(data) {
                                     students = data
+                                    
                                     get_sections()
                                     $('#p_status').text('Fetching enrolled students.')
                               },error:function(){
@@ -1083,6 +1306,8 @@
                               data:{
                                     syid:$('#filter_sy').val(),
                                     semid:$('#filter_semester').val(),
+                                    courseid : $('#filter_course').val(),
+                                    gradelevel : $('#filter_gradelevel').val()
                               },
                               success:function(data) {
                                     all_sections = data[0].sections
@@ -1130,9 +1355,12 @@
                               data:{
                                     syid:$('#filter_sy').val(),
                                     semid:$('#filter_semester').val(),
+                                    courseid : $('#filter_course').val(),
+                                    gradelevel : $('#filter_gradelevel').val()
                               },
                               success:function(data) {
                                     subjects = data
+                                    
                                     $('#p_status').text('Fetching course subjects.')
                                     get_studentsgrade()
                               },error:function(){
@@ -1145,11 +1373,39 @@
                         })
 
                   }
+                  
+                  $(document).on('change','#filter_course',function(){
+                        grade_status()
+                        get_enrolled()
+                  })
+
+                  $(document).on('change','#filter_gradelevel',function(){
+                        grade_status()
+                        get_enrolled()
+                  })
+
+                  $(document).on('change','#filter_sy',function(){
+                        grade_status()
+                        get_enrolled()
+                  })
+                  $(document).on('change','#filter_semester',function(){
+                        grade_status()
+                        get_enrolled()
+                  })
 
                   function get_studentsgrade(){
-
-                        var temp_courses = @json($courses);
-                        var count = 0
+                        var filtered_course = $('#filter_course').val()
+                        grade = []
+                        
+                        if(filtered_course == ''){
+                              var temp_courses = @json($courses);
+                              var count = 0
+                        }else{
+                              var temp_courses =[]
+                              var count = 0
+                              temp_courses.push({id:filtered_course})
+                        }
+                       
 
                         $.each(temp_courses,function(a,b){
                               $.ajax({
@@ -1158,18 +1414,23 @@
                                     data:{
                                           syid:$('#filter_sy').val(),
                                           semid:$('#filter_semester').val(),
-                                          courseid:b.id
+                                          courseid:$('#filter_course').val(),
+                                          gradelevel : $('#filter_gradelevel').val(),
                                     },
                                     success:function(data) {
-                                       
+                                          grade = []
+
                                           $.each(data,function(c,d){
+                                                
                                                 var check = students.filter(x=>x.studid == d.studid)
+                                                
+
                                                 if(check.length > 0){
                                                       grade.push(d)
                                                 }
                                           })
                                           count += 1
-
+                                          
                                           $('#p_status').text('Fetching grades ('+count+'/'+temp_courses.length+').')
 
                                           if(temp_courses.length == count){
@@ -1177,6 +1438,7 @@
                                                 get_data()
                                                 
                                           }
+
                                     },error:function(){
                                           Toast.fire({
                                                 type: 'error',
@@ -1194,8 +1456,16 @@
 
                   function get_data(){
 
-                        var temp_courses = @json($courses);
-                        var count = 0
+                         var filtered_course = $('#filter_course').val()
+                        
+                        if(filtered_course == ''){
+                              var temp_courses = @json($courses);
+                              var count = 0
+                        }else{
+                              var temp_courses =[]
+                              var count = 0
+                              temp_courses.push({id:filtered_course})
+                        }
 
                         $.each(temp_courses,function(a,b){
 
@@ -1207,10 +1477,10 @@
                                     data:{
                                           syid:$('#filter_sy').val(),
                                           semid:$('#filter_semester').val(),
-                                          courseid:b.id
+                                          courseid: $('#filter_course').val(),
+                                          gradelevel: $('#filter_gradelevel').val(),
                                     },
                                     success:function(data) {
-                                   
                                           $.each(data,function(c,d){
                                                 var check = students.filter(x=>x.studid == d.studid)
                                                 if(check.length > 0){
@@ -1224,6 +1494,7 @@
                                                 last = true
                                           }
                                           generate_record(all_sections,all_section_sched,data,last)
+
                                           
                                     },error:function(){
                                           Toast.fire({
@@ -1300,9 +1571,54 @@
                   var inc_stud_3 = []
                   var inc_stud_4 = []
 
+                  var pos_sec_1 = []
+                  var pos_sec_2 = []
+                  var pos_sec_3 = []
+                  var pos_sec_4 = []
+
+
+                  var pos_stud_1 = []
+                  var pos_stud_2 = []
+                  var pos_stud_3 = []
+                  var pos_stud_4 = []
+
                   
 
                   function generate_record(section, sectionsched,studsched,last = false){
+                        sub_sec_1 = []
+                        sub_sec_2 = []
+                        sub_sec_3 = []
+                        sub_sec_4 = []
+
+                        app_sec_1 = []
+                        app_sec_2 = []
+                        app_sec_3 = [] 
+                        app_sec_4 = []
+
+                        pen_sec_1 = []
+                        pen_sec_2 = []
+                        pen_sec_3 = []
+                        pen_sec_4 = []
+
+                        uns_sec_1 = []
+                        uns_sec_2 = []
+                        uns_sec_3 = []
+                        uns_sec_4 = []
+
+                        inc_sec_1 = []
+                        inc_sec_2 = []
+                        inc_sec_3 = []
+                        inc_sec_4 = []
+                        
+                        drop_sec_1 = []
+                        drop_sec_2 = []
+                        drop_sec_3 = []
+                        drop_sec_4 = []
+
+                        pos_sec_1 = []
+                        pos_sec_2 = []
+                        pos_sec_3 = []
+                        pos_sec_4 = []
 
                         uns_stud_1 = []
                         uns_stud_2 = []
@@ -1334,24 +1650,32 @@
                         drop_stud_3 = []
                         drop_stud_4 = []
 
+                        pos_stud_1 = []
+                        pos_stud_2 = []
+                        pos_stud_3 = []
+                        pos_stud_4 = []
+
                         $.each(section,function(a,b){
                               var temp_all_section_sched = sectionsched.filter(x=>x.sectionID == b.id)
                               $.each(temp_all_section_sched,function(c,d){
                                     var temp_stud_schd = studsched.filter(x=>x.schedid == d.id)
                                     $.each(temp_stud_schd,function(e,f){
-                                          var stud_grade = grade.filter(x=>x.prospectusID == f.subjectID && x.studid == f.studid).length
+                                          var stud_grade = grade.filter(x=>x.subjid == f.subjid && x.studid == f.studid).length
+                                          // console.log(temp_stud_schd,'temp_stud_schd');
+                                          // console.log(stud_grade,'stud_grade');
+                                          
                                           if(stud_grade == 0){
                                                 grade.push({
                                                       subjid:f.subjid,
-                                                      finalgrade: null,
-                                                      finalstatus: null,
+                                                      final_grade: null,
+                                                      final_status: null,
                                                       id: null,
-                                                      midtermgrade: null,
-                                                      midtermstatus: null,
-                                                      prefigrade: null,
-                                                      prefistatus: null,
-                                                      prelemgrade: null,
-                                                      prelemstatus: null,
+                                                      midterm_grade: null,
+                                                      midterm_status: null,
+                                                      prefinal_grade: null,
+                                                      prefinal_status: null,
+                                                      prelim_grade: null,
+                                                      prelim_status: null,
                                                       prospectusID: f.subjectID,
                                                       sectionID: b.id,
                                                       studid: f.studid,
@@ -1361,127 +1685,149 @@
                               })
                         })
 
-                        $.each(section,function(a,b){
+                        // console.log(section,'section');
 
+                        $.each(section,function(a,b){
                               var ws1, ws2, ws3, ws4 = false
                               var wa1, wa2, wa3, wa4 = false
                               var wp1, wp2, wp3, wp4 = false
                               var wu1, wu2, wu3, wu4 = false
                               var wi1, wi2, wi3, wi4 = false
                               var wd1, wd2, wd3, wd4 = false
+                              var wpo1, wpo2, wpo3, wpo4 = false
 
                               var temp_sched = sectionsched.filter(x=>x.sectionID  == b.id)
-
+                              // console.log(temp_sched,'temp_sched');
                               $.each(temp_sched,function(c,d){
 
-                                    var temp_grade = grade.filter(x=>x.prospectusID == d.subjectID && x.sectionID == b.id)
-
+                                    var temp_grade = grade.filter(x=>x.subjid == d.subjectID && x.sectionID == b.id)
+                                    // console.log(temp_grade,'temp_grade');
+                                    // console.log(grade,'grade');
+                                    
+                                    
                                     //submitted
-                                    if(temp_grade.filter(x=>x.prelemstatus == 1).length > 0){ 
+                                    if(temp_grade.filter(x=>x.prelim_status == 1).length > 0){ 
                                           ws1 = true; 
-                                          $.each(temp_grade.filter(x=>x.prelemstatus == 1),function(e,f){ sub_stud_1.push(f); })
+                                          $.each(temp_grade.filter(x=>x.prelim_status == 1),function(e,f){ sub_stud_1.push(f); })
                                     }
-                                    if(temp_grade.filter(x=>x.midtermstatus == 1).length > 0){ 
+                                    if(temp_grade.filter(x=>x.midterm_status == 1).length > 0){ 
                                           ws2 = true;
-                                          $.each(temp_grade.filter(x=>x.midtermstatus == 1),function(e,f){ sub_stud_2.push(f); })
+                                          $.each(temp_grade.filter(x=>x.midterm_status == 1),function(e,f){ sub_stud_2.push(f); })
                                     }
-                                    if(temp_grade.filter(x=>x.prefistatus == 1).length > 0){ 
+                                    if(temp_grade.filter(x=>x.prefinal_status == 1).length > 0){ 
                                           ws3 = true;
-                                          $.each(temp_grade.filter(x=>x.prefistatus == 1),function(e,f){ sub_stud_3.push(f); })
+                                          $.each(temp_grade.filter(x=>x.prefinal_status == 1),function(e,f){ sub_stud_3.push(f); })
                                     }
-                                    if(temp_grade.filter(x=>x.finalstatus == 1).length > 0){ 
+                                    if(temp_grade.filter(x=>x.final_status == 1).length > 0){ 
                                           ws4 = true; 
-                                          $.each(temp_grade.filter(x=>x.finalstatus == 1),function(e,f){ sub_stud_4.push(f); })
+                                          $.each(temp_grade.filter(x=>x.final_status == 1),function(e,f){ sub_stud_4.push(f); })
                                     }
 
                                     //approved
-                                    if(temp_grade.filter(x=>x.prelemstatus == 7).length > 0){ 
+                                    if(temp_grade.filter(x=>x.prelim_status == 2).length > 0){ 
                                           wa1 = true; 
-                                          $.each(temp_grade.filter(x=>x.prelemstatus == 7),function(e,f){ app_stud_1.push(f); })
+                                          $.each(temp_grade.filter(x=>x.prelim_status == 2),function(e,f){ app_stud_1.push(f); })
                                     }
-                                    if(temp_grade.filter(x=>x.midtermstatus == 7).length > 0){ 
+                                    if(temp_grade.filter(x=>x.midterm_status == 2).length > 0){ 
                                           wa2 = true;
-                                          $.each(temp_grade.filter(x=>x.midtermstatus == 7),function(e,f){ app_stud_2.push(f); })
+                                          $.each(temp_grade.filter(x=>x.midterm_status == 2),function(e,f){ app_stud_2.push(f); })
                                     }
-                                    if(temp_grade.filter(x=>x.prefistatus == 7).length > 0){ 
+                                    if(temp_grade.filter(x=>x.prefinal_status == 2).length > 0){ 
                                           wa3 = true;
-                                          $.each(temp_grade.filter(x=>x.prefistatus == 7),function(e,f){ app_stud_3.push(f); })
+                                          $.each(temp_grade.filter(x=>x.prefinal_status == 2),function(e,f){ app_stud_3.push(f); })
                                     }
-                                    if(temp_grade.filter(x=>x.finalstatus == 7).length > 0){ 
+                                    if(temp_grade.filter(x=>x.final_status == 2).length > 0){ 
                                           wa4 = true; 
-                                          $.each(temp_grade.filter(x=>x.finalstatus == 7),function(e,f){ app_stud_4.push(f); })
+                                          $.each(temp_grade.filter(x=>x.final_status == 2),function(e,f){ app_stud_4.push(f); })
                                     }
 
                                     //pending
-                                    if(temp_grade.filter(x=>x.prelemstatus == 3).length > 0){ 
+                                    if(temp_grade.filter(x=>x.prelim_status == 6).length > 0){ 
                                           wp1 = true; 
-                                          $.each(temp_grade.filter(x=>x.prelemstatus == 3),function(e,f){ pen_stud_1.push(f); })
+                                          $.each(temp_grade.filter(x=>x.prelim_status == 6),function(e,f){ pen_stud_1.push(f); })
                                     }
-                                    if(temp_grade.filter(x=>x.midtermstatus == 3).length > 0){ 
+                                    if(temp_grade.filter(x=>x.midterm_status == 6).length > 0){ 
                                           wp2 = true;
-                                          $.each(temp_grade.filter(x=>x.midtermstatus == 3),function(e,f){ pen_stud_2.push(f); })
+                                          $.each(temp_grade.filter(x=>x.midterm_status == 6),function(e,f){ pen_stud_2.push(f); })
                                     }
-                                    if(temp_grade.filter(x=>x.prefistatus == 3).length > 0){ 
+                                    if(temp_grade.filter(x=>x.prefinal_status == 6).length > 0){ 
                                           wp3 = true;
-                                          $.each(temp_grade.filter(x=>x.prefistatus == 3),function(e,f){ pen_stud_3.push(f); })
+                                          $.each(temp_grade.filter(x=>x.prefinal_status == 6),function(e,f){ pen_stud_3.push(f); })
                                     }
-                                    if(temp_grade.filter(x=>x.finalstatus == 3).length > 0){ 
+                                    if(temp_grade.filter(x=>x.final_status == 6).length > 0){ 
                                           wp4 = true; 
-                                          $.each(temp_grade.filter(x=>x.finalstatus == 3),function(e,f){ pen_stud_4.push(f); })
+                                          $.each(temp_grade.filter(x=>x.final_status == 6),function(e,f){ pen_stud_4.push(f); })
                                     }
 
                                     //unsubmitted
-                                    if(temp_grade.filter(x=>x.prelemstatus == null).length > 0){ 
+                                    if(temp_grade.filter(x=>x.prelim_status == 0 || x.prelim_status == null ).length > 0){ 
                                           wu1 = true; 
-                                          $.each(temp_grade.filter(x=>x.prelemstatus == null),function(e,f){ uns_stud_1.push(f); })
+                                          $.each(temp_grade.filter(x=>x.prelim_status == 0 || x.prelim_status == null),function(e,f){ uns_stud_1.push(f); })
                                     }
-                                    if(temp_grade.filter(x=>x.midtermstatus == null).length > 0){ 
+                                    if(temp_grade.filter(x=>x.midterm_status == 0 || x.midterm_status == null).length > 0){ 
                                           wu2 = true;
-                                          $.each(temp_grade.filter(x=>x.midtermstatus == null),function(e,f){ uns_stud_2.push(f); })
+                                          $.each(temp_grade.filter(x=>x.midterm_status == 0 || x.midterm_status == null),function(e,f){ uns_stud_2.push(f); })
                                     }
-                                    if(temp_grade.filter(x=>x.prefistatus == null).length > 0){ 
+                                    if(temp_grade.filter(x=>x.prefinal_status == 0 || x.prefinal_status == null).length > 0){ 
                                           wu3 = true;
-                                          $.each(temp_grade.filter(x=>x.prefistatus == null),function(e,f){ uns_stud_3.push(f); })
+                                          $.each(temp_grade.filter(x=>x.prefinal_status == 0 || x.prefinal_status == null),function(e,f){ uns_stud_3.push(f); })
                                     }
-                                    if(temp_grade.filter(x=>x.finalstatus == null).length > 0){ 
+                                    if(temp_grade.filter(x=>x.final_status == 0 || x.final_status == null).length > 0){ 
                                           wu4 = true; 
-                                          $.each(temp_grade.filter(x=>x.finalstatus == null),function(e,f){ uns_stud_4.push(f); })
+                                          $.each(temp_grade.filter(x=>x.final_status == 0 || x.final_status == null),function(e,f){ uns_stud_4.push(f); })
                                     }
 
                                     //inc
-                                    if(temp_grade.filter(x=>x.prelemstatus == 8).length > 0){ 
+                                    if(temp_grade.filter(x=>x.prelim_status == 7).length > 0){ 
                                           wi1 = true; 
-                                          $.each(temp_grade.filter(x=>x.prelemstatus == 8),function(e,f){ inc_stud_1.push(f); })
+                                          $.each(temp_grade.filter(x=>x.prelim_status == 7),function(e,f){ inc_stud_1.push(f); })
                                     }
-                                    if(temp_grade.filter(x=>x.midtermstatus == 8).length > 0){ 
+                                    if(temp_grade.filter(x=>x.midterm_status == 7).length > 0){ 
                                           wi2 = true;
-                                          $.each(temp_grade.filter(x=>x.midtermstatus == 8),function(e,f){ inc_stud_2.push(f); })
+                                          $.each(temp_grade.filter(x=>x.midterm_status == 7),function(e,f){ inc_stud_2.push(f); })
                                     }
-                                    if(temp_grade.filter(x=>x.prefistatus == 8).length > 0){ 
+                                    if(temp_grade.filter(x=>x.prefinal_status == 7).length > 0){ 
                                           wi3 = true;
-                                          $.each(temp_grade.filter(x=>x.prefistatus == 8),function(e,f){ inc_stud_3.push(f); })
+                                          $.each(temp_grade.filter(x=>x.prefinal_status == 7),function(e,f){ inc_stud_3.push(f); })
                                     }
-                                    if(temp_grade.filter(x=>x.finalstatus == 8).length > 0){ 
+                                    if(temp_grade.filter(x=>x.final_status == 7).length > 0){ 
                                           wi4 = true; 
-                                          $.each(temp_grade.filter(x=>x.finalstatus == 8),function(e,f){ inc_stud_4.push(f); })
+                                          $.each(temp_grade.filter(x=>x.final_status == 7),function(e,f){ inc_stud_4.push(f); })
                                     }
 
                                     //drop
-                                    if(temp_grade.filter(x=>x.prelemstatus == 9).length > 0){ 
+                                    if(temp_grade.filter(x=>x.prelim_status == 8).length > 0){ 
                                           wd1 = true; 
-                                          $.each(temp_grade.filter(x=>x.prelemstatus == 9),function(e,f){ drop_stud_1.push(f); })
+                                          $.each(temp_grade.filter(x=>x.prelim_status == 8),function(e,f){ drop_stud_1.push(f); })
                                     }
-                                    if(temp_grade.filter(x=>x.midtermstatus == 9).length > 0){ 
+                                    if(temp_grade.filter(x=>x.midterm_status == 8).length > 0){ 
                                           wd2 = true;
-                                          $.each(temp_grade.filter(x=>x.midtermstatus == 9),function(e,f){ drop_stud_2.push(f); })
+                                          $.each(temp_grade.filter(x=>x.midterm_status == 8),function(e,f){ drop_stud_2.push(f); })
                                     }
-                                    if(temp_grade.filter(x=>x.prefistatus == 9).length > 0){ 
+                                    if(temp_grade.filter(x=>x.prefinal_status == 8).length > 0){ 
                                           wd3 = true;
-                                          $.each(temp_grade.filter(x=>x.prefistatus == 9),function(e,f){ drop_stud_3.push(f); })
+                                          $.each(temp_grade.filter(x=>x.prefinal_status == 8),function(e,f){ drop_stud_3.push(f); })
                                     }
-                                    if(temp_grade.filter(x=>x.finalstatus == 9).length > 0){ 
+                                    if(temp_grade.filter(x=>x.final_status == 8).length > 0){ 
                                           wd4 = true; 
-                                          $.each(temp_grade.filter(x=>x.finalstatus == 9),function(e,f){ drop_stud_4.push(f); })
+                                          $.each(temp_grade.filter(x=>x.final_status == 8),function(e,f){ drop_stud_4.push(f); })
+                                    }
+                                    //posted
+                                    if(temp_grade.filter(x=>x.prelim_status == 5).length > 0){ 
+                                          wpo1 = true; 
+                                          $.each(temp_grade.filter(x=>x.prelim_status == 5),function(e,f){ pos_stud_1.push(f); })
+                                    }
+                                    if(temp_grade.filter(x=>x.midterm_status == 5).length > 0){ 
+                                          wpo2 = true;
+                                          $.each(temp_grade.filter(x=>x.midterm_status == 5),function(e,f){ pos_stud_2.push(f); })
+                                    }
+                                    if(temp_grade.filter(x=>x.prefinal_status == 5).length > 0){ 
+                                          wpo3 = true;
+                                          $.each(temp_grade.filter(x=>x.prefinal_status == 5),function(e,f){ pos_stud_3.push(f); })
+                                    }
+                                    if(temp_grade.filter(x=>x.final_status == 5).length > 0){ 
+                                          wpo4 = true; 
+                                          $.each(temp_grade.filter(x=>x.final_status == 5),function(e,f){ pos_stud_4.push(f); })
                                     }
 
                                     //unsubmitted
@@ -1530,6 +1876,13 @@
                               if(wd3){ drop_sec_3.push(b) }
                               if(wd4){ drop_sec_4.push(b) }
 
+                              if(wpo1){ pos_sec_1.push(b) }
+                              if(wpo2){ pos_sec_2.push(b) }
+                              if(wpo3){ pos_sec_3.push(b) }
+                              if(wpo4){ pos_sec_4.push(b) }
+                              
+                              
+
                         })
 
 
@@ -1539,7 +1892,7 @@
                         update_list_display()
                         if(last){
                               $('#p_status').text('Complete')
-                              generate_by_subject()
+                              // generate_by_subject()
                         }
 
                   }
@@ -1628,7 +1981,16 @@
                                           gradelevel = 4
                                     }else if(b.levelid == 21){
                                           gradelevel = 5
+                                    }else if(b.levelid == 22){
+                                          gradelevel = 1
+                                    }else if(b.levelid == 23){
+                                          gradelevel = 2
+                                    }else if(b.levelid == 24){
+                                          gradelevel = 3
+                                    }else if(b.levelid == 25){
+                                          gradelevel = 4
                                     }
+                                    
 
                                     if(school == 'apmc'.toUpperCase()){
                                           $('#student_list_grades').append('<tr><td class="text-center">'+count+'</td><td>'+b.student+'</td><td data-studid="'+b.studid+'" data-course="'+b.courseid+'" data-pid="'+pid+'" data-section="'+sectionid+'" class="grade_td" data-term="prelemgrade" '+q1hidden+'></td><td data-studid="'+b.studid+'" data-course="'+b.courseid+'" data-pid="'+pid+'" data-section="'+sectionid+'" class="grade_td" data-term="midtermgrade" '+q1hidden+'></td><td data-studid="'+b.studid+'" data-course="'+b.courseid+'" data-pid="'+pid+'" data-section="'+sectionid+'" class="grade_td" data-term="prefigrade" '+q2hidden+'></td><td data-studid="'+b.studid+'" data-course="'+b.courseid+'" data-pid="'+pid+'" data-section="'+sectionid+'" class="grade_td" data-term="finalgrade" '+q3hidden+'></td><th class="text-center align-middle" data-studid="'+b.studid+'" data-course="'+b.courseid+'" data-pid="'+pid+'" data-section="'+sectionid+'" data-term="fg" '+q1hidden+'></th><th class="text-center align-middle" data-studid="'+b.studid+'" data-course="'+b.courseid+'" data-pid="'+pid+'" data-section="'+sectionid+'" data-term="remarks" '+q1hidden+'></th></tr>')
@@ -1780,153 +2142,7 @@
                         })
                   }
 
-                  function plot_subject_grades(data){
-
-                        $.each(data,function(a,b){
-                                                
-                              var q1status = 'input_grades'
-                              var q2status = 'input_grades'
-                              var q3status = 'input_grades'
-                              var q4status = 'input_grades'
-
-                              if(school == 'spct'.toUpperCase()){
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="prelemgrade"]').text(b.prelemgrade != null ? parseFloat(b.prelemgrade).toFixed() : '')
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="midtermgrade"]').text(b.midtermgrade != null ? parseFloat(b.midtermgrade).toFixed() : '')
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="prefigrade"]').text(b.prefigrade != null ? parseFloat(b.prefigrade).toFixed() : '')
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="finalgrade"]').text(b.finalgrade != null ? parseFloat(b.finalgrade).toFixed() : '')
-                              }else{
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="prelemgrade"]').text(b.prelemgrade != null ? parseFloat(b.prelemgrade).toFixed(2) : '')
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="midtermgrade"]').text(b.midtermgrade != null ? parseFloat(b.midtermgrade).toFixed(2) : '')
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="prefigrade"]').text(b.prefigrade != null ? parseFloat(b.prefigrade).toFixed(2) : '')
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="finalgrade"]').text(b.finalgrade != null ? parseFloat(b.finalgrade).toFixed(2) : '')
-                              }
-
-                              $('.input_grades[data-studid="'+b.studid+'"][data-term="prelemgrade"]').attr('data-id',b.id)
-                              $('.input_grades[data-studid="'+b.studid+'"][data-term="midtermgrade"]').attr('data-id',b.id)
-                              $('.input_grades[data-studid="'+b.studid+'"][data-term="prefigrade"]').attr('data-id',b.id)
-                              $('.input_grades[data-studid="'+b.studid+'"][data-term="finalgrade"]').attr('data-id',b.id)
-
-                              $('.input_grades[data-studid="'+b.studid+'"][data-term="prelemgrade"]').attr('data-status',b.prelemstatus)
-                              $('.input_grades[data-studid="'+b.studid+'"][data-term="midtermgrade"]').attr('data-status',b.midtermstatus)
-                              $('.input_grades[data-studid="'+b.studid+'"][data-term="prefigrade"]').attr('data-status',b.prefistatus)
-                              $('.input_grades[data-studid="'+b.studid+'"][data-term="finalgrade"]').attr('data-status',b.finalstatus)
-
-                              if(b.prelemstatus == 1){
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="prelemgrade"]').addClass('bg-success')
-                              }else if(b.prelemstatus == 3){
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="prelemgrade"]').addClass('bg-warning')
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="prelemgrade"]').text("")
-                              }else if(b.prelemstatus == 7){
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="prelemgrade"]').addClass('bg-primary')
-                              }else if(b.prelemstatus == 9){
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="prelemgrade"]').addClass('bg-danger')
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="prelemgrade"]').text('DROPPED')
-                              }else if(b.prelemstatus == 8){
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="prelemgrade"]').addClass('bg-warning')
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="prelemgrade"]').text('INC')
-                              }else{
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="prelemgrade"]').removeAttr('class')
-                                    $('td[data-studid="'+b.studid+'"][data-term="prelemgrade"]').addClass('grade_td text-center align-middle input_grades')
-                              }
-
-                              if(b.midtermstatus == 1){
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="midtermgrade"]').addClass('bg-success')
-                              }else if(b.midtermstatus == 3){
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="midtermgrade"]').addClass('bg-warning')
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="midtermgrade"]').text("")
-                              }else if(b.midtermstatus == 7){
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="midtermgrade"]').addClass('bg-primary')
-                              }else if(b.midtermstatus == 9){
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="midtermgrade"]').addClass('bg-danger')
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="midtermgrade"]').text('DROPPED')
-                              }else if(b.midtermstatus == 8){
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="midtermgrade"]').addClass('bg-warning')
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="midtermgrade"]').text('INC')
-                              }else{
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="midtermgrade"]').removeAttr('class')
-                                    $('td[data-studid="'+b.studid+'"][data-term="midtermgrade"]').addClass('grade_td text-center align-middle input_grades')
-                              }
-
-                              if(b.prefistatus == 1){
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="prefigrade"]').addClass('bg-success')
-                              }else if(b.prefistatus == 3){
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="prefigrade"]').addClass('bg-warning')
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="prefigrade"]').text("")
-                              }else if(b.prefistatus == 7){
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="prefigrade"]').addClass('bg-primary')
-                              }else if(b.prefistatus == 9){
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="prefigrade"]').addClass('bg-danger')
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="prefigrade"]').text('DROPPED')
-                              }else if(b.prefistatus == 8){
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="prefigrade"]').addClass('bg-warning')
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="prefigrade"]').text('INC')
-                              }else{
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="prefigrade"]').removeAttr('class')
-                                    $('td[data-studid="'+b.studid+'"][data-term="prefigrade"]').addClass('grade_td text-center align-middle input_grades')
-                              }
-
-                              if(b.finalstatus == 1){
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="finalgrade"]').addClass('bg-success')
-                              }else if(b.finalstatus == 7){
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="finalgrade"]').addClass('bg-primary')
-                              }else if(b.finalstatus == 3){
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="finalgrade"]').addClass('bg-warning')
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="finalgrade"]').text("")
-                              }else if(b.finalstatus == 9){
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="finalgrade"]').addClass('bg-danger')
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="finalgrade"]').text('DROPPED')
-                              }else if(b.finalstatus == 8){
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="finalgrade"]').addClass('bg-warning')
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="finalgrade"]').text('INC')
-                              }else{
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="finalgrade"]').removeAttr('class')
-                                    if(school == 'spct'.toUpperCase()){
-                                          $('th[data-studid="'+b.studid+'"][data-term="finalgrade"]').addClass('grade_td text-center align-middle input_grades')
-                                    }else{
-                                          $('td[data-studid="'+b.studid+'"][data-term="finalgrade"]').addClass('grade_td text-center align-middle input_grades')
-                                    }
-                              }
-
-                              if(b.prelemstatus == 1 || b.prelemstatus == 7){
-                                    $('.select[data-studid="'+b.studid+'"]').removeAttr('disabled')
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="prelemgrade"]').removeClass('input_grades')
-                              }
-
-                              if(b.midtermstatus == 1 || b.midtermstatus == 7){
-                                    $('.select[data-studid="'+b.studid+'"]').removeAttr('disabled')
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="midtermgrade"]').removeClass('input_grades')
-                              }
-
-                              if(b.prefistatus == 1 || b.prefistatus == 7){
-                                    $('.select[data-studid="'+b.studid+'"]').removeAttr('disabled')
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="prefigrade"]').removeClass('input_grades')
-                              }
-
-                              if(b.finalstatus == 1 || b.finalstatus == 7){
-                                    $('.select[data-studid="'+b.studid+'"]').removeAttr('disabled')
-                                    $('.input_grades[data-studid="'+b.studid+'"][data-term="finalgrade"]').removeClass('input_grades')
-                              }
-
-                              var temp_studid = b.studid
-                              var average = parseFloat( ( parseFloat ( $('.grade_td[data-studid="'+temp_studid+'"][data-term="prelemgrade"]').text()) + parseFloat($('.grade_td[data-studid="'+temp_studid+'"][data-term="midtermgrade"]').text() )  + parseFloat($('.grade_td[data-studid="'+temp_studid+'"][data-term="prefigrade"]').text() )  + parseFloat( $('.grade_td[data-studid="'+temp_studid+'"][data-term="finalgrade"]').text() ) ) / 4 ).toFixed(2)
-
-                              if(average != 'NaN'){
-                                    $('th[data-studid="'+temp_studid+'"][data-term="fg"]').text(average)
-
-                                    if(average >= 3){
-                                          $('th[data-studid="'+temp_studid+'"][data-term="remarks"]').text('FAILED')
-                                    }else{
-                                          $('th[data-studid="'+temp_studid+'"][data-term="remarks"]').text('PASSED')
-                                    }
-                              }else{
-                                    $('th[data-studid="'+temp_studid+'"][data-term="fg"]').text('')
-                                    $('th[data-studid="'+temp_studid+'"][data-term="remarks"]').text('')
-                              }
-                        })
-
-                        $('.grade_td').addClass('text-center')
-
-                  }
+            
 
                   $(document).on('change','#filter_status_by_subject',function(){
                         generate_by_subject(false)
@@ -1938,193 +2154,834 @@
                         autoWidth: false,
                         lengthChange: false,
                   })
+                  grade_status()
+                  function grade_status(){
+                        $.ajax({
+                              type: "GET",
+                              url: '/college/grades/gradestatus',
+                              data: {
+                                    syid: $('#filter_sy').val(),
+                                    semid: $('#filter_semester').val(),
+                                    courseid: $('#filter_course').val(),
+                                    gradelevel : $('#filter_gradelevel').val()
 
-                  function generate_by_subject(){
-
-                        var temp_subjects = [...new Map(subjects.map(item =>
-                              [item['subjectID'], item])).values()];
-
-                        $.each(temp_subjects,function(a,b){
-                              
-                              var temp_count = sched.filter(x=>x.subjid == b.subjectID)
-                              b.student_count = temp_count.length
-                              b.student_list = temp_count
-                              b.withsub = sub_stud_1.filter(x=>x.subjid == b.subjectID).length || sub_stud_2.filter(x=>x.subjid == b.subjectID).length || sub_stud_3.filter(x=>x.subjid == b.subjectID).length || sub_stud_4.filter(x=>x.subjid == b.subjectID).length > 0 ? true : false;
-
-                              b.withapp = app_stud_1.filter(x=>x.subjid == b.subjectID).length || app_stud_2.filter(x=>x.subjid == b.subjectID).length || app_stud_3.filter(x=>x.subjid == b.subjectID).length || app_stud_4.filter(x=>x.subjid == b.subjectID).length > 0 ? true : false;
-
-                              b.withpen = pen_stud_1.filter(x=>x.subjid == b.subjectID).length || pen_stud_2.filter(x=>x.subjid == b.subjectID).length || pen_stud_3.filter(x=>x.subjid == b.subjectID).length || pen_stud_4.filter(x=>x.subjid == b.subjectID).length > 0 ? true : false;
-
-                              b.withuns = uns_stud_1.filter(x=>x.subjid == b.subjectID).length || uns_stud_2.filter(x=>x.subjid == b.subjectID).length || uns_stud_3.filter(x=>x.subjid == b.subjectID).length || uns_stud_4.filter(x=>x.subjid == b.subjectID).length > 0 ? true : false;
-
-                              b.withinc = inc_stud_1.filter(x=>x.subjid == b.subjectID).length || inc_stud_2.filter(x=>x.subjid == b.subjectID).length || inc_stud_3.filter(x=>x.subjid == b.subjectID).length || inc_stud_4.filter(x=>x.subjid == b.subjectID).length > 0 ? true : false;
-
-                              b.withdrop = drop_stud_1.filter(x=>x.subjid == b.subjectID).length || drop_stud_2.filter(x=>x.subjid == b.subjectID).length || drop_stud_3.filter(x=>x.subjid == b.subjectID).length || drop_stud_4.filter(x=>x.subjid == b.subjectID).length > 0 ? true : false;
-
+                                    // levelid: $('#filter_level').val(),
+                                    // sectionid: $('#filter_section').val(),
+                              },
+                              success: function (data) {
+                                    generate_by_teacher(data)
+                              }
                         })
+                  }
 
-                        
-
-                        var selected_status =  $('#filter_status_by_subject').val()
-
-                        var uns_checked = selected_status == "uns" ? 'selected="selected"':''
-                        var sub_checked = selected_status == "sub" ? 'selected="selected"':''
-                        var app_checked = selected_status == "app" ? 'selected="selected"':''
-                        var pen_checked = selected_status == "pen" ? 'selected="selected"':''
-                        var inc_checked = selected_status == "inc" ? 'selected="selected"':''
-                        var drop_checked = selected_status == "drop" ? 'selected="selected"':''
-
-
-                        $('#filter_status_by_subject').empty();
-                        $('#filter_status_by_subject').append('<option value="uns" '+uns_checked+'>Unsubmitted ('+temp_subjects.filter(x=>x.withuns == true).length+')</option>');
-                        $('#filter_status_by_subject').append('<option value="sub" '+sub_checked+'>Submitted ('+temp_subjects.filter(x=>x.withsub == true).length+')</option>');
-                        $('#filter_status_by_subject').append('<option value="app" '+app_checked+'>Approved ('+temp_subjects.filter(x=>x.withapp == true).length+')</option>');
-                        $('#filter_status_by_subject').append('<option value="pen" '+pen_checked+'>Pending ('+temp_subjects.filter(x=>x.withpen == true).length+')</option>');
-                        $('#filter_status_by_subject').append('<option value="inc" '+inc_checked+'>INC ('+temp_subjects.filter(x=>x.withinc == true).length+')</option>');
-                        $('#filter_status_by_subject').append('<option value="drop" '+drop_checked+'>Dropped ('+temp_subjects.filter(x=>x.withdrop == true).length+')</option>');
-                        
-                     
-                        temp_subjects = temp_subjects.filter(x=>x.student_count != 0)
-
-                        subjects = temp_subjects
-
-                        if($('#filter_status_by_subject').val() == 'sub'){
-                              temp_subjects = temp_subjects.filter(x=>x.withsub == true)
-                        }else if($('#filter_status_by_subject').val() == 'pen'){
-                              temp_subjects = temp_subjects.filter(x=>x.withpen == true)
-                        }else if($('#filter_status_by_subject').val() == 'app'){
-                              temp_subjects = temp_subjects.filter(x=>x.withapp == true)
-                        }else if($('#filter_status_by_subject').val() == 'uns'){
-                              temp_subjects = temp_subjects.filter(x=>x.withuns == true)
-                        }else if($('#filter_status_by_subject').val() == 'inc'){
-                              temp_subjects = temp_subjects.filter(x=>x.withinc == true)
-                        }else if($('#filter_status_by_subject').val() == 'drop'){
-                              temp_subjects = temp_subjects.filter(x=>x.withdrop == true)
-                        }
-
-                        
-
-                        $("#datatable_7").DataTable({
+                  var datatable_var
+                  function generate_by_teacher(data){
+                        datatable_var = $("#datatable_7").DataTable({
                               destroy: true,
-                              data:temp_subjects,
+                              data: data,
                               autoWidth: false,
                               lengthChange: false,
                               columns: [
                                     { "data": "subjDesc"},
                                     // { "data": "courseabrv"},
-                                    { "data": "student_count"},
-                                    // { "data": null},
-                                    // { "data": null},
-                                    // { "data": null},
-                                    // { "data": null},
+                                    { "data": null},
+                                    { "data": null},
+                                    { "data": null},
+                                    { "data": null},
+                                    { "data": null},
+                                    { "data": null},
                               ],
                               columnDefs: [
                                     {
                                           'targets': 0,
                                           'orderable': false, 
                                           'createdCell':  function (td, cellData, rowData, row, col) {
-                                                var text = '<a class="mb-0">'+rowData.subjDesc+'</a><p class="text-muted mb-0" style="font-size:.7rem">'+rowData.subjCode+'</p>';
+                                                var text = '<p class="mb-0">'+rowData.sectionDesc+'</p>';
                                                 $(td)[0].innerHTML =  text
                                           }
                                     },
-                                    // {
-                                    //       'targets': 1,
-                                    //       'orderable': false, 
-                                    //       'createdCell':  function (td, cellData, rowData, row, col) {
-                                    //             var text = '<a class="mb-0">'+rowData.courseabrv+'</a><p class="text-muted mb-0" style="font-size:.7rem">'+rowData.levelname.replace(' COLLEGE','')+'</p>';
-                                    //             $(td)[0].innerHTML =  text
-                                    //             $(td).addClass('align-middle')
-                                    //       }
-                                    // },
                                     {
                                           'targets': 1,
                                           'orderable': false, 
                                           'createdCell':  function (td, cellData, rowData, row, col) {
-                                                var text = '<a class="mb-0 by_subj_view_stud" href="#" data-id="'+rowData.subjectID+'">'+rowData.student_count+'</a>';
-                                                $(td)[0].innerHTML = text
-                                                $(td).addClass('align-middle')
-                                                $(td).addClass('text-center')
+                                                var text = '<p class="mb-0 " data-id="'+rowData.teacherid+'">'+rowData.teachername+'</p>';
+                                                $(td)[0].innerHTML =  text
                                           }
                                     },
-                                    // {
-                                    //       'targets': 3,
-                                    //       'orderable': false, 
-                                    //       'createdCell':  function (td, cellData, rowData, row, col) {
-                                                
-                                    //             var text = null
-                                    //             if($('#filter_status_by_subject').val() == ""){
-                                    //                   text = 'N/A';
-                                    //             }
-
-                                    //             if(school == 'GBBC'){
-                                    //                   $(td).attr('hidden','hidden')
-                                    //             }
-
-                                    //             $(td)[0].innerHTML = text
-                                    //             $(td).addClass('align-middle')
-                                    //             $(td).addClass('text-center')
-                                    //       }
-                                    // },
-                                    // {
-                                    //       'targets': 4,
-                                    //       'orderable': false, 
-                                    //       'createdCell':  function (td, cellData, rowData, row, col) {
-                                    //             var text = null
-                                    //             if($('#filter_status_by_subject').val() == ""){
-                                    //                   text = 'N/A';
-                                    //             }
-
-                                    //             if(school == 'GBBC'){
-                                    //                   $(td).attr('hidden','hidden')
-                                    //             }
-
-                                    //             $(td)[0].innerHTML = text
-                                    //             $(td).addClass('align-middle')
-                                    //             $(td).addClass('text-center')
-                                    //       }
-                                    // },
-                                    // {
-                                    //       'targets': 5,
-                                    //       'orderable': false, 
-                                    //       'createdCell':  function (td, cellData, rowData, row, col) {
-                                    //             var text = null
-                                    //             if($('#filter_status_by_subject').val() == ""){
-                                    //                   text = 'N/A';
-                                    //             }
-
-                                    //             if(school == 'GBBC'){
-                                    //                   $(td).attr('hidden','hidden')
-                                    //             }
-
-                                    //             $(td)[0].innerHTML = text
-                                    //             $(td).addClass('align-middle')
-                                    //             $(td).addClass('text-center')
-                                    //       }
-                                    // },
-                                    // {
-                                    //       'targets': 6,
-                                    //       'orderable': false, 
-                                    //       'createdCell':  function (td, cellData, rowData, row, col) {
-                                    //             var text = null
-
-                                    //             if($('#filter_status_by_subject').val() == ""){
-                                    //                   text = 'N/A';
-                                    //             }
-
-                                               
-
-                                    //             $(td)[0].innerHTML = text
-                                    //             $(td).addClass('align-middle')
-                                    //             $(td).addClass('text-center')
-                                    //       }
-                                    // },
+                                    {
+                                          'targets': 2,
+                                          'orderable': false, 
+                                          'createdCell':  function (td, cellData, rowData, row, col) {
+                                                var text = '<p class="mb-0">'+rowData.subjDesc+'</p><p class="text-muted mb-0" style="font-size:.7rem">'+rowData.subjCode+'</p>';
+                                                $(td)[0].innerHTML =  text
+                                          }
+                                    },
+                                    {
+                                          'targets': 3,
+                                          'orderable': false, 
+                                          'createdCell':  function (td, cellData, rowData, row, col) {
+                                                var status = ''
+                                                var text = ''
+                                                if (rowData.grades && rowData.grades.length > 0) {
+                                                      var temp_grade_1 = rowData.grades.filter(x=>x.prelim_status == 1 || x.prelim_status == 7)
+                                                      var temp_grade_2 = rowData.grades.filter(x=>x.prelim_status == 2)
+                                                      var temp_grade_3 = rowData.grades.filter(x=>x.prelim_status == 6)
+                                                      var temp_grade_4 = rowData.grades.filter(x=>x.prelim_status == 5)
+                                                      switch (true) {
+                                                            
+                                                            case (temp_grade_1.length > 0):
+                                                                  text = '<a href="#" class="text-success font-weight-bold showSubjectGrade" data-term="prelim" data-id="'+rowData.schedid+'" data-subjectid="'+rowData.prospectusID+'">Submitted</a>';
+                                                                  break;
+                                                            case (temp_grade_2.length > 0):
+                                                                  text = '<a href="#" class="text-primary font-weight-bold showSubjectGrade" data-term="prelim" data-id="'+rowData.schedid+'" data-subjectid="'+rowData.prospectusID+'">Approved</a>';
+                                                                  break;
+                                                            case (temp_grade_4.length > 0):
+                                                            text = '<a href="#" class="text-info font-weight-bold showSubjectGrade" data-term="prelim" data-id="'+rowData.schedid+'" data-subjectid="'+rowData.prospectusID+'">Posted</a>';
+                                                            break;
+                                                            case (temp_grade_3.length > 0):
+                                                                  text = '<a href="#" class="text-warning font-weight-bold showSubjectGrade" data-term="prelim" data-id="'+rowData.schedid+'" data-subjectid="'+rowData.prospectusID+'">Pending</a>';
+                                                                  break;
+                                                            default:
+                                                                  text = '<p class="mb-0 text-secondary">Not Submitted</p>';
+                                                      }
+                                                }else{
+                                                      text = '<p class="mb-0 text-secondary">Not Submitted</p>'
+                                                }
+                                                $(td).html(text).addClass('text-center')
+                                          }
+                                    },
+                                    {
+                                          'targets': 4,
+                                          'orderable': false, 
+                                          'createdCell':  function (td, cellData, rowData, row, col) {
+                                                var status = ''
+                                                var text = ''
+                                                if (rowData.grades && rowData.grades.length > 0) {
+                                                      var temp_grade_1 = rowData.grades.filter(x=>x.midterm_status == 1 || x.midterm_status == 7)
+                                                      var temp_grade_2 = rowData.grades.filter(x=>x.midterm_status == 2)
+                                                      var temp_grade_3 = rowData.grades.filter(x=>x.midterm_status == 6)
+                                                      var temp_grade_4 = rowData.grades.filter(x=>x.midterm_status == 5)
+                                                      switch (true) {
+                                                            
+                                                            case (temp_grade_1.length > 0):
+                                                                  text = '<a href="#" class="text-success font-weight-bold showSubjectGrade" data-term="midterm" data-id="'+rowData.schedid+'" data-subjectid="'+rowData.prospectusID+'">Submitted</a>';
+                                                                  break;
+                                                            case (temp_grade_2.length > 0):
+                                                                  text = '<a href="#" class="text-primary font-weight-bold showSubjectGrade" data-term="midterm" data-id="'+rowData.schedid+'" data-subjectid="'+rowData.prospectusID+'">Approved</a>';
+                                                                  break;
+                                                            case (temp_grade_4.length > 0):
+                                                            text = '<a href="#" class="text-info font-weight-bold showSubjectGrade" data-term="midterm" data-id="'+rowData.schedid+'" data-subjectid="'+rowData.prospectusID+'">Posted</a>';
+                                                            break;
+                                                            case (temp_grade_3.length > 0): 
+                                                                  text = '<a href="#" class="text-warning font-weight-bold showSubjectGrade" data-term="midterm" data-id="'+rowData.schedid+'" data-subjectid="'+rowData.prospectusID+'">Pending</a>';
+                                                                  break;
+                                                            default:
+                                                                  text = '<p class="mb-0 text-secondary">Not Submitted</p>';
+                                                      }
+                                                }else{
+                                                      text = '<p class="mb-0 text-secondary">Not Submitted</p>'
+                                                }
+                                                $(td).html(text).addClass('text-center')
+                                          }
+                                    },
+                                    {
+                                          'targets': 5,
+                                          'orderable': false, 
+                                          'createdCell':  function (td, cellData, rowData, row, col) {
+                                                var status = ''
+                                                var text = ''
+                                                if (rowData.grades && rowData.grades.length > 0) {
+                                                      var temp_grade_1 = rowData.grades.filter(x=>x.prefinal_status == 1 || x.prefinal_status == 7)
+                                                      var temp_grade_2 = rowData.grades.filter(x=>x.prefinal_status == 2)
+                                                      var temp_grade_3 = rowData.grades.filter(x=>x.prefinal_status == 6)
+                                                      var temp_grade_4 = rowData.grades.filter(x=>x.prefinal_status == 5)
+                                                      switch (true) {
+                                                            
+                                                            case (temp_grade_1.length > 0):
+                                                                  text = '<a href="#" class="text-success font-weight-bold showSubjectGrade" data-term="prefinal" data-id="'+rowData.schedid+'" data-subjectid="'+rowData.prospectusID+'">Submitted</a>';
+                                                                  break;
+                                                            case (temp_grade_2.length > 0):
+                                                                  text = '<a href="#" class="text-primary font-weight-bold showSubjectGrade" data-term="prefinal" data-id="'+rowData.schedid+'" data-subjectid="'+rowData.prospectusID+'">Approved</a>';
+                                                                  break;
+                                                            case (temp_grade_4.length > 0):
+                                                            text = '<a href="#" class="text-info font-weight-bold showSubjectGrade" data-term="prefinal" data-id="'+rowData.schedid+'" data-subjectid="'+rowData.prospectusID+'">Posted</a>';
+                                                            break;
+                                                            case (temp_grade_3.length > 0):
+                                                                  text = '<a href="#" class="text-warning font-weight-bold showSubjectGrade" data-term="prefinal" data-id="'+rowData.schedid+'" data-subjectid="'+rowData.prospectusID+'">Pending</a>';
+                                                                  break;
+                                                            default:
+                                                                  text = '<p class="mb-0 text-secondary">Not Submitted</p>';
+                                                      }
+                                                }else{
+                                                      text = '<p class="mb-0 text-secondary">Not Submitted</p>'
+                                                }
+                                                $(td).html(text).addClass('text-center')
+                                          }
+                                    },
+                                    {
+                                          'targets': 6,
+                                          'orderable': false, 
+                                          'createdCell':  function (td, cellData, rowData, row, col) {
+                                                var status = ''
+                                                var text = ''
+                                                if (rowData.grades && rowData.grades.length > 0) {
+                                                      var temp_grade_1 = rowData.grades.filter(x=>x.final_status == 1 || x.final_status == 7)
+                                                      var temp_grade_2 = rowData.grades.filter(x=>x.final_status == 2)
+                                                      var temp_grade_3 = rowData.grades.filter(x=>x.final_status == 6)
+                                                      var temp_grade_4 = rowData.grades.filter(x=>x.final_status == 5)
+                                                      switch (true) {
+                                                            
+                                                            case (temp_grade_1.length > 0):
+                                                                  text = '<a href="#" class="text-success font-weight-bold showSubjectGrade" data-term="final" data-id="'+rowData.schedid+'" data-subjectid="'+rowData.prospectusID+'">Submitted</a>';
+                                                                  break;
+                                                            case (temp_grade_2.length > 0):
+                                                                  text = '<a href="#" class="text-primary font-weight-bold showSubjectGrade" data-term="final" data-id="'+rowData.schedid+'" data-subjectid="'+rowData.prospectusID+'">Approved</a>';
+                                                                  break;
+                                                            case (temp_grade_4.length > 0):
+                                                            text = '<a href="#" class="text-info font-weight-bold showSubjectGrade" data-term="final" data-id="'+rowData.schedid+'" data-subjectid="'+rowData.prospectusID+'">Posted</a>';
+                                                            break;
+                                                            case (temp_grade_3.length > 0):
+                                                                  text = '<a href="#" class="text-warning font-weight-bold showSubjectGrade" data-term="final" data-id="'+rowData.schedid+'" data-subjectid="'+rowData.prospectusID+'">Pending</a>';
+                                                                  break;
+                                                            default:
+                                                                  text = '<p class="mb-0 text-secondary">Not Submitted</p>';
+                                                      }
+                                                }else{
+                                                      text = '<p class="mb-0 text-secondary">Not Submitted</p>'
+                                                }
+                                                $(td).html(text).addClass('text-center')
+                                          }
+                                    },
+      
                               ]
+                        })
+                        
+                        var label_text = $('#datatable_7_wrapper').find('.col-md-6').first()
+                        var label_text2 = $('#datatable_7_wrapper').find('.col-md-6').eq(1)
+                        label_text2.addClass('align-self-end')
+                        label_text.html(
+                              '<div class="d-flex flex-row align-items-center ">'+
+                              '<p class=" mb-1 mr-2">Instructor:</p>'+
+                              '<select class="form-control form-control-sm select2"  style="margin-bottom: 0.25rem; width: 300px!important" id="instructor_filter">' +
+                              '</select>' +
+                              '</div>'
+                        )
+                        filterInstructor(data)
+                        $('#instructor_filter').select2({
+                              placeholder: 'Select Instructor',
+                              allowClear: true
                         })
 
 
+                        
+                  }
 
+                  
+                 
+                  $(document).on('change', '#instructor_filter', function () {
+                        var val = $(this).val(); // Get the selected value from the dropdown
+                        // console.log('Selected Instructor:', val); // Debugging log
+
+                        // Clear previous custom filters for this specific table
+                        $.fn.dataTable.ext.search = $.fn.dataTable.ext.search.filter(function (filterFn) {
+                              return filterFn !== customFilter;
+                        });
+
+                        // Define the custom filter
+                        var customFilter = function (settings, data, dataIndex) {
+                              // Check if the table being filtered is the correct one
+                              if (settings.nTable.id !== 'datatable_7') {
+                                    return true; // Allow other tables to pass through this filter
+                              }
+
+                              // Get the value of the "Instructor" column (adjust index if necessary)
+                              var instructorCell = settings.aoData[dataIndex].anCells[1];
+                              if (!instructorCell) return false; // Column 1
+                              var instructorId = $(instructorCell).find('p').data('id');
+                              // console.log('Instructor ID in row:', instructorId);
+                              // Hide rows that don't match the selected instructor or show all rows if no value is selected
+                              return val === "" || parseInt(instructorId) === parseInt(val);
+                        };
+
+                        $.fn.dataTable.ext.search = $.fn.dataTable.ext.search.filter(function (filterFn) {
+                              return false;
+                        });
+
+                        // Push the custom filter
+                        $.fn.dataTable.ext.search.push(customFilter);
+
+                        // Redraw the table
+                        datatable_var.draw();
+                  });
+
+                  function filterInstructor(data){
+                        var uniqueData = [...new Set(data.map(item => item.teacherid))].map(id => {
+                              return data.find(item => item.teacherid === id);
+                        });
+                        $('#instructor_filter').append('<option value="">Select Instructor</option>')
+                        $.each(uniqueData, function (key, item) {
+                              $('#instructor_filter').append('<option value="'+item.teacherid+'">'+item.teachername+'</option>')
+                        })
+                  }
+
+                  var schedid;
+                  var status;
+                  $(document).on('click','.showSubjectGrade',function(){
+                        grade_access = 'subjects'
+                        schedid = $(this).attr('data-id')
+                        var prospectusID = $(this).attr('data-subjectid')
+                        status = $(this).text()
+                        
+                        if(status == 'Submitted'){
+                              status = 1
+                        }else if(status == 'Approved'){
+                              status = 2
+                        }else if(status == 'Posted'){
+                              status = 5
+                        }else if(status == 'Pending'){
+                              status = 6
+                        }else if(status == 'INC'){
+                              status = 7
+                        }else if(status == 'Dropped'){
+                              status = 8
+                        }
+                        term = $(this).attr('data-term')
+                        
+                        console.log(status,'status1');
+                        $.ajax({
+                              type: "GET",
+                              url: '/college/grades/gradestatus/showgrades',
+                              data: {
+                                    schedid: schedid,
+                                    prospectusID: prospectusID
+                              },
+                              success: function (data) {
+                                    $('.gradeStatusSubject_title').html(data.sectionDesc + ' - ' + data.subjDesc)
+                                    $('#teacherName').text(data.teachername)
+                                    $('#subjectDesc').text(data.subjDesc)
+                                    $('#levelName').text(data.levelname)
+                                    $('#sectionName').text(data.sectionDesc)
+                                    change_status_modal()
+                                    display_ecr()
+                                    
+                              }
+                        })
+                  })
+
+                  function change_status_modal(){
+                        
+                        if(status == 6){
+                              $('.student_badge').each(function() {
+                                    if($(this).hasClass('bg-info') || $(this).hasClass('bg-primary') || $(this).hasClass('bg-success')) {
+                                    }
+                              });
+
+                        }
+                        status = parseInt(status)       
+                        console.log(status,'status');
+                                         
+                        $('#gradeStatus').removeClass('badge-success')
+                        $('#gradeStatus').removeClass('badge-primary')
+                        $('#gradeStatus').removeClass('badge-info')
+                        $('#gradeStatus').removeClass('badge-warning')
+                        $('#gradeStatus').removeClass('badge-danger')
+                        $('#gradeStatus').removeClass('badge-secondary')
+                        switch(true){
+                              case(status === 1):
+                              $('#gradeStatus').text('Submitted').addClass('badge badge-success badge-pill');
+                              break;
+                              case(status === 2):
+                              $('#gradeStatus').text('Approved').addClass('badge badge-primary badge-pill');
+                              break;
+                              case(status === 5):
+                              
+                              $('#gradeStatus').text('Posted').addClass('badge badge-info badge-pill');
+                              break;
+                              case(status === 6):
+                              $('#gradeStatus').text('Pending').addClass('badge badge-warning badge-pill');
+                              break;
+                              case(status === 7):
+                              $('#gradeStatus').text('INC').addClass('badge badge-danger badge-pill');
+                              break;
+                              case(status === 8):
+                              $('#gradeStatus').text('Dropped').addClass('badge badge-danger badge-pill');
+                              break;
+                              default:
+                              $('#gradeStatus').text('Not Submitted').addClass('badge badge-secondary badge-pill');
+                        }
+                  }
+                   
+                  var term;
+                  $(document).on('change','#select_term',function(){
+                        term = $(this).val()
+                        $('.highest_score').text(0)
+                        $('.score').text(0)
+                        $('.total_average').text(0)
+                        $('.gen_average').text(0)
+                        $('.total_score').text(0)
+                        $('.average_score').text(0)
+                        $('.bg-success').removeClass('bg-success')
+                        $('.bg-warning').removeClass('bg-warning')
+                        $('.date_time').text('MM/DD/YYYY')
+                        $('.gender_checkbox').prop('checked', true).trigger('change')
+                        change_status_modal()
+                        display_grades()
+                        
+                        
+                  })
+
+                  function change_button_status(){
+                        
+                        // if(term == 0 ){
+                        //       $('.subject_status_button').attr('disabled', true)
+                        // }else{
+                        //       $('.subject_status_button').removeAttr('disabled')
+                        //       if(status == 0 || status == null){
+                        //             $('#subject_approve_button').attr('disabled', true)
+                        //             $('#subject_post_button').attr('disabled', true)
+                        //             $('#subject_pending_button').attr('disabled', true)
+                        //             $('#subject_unpost_button').attr('disabled', true)
+                        //       }
+                        //       if(status == 1){
+                        //             $('#subject_unpost_button').attr('disabled', true)
+                        //             $('#subject_approve_button').removeAttr('disabled', true)
+                        //             $('#subject_post_button').removeAttr('disabled', true)
+                        //             $('#subject_pending_button').removeAttr('disabled', true)
+
+                        //       }
+                        //       if(status == 2){
+                        //             $('#subject_unpost_button').attr('disabled', true)
+                        //             $('#subject_approve_button').attr('disabled', true)
+                        //       }
+
+                        //       if(status == 5){
+                        //             $('#subject_approve_button').attr('disabled', true)
+                        //             $('#subject_post_button').attr('disabled', true)
+                        //             $('#subject_pending_button').attr('disabled', true)
+                        //       }
+                        //       if(status == 6){
+                        //             $('#subject_approve_button').attr('disabled', true)
+                        //             $('#subject_post_button').attr('disabled', true)
+                        //             $('#subject_pending_button').attr('disabled', true)
+                        //             $('#subject_unpost_button').attr('disabled', true)
+                        //       }
+                              
+                        // }
+                        if(status == 8){
+                                    $('#subject_approve_button').attr('disabled', true)
+                                    $('#subject_post_button').attr('disabled', true)
+                                    $('#subject_pending_button').attr('disabled', true)
+                                    $('#subject_unpost_button').attr('disabled', true)
+                              }
+                  }
+
+                  function display_ecr(){
+                        
+                        var semid = $('#filter_semester').val()
+                        var syid = $('#filter_sy').val()
+                        $.ajax({
+                              type: "GET",
+                              url: '/college/grades/gradestatus/showgradesinfo',
+                              data: {
+                                    syid: syid,
+                                    semid: semid,
+                                    schedid: schedid,
+                                    status: status,
+                                    grade_access: grade_access
+                              },
+                              success: function (data) {
+                                    
+                                    $('#ecr_table_container').html(data);
+                                    $('#gradeStatusSubject').modal('show')
+                                    if(grade_access == 'sections'){
+                                          if (term_section == 1){
+                                                $('#select_term').val('Prelim').trigger('change')
+                                          }else if(term_section == 2){
+                                                $('#select_term').val('Midterm').trigger('change')
+                                          }else if(term_section == 3){
+                                                $('#select_term').val('Pre-Final').trigger('change')
+                                          }else if(term_section == 4){
+                                                $('#select_term').val('Final').trigger('change')
+                                          }
+                                    }else if(grade_access = 'subjects'){
+                                          
+                                          if (term === 'prelim'){
+                                                $('#select_term').val('Prelim').trigger('change')
+                                          }else if(term === 'midterm'){
+                                                $('#select_term').val('Midterm').trigger('change')
+                                          }else if(term === 'prefinal'){
+                                                $('#select_term').val('Pre-Final').trigger('change')
+                                          }else if(term === 'final'){
+                                                $('#select_term').val('Final').trigger('change')
+                                          }
+                                    }
+                                    
+                              }
+                        })
+                  }
+
+                  function display_grades(){
+
+                        $('.checkbox').removeAttr('disabled').prop('checked', true)
+                        $('.scores').removeClass('bg-warning');
+                        $('.total_average').removeClass('bg-warning');
+                        if(term === 'Prelim'){
+                              var new_term = 1
+                        }else if(term === 'Midterm'){
+                              var new_term = 2
+                        }else if(term === 'Pre-Final'){
+                              var new_term = 3
+                        }
+                        else if(term === 'Final'){
+                              var new_term = 4
+                        }
+                        
+                        $.ajax({
+                              type: "GET",
+                              url: '/college/teacher/student/systemgrades/get_submitted_grades',
+                              data: {
+                                    schedid: schedid,
+                                    term: new_term,
+                                    status: status
+                              },
+                              success: function (grades) {
+                                    
+                                    $.each(grades.highest_scores, function (a, high_score) {
+                            
+                                          if(high_score.subcomponent_id != 0){
+                                                $('.highest_score[data-sort-id=' + high_score.column_number + '][data-comp-id='+ high_score.component_id +'][data-sub-id=' + high_score.subcomponent_id + ']').text(high_score.score);
+                                                $('.date_time[data-sort-id=' + high_score.column_number + '][data-comp-id='+ high_score.component_id +'][data-sub-id=' + high_score.subcomponent_id + ']').text(high_score.date).trigger('input');
+                                          }else{
+                                                $('.highest_score[data-sort-id=' + high_score.column_number + '][data-comp-id='+ high_score.component_id +']').text(high_score.score);
+                                                $('.date_time[data-sort-id=' + high_score.column_number + '][data-comp-id='+ high_score.component_id +']').text(high_score.date).trigger('input');
+                                          }
+                                          })
+                                          $.each(grades.grade_scores, function (a, grade){
+                                          if(grade.subcomponent_id != 0){
+                                                $('.scores[data-sort-id='+grade.column_number+'][data-comp-id=' +grade.componentid+ '][data-sub-id=' +grade.subcomponent_id+ '][data-stud-id=' +grade.studid+ ']').text(grade.score).trigger('input')
+                                          }else{
+                                                $('.scores[data-sort-id='+grade.column_number+'][data-comp-id=' +grade.componentid+ '][data-stud-id=' +grade.studid+ ']').text(grade.score).trigger('input')
+                                          }
+                                    })
+                                    var status_flag = null
+                                    $.each(grades.grade_status, function (a, grade_status){
+                                          if(grade_status.status_flag != null && grade_status.status_flag != 0){
+                                                if(grade_status.status_flag == 1){
+                                                      status_flag = 1
+                                                }else if(status_flag == null || status_flag == 6){
+                                                      status_flag = grade_status.status_flag
+                                                }
+                                          }
+                                    })
+
+                                    if(grade_access == 'subjects'){
+                                          status = status_flag
+                                    }
+                                    
+                                    
+                                    $('.badge_pill_status').remove()
+
+                                    $.each(grades.grade_status, function (a, grade_status){                                     
+                                          $('.studname[data-stud-id=' +grade_status.studid+ ']').before('<div class="badge_pill_status"><p class="mb-0 ml-1 mr-1 align-middle student_badge" id="student_badge_' + grade_status.studid + '"></p></div>')
+                                          switch(true){
+                                                case(grade_status.status_flag == 1):
+                                                $('#student_badge_' + grade_status.studid).text('Submitted').addClass('badge badge-success badge-pill');
+                                                break;
+                                                case(grade_status.status_flag == 2):
+                                                $('#student_badge_' + grade_status.studid).text('Approved').addClass('badge badge-primary badge-pill');
+                                                break;
+                                                case(grade_status.status_flag == 5):
+                                                $('#student_badge_' + grade_status.studid).text('Posted').addClass('badge badge-info badge-pill');
+                                                break;
+                                                case(grade_status.status_flag == 6):
+                                                $('#student_badge_' + grade_status.studid).text('Pending').addClass('badge badge-warning badge-pill');
+                                                break;
+                                                case(grade_status.status_flag == 7):
+                                                $('#student_badge_' + grade_status.studid).text('INC').addClass('badge badge-warning badge-pill');
+                                                break;
+                                                case(grade_status.status_flag == 8):
+                                                $('#student_badge_' + grade_status.studid).text('Dropped').addClass('badge badge-danger badge-pill');
+                                                break;
+                                                default:
+                                                $('#student_badge_' + grade_status.studid).text('Not Submitted').addClass('badge badge-secondary badge-pill');
+                                          }
+                                          
+                                          if(grade_status.status_flag != status){
+                                                
+                                                $('.checkbox[data-stud-id='+grade_status.studid+']').prop('checked', false);
+
+                                          }
+                                          if(grade_status.status_flag == 6){
+                                                $('.checkbox[data-stud-id='+grade_status.studid+']').attr('disabled', true).prop('checked', false);
+                                          }
+                                         
+                                    })
+                                    change_button_status()
+                                    count_grade_status()
+                                    grade_remarks()
+                                    
+                              }
+                        })
+                  }
+
+                  function count_grade_status(){
+                        var not_sub = $('.student_badge').filter(function() {
+                            return $(this).text() === 'Not Submitted';
+                        }).length;
+                        var submitted = $('.student_badge').filter(function() {
+                            return $(this).text() === 'Submitted';
+                        }).length;
+                        var approved = $('.student_badge').filter(function() {
+                            return $(this).text() === 'Approved';
+                        }).length;
+                        var posted = $('.student_badge').filter(function() {
+                            return $(this).text() === 'Posted';
+                        }).length;
+                        var pending = $('.student_badge').filter(function() {
+                            return $(this).text() === 'Pending';
+                        }).length;
+                        $('#notSubmittedCount').html('' + not_sub + '')
+                        $('#submittedCount').html('' + submitted + '')
+                        $('#postedCount').html('' + posted + '')
+                        $('#approvedCount').html('' + approved + '')
+                        $('#pendingCount').html('' + pending + '')
+
+                        var male = $("[data-gender='Male']").length
+                        var female = $("[data-gender='Female']").length
+                        var total = male + female
+                        $('#maleCount').html('' + male + '')
+                        $('#femaleCount').html('' + female + '')
+                        $('#totalCount').html('' + total + '')
 
                   }
+
+                  function grade_remarks(){
+                        $.ajax({
+                              type: "GET",
+                              url: '/college/gradepointequivalency',
+                              success: function (data) {
+                                    $('.total_average').each(function(){
+                                          var cell = $(this)
+                                          var text = Math.round($(this).text())
+                                          
+                                          $.each(data , function (a, grade){
+                                                var numbers = []
+                                                if(grade.is_failed == 1){
+                                                      var num = grade.percent_equivalence.replace(/\D/g, '');
+
+                                                      if(text < num){
+                                                            cell.addClass('bg-danger')
+                                                      }
+                                                }else{
+                                                      numbers = grade.percent_equivalence.split('-').map(num => num.replace('%', '').trim())
+
+                                                      if(text >= numbers[0] && text <= numbers[1]){
+                                                            
+                                                            cell.addClass('bg-success')
+                                                      }
+                                                }
+                                          })
+                                          var passedCount = $('.total_average.bg-success').length
+                                          $('#passedCount').html('' + passedCount + '')
+                                          var failedCount = $('.total_average.bg-danger').length
+                                          $('#failedCount').html('' + failedCount + '')
+                                    })
+                              }
+                        })
+                  }
+
+                  $(document).on('change', '#male_checkbox', function(){
+                        if($(this).is(':checked')){
+                              $('.male_checkbox:not([disabled])').prop('checked', true)
+                        }else{
+                              $('.male_checkbox').prop('checked', false)
+                        }
+                  })
+
+                  $(document).on('change', '#female_checkbox', function(){
+
+                        if($(this).is(':checked')){
+                              $('.female_checkbox:not([disabled])').prop('checked', true)
+                        }else{
+                              $('.female_checkbox').prop('checked', false)
+                        }
+                  })
+
+                  $(document).on('change', '.female_checkbox', function(){
+                        $('.female_checkbox').each(function(){
+                              var count = $('.female_checkbox:checked').length
+                              if(count == 0){
+                                    $('#female_checkbox').prop('checked', false)
+                              }
+                        })
+                  })
+                  $(document).on('change', '.male_checkbox', function(){
+                        $('.male_checkbox').each(function(){
+                        var count = $('.male_checkbox:checked').length
+                              if(count == 0){
+                                    $('#male_checkbox').prop('checked', false)
+                              }
+                        })
+                  })
+                  
+                  
+
+                  $(document).on('input','.score',function(){
+
+                        var studid = $(this).attr('data-stud-id');
+                        var compid = $(this).attr('data-comp-id');
+                        var subid = $(this).attr('data-sub-id');
+                        var sort = $(this).attr('data-sort-id');
+
+                        if(subid){
+                              
+                              total_score = 0 
+                              $('.scores[data-stud-id=' + studid + '][data-sub-id=' + subid + ']').each(function(){
+                                    total_score += parseInt($(this).text()) || 0;
+                              });
+                              $('.total_score[data-stud-id=' + studid + '][data-sub-id=' + subid + ']').html(total_score);
+                              total_highest_score = 0
+                              $('.highest_score[data-sub-id='+ subid +']').each(function(){
+                                    total_highest_score += parseInt($(this).text()) || 0;
+                              });
+                              var average = isNaN(parseFloat((total_score/total_highest_score) * 100)) ? 0 : parseFloat((total_score/total_highest_score) * 100).toFixed(2)
+                              
+                              $('.average_score[data-stud-id=' + studid + '][data-sub-id=' + subid + ']').html(average,'%')   
+                              var gen_average = 0
+
+                              $('.average_score[data-stud-id=' + studid + '][data-comp-id=' + compid + ']').each(function() {
+                                    var score = parseFloat($(this).text()) || 0;
+                                    var percentage = parseFloat($(this).attr('data-percentage')) || 0;
+
+                                    gen_average += (score * (percentage / 100));
+                              });
+
+                              $('.gen_average[data-stud-id=' + studid + '][data-comp-id=' + compid + ']').html(gen_average.toFixed(2));                 
+                        }else{
+                              
+                              total_score = 0 
+                              $('.scores[data-stud-id=' + studid + '][data-comp-id=' + compid + ']').each(function(){
+                                    total_score += parseInt($(this).text()) || 0;
+                              });
+                              $('.total_score[data-stud-id=' + studid + '][data-comp-id=' + compid + ']').html(total_score);
+                              total_highest_score = 0
+                              $('.highest_score[data-comp-id='+ compid +']').each(function(){
+                                    total_highest_score += parseInt($(this).text()) || 0;
+                              });
+                              var average = isNaN(total_score/total_highest_score) ? 0 : parseFloat((total_score/total_highest_score) * 100).toFixed(2);
+                              
+                              $('.average_score[data-stud-id=' + studid + '][data-comp-id=' + compid + ']').html(average,'%') 
+                              var gen_average = 0
+                              $('.average_score[data-stud-id=' + studid + '][data-comp-id=' + compid + ']').each(function(){
+                                    gen_average += parseFloat($(this).text()) || 0;
+                              })
+                              gen_average = isNaN(gen_average) ? 0 : parseFloat(gen_average /  $('.average_score[data-stud-id=' + studid + '][data-comp-id=' + compid + ']').length).toFixed(2)
+                              $('.gen_average[data-stud-id=' + studid + '][data-comp-id=' + compid + ']').html(gen_average);
+                        }
+
+                        var hasINC = false;
+                        $('.scores[data-stud-id=' + studid + ']').each(function() {
+                              var inc = $(this)
+                              if ($(this).text().trim() === 'INC') {
+                                    inc.addClass('bg-warning');
+
+                                    hasINC = true;
+                                    return false; // break the loop
+                              }
+                        });
+
+
+                        if (hasINC) {
+                              $('.total_average[data-stud-id=' + studid + ']').html('INC').addClass('bg-warning');
+                        } else {
+                              var total_average = 0;
+                              $('.gen_average[data-stud-id=' + studid + ']').each(function() {
+                                    var gen_ave = $(this).text();
+                                    var percentage = parseFloat($(this).attr('data-percentage')) || 0;
+
+                                    total_average += (gen_ave * (percentage / 100));
+                              });
+                              $('.total_average[data-stud-id=' + studid + ']').html(total_average.toFixed(2));
+                        }
+
+                  })
+
+
+                  $(document).on('click', '.subject_status_button', function(){
+                        var status_id  = $(this).data('id')
+                        var scores = []
+                        var students = []
+                        $.each($('.checkbox:checked'), function(){
+                        var studid = $(this).data('stud-id')
+                        $.each($('.total_average[data-stud-id='+studid+']'), function(){
+                              var student = {
+                                    studid: studid,
+                                    schedid: schedid,
+                                    term: term,
+                                    status_id: status_id
+                              }
+
+                              students.push(student)
+                              })
+                        $.each($('.scores[data-stud-id='+studid+']'), function(){
+                              var sort = $(this).data('sort-id')
+                              var component_id = $(this).data('comp-id')
+                              var subid = typeof $(this).data('sub-id') !== 'undefined' ? $(this).data('sub-id') : 0;
+                              var score_text = $(this).text()
+                              var studid = $(this).data('stud-id')
+                              
+                              var score = {
+                                    schedid: schedid,
+                                    studid: studid,
+                                    component_id: component_id,
+                                    subid: subid,
+                                    score: score_text,
+                                    term: term,
+                                    sort: sort,
+                                    status_id: status_id
+                              }
+                              scores.push(score)
+                              })
+                              
+                        })
+                        
+                        $.ajax({
+                              type: 'POST',
+                              url: '/college/teacher/student/systemgrades/update_status',
+                              data: {
+                              grades: scores,
+                              students: students
+                              },
+                              success: function (response) {
+                                    
+                                    if(status_id == 2){
+                                          var label = 'Approved'
+                                    }else if(status_id == 5){
+                                          var label = 'Posted'
+                                    }else if(status_id == 6){
+                                          var label = 'Pended'
+                                    }
+
+                                    Toast.fire({
+                                          type: 'success',
+                                          title: 'Grades ' +label+ ' Succesfully'
+                                    })
+                                    
+                                    status = status_id
+                                    change_status_modal()
+                                    display_grades()
+                                    grade_status()
+                                    $('#select_term').trigger('change')
+                                    get_studentsgrade()
+                              }
+                        })
+
+                        
+                  })
+
+                  
+                  
+
 
                   function update_list_display(){
 
@@ -2133,81 +2990,94 @@
                         $('.section_submitted[data-term="3"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="3" data-status="1">'+[...new Map(sub_sec_3.map(item => [item['id'], item])).values()].length+'</a>'
                         $('.section_submitted[data-term="4"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="4" data-status="1">'+[...new Map(sub_sec_4.map(item => [item['id'], item])).values()].length+'</a>'
 
-                        $('.section_approved[data-term="1"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="1" data-status="7">'+[...new Map(app_sec_1.map(item => [item['id'], item])).values()].length+'</a>'
-                        $('.section_approved[data-term="2"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="2" data-status="7">'+[...new Map(app_sec_2.map(item => [item['id'], item])).values()].length+'</a>'
-                        $('.section_approved[data-term="3"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="3" data-status="7">'+[...new Map(app_sec_3.map(item => [item['id'], item])).values()].length+'</a>'
-                        $('.section_approved[data-term="4"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="4" data-status="7">'+[...new Map(app_sec_4.map(item => [item['id'], item])).values()].length+'</a>'
+                        $('.section_approved[data-term="1"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="1" data-status="2">'+[...new Map(app_sec_1.map(item => [item['id'], item])).values()].length+'</a>'
+                        $('.section_approved[data-term="2"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="2" data-status="2">'+[...new Map(app_sec_2.map(item => [item['id'], item])).values()].length+'</a>'
+                        $('.section_approved[data-term="3"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="3" data-status="2">'+[...new Map(app_sec_3.map(item => [item['id'], item])).values()].length+'</a>'
+                        $('.section_approved[data-term="4"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="4" data-status="2">'+[...new Map(app_sec_4.map(item => [item['id'], item])).values()].length+'</a>'
 
-                        $('.section_pending[data-term="1"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="1" data-status="3">'+[...new Map(pen_sec_1.map(item => [item['id'], item])).values()].length+'</a>'
-                        $('.section_pending[data-term="2"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="2" data-status="3">'+[...new Map(pen_sec_2.map(item => [item['id'], item])).values()].length+'</a>'
-                        $('.section_pending[data-term="3"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="3" data-status="3">'+[...new Map(pen_sec_3.map(item => [item['id'], item])).values()].length+'</a>'
-                        $('.section_pending[data-term="4"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="4" data-status="3">'+[...new Map(pen_sec_4.map(item => [item['id'], item])).values()].length+'</a>'
+                        $('.section_pending[data-term="1"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="1" data-status="6">'+[...new Map(pen_sec_1.map(item => [item['id'], item])).values()].length+'</a>'
+                        $('.section_pending[data-term="2"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="2" data-status="6">'+[...new Map(pen_sec_2.map(item => [item['id'], item])).values()].length+'</a>'
+                        $('.section_pending[data-term="3"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="3" data-status="6">'+[...new Map(pen_sec_3.map(item => [item['id'], item])).values()].length+'</a>'
+                        $('.section_pending[data-term="4"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="4" data-status="6">'+[...new Map(pen_sec_4.map(item => [item['id'], item])).values()].length+'</a>'
 
-                        $('.section_inc[data-term="1"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="1" data-status="8">'+[...new Map(inc_sec_1.map(item => [item['id'], item])).values()].length+'</a>'
-                        $('.section_inc[data-term="2"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="2" data-status="8">'+[...new Map(inc_sec_2.map(item => [item['id'], item])).values()].length+'</a>'
-                        $('.section_inc[data-term="3"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="3" data-status="8">'+[...new Map(inc_sec_3.map(item => [item['id'], item])).values()].length+'</a>'
-                        $('.section_inc[data-term="4"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="4" data-status="8">'+[...new Map(inc_sec_4.map(item => [item['id'], item])).values()].length+'</a>'
+                        $('.section_inc[data-term="1"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="1" data-status="7">'+[...new Map(inc_sec_1.map(item => [item['id'], item])).values()].length+'</a>'
+                        $('.section_inc[data-term="2"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="2" data-status="7">'+[...new Map(inc_sec_2.map(item => [item['id'], item])).values()].length+'</a>'
+                        $('.section_inc[data-term="3"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="3" data-status="7">'+[...new Map(inc_sec_3.map(item => [item['id'], item])).values()].length+'</a>'
+                        $('.section_inc[data-term="4"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="4" data-status="7">'+[...new Map(inc_sec_4.map(item => [item['id'], item])).values()].length+'</a>'
 
-                        $('.section_drop[data-term="1"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="1" data-status="9">'+[...new Map(drop_sec_1.map(item => [item['id'], item])).values()].length+'</a>'
-                        $('.section_drop[data-term="2"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="2" data-status="9">'+[...new Map(drop_sec_2.map(item => [item['id'], item])).values()].length+'</a>'
-                        $('.section_drop[data-term="3"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="3" data-status="9">'+[...new Map(drop_sec_3.map(item => [item['id'], item])).values()].length+'</a>'
-                        $('.section_drop[data-term="4"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="4" data-status="9">'+[...new Map(drop_sec_4.map(item => [item['id'], item])).values()].length+'</a>'
+                        $('.section_drop[data-term="1"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="1" data-status="8">'+[...new Map(drop_sec_1.map(item => [item['id'], item])).values()].length+'</a>'
+                        $('.section_drop[data-term="2"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="2" data-status="8">'+[...new Map(drop_sec_2.map(item => [item['id'], item])).values()].length+'</a>'
+                        $('.section_drop[data-term="3"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="3" data-status="8">'+[...new Map(drop_sec_3.map(item => [item['id'], item])).values()].length+'</a>'
+                        $('.section_drop[data-term="4"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="4" data-status="8">'+[...new Map(drop_sec_4.map(item => [item['id'], item])).values()].length+'</a>'
+
+                        $('.section_posted[data-term="1"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="1" data-status="5">'+[...new Map(pos_sec_1.map(item => [item['id'], item])).values()].length+'</a>'
+                        $('.section_posted[data-term="2"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="2" data-status="5">'+[...new Map(pos_sec_2.map(item => [item['id'], item])).values()].length+'</a>'
+                        $('.section_posted[data-term="3"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="3" data-status="5">'+[...new Map(pos_sec_3.map(item => [item['id'], item])).values()].length+'</a>'
+                        $('.section_posted[data-term="4"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="4" data-status="5">'+[...new Map(pos_sec_4.map(item => [item['id'], item])).values()].length+'</a>'
                         
                         $('.section_unsubmitted[data-term="1"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="1" data-status="0">'+[...new Map(uns_sec_1.map(item => [item['id'], item])).values()].length+'</a>'
                         $('.section_unsubmitted[data-term="2"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="2" data-status="0">'+[...new Map(uns_sec_2.map(item => [item['id'], item])).values()].length+'</a>'
                         $('.section_unsubmitted[data-term="3"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="3" data-status="0">'+[...new Map(uns_sec_3.map(item => [item['id'], item])).values()].length+'</a>'
                         $('.section_unsubmitted[data-term="4"]')[0].innerHTML = '<a href="#" class="view_sections" data-term="4" data-status="0">'+[...new Map(uns_sec_4.map(item => [item['id'], item])).values()].length+'</a>'
 
-                        $('.unsubmitted[data-term="1"]')[0].innerHTML = '<a href="#" class="view_uns" data-term="1" data-status="7">'+[...new Map(uns_stud_1.map(item => [item['studid'], item])).values()].length+'</a>'
-                        $('.unsubmitted[data-term="2"]')[0].innerHTML = '<a href="#" class="view_uns" data-term="2" data-status="7">'+[...new Map(uns_stud_2.map(item => [item['studid'], item])).values()].length+'</a>'
-                        $('.unsubmitted[data-term="3"]')[0].innerHTML = '<a href="#" class="view_uns" data-term="3" data-status="7">'+[...new Map(uns_stud_3.map(item => [item['studid'], item])).values()].length+'</a>'
-                        $('.unsubmitted[data-term="4"]')[0].innerHTML = '<a href="#" class="view_uns" data-term="4" data-status="7">'+[...new Map(uns_stud_4.map(item => [item['studid'], item])).values()].length+'</a>'
+                        $('.unsubmitted[data-term="1"]')[0].innerHTML = '<a href="#" class="view_students" data-term="1" data-status="0">'+[...new Map(uns_stud_1.map(item => [item['studid'], item])).values()].length+'</a>'
+                        $('.unsubmitted[data-term="2"]')[0].innerHTML = '<a href="#" class="view_students" data-term="2" data-status="0">'+[...new Map(uns_stud_2.map(item => [item['studid'], item])).values()].length+'</a>'
+                        $('.unsubmitted[data-term="3"]')[0].innerHTML = '<a href="#" class="view_students" data-term="3" data-status="0">'+[...new Map(uns_stud_3.map(item => [item['studid'], item])).values()].length+'</a>'
+                        $('.unsubmitted[data-term="4"]')[0].innerHTML = '<a href="#" class="view_students" data-term="4" data-status="0">'+[...new Map(uns_stud_4.map(item => [item['studid'], item])).values()].length+'</a>'
 
-                        $('.submitted[data-term="1"]')[0].innerHTML = '<a href="#" class="view_submitted" data-term="1" data-status="7">'+[...new Map(sub_stud_1.map(item => [item['studid'], item])).values()].length+'</a>'
-                        $('.submitted[data-term="2"]')[0].innerHTML = '<a href="#" class="view_submitted" data-term="2" data-status="7">'+[...new Map(sub_stud_2.map(item => [item['studid'], item])).values()].length+'</a>'
-                        $('.submitted[data-term="3"]')[0].innerHTML = '<a href="#" class="view_submitted" data-term="3" data-status="7">'+[...new Map(sub_stud_3.map(item => [item['studid'], item])).values()].length+'</a>'
-                        $('.submitted[data-term="4"]')[0].innerHTML = '<a href="#" class="view_submitted" data-term="4" data-status="7">'+[...new Map(sub_stud_4.map(item => [item['studid'], item])).values()].length+'</a>'
+                        $('.submitted[data-term="1"]')[0].innerHTML = '<a href="#" class="view_students" data-term="1" data-status="1">'+[...new Map(sub_stud_1.map(item => [item['studid'], item])).values()].length+'</a>'
+                        $('.submitted[data-term="2"]')[0].innerHTML = '<a href="#" class="view_students" data-term="2" data-status="1">'+[...new Map(sub_stud_2.map(item => [item['studid'], item])).values()].length+'</a>'
+                        $('.submitted[data-term="3"]')[0].innerHTML = '<a href="#" class="view_students" data-term="3" data-status="1">'+[...new Map(sub_stud_3.map(item => [item['studid'], item])).values()].length+'</a>'
+                        $('.submitted[data-term="4"]')[0].innerHTML = '<a href="#" class="view_students" data-term="4" data-status="1">'+[...new Map(sub_stud_4.map(item => [item['studid'], item])).values()].length+'</a>'
 
-                        $('.approved[data-term="1"]')[0].innerHTML = '<a href="#" class="view_approved" data-term="1" data-status="7">'+[...new Map(app_stud_1.map(item => [item['studid'], item])).values()].length+'</a>'
-                        $('.approved[data-term="2"]')[0].innerHTML = '<a href="#" class="view_approved" data-term="2" data-status="7">'+[...new Map(app_stud_2.map(item => [item['studid'], item])).values()].length+'</a>'
-                        $('.approved[data-term="3"]')[0].innerHTML = '<a href="#" class="view_approved" data-term="3" data-status="7">'+[...new Map(app_stud_3.map(item => [item['studid'], item])).values()].length+'</a>'
-                        $('.approved[data-term="4"]')[0].innerHTML = '<a href="#" class="view_approved" data-term="4" data-status="7">'+[...new Map(app_stud_4.map(item => [item['studid'], item])).values()].length+'</a>'
+                        $('.approved[data-term="1"]')[0].innerHTML = '<a href="#" class="view_students" data-term="1" data-status="2">'+[...new Map(app_stud_1.map(item => [item['studid'], item])).values()].length+'</a>'
+                        $('.approved[data-term="2"]')[0].innerHTML = '<a href="#" class="view_students" data-term="2" data-status="2">'+[...new Map(app_stud_2.map(item => [item['studid'], item])).values()].length+'</a>'
+                        $('.approved[data-term="3"]')[0].innerHTML = '<a href="#" class="view_students" data-term="3" data-status="2">'+[...new Map(app_stud_3.map(item => [item['studid'], item])).values()].length+'</a>'
+                        $('.approved[data-term="4"]')[0].innerHTML = '<a href="#" class="view_students" data-term="4" data-status="2">'+[...new Map(app_stud_4.map(item => [item['studid'], item])).values()].length+'</a>'
 
-                        $('.pending[data-term="1"]')[0].innerHTML = '<a href="#" class="view_pending" data-term="1" data-status="7">'+[...new Map(pen_stud_1.map(item => [item['studid'], item])).values()].length+'</a>'
-                        $('.pending[data-term="2"]')[0].innerHTML = '<a href="#" class="view_pending" data-term="2" data-status="7">'+[...new Map(pen_stud_2.map(item => [item['studid'], item])).values()].length+'</a>'
-                        $('.pending[data-term="3"]')[0].innerHTML = '<a href="#" class="view_pending" data-term="3" data-status="7">'+[...new Map(pen_stud_3.map(item => [item['studid'], item])).values()].length+'</a>'
-                        $('.pending[data-term="4"]')[0].innerHTML = '<a href="#" class="view_pending" data-term="4" data-status="7">'+[...new Map(pen_stud_4.map(item => [item['studid'], item])).values()].length+'</a>'
+                        $('.pending[data-term="1"]')[0].innerHTML = '<a href="#" class="view_students" data-term="1" data-status="6">'+[...new Map(pen_stud_1.map(item => [item['studid'], item])).values()].length+'</a>'
+                        $('.pending[data-term="2"]')[0].innerHTML = '<a href="#" class="view_students" data-term="2" data-status="6">'+[...new Map(pen_stud_2.map(item => [item['studid'], item])).values()].length+'</a>'
+                        $('.pending[data-term="3"]')[0].innerHTML = '<a href="#" class="view_students" data-term="3" data-status="6">'+[...new Map(pen_stud_3.map(item => [item['studid'], item])).values()].length+'</a>'
+                        $('.pending[data-term="4"]')[0].innerHTML = '<a href="#" class="view_students" data-term="4" data-status="6">'+[...new Map(pen_stud_4.map(item => [item['studid'], item])).values()].length+'</a>'
 
-                        $('.inc[data-term="1"]')[0].innerHTML = '<a href="#" class="view_inc" data-term="1" data-status="8">'+[...new Map(inc_stud_1.map(item => [item['studid'], item])).values()].length+'</a>'
-                        $('.inc[data-term="2"]')[0].innerHTML = '<a href="#" class="view_inc" data-term="2" data-status="8">'+[...new Map(inc_stud_2.map(item => [item['studid'], item])).values()].length+'</a>'
-                        $('.inc[data-term="3"]')[0].innerHTML = '<a href="#" class="view_inc" data-term="3" data-status="8">'+[...new Map(inc_stud_3.map(item => [item['studid'], item])).values()].length+'</a>'
-                        $('.inc[data-term="4"]')[0].innerHTML = '<a href="#" class="view_inc" data-term="4" data-status="8">'+[...new Map(inc_stud_4.map(item => [item['studid'], item])).values()].length+'</a>'
+                        $('.inc[data-term="1"]')[0].innerHTML = '<a href="#" class="view_students" data-term="1" data-status="7">'+[...new Map(inc_stud_1.map(item => [item['studid'], item])).values()].length+'</a>'
+                        $('.inc[data-term="2"]')[0].innerHTML = '<a href="#" class="view_students" data-term="2" data-status="7">'+[...new Map(inc_stud_2.map(item => [item['studid'], item])).values()].length+'</a>'
+                        $('.inc[data-term="3"]')[0].innerHTML = '<a href="#" class="view_students" data-term="3" data-status="7">'+[...new Map(inc_stud_3.map(item => [item['studid'], item])).values()].length+'</a>'
+                        $('.inc[data-term="4"]')[0].innerHTML = '<a href="#" class="view_students" data-term="4" data-status="7">'+[...new Map(inc_stud_4.map(item => [item['studid'], item])).values()].length+'</a>'
 
-                        $('.drop[data-term="1"]')[0].innerHTML = '<a href="#" class="view_drop" data-term="1" data-status="9">'+[...new Map(drop_stud_1.map(item => [item['studid'], item])).values()].length+'</a>'
-                        $('.drop[data-term="2"]')[0].innerHTML = '<a href="#" class="view_drop" data-term="2" data-status="9">'+[...new Map(drop_stud_2.map(item => [item['studid'], item])).values()].length+'</a>'
-                        $('.drop[data-term="3"]')[0].innerHTML = '<a href="#" class="view_drop" data-term="3" data-status="9">'+[...new Map(drop_stud_3.map(item => [item['studid'], item])).values()].length+'</a>'
-                        $('.drop[data-term="4"]')[0].innerHTML = '<a href="#" class="view_drop" data-term="4" data-status="9">'+[...new Map(drop_stud_4.map(item => [item['studid'], item])).values()].length+'</a>'
+                        $('.drop[data-term="1"]')[0].innerHTML = '<a href="#" class="view_students" data-term="1" data-status="8">'+[...new Map(drop_stud_1.map(item => [item['studid'], item])).values()].length+'</a>'
+                        $('.drop[data-term="2"]')[0].innerHTML = '<a href="#" class="view_students" data-term="2" data-status="8">'+[...new Map(drop_stud_2.map(item => [item['studid'], item])).values()].length+'</a>'
+                        $('.drop[data-term="3"]')[0].innerHTML = '<a href="#" class="view_students" data-term="3" data-status="8">'+[...new Map(drop_stud_3.map(item => [item['studid'], item])).values()].length+'</a>'
+                        $('.drop[data-term="4"]')[0].innerHTML = '<a href="#" class="view_students" data-term="4" data-status="8">'+[...new Map(drop_stud_4.map(item => [item['studid'], item])).values()].length+'</a>'
+
+                        $('.posted[data-term="1"]')[0].innerHTML = '<a href="#" class="view_students" data-term="1" data-status="5">'+[...new Map(pos_stud_1.map(item => [item['studid'], item])).values()].length+'</a>'
+                        $('.posted[data-term="2"]')[0].innerHTML = '<a href="#" class="view_students" data-term="2" data-status="5">'+[...new Map(pos_stud_2.map(item => [item['studid'], item])).values()].length+'</a>'
+                        $('.posted[data-term="3"]')[0].innerHTML = '<a href="#" class="view_students" data-term="3" data-status="5">'+[...new Map(pos_stud_3.map(item => [item['studid'], item])).values()].length+'</a>'
+                        $('.posted[data-term="4"]')[0].innerHTML = '<a href="#" class="view_students" data-term="4" data-status="5">'+[...new Map(pos_stud_4.map(item => [item['studid'], item])).values()].length+'</a>'
 
 
                   }
-
+                  var status
                   $(document).on('click','.view_sections',function(){
                         var term  = $(this).attr('data-term')
-                        var status  = $(this).attr('data-status')
+                        status  = $(this).attr('data-status')
 
                         var title_text = ''
 
+                        
                         if(status == 0){
                               title_text += 'Section Unsubmitted Grades'
                         }else if(status == 1){
                               title_text += 'Section Submitted Grades'
-                        }else if(status == 7){
+                        }else if(status == 2){
                               title_text += 'Section Approved Grades'
-                        }else if(status == 3){
+                        }else if(status == 5){
+                              title_text += 'Section Posted Grades'
+                        }else if(status == 6){
                               title_text += 'Section Pending Grades'
-                        }else if(status == 8){
+                        }else if(status == 7){
                               title_text += 'Section INC Grades'
-                        }else if(status == 9){
+                        }else if(status == 8){
                               title_text += 'Section Dropped Grades'
                         }
 
@@ -2230,212 +3100,269 @@
                         $('#modal_4').modal()
                   })
 
-                  $(document).on('click','.view_section_grades',function(){
+            
+                  $(document).on('click','.view_students',function(){
+                        term  = $(this).attr('data-term')
+                        status  = $(this).attr('data-status')
 
-                        var term  = $(this).attr('data-term')
-                        var status  = $(this).attr('data-status')
-                        var section  = $(this).attr('data-section')
-                        var subjid  = $(this).attr('data-subj')
-                        selected_subject = subjid
-                        show_section_grades(term,status,section,subjid)
-                        $('#modal_6').modal()
+                        var title_text = ''
 
-                  })
-
-                  $(document).on('click','#grade_appove',function(){
-                        $('.select').attr('disabled','disabled')
-                        $('#quarter_select').val("").change()
-                        $('#process_button').text('Approve')
-                        $('#process_button').removeClass('btn-warning')
-                        $('#process_button').addClass('btn-primary')
-                        $('#process_button').attr('data-id',7)
-                        $('#modal_8').modal()
-                        current_status = 7
-                  })
-
-                  $(document).on('click','#grade_pending',function(){
-                        $('#quarter_select').val("").change()
-                        $('.select').attr('disabled','disabled')
-                        $('#process_button').text('Pending')
-                        $('#process_button').removeClass('btn-primary')
-                        $('#process_button').addClass('btn-warning')
-                        $('#modal_8').modal()
-                        $('#process_button').attr('data-id',3)
-                        current_status = 3
-                  })
-
-                  $(document).on('change','#quarter_select',function() {
-                        var term = $(this).val()
-                        if(term == ""){
-                              $('.select_all').attr('disabled','disabled')
-                              $('.select').attr('disabled','disabled')
-                              $('.grade_submission_student').text()
-                              $('#submit_selected_grade').attr('disabled','disabled')
-                              $('.select').removeAttr('data-id')
-                              $('.grade_submission_student').empty()
-                              return false
-                        }else if(term == "prelemgrade"){
-                              selected_term = 1;
-                        }else if(term == "midtermgrade"){
-                              selected_term = 2;
-                        }else if(term == "prefigrade"){
-                              selected_term = 3;
-                        }else if(term == "finalgrade"){
-                              selected_term = 4;
+                        if(status == 0){
+                              title_text += 'Student Unsubmitted Grades'
+                        }else if(status == 1){
+                              title_text += 'Student Submitted Grades'
+                        }else if(status == 2){
+                              title_text += 'Student Approved Grades'
+                        }else if(status == 5){
+                              title_text += 'Student Posted Grades'
+                        }else if(status == 6){
+                              title_text += 'Student Pending Grades'
+                        }else if(status == 7){
+                              title_text += 'Student INC Grades'
+                        }else if(status == 8){
+                              title_text += 'Student Dropped Grades'
                         }
 
-                        $('#submit_selected_grade').removeAttr('disabled')
-                        $('.select_all').removeAttr('disabled')
-                        $('.select').removeAttr('disabled')
+                        if(term == 1){
+                              title_text += ' <i>['+'Prelim'+']</i>'
+                        }else if(term == 2){
+                              title_text += ' <i>['+'Midterm'+']</i>'
+                        }else if(term == 3){
+                              title_text += ' <i>['+'Prefi'+']</i>'
+                        }else if(term == 4){
+                              title_text += ' <i>['+'Final'+']</i>'
+                        }
 
 
-                        $('.grade_td[data-term="'+term+'"]').each(function(a,b){
+                        $('.modal_title_1').each(function(){
+                              $(this)[0].innerHTML = title_text;
+                        })
 
-                              if(( current_status == 7 && $(this).attr('data-status') == 7 ) || ( current_status == 7 && $(this).attr('data-status') == 3 )){
-                                    $('.select[data-studid="'+$(this).attr('data-studid')+'"]').attr('disabled','disabled')
-                              }else if(current_status == 3 && $(this).attr('data-status') == 3){
-                                    $('.select[data-studid="'+$(this).attr('data-studid')+'"]').attr('disabled','disabled')
-                              }else if($(this).attr('data-status') == 9 || $(this).attr('data-status') == 8){
-                                    $('.select[data-studid="'+$(this).attr('data-studid')+'"]').attr('disabled','disabled')
-                              }
+                        current_status = status
+                        view_student_list_modal(term,status)
+                        $('#modal_1').modal()
+                  })
+
+
+                  // $(document).on('click','.view_section_grades',function(){
+
+                  //       var term  = $(this).attr('data-term')
+                  //       var status  = $(this).attr('data-status')
+                  //       var section  = $(this).attr('data-section')
+                  //       var subjid  = $(this).attr('data-subj')
+                  //       selected_subject = subjid
+                  //       show_section_grades(term,status,section,subjid)
+                  //       $('#modal_6').modal()
+
+                  // })
+
+                  // $(document).on('click','#grade_appove',function(){
+                  //       $('.select').attr('disabled','disabled')
+                  //       $('#quarter_select').val("").change()
+                  //       $('#process_button').text('Approve')
+                  //       $('#process_button').removeClass('btn-warning')
+                  //       $('#process_button').addClass('btn-primary')
+                  //       $('#process_button').attr('data-id',7)
+                  //       $('#modal_8').modal()
+                  //       current_status = 7
+                  // })
+
+                  // $(document).on('click','#grade_pending',function(){
+                  //       $('#quarter_select').val("").change()
+                  //       $('.select').attr('disabled','disabled')
+                  //       $('#process_button').text('Pending')
+                  //       $('#process_button').removeClass('btn-primary')
+                  //       $('#process_button').addClass('btn-warning')
+                  //       $('#modal_8').modal()
+                  //       $('#process_button').attr('data-id',3)
+                  //       current_status = 3
+                  // })
+
+                  // $(document).on('change','#quarter_select',function() {
+                  //       var term = $(this).val()
+                  //       if(term == ""){
+                  //             $('.select_all').attr('disabled','disabled')
+                  //             $('.select').attr('disabled','disabled')
+                  //             $('.grade_submission_student').text()
+                  //             $('#submit_selected_grade').attr('disabled','disabled')
+                  //             $('.select').removeAttr('data-id')
+                  //             $('.grade_submission_student').empty()
+                  //             return false
+                  //       }else if(term == "prelemgrade"){
+                  //             selected_term = 1;
+                  //       }else if(term == "midtermgrade"){
+                  //             selected_term = 2;
+                  //       }else if(term == "prefigrade"){
+                  //             selected_term = 3;
+                  //       }else if(term == "finalgrade"){
+                  //             selected_term = 4;
+                  //       }
+
+                  //       $('#submit_selected_grade').removeAttr('disabled')
+                  //       $('.select_all').removeAttr('disabled')
+                  //       $('.select').removeAttr('disabled')
+
+
+                  //       $('.grade_td[data-term="'+term+'"]').each(function(a,b){
+
+                  //             if(( current_status == 7 && $(this).attr('data-status') == 7 ) || ( current_status == 7 && $(this).attr('data-status') == 3 )){
+                  //                   $('.select[data-studid="'+$(this).attr('data-studid')+'"]').attr('disabled','disabled')
+                  //             }else if(current_status == 3 && $(this).attr('data-status') == 3){
+                  //                   $('.select[data-studid="'+$(this).attr('data-studid')+'"]').attr('disabled','disabled')
+                  //             }else if($(this).attr('data-status') == 9 || $(this).attr('data-status') == 8){
+                  //                   $('.select[data-studid="'+$(this).attr('data-studid')+'"]').attr('disabled','disabled')
+                  //             }
                               
 
 
 
 
-                              $('.grade_submission_student[data-studid="'+$(this).attr('data-studid')+'"]').text($(this).text())
-                              $('.select[data-studid="'+$(this).attr('data-studid')+'"]').attr('data-id',$(this).attr('data-id'))
-                        })
-                  })
+                  //             $('.grade_submission_student[data-studid="'+$(this).attr('data-studid')+'"]').text($(this).text())
+                  //             $('.select[data-studid="'+$(this).attr('data-studid')+'"]').attr('data-id',$(this).attr('data-id'))
+                  //       })
+                  // })
 
-                  $(document).on('click','#process_button',function(){
-                        if($(this).attr('data-id') == 7){
-                              approve_grade()
-                        }else if($(this).attr('data-id') == 3){
-                              pending_grade()
-                        }
+                  // $(document).on('click','#process_button',function(){
+                  //       if($(this).attr('data-id') == 7){
+                  //             approve_grade()
+                  //       }else if($(this).attr('data-id') == 3){
+                  //             pending_grade()
+                  //       }
                         
-                  })
+                  // })
 
                   
 
-                  function show_section_grades(term = null, status = null, section = null, subjid = null){
+                  // function show_section_grades(term = null, status = null, section = null, subjid = null){
 
-                        var data = get_current_selecton_data(term,status)
+                  //       var data = get_current_selecton_data(term,status)
 
-                        data = [...new Map(data.map(item => [item['studid'], item])).values()]
+                  //       data = [...new Map(data.map(item => [item['studid'], item])).values()]
 
-                        $('#datatable_6').empty()
+                  //       $('#datatable_6').empty()
 
-                        if(data.length == 0){
-                              $('.approve_grade').attr('hidden','hidden')
-                              $('.pending_grade').attr('hidden','hidden')
-                              $('#select_all').attr('disabled','disabled')
-                              return false
-                        }
+                  //       if(data.length == 0){
+                  //             $('.approve_grade').attr('hidden','hidden')
+                  //             $('.pending_grade').attr('hidden','hidden')
+                  //             $('#select_all').attr('disabled','disabled')
+                  //             return false
+                  //       }
 
-                        if(status == 1){
-                              $('.approve_grade').removeAttr('hidden')
-                              $('.pending_grade').removeAttr('hidden')
-                        }else if(status == 7){
-                              $('.approve_grade').attr('hidden','hidden')
-                              $('.pending_grade').removeAttr('hidden')
-                        }else{
-                              $('.approve_grade').attr('hidden','hidden')
-                              $('.pending_grade').attr('hidden','hidden')
-                        }
+                  //       if(status == 1){
+                  //             $('.approve_grade').removeAttr('hidden')
+                  //             $('.pending_grade').removeAttr('hidden')
+                  //       }else if(status == 7){
+                  //             $('.approve_grade').attr('hidden','hidden')
+                  //             $('.pending_grade').removeAttr('hidden')
+                  //       }else{
+                  //             $('.approve_grade').attr('hidden','hidden')
+                  //             $('.pending_grade').attr('hidden','hidden')
+                  //       }
                        
-                        $('.select_all').removeAttr('disabled')
-                        $('.select_all').prop('checked',true)
-                        data = data.filter(x=>x.prospectusID == subjid)
-                        $('.selected_count').text(data.length)
+                  //       $('.select_all').removeAttr('disabled')
+                  //       $('.select_all').prop('checked',true)
+                  //       data = data.filter(x=>x.prospectusID == subjid)
+                  //       $('.selected_count').text(data.length)
 
-                        var female = 0;
-                        var male = 0;
+                  //       var female = 0;
+                  //       var male = 0;
 
-                        $.each(data,function (a,b) {
+                  //       $.each(data,function (a,b) {
 
-                              var grade = null
-                              if(term == 1){ grade = b.prelemgrade }
-                              else if(term == 2){ grade = b.midtermgrade }
-                              else if(term == 3){ grade = b.prefigrade }
-                              else if(term == 4){ grade = b.finalgrade }
+                  //             var grade = null
+                  //             if(term == 1){ grade = b.prelemgrade }
+                  //             else if(term == 2){ grade = b.midtermgrade }
+                  //             else if(term == 3){ grade = b.prefigrade }
+                  //             else if(term == 4){ grade = b.finalgrade }
 
-                              var temp_student = students.filter(x=>x.studid == b.studid)
+                  //             var temp_student = students.filter(x=>x.studid == b.studid)
 
-                              if(male == 0 && temp_student[0].gender == 'MALE'){
-                                    $('#datatable_6').append('<tr class="bg-secondary"><th colspan="4">MALE</th></tr>')
-                                    male = 1
-                              }else if(female == 0 && temp_student[0].gender == 'FEMALE'){
-                                    $('#datatable_6').append('<tr class="bg-secondary"><th colspan="4">FEMALE</th></tr>')
-                                    female = 1
-                              }
+                  //             if(male == 0 && temp_student[0].gender == 'MALE'){
+                  //                   $('#datatable_6').append('<tr class="bg-secondary"><th colspan="4">MALE</th></tr>')
+                  //                   male = 1
+                  //             }else if(female == 0 && temp_student[0].gender == 'FEMALE'){
+                  //                   $('#datatable_6').append('<tr class="bg-secondary"><th colspan="4">FEMALE</th></tr>')
+                  //                   female = 1
+                  //             }
 
-                              $('#datatable_6').append('<tr><td><input data-id="'+b.id+'" checked="checked" type="checkbox" class="select"></td><td>'+temp_student[0].sid+'</td><td>'+temp_student[0].studentname+'</td><td data-studid="'+temp_student[0].sid+'" class="grade_submission_student text-center">'+grade+'</td></tr>')
+                  //             $('#datatable_6').append('<tr><td><input data-id="'+b.id+'" checked="checked" type="checkbox" class="select"></td><td>'+temp_student[0].sid+'</td><td>'+temp_student[0].studentname+'</td><td data-studid="'+temp_student[0].sid+'" class="grade_submission_student text-center">'+grade+'</td></tr>')
                               
+                  //       })
+                  // }
+
+                  var section_list;
+                  var term_section
+                  function view_section_list_modal(term = null, status = null){
+                        term_section = term
+                        var syid = $('#filter_sy').val()
+                        var semid = $('#filter_semester').val()
+                        var courseid = $('#filter_course').val()
+                        var gradelevel = $('#filter_gradelevel').val()
+                        $.ajax({
+                              url: "/college/grades/get_sections",
+                              method: 'GET',
+                              data: {
+                                    syid:syid,
+                                    semid:semid,
+                                    courseid:courseid,
+                                    gradelevel:gradelevel,
+                                    term:term,
+                                    status:status,
+                              },
+                              success: function (data) {
+                                    section_list = data
+                                    display_status_sections()
+                              }
                         })
+
+                        
                   }
 
-                  function view_section_list_modal(term = null, status = null){
-
-                        var data = []
-
-                        if(term == 1){
-                              if(status == 1){ data = sub_sec_1 }
-                              else if(status == 7){ data = app_sec_1 }
-                              else if(status == 3){ data = pen_sec_1 }
-                              else if(status == 0){ data = uns_sec_1 }
-                              else if(status == 8){ data = inc_sec_1 }
-                              else if(status == 9){ data = drop_sec_1 }
-                        }else if(term == 2){
-                              if(status == 1){ data = sub_sec_2 }
-                              else if(status == 7){ data = app_sec_2 }
-                              else if(status == 3){ data = pen_sec_2 }
-                              else if(status == 0){ data = uns_sec_2 }
-                              else if(status == 8){ data = inc_sec_2 }
-                              else if(status == 9){ data = drop_sec_2 }
-                        }else if(term == 3){
-                              if(status == 1){ data = sub_sec_3 }
-                              else if(status == 7){ data = app_sec_3 }
-                              else if(status == 3){ data = pen_sec_3 }
-                              else if(status == 0){ data = uns_sec_3 }
-                              else if(status == 8){ data = inc_sec_3 }
-                              else if(status == 9){ data = drop_sec_3 }
-                        }else if(term == 4){
-                              if(status == 1){ data = sub_sec_4 }
-                              else if(status == 7){ data = app_sec_4 }
-                              else if(status == 3){ data = pen_sec_4 }
-                              else if(status == 0){ data = uns_sec_4 }
-                              else if(status == 8){ data = inc_sec_4 }
-                              else if(status == 9){ data = drop_sec_4 }
-                        }
-
-                        var student_data = get_current_selecton_data(term,status)
-
-                        data = [...new Map(data.map(item => [item['id'], item])).values()]
-
-                        $.each(data,function(a,b){
-                              var temp_data = student_data.filter(x=>x.sectionID == b.id)
-                              var count = [...new Map(temp_data.map(item => [item['prospectusID'], item])).values()].length
-                              b.subj_count = count
+                  var term_students
+                  var student_list;
+                  function view_student_list_modal(term = null, status = null){
+                        term_students = term
+                        var syid = $('#filter_sy').val()
+                        var semid = $('#filter_semester').val()
+                        var courseid = $('#filter_course').val()
+                        var gradelevel = $('#filter_gradelevel').val()
+                        $.ajax({
+                              url: "/college/grades/get_students",
+                              method: 'GET',
+                              data: {
+                                    syid:syid,
+                                    semid:semid,
+                                    courseid:courseid,
+                                    gradelevel:gradelevel,
+                                    term:term,
+                                    status:status,
+                              },
+                              success: function (data) {
+                                    student_list = data
+                                    display_status_students()
+                              }
                         })
 
-                        $("#datatable_4").DataTable({
+                        
+                  }
+
+                  function display_status_students(){
+                        
+                        $("#datatable_1").DataTable({
                               destroy: true,
-                              data:data,
+                              data:student_list,
                               lengthChange: false,
                               autoWidth: false,
                               columns: [
-                                    { "data": "sectionDesc"},
-                                    { "data": null}
+                                    { "data": null},
+                                    { "data": null},
                               ],
                               columnDefs: [
                                     {
                                           'targets': 0,
                                           'orderable': false, 
                                           'createdCell':  function (td, cellData, rowData, row, col) {
-                                                var text = '<a class="mb-0">'+rowData.sectionDesc+'</a><p class="text-muted mb-0" style="font-size:.7rem" >'+rowData.levelname.replace(' COLLEGE','')+'</p>';  
-                                                $(td)[0].innerHTML = text
+                                                $(td).html('<div>'+ rowData.sectionDesc +'</div><div class="text-secondary" style="font-size:.5rem!important">'+ rowData.levelname.replace(' COLLEGE','') +'</div>')
                                                 $(td).addClass('align-middle')
                                           }
                                     },
@@ -2443,147 +3370,46 @@
                                           'targets': 1,
                                           'orderable': false, 
                                           'createdCell':  function (td, cellData, rowData, row, col) {
-                                                var text = '<button class="btn btn-primary btn-sm view_section_subjects btn-block" data-term="'+term+'" data-status="'+status+'" data-section="'+rowData.id+'">View Subjects ( ' +rowData.subj_count+' )</button>'   
-                                                $(td)[0].innerHTML = text
+                                                if(status == 0){
+                                                      $(td).html('<div>'+ rowData.studname +'</div> <div class="text-success"  style="font-size:.5rem!important">'+ rowData.sid +'</div>' )
+                                                }else{
+                                                      $(td).html('<a href="#" class="view_student_grades" data-sectionid="'+ rowData.sectionid +'" data-studname="'+rowData.studname+'" data-studid="'+rowData.studid+'">'+ rowData.studname +'</a> <div class="text-success"  style="font-size:.5rem!important">'+ rowData.sid +'</div>' )
+                                                }
                                                 $(td).addClass('align-middle')
-                                                $(td).addClass('text-center')
                                           }
                                     },
                               ]
                         })
                   }
+                  
+                  
 
-
-
-
-                  $(document).on('click','.view_section_subjects',function(){
-                        var temp_section = $(this).attr('data-section')
-                        var term = $(this).attr('data-term')
-                        var status = $(this).attr('data-status')
-                        var section_info = all_sections.filter(x=>x.id == temp_section)
-                        $('#modal_sectionname').text(section_info[0].sectionDesc)
-                        selected_term = term
-                        current_status = status
-                        selected_section = temp_section
-                        show_section_subject(term, status, temp_section)
-                        $('#modal_5').modal()
-
-                  })
-
-                  function show_section_subject(term = null, status = null, section = null){
-
-                        var temp_subjects = all_section_sched.filter(x=>x.sectionID == section)
-                        var data = get_current_selecton_data(term, status)
-
-                        if(term == 1){
-                              if(status == 0){
-                                    $.each(temp_subjects,function(a,b){
-                                          b.student_count = sched.filter(x=>x.schedid == b.id).length
-                                    })
-                              }else if(status == 1 || status == 7 || status == 3 || status == 8 || status == 9){
-                                    var subject_holder = []
-                                    $.each(temp_subjects,function(a,b){
-                                          student_count = data.filter(x=>x.prospectusID == b.subjectID && x.sectionID == section)
-                                          student_count = [...new Map(student_count.map(item => [item['studid'], item])).values()].length
-                                          if(student_count > 0){
-                                                b.student_count = student_count
-                                                subject_holder.push(b)
-                                          }
-                                    })
-                                    temp_subjects = subject_holder
-                              }
-                        }else if(term == 2){
-                              if(status == 0){
-                                    $.each(temp_subjects,function(a,b){
-                                          b.student_count = sched.filter(x=>x.schedid == b.id).length
-                                    })
-                              }else if(status == 1 || status == 7 || status == 3 || status == 8 || status == 9){
-                                    var subject_holder = []
-                                    $.each(temp_subjects,function(a,b){
-                                          student_count = data.filter(x=>x.prospectusID == b.subjectID && x.sectionID == section)
-                                          student_count = [...new Map(student_count.map(item => [item['studid'], item])).values()].length
-                                          if(student_count > 0){
-                                                b.student_count = student_count
-                                                subject_holder.push(b)
-                                          }
-                                    })
-                                    temp_subjects = subject_holder
-                              }
-                        }else if(term == 3){
-                              if(status == 0){
-                                    $.each(temp_subjects,function(a,b){
-                                          b.student_count = sched.filter(x=>x.schedid == b.id).length
-                                    })
-                              }else if(status == 1 || status == 7 || status == 3 || status == 8 || status == 9){
-                                    var subject_holder = []
-                                    $.each(temp_subjects,function(a,b){
-                                          student_count = data.filter(x=>x.prospectusID == b.subjectID && x.sectionID == section)
-                                          student_count = [...new Map(student_count.map(item => [item['studid'], item])).values()].length
-                                          if(student_count > 0){
-                                                b.student_count = student_count
-                                                subject_holder.push(b)
-                                          }
-                                    })
-                                    temp_subjects = subject_holder
-                              }
-                        }else if(term == 4){
-                              if(status == 0){
-                                    $.each(temp_subjects,function(a,b){
-                                          b.student_count = sched.filter(x=>x.schedid == b.id).length
-                                    })
-                              }else if(status == 1 || status == 7 || status == 3 || status == 8 || status == 9){
-                                    var subject_holder = []
-                                    $.each(temp_subjects,function(a,b){
-                                          student_count = data.filter(x=>x.prospectusID == b.subjectID && x.sectionID == section)
-                                          student_count = [...new Map(student_count.map(item => [item['studid'], item])).values()].length
-                                          if(student_count > 0){
-                                                b.student_count = student_count
-                                                subject_holder.push(b)
-                                          }
-                                    })
-                                    temp_subjects = subject_holder
-                              }
-                        }
-
-                       
-
-                        $.each(temp_subjects,function(a,b){
-                              b.teacher = null
-                              b.tid = null
-                              var temp_teacher = teacher.filter(x=>x.id == b.teacherID)
-                              if(temp_teacher.length > 0){
-                                    b.teacher = temp_teacher[0].teachername
-                                    b.tid = temp_teacher[0].tid
-                              }
-                             
-                        })
-
-                        $("#datatable_5").DataTable({
+                  function display_status_sections(){
+                        
+                        $("#datatable_4").DataTable({
                               destroy: true,
-                              data:temp_subjects,
+                              data:section_list,
                               lengthChange: false,
                               autoWidth: false,
                               columns: [
-                                    { "data": "subjDesc"},
-                                    { "data": "teacher"},
-                                    { "data": "student_count"}
+                                    { "data": "sectionDesc"},
+                                    { "data": 'teachername'},
+                                    { "data": null},
                               ],
                               columnDefs: [
                                     {
                                           'targets': 0,
-                                          'orderable': true, 
+                                          'orderable': false, 
                                           'createdCell':  function (td, cellData, rowData, row, col) {
-                                                var text = '<a class="mb-0">'+rowData.subjDesc+'</a><p class="text-muted mb-0" style="font-size:.7rem" >'+rowData.subjCode+'</p>';
-                                                $(td)[0].innerHTML = text
+                                                $(td).html('<div>'+ rowData.sectionDesc +'</div><div class="text-secondary" style="font-size:.5rem!important">'+ rowData.levelname.replace(' COLLEGE','') +'</div>')
                                                 $(td).addClass('align-middle')
                                           }
                                     },
                                     {
                                           'targets': 1,
-                                          'orderable': true, 
+                                          'orderable': false, 
                                           'createdCell':  function (td, cellData, rowData, row, col) {
-                                                var text = '<a class="mb-0">'+rowData.teacher+'</a><p class="text-muted mb-0" style="font-size:.7rem" >'+rowData.tid+'</p>';
-                                                $(td)[0].innerHTML = text
+                                                $(td).html('<div>'+ rowData.teachername +'</div> <div class="text-success"  style="font-size:.5rem!important">'+ rowData.tid +'</div>' )
                                                 $(td).addClass('align-middle')
                                           }
                                     },
@@ -2591,571 +3417,895 @@
                                           'targets': 2,
                                           'orderable': false, 
                                           'createdCell':  function (td, cellData, rowData, row, col) {
-                                                if(status == 1 || status == 7){
-                                                      var text = '<button class="btn btn-primary btn-sm view_section_grades btn-block" style="font-size:.8rem"  data-term="'+term+'" data-status="'+status+'" data-section="'+rowData.id+'" data-subj="'+rowData.subjectID+'">View Grades ( '+rowData.student_count+' )</button>';
-                                                      $(td)[0].innerHTML = text
-                                                      $(td).addClass('align-middle')
-                                                      $(td).addClass('text-center')
+                                                if(status == 0){
+                                                      $(td).html('<div href="#" class="view_section_subjects" data-section="'+rowData.id+'">'+ rowData.subjDesc +'</div><div class="text-success"  style="font-size:.5rem!important">'+ rowData.subjCode +'</div>')
+
                                                 }else{
-                                                      var text = rowData.student_count;
+                                                      $(td).html('<a href="#" class="view_section_subjects" data-schedid="'+rowData.schedid+'" >'+ rowData.subjDesc +'</a><div class="text-success"  style="font-size:.5rem!important">'+ rowData.subjCode +'</div>')
                                                 }
-                                                $(td)[0].innerHTML = text
                                                 $(td).addClass('align-middle')
-                                                $(td).addClass('text-center')
                                           }
                                     },
                               ]
                         })
-
                   }
+                  var grade_access;
+                  $(document).on('click','.view_section_subjects',function(){
+                        schedid = $(this).attr('data-schedid')
+                        grade_access = 'sections'
+                        display_ecr()
 
-                  function pending_grade(){
+                  })
 
-                        var selected = []
-                        var term = selected_term
-                        var grade_term = ''
+                  var sectionid;
+                  var studid;
+                  $(document).on('click','.view_student_grades',function(){
 
-                        if(term == 1){
-                              term = 'prelemstatus'
-                              grade_term = 'prelemgrade'
-                        }else if(term == 2){
-                              term = 'midtermstatus'
-                              grade_term = 'midtermgrade'
-                        }else if(term == 3){
-                              term = 'prefistatus'
-                              grade_term = 'prefigrade'
-                        }else if(term == 4){
-                              term = 'finalstatus'
-                              grade_term = 'finalgrade'
-                        }
-
-                        $('.select').each(function(){
-                              if($(this).prop('checked') == true && $(this).attr('disabled') == undefined && $(this).attr('data-id') != undefined){
-                                    selected.push($(this).attr('data-id'))
-                              }
-                        })
-
-                        if(selected.length == 0){
-                              Toast.fire({
-                                    type: 'info',
-                                    title: 'No student selected'
-                              })
-                              return false
-                        }
-
-                        $.ajax({
-                              type:'POST',
-                              url: '/college/grades/pending/ph',
-                              data:{
-                                    syid:$('#filter_sy').val(),
-                                    semid:$('#filter_semester').val(),
-                                    term:term,
-                                    selected:selected,
-                              },
-                              success:function(data) {
-                                    if(data[0].status == 1){
-                                          Toast.fire({
-                                                type: 'success',
-                                                title: 'Added to pending!'
-                                          })
-                                          var term = selected_term
-                                          var status = current_status
-                                          var section = selected_section
-                                          var subjid = selected_subject
-
-                                          if(all_grades.length > 0){
-                                                $.each(selected,function(a,b){
-                                                      $('.select[data-id="'+b+'"]').attr('disabled','disabled')
-                                                      $('.grade_td[data-id="'+b+'"][data-term="'+grade_term+'"]').attr('data-status',3)
-                                                      $('.grade_td[data-id="'+b+'"][data-term="'+grade_term+'"]').addClass('bg-warning')
-                                                      var temp_id = all_grades.findIndex(x=>x.id == b)
-                                                      if(grade_term == "prelemgrade"){
-                                                            all_grades[temp_id].prelemstatus = 3
-                                                      }else if(grade_term == "midtermgrade"){
-                                                            all_grades[temp_id].midtermstatus = 3
-                                                      }else if(grade_term == "prefigrade"){
-                                                            all_grades[temp_id].prefistatus = 3
-                                                      }else if(grade_term == "finalgrade"){
-                                                            all_grades[temp_id].finalstatus = 3
-                                                      }
-                                                })
-                                          }
-
-                                          $('.grade_td').addClass('input_grades')
-                                          plot_subject_grades(all_grades)
-
-                                          $.each(selected,function(a,b){
-                                                if(term == 1){
-                                                      if(status == 7){
-                                                            var temp_grade_data = app_stud_1.filter(x=>x.id == b)
-                                                            app_stud_1 = app_stud_1.filter(x=>x.id != b)
-                                                      }else{
-                                                            var temp_grade_data = sub_stud_1.filter(x=>x.id == b)
-                                                            sub_stud_1 = sub_stud_1.filter(x=>x.id != b)
-                                                      }
-                                                      if(temp_grade_data.length > 0){
-                                                            temp_grade_data[0].prelemstatus = 3
-                                                            pen_stud_1.push(temp_grade_data[0])
-                                                      }
-                                                }else if(term == 2){
-                                                      if(status == 7){
-                                                            var temp_grade_data = app_stud_2.filter(x=>x.id == b)
-                                                            app_stud_2 = app_stud_2.filter(x=>x.id != b)
-                                                      }else{
-                                                            var temp_grade_data = sub_stud_2.filter(x=>x.id == b)
-                                                            sub_stud_2 = sub_stud_2.filter(x=>x.id != b)
-                                                      }
-                                                      if(temp_grade_data.length > 0){
-                                                            temp_grade_data[0].midtermstatus = 3
-                                                            pen_stud_1.push(temp_grade_data[0])
-                                                      }
-                                                }else if(term == 3){
-                                                      if(status == 7){
-                                                            var temp_grade_data = app_stud_3.filter(x=>x.id == b)
-                                                            app_stud_3 = app_stud_3.filter(x=>x.id != b)
-                                                      }else{
-                                                            var temp_grade_data = sub_stud_3.filter(x=>x.id == b)
-                                                            sub_stud_3 = sub_stud_3.filter(x=>x.id != b)
-                                                      }
-                                                      if(temp_grade_data.length > 0){
-                                                            temp_grade_data[0].prefistatus = 3
-                                                            pen_stud_1.push(temp_grade_data[0])
-                                                      }
-                                                }else if(term == 4){
-                                                      if(status == 7){
-                                                            var temp_grade_data = app_stud_4.filter(x=>x.id == b)
-                                                            app_stud_4 = app_stud_4.filter(x=>x.id != b)
-                                                      }else{
-                                                            var temp_grade_data = sub_stud_4.filter(x=>x.id == b)
-                                                            sub_stud_4 = sub_stud_4.filter(x=>x.id != b)
-                                                      }
-                                                      if(temp_grade_data.length > 0){
-                                                            temp_grade_data[0].finalstatus = 3
-                                                            pen_stud_4.push(temp_grade_data[0])
-                                                      }
-                                                }
-                                          })
-
-                                          update_data(term)
-                                          update_list_display()
-                                          view_list(term,status)
-
-                                          if(all_grades.length == 0){
-                                                show_section_grades(term,status,section,subjid)
-                                                show_section_subject(term, status, section)
-                                                view_section_list_modal(term,status)
-                                                view_student_subjects(selected_student)
-                                          }
-                                          
-                                    }else{
-                                          Toast.fire({
-                                                type: 'error',
-                                                title: 'Something went wrong!'
-                                          })
-                                    }
-                              },error:function(){
-                                    Toast.fire({
-                                          type: 'error',
-                                          title: 'Something went wrong!'
-                                    })
-                              }
-                        })
-
-                  }
-
-                  function view_list(term = null, status = null){
-
-                        data = []
-                        var temp_data = []
-                        var button_text = ''
-                        var button_class = ''
+                        var studname = $(this).attr('data-studname')
+                        studid = $(this).attr('data-studid')
+                        sectionid = $(this).attr('data-sectionid')
                         var title_text = ''
-
-                        if(status == 0){
-                              button_text = 'View Unsubmitted Grades'
-                              button_class = 'view_unsubmitted_grades'
-                              title_text += 'Student Unsubmitted Grades'
-                        }else if(status == 1){
-                              button_text = 'View Submitted Grades'
-                              button_class = 'view_submitted_grades'
-                              title_text += 'Student Submitted Grades'
-                        }else if(status == 7){
-                              button_text = 'View Aproved Grades'
-                              button_class = 'view_approve_grades'
-                              title_text += 'Student Approved Grades'
-                        }else if(status == 3){
-                              button_text = 'View Pending Grades'
-                              button_class = 'view_pending_grades'
-                              title_text += 'Student Pending Grades'
-                        }else if(status == 8){
-                              button_text = 'View INC Grades'
-                              button_class = 'view_inc_grades'
-                              title_text += 'Student INC Grades'
-                        }else if(status == 9){
-                              button_text = 'View Dropped Grades'
-                              button_class = 'view_drop_grades'
-                              title_text += 'Student Dropped Grades'
-                        }else{
-                              button_text = 'View Unsubmitted Grades'
-                              button_class = 'view_uns_grades'
-                              title_text += 'Student Unsubmitted Grades'
-                        }
-
-                        if(term == 1){
-                              if(status == 1){ data = sub_stud_1 }
-                              else if(status == 7){ data = app_stud_1 }
-                              else if(status == 3){ data = pen_stud_1 }
-                              else if(status == 0){ data = uns_stud_1 }
-                              else if(status == 8){ data = inc_stud_1 }
-                              else if(status == 9){ data = drop_stud_1 }
-                              else{ data = uns_stud_1 }
-                        }else if(term == 2){
-                              if(status == 1){ data = sub_stud_2 }
-                              else if(status == 7){ data = app_stud_2 }
-                              else if(status == 3){ data = pen_stud_2 }
-                              else if(status == 0){ data = uns_stud_2 }
-                              else if(status == 8){ data = inc_stud_2 }
-                              else if(status == 9){ data = drop_stud_2 }
-                              else{ data = uns_stud_2 }
-                        }else if(term == 3){
-                              if(status == 1){ data = sub_stud_3 }
-                              else if(status == 7){ data = app_stud_3 }
-                              else if(status == 3){ data = pen_stud_3 }
-                              else if(status == 0){ data = uns_stud_3 }
-                              else if(status == 8){ data = inc_stud_3 }
-                              else if(status == 9){ data = drop_stud_3 }
-                              else{ data = uns_stud_3 }
-                        }else if(term == 4){
-                              if(status == 1){ data = sub_stud_4 }
-                              else if(status == 7){ data = app_stud_4 }
-                              else if(status == 3){ data = pen_stud_4 }
-                              else if(status == 0){ data = uns_stud_4 }
-                              else if(status == 8){ data = inc_stud_4 }
-                              else if(status == 9){ data = drop_stud_4 }
-                              else{ data = uns_stud_4 }
-                        }
-
-                        $.each(data,function (a,b) {
-                              var temp_student = students.filter(x=>x.studid == b.studid)
-                              if(temp_student.length == 0){
-                                    b.studentname = ''
-                              }else{
-                                    b.studentname = temp_student[0].studentname
-                              }
-                        })
-
-                        data = [...new Map(data.map(item => [item['studid'], item])).values()]
-
-                        if(selected_term == 1){
+                        title_text = studname
+                        if(term_students == 1){
                               title_text += ' <i>['+'Prelim'+']</i>'
-                        }else if(selected_term == 2){
+                        }else if(term_students == 2){
                               title_text += ' <i>['+'Midterm'+']</i>'
-                        }else if(selected_term == 3){
+                        }else if(term_students == 3){
                               title_text += ' <i>['+'Prefi'+']</i>'
-                        }else if(selected_term == 4){
+                        }else if(term_students == 4){
                               title_text += ' <i>['+'Final'+']</i>'
                         }
+                        if(status == 1){
+                              title_text += ' <i>['+'Submitted'+']</i>'
+                        }else if(status == 2){
+                              title_text += ' <i>['+'Approved'+']</i>'
+                        }else if(status == 5){
+                              title_text += ' <i>['+'Posted'+']</i>'
+                        }else if(status == 6){
+                              title_text += ' <i>['+'Pending'+']</i>'
+                        }else if(status == 7){
+                              title_text += ' <i>['+'INC'+']</i>'
+                        }else if(status == 8){
+                              title_text += ' <i>['+'Dropped'+']</i>'
+                        }
 
-                        $('.modal_title_1')[0].innerHTML = title_text;
-                        $('#modal_title_3')[0].innerHTML = title_text;
+                        $('.modal-title-1-5').html(title_text)
+                        $('#modal_1_5').modal()
+                        view_student_grades()
+                  })
 
-                        $("#datatable_1").DataTable({
-                              destroy: true,
-                              data:data,
-                              lengthChange: false,
-                              autoWidth: false,
-                              columns: [
-                                    { "data": "studentname"},
-                                    { "data": null},
-                              ],
-                              columnDefs: [
-                                    {
-                                          'targets': 1,
-                                          'orderable': true, 
-                                          'createdCell':  function (td, cellData, rowData, row, col) {
-                                                $(td)[0].innerHTML =  '<button class="btn btn-primary btn-sm '+button_class+'" data-studid="'+rowData.studid+'" style="font-size:.8rem">'+button_text+'</button>'
-                                                $(td).addClass('align-middle')
-                                                $(td).addClass('text-center')
-                                          }
-                                    },
-                              ]
+                  function view_student_grades(){
+                        
+                        $.ajax({
+                              url: "/college/grades/get_student_grades",
+                              method: 'GET',
+                              data: {
+                                    sectionid: sectionid,
+                                    term: term_students,
+                                    status: status,
+                                    studid: studid
+                              },
+                              success: function (data) {
+                                    display_status_students_grades(data)
+                              }
+                        })
+                  }
+
+                  function display_status_students_grades(data){
+                        var grade;
+                        $('#data_1_5').empty()
+                        
+                        $.each(data, function(a,datum){
+                              if(status == 7){
+                                    grade = 'INC'
+                                    var remarks = 'INC'
+                              }else{
+                                    if(term_students == 1){
+                                          grade = datum.prelim_transmuted
+                                          var remarks = datum.prelim_remarks
+                                    }else if(term_students == 2){
+                                          grade = datum.midterm_transmuted
+                                          var remarks = datum.midterm_remarks
+                                    }else if(term_students == 3){
+                                          grade = datum.prefinal_transmuted
+                                          var remarks = datum.prefinal_remarks
+                                    }else if(term_students == 4){
+                                          grade = datum.final_transmuted
+                                          var remarks = datum.final_remarks
+                                    }
+                              }
+                             
+                              
+                              $('#data_1_5').append(
+                                    `
+                                          <tr>
+                                                <td class="align-middle">${datum.sectionDesc}<div class="text-secondary" style="font-size: .5rem!important">${datum.levelname}</div></td>
+                                                <td class="align-middle">${datum.subjDesc}<div class="text-success" style="font-size: .5rem!important">${datum.subjCode}</div></td>
+                                                <td class="text-center align-middle">${grade}</td>
+                                                <td class="align-middle">${remarks}</td>
+                                                <td class="align-middle">
+                                                      <button class="btn btn-primary btn-sm status_student_grades" id="approve_student_grades" data-schedid="${datum.schedid}" data-studid="${datum.studid}" data-status="2" style="font-size:.8rem">Approve</button>
+                                                      <button class="btn btn-info btn-sm ml-1 status_student_grades" id="post_student_grades" data-schedid="${datum.schedid}" data-studid="${datum.studid}" data-status="5"  style="font-size:.8rem">Post</button>
+                                                      <button class="btn btn-warning btn-sm ml-1 status_student_grades" id="pend_student_grades" data-schedid="${datum.schedid}" data-studid="${datum.studid}" data-status="6"  style="font-size:.8rem">Pending</button>
+                                                      <button class="btn btn-danger btn-sm ml-1 status_student_grades" id="unpost_student_grades" data-schedid="${datum.schedid}" data-studid="${datum.studid}" data-status="2"  style="font-size:.8rem">Unpost</button>
+                                                </td>
+                                          </tr>
+                                    `
+                              )
+
+                        })
+                        
+                        if(status == 1 || status == 7){
+                              $('#approve_student_grades').removeAttr('disabled')
+                              $('#post_student_grades').removeAttr('disabled')
+                              $('#pend_student_grades').removeAttr('disabled')
+                              $('#unpost_student_grades').attr('disabled', true)
+                        }else if(status == 2){
+                              $('#post_student_grades').removeAttr('disabled')
+                              $('#pend_student_grades').removeAttr('disabled')
+                              $('#approve_student_grades').attr('disabled', true)
+                              $('#unpost_student_grades').attr('disabled', true)
+                        }else if(status == 5){
+                              $('#pend_student_grades').removeAttr('disabled')
+                              $('#unpost_student_grades').removeAttr('disabled')
+                              $('#approve_student_grades').attr('disabled', true)
+                              $('#post_student_grades').attr('disabled', true)
+                        }else if(status == 6){
+                              $('#approve_student_grades').attr('disabled', true)
+                              $('#post_student_grades').attr('disabled', true)
+                              $('#pend_student_grades').attr('disabled', true)
+                              $('#unpost_student_grades').attr('disabled', true)
+                        }
+                        else if(status == 8){
+                              $('#approve_student_grades').attr('disabled', true)
+                              $('#post_student_grades').attr('disabled', true)
+                              $('#pend_student_grades').attr('disabled', true)
+                              $('#unpost_student_grades').attr('disabled', true)
+                        }
+
+                        
+                  }
+
+                  $(document).on('click','.status_student_grades',function(){
+                        var studid = $(this).attr('data-studid')
+                        var stud_status = $(this).attr('data-status')
+                        var schedid = $(this).attr('data-schedid')
+                        
+                        $.ajax({
+                              url: "/college/grades/change_student_grade_status",
+                              method: 'GET',
+                              data: {
+                                    stud_status: stud_status,
+                                    studid: studid,
+                                    schedid: schedid,
+                                    term_students: term_students
+                              },
+                              success: function (data) {
+                                    view_student_grades()
+                                    view_student_list_modal(term, status)
+                                    grade_status()
+                                    get_enrolled()
+                              }
                         })
 
-                  }
-
-                  $(document).on('click','.view_approved',function(){
-                        selected_term = $(this).attr('data-term')
-                        current_status = 7
-                        view_list(selected_term,current_status)
-                        $('#modal_1').modal()
                   })
 
-                  $(document).on('click','.view_uns',function(){
-                        selected_term = $(this).attr('data-term')
-                        current_status = 0
-                        view_list(selected_term,current_status)
-                        $('#modal_1').modal()
+                  $('#modal_1_5').on('hidden.bs.modal', function () {
+                        $('#data_1_5').empty()
                   })
 
-                  $(document).on('click','.view_pending',function(){
-                        selected_term = $(this).attr('data-term')
-                        current_status = 3
-                        view_list(selected_term,current_status)
-                        $('#modal_1').modal()
-                  })
 
-                  $(document).on('click','.view_drop',function(){
-                        selected_term = $(this).attr('data-term')
-                        current_status = 9
-                        view_list(selected_term,current_status)
-                        $('#modal_1').modal()
-                  })
 
-                  $(document).on('click','.view_inc',function(){
-                        selected_term = $(this).attr('data-term')
-                        current_status = 8
-                        view_list(selected_term,current_status)
-                        $('#modal_1').modal()
-                  })
 
-                  $(document).on('click','.view_approve_grades',function(){
-                        selected_student = $(this).attr('data-studid')
-                        view_student_subjects(selected_student)
-                        $('.approve_grade').attr('hidden','hidden')
-                        $('.pending_grade').removeAttr('hidden')
-                        $('#modal_3').modal()
-                  })
+                  // $(document).on('click','.view_section_subjects',function(){
+                  //       var temp_section = $(this).attr('data-section')
+                  //       var term = $(this).attr('data-term')
+                  //       var status = $(this).attr('data-status')
+                  //       var section_info = all_sections.filter(x=>x.id == temp_section)
+                  //       $('#modal_sectionname').text(section_info[0].sectionDesc)
+                  //       selected_term = term
+                  //       current_status = status
+                  //       selected_section = temp_section
+                  //       show_section_subject(term, status, temp_section)
+                  //       $('#modal_5').modal()
 
-                  $(document).on('click','.view_pending_grades',function(){
-                        selected_student = $(this).attr('data-studid')
-                        view_student_subjects(selected_student)
-                        $('.approve_grade').attr('hidden','hidden')
-                        $('.pending_grade').attr('hidden','hidden')
-                        $('#modal_3').modal()
-                  })
+                  // })
 
-                  $(document).on('click','.view_inc_grades',function(){
-                        selected_student = $(this).attr('data-studid')
-                        view_student_subjects(selected_student)
-                        $('.approve_grade').attr('hidden','hidden')
-                        $('.pending_grade').attr('hidden','hidden')
-                        $('#modal_3').modal()
-                  })
+                  // function show_section_subject(term = null, status = null, section = null){
 
-                  $(document).on('click','.view_drop_grades',function(){
-                        selected_student = $(this).attr('data-studid')
-                        view_student_subjects(selected_student)
-                        $('.approve_grade').attr('hidden','hidden')
-                        $('.pending_grade').attr('hidden','hidden')
-                        $('#modal_3').modal()
-                  })
+                  //       var temp_subjects = all_section_sched.filter(x=>x.sectionID == section)
+                  //       var data = get_current_selecton_data(term, status)
 
-                  $(document).on('click','.view_unsubmitted_grades',function(){
-                        selected_student = $(this).attr('data-studid')
-                        view_student_subjects(selected_student)
-                        $('.approve_grade').attr('hidden','hidden')
-                        $('.pending_grade').attr('hidden','hidden')
-                        $('#modal_3').modal()
-                  })
+                  //       if(term == 1){
+                  //             if(status == 0){
+                  //                   $.each(temp_subjects,function(a,b){
+                  //                         b.student_count = sched.filter(x=>x.schedid == b.id).length
+                  //                   })
+                  //             }else if(status == 1 || status == 7 || status == 3 || status == 8 || status == 9){
+                  //                   var subject_holder = []
+                  //                   $.each(temp_subjects,function(a,b){
+                  //                         student_count = data.filter(x=>x.prospectusID == b.subjectID && x.sectionID == section)
+                  //                         student_count = [...new Map(student_count.map(item => [item['studid'], item])).values()].length
+                  //                         if(student_count > 0){
+                  //                               b.student_count = student_count
+                  //                               subject_holder.push(b)
+                  //                         }
+                  //                   })
+                  //                   temp_subjects = subject_holder
+                  //             }
+                  //       }else if(term == 2){
+                  //             if(status == 0){
+                  //                   $.each(temp_subjects,function(a,b){
+                  //                         b.student_count = sched.filter(x=>x.schedid == b.id).length
+                  //                   })
+                  //             }else if(status == 1 || status == 7 || status == 3 || status == 8 || status == 9){
+                  //                   var subject_holder = []
+                  //                   $.each(temp_subjects,function(a,b){
+                  //                         student_count = data.filter(x=>x.prospectusID == b.subjectID && x.sectionID == section)
+                  //                         student_count = [...new Map(student_count.map(item => [item['studid'], item])).values()].length
+                  //                         if(student_count > 0){
+                  //                               b.student_count = student_count
+                  //                               subject_holder.push(b)
+                  //                         }
+                  //                   })
+                  //                   temp_subjects = subject_holder
+                  //             }
+                  //       }else if(term == 3){
+                  //             if(status == 0){
+                  //                   $.each(temp_subjects,function(a,b){
+                  //                         b.student_count = sched.filter(x=>x.schedid == b.id).length
+                  //                   })
+                  //             }else if(status == 1 || status == 7 || status == 3 || status == 8 || status == 9){
+                  //                   var subject_holder = []
+                  //                   $.each(temp_subjects,function(a,b){
+                  //                         student_count = data.filter(x=>x.prospectusID == b.subjectID && x.sectionID == section)
+                  //                         student_count = [...new Map(student_count.map(item => [item['studid'], item])).values()].length
+                  //                         if(student_count > 0){
+                  //                               b.student_count = student_count
+                  //                               subject_holder.push(b)
+                  //                         }
+                  //                   })
+                  //                   temp_subjects = subject_holder
+                  //             }
+                  //       }else if(term == 4){
+                  //             if(status == 0){
+                  //                   $.each(temp_subjects,function(a,b){
+                  //                         b.student_count = sched.filter(x=>x.schedid == b.id).length
+                  //                   })
+                  //             }else if(status == 1 || status == 7 || status == 3 || status == 8 || status == 9){
+                  //                   var subject_holder = []
+                  //                   $.each(temp_subjects,function(a,b){
+                  //                         student_count = data.filter(x=>x.prospectusID == b.subjectID && x.sectionID == section)
+                  //                         student_count = [...new Map(student_count.map(item => [item['studid'], item])).values()].length
+                  //                         if(student_count > 0){
+                  //                               b.student_count = student_count
+                  //                               subject_holder.push(b)
+                  //                         }
+                  //                   })
+                  //                   temp_subjects = subject_holder
+                  //             }
+                  //       }
+
+                       
+
+                  //       $.each(temp_subjects,function(a,b){
+                  //             b.teacher = null
+                  //             b.tid = null
+                  //             var temp_teacher = teacher.filter(x=>x.id == b.teacherID)
+                  //             if(temp_teacher.length > 0){
+                  //                   b.teacher = temp_teacher[0].teachername
+                  //                   b.tid = temp_teacher[0].tid
+                  //             }
+                             
+                  //       })
+
+                  //       $("#datatable_5").DataTable({
+                  //             destroy: true,
+                  //             data:temp_subjects,
+                  //             lengthChange: false,
+                  //             autoWidth: false,
+                  //             columns: [
+                  //                   { "data": "subjDesc"},
+                  //                   { "data": "teacher"},
+                  //                   { "data": "student_count"}
+                  //             ],
+                  //             columnDefs: [
+                  //                   {
+                  //                         'targets': 0,
+                  //                         'orderable': true, 
+                  //                         'createdCell':  function (td, cellData, rowData, row, col) {
+                  //                               var text = '<a class="mb-0">'+rowData.subjDesc+'</a><p class="text-muted mb-0" style="font-size:.7rem" >'+rowData.subjCode+'</p>';
+                  //                               $(td)[0].innerHTML = text
+                  //                               $(td).addClass('align-middle')
+                  //                         }
+                  //                   },
+                  //                   {
+                  //                         'targets': 1,
+                  //                         'orderable': true, 
+                  //                         'createdCell':  function (td, cellData, rowData, row, col) {
+                  //                               var text = '<a class="mb-0">'+rowData.teacher+'</a><p class="text-muted mb-0" style="font-size:.7rem" >'+rowData.tid+'</p>';
+                  //                               $(td)[0].innerHTML = text
+                  //                               $(td).addClass('align-middle')
+                  //                         }
+                  //                   },
+                  //                   {
+                  //                         'targets': 2,
+                  //                         'orderable': false, 
+                  //                         'createdCell':  function (td, cellData, rowData, row, col) {
+                  //                               if(status == 1 || status == 7){
+                  //                                     var text = '<button class="btn btn-primary btn-sm view_section_grades btn-block" style="font-size:.8rem"  data-term="'+term+'" data-status="'+status+'" data-section="'+rowData.id+'" data-subj="'+rowData.subjectID+'">View Grades ( '+rowData.student_count+' )</button>';
+                  //                                     $(td)[0].innerHTML = text
+                  //                                     $(td).addClass('align-middle')
+                  //                                     $(td).addClass('text-center')
+                  //                               }else{
+                  //                                     var text = rowData.student_count;
+                  //                               }
+                  //                               $(td)[0].innerHTML = text
+                  //                               $(td).addClass('align-middle')
+                  //                               $(td).addClass('text-center')
+                  //                         }
+                  //                   },
+                  //             ]
+                  //       })
+
+                  // }
+
+                  // function pending_grade(){
+
+                  //       var selected = []
+                  //       var term = selected_term
+                  //       var grade_term = ''
+
+                  //       if(term == 1){
+                  //             term = 'prelemstatus'
+                  //             grade_term = 'prelemgrade'
+                  //       }else if(term == 2){
+                  //             term = 'midtermstatus'
+                  //             grade_term = 'midtermgrade'
+                  //       }else if(term == 3){
+                  //             term = 'prefistatus'
+                  //             grade_term = 'prefigrade'
+                  //       }else if(term == 4){
+                  //             term = 'finalstatus'
+                  //             grade_term = 'finalgrade'
+                  //       }
+
+                  //       $('.select').each(function(){
+                  //             if($(this).prop('checked') == true && $(this).attr('disabled') == undefined && $(this).attr('data-id') != undefined){
+                  //                   selected.push($(this).attr('data-id'))
+                  //             }
+                  //       })
+
+                  //       if(selected.length == 0){
+                  //             Toast.fire({
+                  //                   type: 'info',
+                  //                   title: 'No student selected'
+                  //             })
+                  //             return false
+                  //       }
+
+            //             $.ajax({
+            //                   type:'POST',
+            //                   url: '/college/grades/pending/ph',
+            //                   data:{
+            //                         syid:$('#filter_sy').val(),
+            //                         semid:$('#filter_semester').val(),
+            //                         term:term,
+            //                         selected:selected,
+            //                   },
+            //                   success:function(data) {
+            //                         if(data[0].status == 1){
+            //                               Toast.fire({
+            //                                     type: 'success',
+            //                                     title: 'Added to pending!'
+            //                               })
+            //                               var term = selected_term
+            //                               var status = current_status
+            //                               var section = selected_section
+            //                               var subjid = selected_subject
+
+            //                               if(all_grades.length > 0){
+            //                                     $.each(selected,function(a,b){
+            //                                           $('.select[data-id="'+b+'"]').attr('disabled','disabled')
+            //                                           $('.grade_td[data-id="'+b+'"][data-term="'+grade_term+'"]').attr('data-status',3)
+            //                                           $('.grade_td[data-id="'+b+'"][data-term="'+grade_term+'"]').addClass('bg-warning')
+            //                                           var temp_id = all_grades.findIndex(x=>x.id == b)
+            //                                           if(grade_term == "prelemgrade"){
+            //                                                 all_grades[temp_id].prelemstatus = 3
+            //                                           }else if(grade_term == "midtermgrade"){
+            //                                                 all_grades[temp_id].midtermstatus = 3
+            //                                           }else if(grade_term == "prefigrade"){
+            //                                                 all_grades[temp_id].prefistatus = 3
+            //                                           }else if(grade_term == "finalgrade"){
+            //                                                 all_grades[temp_id].finalstatus = 3
+            //                                           }
+            //                                     })
+            //                               }
+
+            //                               $('.grade_td').addClass('input_grades')
+            //                               plot_subject_grades(all_grades)
+
+            //                               $.each(selected,function(a,b){
+            //                                     if(term == 1){
+            //                                           if(status == 7){
+            //                                                 var temp_grade_data = app_stud_1.filter(x=>x.id == b)
+            //                                                 app_stud_1 = app_stud_1.filter(x=>x.id != b)
+            //                                           }else{
+            //                                                 var temp_grade_data = sub_stud_1.filter(x=>x.id == b)
+            //                                                 sub_stud_1 = sub_stud_1.filter(x=>x.id != b)
+            //                                           }
+            //                                           if(temp_grade_data.length > 0){
+            //                                                 temp_grade_data[0].prelemstatus = 3
+            //                                                 pen_stud_1.push(temp_grade_data[0])
+            //                                           }
+            //                                     }else if(term == 2){
+            //                                           if(status == 7){
+            //                                                 var temp_grade_data = app_stud_2.filter(x=>x.id == b)
+            //                                                 app_stud_2 = app_stud_2.filter(x=>x.id != b)
+            //                                           }else{
+            //                                                 var temp_grade_data = sub_stud_2.filter(x=>x.id == b)
+            //                                                 sub_stud_2 = sub_stud_2.filter(x=>x.id != b)
+            //                                           }
+            //                                           if(temp_grade_data.length > 0){
+            //                                                 temp_grade_data[0].midtermstatus = 3
+            //                                                 pen_stud_2.push(temp_grade_data[0])
+            //                                           }
+            //                                     }else if(term == 3){
+            //                                           if(status == 7){
+            //                                                 var temp_grade_data = app_stud_3.filter(x=>x.id == b)
+            //                                                 app_stud_3 = app_stud_3.filter(x=>x.id != b)
+            //                                           }else{
+            //                                                 var temp_grade_data = sub_stud_3.filter(x=>x.id == b)
+            //                                                 sub_stud_3 = sub_stud_3.filter(x=>x.id != b)
+            //                                           }
+            //                                           if(temp_grade_data.length > 0){
+            //                                                 temp_grade_data[0].prefistatus = 3
+            //                                                 pen_stud_3.push(temp_grade_data[0])
+            //                                           }
+            //                                     }else if(term == 4){
+            //                                           if(status == 7){
+            //                                                 var temp_grade_data = app_stud_4.filter(x=>x.id == b)
+            //                                                 app_stud_4 = app_stud_4.filter(x=>x.id != b)
+            //                                           }else{
+            //                                                 var temp_grade_data = sub_stud_4.filter(x=>x.id == b)
+            //                                                 sub_stud_4 = sub_stud_4.filter(x=>x.id != b)
+            //                                           }
+            //                                           if(temp_grade_data.length > 0){
+            //                                                 temp_grade_data[0].finalstatus = 3
+            //                                                 pen_stud_4.push(temp_grade_data[0])
+            //                                           }
+            //                                     }
+            //                               })
+
+            //                               update_data(term)
+            //                               update_list_display()
+            //                               view_list(term,status)
+
+            //                               if(all_grades.length == 0){
+            //                                     show_section_grades(term,status,section,subjid)
+            //                                     show_section_subject(term, status, section)
+            //                                     view_section_list_modal(term,status)
+            //                                     view_student_subjects(selected_student)
+            //                               }
+                                          
+            //                         }else{
+            //                               Toast.fire({
+            //                                     type: 'error',
+            //                                     title: 'Something went wrong!'
+            //                               })
+            //                         }
+            //                   },error:function(){
+            //                         Toast.fire({
+            //                               type: 'error',
+            //                               title: 'Something went wrong!'
+            //                         })
+            //                   }
+            //             })
+            //             grade_status()
+
+
+            //       }
+
+            //       function view_list(term = null, status = null){
+
+            //             data = []
+            //             var temp_data = []
+            //             var button_text = ''
+            //             var button_class = ''
+            //             var title_text = ''
+
+            //             if(status == 0){
+            //                   button_text = 'View Unsubmitted Grades'
+            //                   button_class = 'view_unsubmitted_grades'
+            //                   title_text += 'Student Unsubmitted Grades'
+            //             }else if(status == 1){
+            //                   button_text = 'View Submitted Grades'
+            //                   button_class = 'view_submitted_grades'
+            //                   title_text += 'Student Submitted Grades'
+            //             }else if(status == 7){
+            //                   button_text = 'View Aproved Grades'
+            //                   button_class = 'view_approve_grades'
+            //                   title_text += 'Student Approved Grades'
+            //             }else if(status == 3){
+            //                   button_text = 'View Pending Grades'
+            //                   button_class = 'view_pending_grades'
+            //                   title_text += 'Student Pending Grades'
+            //             }else if(status == 8){
+            //                   button_text = 'View INC Grades'
+            //                   button_class = 'view_inc_grades'
+            //                   title_text += 'Student INC Grades'
+            //             }else if(status == 9){
+            //                   button_text = 'View Dropped Grades'
+            //                   button_class = 'view_drop_grades'
+            //                   title_text += 'Student Dropped Grades'
+            //             }else{
+            //                   button_text = 'View Unsubmitted Grades'
+            //                   button_class = 'view_uns_grades'
+            //                   title_text += 'Student Unsubmitted Grades'
+            //             }
+
+            //             if(term == 1){
+            //                   if(status == 1){ data = sub_stud_1 }
+            //                   else if(status == 7){ data = app_stud_1 }
+            //                   else if(status == 3){ data = pen_stud_1 }
+            //                   else if(status == 0){ data = uns_stud_1 }
+            //                   else if(status == 8){ data = inc_stud_1 }
+            //                   else if(status == 9){ data = drop_stud_1 }
+            //                   else{ data = uns_stud_1 }
+            //             }else if(term == 2){
+            //                   if(status == 1){ data = sub_stud_2 }
+            //                   else if(status == 7){ data = app_stud_2 }
+            //                   else if(status == 3){ data = pen_stud_2 }
+            //                   else if(status == 0){ data = uns_stud_2 }
+            //                   else if(status == 8){ data = inc_stud_2 }
+            //                   else if(status == 9){ data = drop_stud_2 }
+            //                   else{ data = uns_stud_2 }
+            //             }else if(term == 3){
+            //                   if(status == 1){ data = sub_stud_3 }
+            //                   else if(status == 7){ data = app_stud_3 }
+            //                   else if(status == 3){ data = pen_stud_3 }
+            //                   else if(status == 0){ data = uns_stud_3 }
+            //                   else if(status == 8){ data = inc_stud_3 }
+            //                   else if(status == 9){ data = drop_stud_3 }
+            //                   else{ data = uns_stud_3 }
+            //             }else if(term == 4){
+            //                   if(status == 1){ data = sub_stud_4 }
+            //                   else if(status == 7){ data = app_stud_4 }
+            //                   else if(status == 3){ data = pen_stud_4 }
+            //                   else if(status == 0){ data = uns_stud_4 }
+            //                   else if(status == 8){ data = inc_stud_4 }
+            //                   else if(status == 9){ data = drop_stud_4 }
+            //                   else{ data = uns_stud_4 }
+            //             }
+
+            //             $.each(data,function (a,b) {
+            //                   var temp_student = students.filter(x=>x.studid == b.studid)
+            //                   if(temp_student.length == 0){
+            //                         b.studentname = ''
+            //                   }else{
+            //                         b.studentname = temp_student[0].studentname
+            //                   }
+            //             })
+
+            //             data = [...new Map(data.map(item => [item['studid'], item])).values()]
+
+            //             if(selected_term == 1){
+            //                   title_text += ' <i>['+'Prelim'+']</i>'
+            //             }else if(selected_term == 2){
+            //                   title_text += ' <i>['+'Midterm'+']</i>'
+            //             }else if(selected_term == 3){
+            //                   title_text += ' <i>['+'Prefi'+']</i>'
+            //             }else if(selected_term == 4){
+            //                   title_text += ' <i>['+'Final'+']</i>'
+            //             }
+
+            //             $('.modal_title_1')[0].innerHTML = title_text;
+            //             $('#modal_title_3')[0].innerHTML = title_text;
+
+            //             $("#datatable_1").DataTable({
+            //                   destroy: true,
+            //                   data:data,
+            //                   lengthChange: false,
+            //                   autoWidth: false,
+            //                   columns: [
+            //                         { "data": "studentname"},
+            //                         { "data": null},
+            //                   ],
+            //                   columnDefs: [
+            //                         {
+            //                               'targets': 1,
+            //                               'orderable': true, 
+            //                               'createdCell':  function (td, cellData, rowData, row, col) {
+            //                                     $(td)[0].innerHTML =  '<button class="btn btn-primary btn-sm '+button_class+'" data-studid="'+rowData.studid+'" style="font-size:.8rem">'+button_text+'</button>'
+            //                                     $(td).addClass('align-middle')
+            //                                     $(td).addClass('text-center')
+            //                               }
+            //                         },
+            //                   ]
+            //             })
+
+            //       }
+
+            //       $(document).on('click','.view_approved',function(){
+            //             selected_term = $(this).attr('data-term')
+            //             current_status = 2
+            //             view_list(selected_term,current_status)
+            //             $('#modal_1').modal()
+            //       })
+
+            //       $(document).on('click','.view_uns',function(){
+            //             selected_term = $(this).attr('data-term')
+            //             current_status = 0
+            //             view_list(selected_term,current_status)
+            //             $('#modal_1').modal()
+            //       })
+
+            //       $(document).on('click','.view_pending',function(){
+            //             selected_term = $(this).attr('data-term')
+            //             current_status = 6
+            //             view_list(selected_term,current_status)
+            //             $('#modal_1').modal()
+            //       })
+
+            //       $(document).on('click','.view_drop',function(){
+            //             selected_term = $(this).attr('data-term')
+            //             current_status = 8
+            //             view_list(selected_term,current_status)
+            //             $('#modal_1').modal()
+            //       })
+
+            //       $(document).on('click','.view_posted',function(){
+            //             selected_term = $(this).attr('data-term')
+            //             current_status = 5
+            //             view_list(selected_term,current_status)
+            //             $('#modal_1').modal()
+            //       })
+
+            //       $(document).on('click','.view_inc',function(){
+            //             selected_term = $(this).attr('data-term')
+            //             current_status = 8
+            //             view_list(selected_term,current_status)
+            //             $('#modal_1').modal()
+            //       })
+
+            //       $(document).on('click','.view_approve_grades',function(){
+            //             selected_student = $(this).attr('data-studid')
+            //             view_student_subjects(selected_student)
+            //             $('.approve_grade').attr('hidden','hidden')
+            //             $('.pending_grade').removeAttr('hidden')
+            //             $('#modal_3').modal()
+            //       })
+
+            //       $(document).on('click','.view_pending_grades',function(){
+            //             selected_student = $(this).attr('data-studid')
+            //             view_student_subjects(selected_student)
+            //             $('.approve_grade').attr('hidden','hidden')
+            //             $('.pending_grade').attr('hidden','hidden')
+            //             $('#modal_3').modal()
+            //       })
+
+            //       $(document).on('click','.view_inc_grades',function(){
+            //             selected_student = $(this).attr('data-studid')
+            //             view_student_subjects(selected_student)
+            //             $('.approve_grade').attr('hidden','hidden')
+            //             $('.pending_grade').attr('hidden','hidden')
+            //             $('#modal_3').modal()
+            //       })
+
+            //       $(document).on('click','.view_drop_grades',function(){
+            //             selected_student = $(this).attr('data-studid')
+            //             view_student_subjects(selected_student)
+            //             $('.approve_grade').attr('hidden','hidden')
+            //             $('.pending_grade').attr('hidden','hidden')
+            //             $('#modal_3').modal()
+            //       })
+
+            //       $(document).on('click','.view_unsubmitted_grades',function(){
+            //             selected_student = $(this).attr('data-studid')
+            //             view_student_subjects(selected_student)
+            //             $('.approve_grade').attr('hidden','hidden')
+            //             $('.pending_grade').attr('hidden','hidden')
+            //             $('#modal_3').modal()
+            //       })
                         
-                  $(document).on('click','.select_all',function(){
-                        if($(this).prop('checked') == true){
-                              $('.selected_count').text($('.select[checked="checked"]').length)
-                              $('.select').prop('checked',true)
-                        }else{
-                              $('.selected_count').text(0)
-                              $('.select').prop('checked',false)
-                        }
-                  })
+            //       $(document).on('click','.select_all',function(){
+            //             if($(this).prop('checked') == true){
+            //                   $('.selected_count').text($('.select[checked="checked"]').length)
+            //                   $('.select').prop('checked',true)
+            //             }else{
+            //                   $('.selected_count').text(0)
+            //                   $('.select').prop('checked',false)
+            //             }
+            //       })
 
-            $(document).on('change','.select',function(){
-                  var checked_count = 0;
-                  var unchecked_count = 0;
-                  $('.select').each(function(){
-                        if($(this).prop('checked') == true){
-                              checked_count += 1;
-                        }else{
-                              unchecked_count += 1;
-                        }
-                  })
-                  $('.selected_count').text(checked_count)
+            // $(document).on('change','.select',function(){
+            //       var checked_count = 0;
+            //       var unchecked_count = 0;
+            //       $('.select').each(function(){
+            //             if($(this).prop('checked') == true){
+            //                   checked_count += 1;
+            //             }else{
+            //                   unchecked_count += 1;
+            //             }
+            //       })
+            //       $('.selected_count').text(checked_count)
 
-                  if(unchecked_count != 0){
-                        $('.select_all').prop('checked',false)
-                  }else{
-                        $('.select_all').prop('checked',true)
-                  }
-            })
+            //       if(unchecked_count != 0){
+            //             $('.select_all').prop('checked',false)
+            //       }else{
+            //             $('.select_all').prop('checked',true)
+            //       }
+            // })
 
-            var selected_student = null 
+            // var selected_student = null 
 
-            $(document).on('click','.view_submitted_grades',function(){
-                  selected_student = $(this).attr('data-studid')
-                  view_student_subjects(selected_student)
-                  $('.select_all').removeAttr('disabled')
-                  $('.approve_grade').removeAttr('hidden')
-                  $('.pending_grade').removeAttr('hidden')
-                  $('#modal_3').modal()
-            })
+            // $(document).on('click','.view_submitted_grades',function(){
+            //       selected_student = $(this).attr('data-studid')
+            //       view_student_subjects(selected_student)
+            //       $('.select_all').removeAttr('disabled')
+            //       $('.approve_grade').removeAttr('hidden')
+            //       $('.pending_grade').removeAttr('hidden')
+            //       $('#modal_3').modal()
+            // })
 
-            function view_student_subjects(selected_student){
+            // function view_student_subjects(selected_student){
 
-                  var term = selected_term
-                  var status = current_status
+            //       var term = selected_term
+            //       var status = current_status
 
-                  if(term == 1){
-                        if(status == 1){ data = sub_stud_1 }
-                        else if(status == 7){ data = app_stud_1 }
-                        else if(status == 3){ data = pen_stud_1 }
-                        else if(status == 0){ data = uns_stud_1 }
-                  }else if(term == 2){
-                        if(status == 1){ data = sub_stud_2 }
-                        else if(status == 7){ data = app_stud_2 }
-                        else if(status == 3){ data = pen_stud_2 }
-                        else if(status == 0){ data = uns_stud_2 }
-                  }else if(term == 3){
-                        if(status == 1){ data = sub_stud_3 }
-                        else if(status == 7){ data = app_stud_3 }
-                        else if(status == 3){ data = pen_stud_3 }
-                        else if(status == 0){ data = uns_stud_3 }
-                  }else if(term == 4){
-                        if(status == 1){ data = sub_stud_4 }
-                        else if(status == 7){ data = app_stud_4 }
-                        else if(status == 3){ data = pen_stud_4 }
-                        else if(status == 0){ data = uns_stud_4 }
-                  }
+            //       if(term == 1){
+            //             if(status == 1){ data = sub_stud_1 }
+            //             else if(status == 7){ data = app_stud_1 }
+            //             else if(status == 3){ data = pen_stud_1 }
+            //             else if(status == 0){ data = uns_stud_1 }
+            //       }else if(term == 2){
+            //             if(status == 1){ data = sub_stud_2 }
+            //             else if(status == 7){ data = app_stud_2 }
+            //             else if(status == 3){ data = pen_stud_2 }
+            //             else if(status == 0){ data = uns_stud_2 }
+            //       }else if(term == 3){
+            //             if(status == 1){ data = sub_stud_3 }
+            //             else if(status == 7){ data = app_stud_3 }
+            //             else if(status == 3){ data = pen_stud_3 }
+            //             else if(status == 0){ data = uns_stud_3 }
+            //       }else if(term == 4){
+            //             if(status == 1){ data = sub_stud_4 }
+            //             else if(status == 7){ data = app_stud_4 }
+            //             else if(status == 3){ data = pen_stud_4 }
+            //             else if(status == 0){ data = uns_stud_4 }
+            //       }
 
-                  data = data.filter(x=>x.studid == selected_student)
+            //       data = data.filter(x=>x.studid == selected_student)
            
-                  data = [...new Map(data.map(item => [item['prospectusID'], item])).values()]
-                  var studentinfo = students.filter(x=>x.studid == selected_student)
+            //       data = [...new Map(data.map(item => [item['prospectusID'], item])).values()]
+            //       var studentinfo = students.filter(x=>x.studid == selected_student)
 
-                  $.each(data,function(a,b){
-                        var temp_prospectus = sched.filter(x=>x.subjectID == b.prospectusID)
-                        var temp_teacher = teacher.filter(x=>x.id == b.teacherID)
+            //       $.each(data,function(a,b){
+            //             var temp_prospectus = sched.filter(x=>x.subjectID == b.prospectusID)
+            //             var temp_teacher = teacher.filter(x=>x.id == b.teacherID)
 
-                        b.teachername = null
-                        b.tid = null
-                        b.section = null
-                        b.levelname = null
-                        b.subjDesc = null
-                        b.subjCode = null
+            //             b.teachername = null
+            //             b.tid = null
+            //             b.section = null
+            //             b.levelname = null
+            //             b.subjDesc = null
+            //             b.subjCode = null
 
-                        if(temp_prospectus.length > 0){
-                              var schedinfo = all_section_sched.filter(x=>x.id == temp_prospectus[0].schedid)
-                              var sectionInfo = all_sections.filter(x=>x.id == schedinfo[0].sectionID)
-                              var temp_teacher = teacher.filter(x=>x.id == schedinfo[0].teacherID)
-                              if(temp_teacher.length > 0){
-                                    b.teachername = temp_teacher[0].teachername
-                                    b.tid = temp_teacher[0].tid
-                              }
+            //             if(temp_prospectus.length > 0){
+            //                   var schedinfo = all_section_sched.filter(x=>x.id == temp_prospectus[0].schedid)
+            //                   var sectionInfo = all_sections.filter(x=>x.id == schedinfo[0].sectionID)
+            //                   var temp_teacher = teacher.filter(x=>x.id == schedinfo[0].teacherID)
+            //                   if(temp_teacher.length > 0){
+            //                         b.teachername = temp_teacher[0].teachername
+            //                         b.tid = temp_teacher[0].tid
+            //                   }
 
-                              b.section = sectionInfo[0].sectionDesc
-                              b.levelname = sectionInfo[0].levelname
-                              b.subjDesc = schedinfo[0].subjDesc
-                              b.subjCode = schedinfo[0].subjCode
-                        }
-                  })
+            //                   b.section = sectionInfo[0].sectionDesc
+            //                   b.levelname = sectionInfo[0].levelname
+            //                   b.subjDesc = schedinfo[0].subjDesc
+            //                   b.subjCode = schedinfo[0].subjCode
+            //             }
+            //       })
 
-                  if(studentinfo.length > 0){
-                        $('#student_name').text(studentinfo[0].studentname)
-                  }
+            //       if(studentinfo.length > 0){
+            //             $('#student_name').text(studentinfo[0].studentname)
+            //       }
                  
                  
-                  $("#datatable_3").DataTable({
-                        destroy: true,
-                        data:data,
-                        lengthChange: false,
-                        autoWidth: false,
-                        paging:false,
-                        bInfo:false,
-                        order: [],
-                        columns: [
-                              { "data": null},
-                              { "data": "section"},
-                              { "data": "subjDesc"},
-                              { "data": "teachername"},
-                              { "data": null},
-                        ],
-                        columnDefs: [
-                              {
-                                    'targets': 0,
-                                    'orderable': false, 
-                                    'createdCell':  function (td, cellData, rowData, row, col) {
-                                          var temp_id = ''
-                                          temp_id = 'data-id="'+rowData.id+'"'
-                                          $(td)[0].innerHTML = '<input '+temp_id+' checked="checked" type="checkbox" class="select">'
-                                          $(td).addClass('align-middle')
-                                          $(td).addClass('text-center')
-                                    }
-                              },
-                              {
-                                    'targets': 1,
-                                    'orderable': true, 
-                                    'createdCell':  function (td, cellData, rowData, row, col) {
-                                          var text = '<a class="mb-0">'+rowData.section+'</a><p class="text-muted mb-0" style="font-size:.7rem">'+rowData.levelname.replace('COLLEGE','')+'</p>';
-                                          $(td)[0].innerHTML = text
-                                          $(td).addClass('align-middle')
+            //       $("#datatable_3").DataTable({
+            //             destroy: true,
+            //             data:data,
+            //             lengthChange: false,
+            //             autoWidth: false,
+            //             paging:false,
+            //             bInfo:false,
+            //             order: [],
+            //             columns: [
+            //                   { "data": null},
+            //                   { "data": "section"},
+            //                   { "data": "subjDesc"},
+            //                   { "data": "teachername"},
+            //                   { "data": null},
+            //             ],
+            //             columnDefs: [
+            //                   {
+            //                         'targets': 0,
+            //                         'orderable': false, 
+            //                         'createdCell':  function (td, cellData, rowData, row, col) {
+            //                               var temp_id = ''
+            //                               temp_id = 'data-id="'+rowData.id+'"'
+            //                               $(td)[0].innerHTML = '<input '+temp_id+' checked="checked" type="checkbox" class="select">'
+            //                               $(td).addClass('align-middle')
+            //                               $(td).addClass('text-center')
+            //                         }
+            //                   },
+            //                   {
+            //                         'targets': 1,
+            //                         'orderable': true, 
+            //                         'createdCell':  function (td, cellData, rowData, row, col) {
+            //                               var text = '<a class="mb-0">'+rowData.section+'</a><p class="text-muted mb-0" style="font-size:.7rem">'+rowData.levelname.replace('COLLEGE','')+'</p>';
+            //                               $(td)[0].innerHTML = text
+            //                               $(td).addClass('align-middle')
                                           
-                                    }
-                              },
-                              {
-                                    'targets': 2,
-                                    'orderable': true, 
-                                    'createdCell':  function (td, cellData, rowData, row, col) {
-                                          var text = '<a class="mb-0">'+rowData.subjDesc+'</a><p class="text-muted mb-0" style="font-size:.7rem">'+rowData.subjCode+'</p>';
-                                          $(td)[0].innerHTML = text
-                                          $(td).addClass('align-middle')
-                                    }
-                              },
-                              {
-                                    'targets': 3,
-                                    'orderable': true, 
-                                    'createdCell':  function (td, cellData, rowData, row, col) {
-                                          var text = '<a class="mb-0">'+rowData.teachername+'</a><p class="text-muted mb-0" style="font-size:.7rem">'+rowData.tid+'</p>';
-                                          $(td)[0].innerHTML = text
-                                          $(td).addClass('align-middle')
-                                    }
-                              },
-                              {
-                                    'targets': 4,
-                                    'orderable': false, 
-                                    'createdCell':  function (td, cellData, rowData, row, col) {
-                                          var temp_grade = null
+            //                         }
+            //                   },
+            //                   {
+            //                         'targets': 2,
+            //                         'orderable': true, 
+            //                         'createdCell':  function (td, cellData, rowData, row, col) {
+            //                               var text = '<a class="mb-0">'+rowData.subjDesc+'</a><p class="text-muted mb-0" style="font-size:.7rem">'+rowData.subjCode+'</p>';
+            //                               $(td)[0].innerHTML = text
+            //                               $(td).addClass('align-middle')
+            //                         }
+            //                   },
+            //                   {
+            //                         'targets': 3,
+            //                         'orderable': true, 
+            //                         'createdCell':  function (td, cellData, rowData, row, col) {
+            //                               var text = '<a class="mb-0">'+rowData.teachername+'</a><p class="text-muted mb-0" style="font-size:.7rem">'+rowData.tid+'</p>';
+            //                               $(td)[0].innerHTML = text
+            //                               $(td).addClass('align-middle')
+            //                         }
+            //                   },
+            //                   {
+            //                         'targets': 4,
+            //                         'orderable': false, 
+            //                         'createdCell':  function (td, cellData, rowData, row, col) {
+            //                               var temp_grade = null
                                      
-                                          if(selected_term == 1 && rowData.prelemstatus != null ){
-                                                temp_grade = rowData.prelemgrade 
-                                          }else if(selected_term == 2 && rowData.midtermstatus != null){
-                                                temp_grade = rowData.midtermgrade
-                                          }else if(selected_term == 3 && rowData.prefistatus != null){
-                                                temp_grade = rowData.prefigrade
-                                          }else if(selected_term == 4 && rowData.finalstatus != null){
-                                                temp_grade = rowData.finalgrade
-                                          }
+            //                               if(selected_term == 1 && rowData.prelemstatus != null ){
+            //                                     temp_grade = rowData.prelemgrade 
+            //                               }else if(selected_term == 2 && rowData.midtermstatus != null){
+            //                                     temp_grade = rowData.midtermgrade
+            //                               }else if(selected_term == 3 && rowData.prefistatus != null){
+            //                                     temp_grade = rowData.prefigrade
+            //                               }else if(selected_term == 4 && rowData.finalstatus != null){
+            //                                     temp_grade = rowData.finalgrade
+            //                               }
                                           
                                           
-                                          $(td).text(temp_grade)
-                                          $(td).addClass('align-middle')
-                                          $(td).addClass('text-center')
-                                    }
-                              },
-                        ]
-                  })
+            //                               $(td).text(temp_grade)
+            //                               $(td).addClass('align-middle')
+            //                               $(td).addClass('text-center')
+            //                         }
+            //                   },
+            //             ]
+            //       })
 
-                  $('.selected_count').text($('.select[checked="checked"]').length)
+            //       $('.selected_count').text($('.select[checked="checked"]').length)
 
-                  if(current_status == 0 || current_status == 3 || $('.select').length == 0 || current_status == 8 || current_status == 9){
-                        $('.pending_grade').attr('hidden','hidden')
-                        $('.approve_grade').attr('hidden','hidden')
-                        $('.select').attr('disabled','disabled')
-                        $('.select_all').attr('disabled','disabled')
-                  }
+            //       if(current_status == 0 || current_status == 3 || $('.select').length == 0 || current_status == 8 || current_status == 9){
+            //             $('.pending_grade').attr('hidden','hidden')
+            //             $('.approve_grade').attr('hidden','hidden')
+            //             $('.select').attr('disabled','disabled')
+            //             $('.select_all').attr('disabled','disabled')
+            //       }
 
-            }
+            // }
 
       })
 </script>
-
+{{-- 
       <script>
             $(document).ready(function(){
                   var keysPressed = {};
@@ -3178,7 +4328,7 @@
                         delete keysPressed[event.key];
                   });
             })
-      </script>
+      </script> --}}
 
 
 

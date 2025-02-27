@@ -84,11 +84,11 @@
                     <div class="modal-body">
                         <div class="form-group">
                             <label for="modyearsofservice">Years of Service</label>
-                            <input type="number" class="form-control" id="modyearsofservice" min="0">
+                            <input type="number" value="0" class="form-control" id="modyearsofservice" min="0">
                         </div>
                         <div class="form-group">
                             <label for="moddays">Days</label>
-                            <input type="number" class="form-control" id="moddays" min="0">
+                            <input type="number" value="0" class="form-control" id="moddays" min="0">
                         </div>
                     </div>
                     <div class="modal-footer justify-content-between">
@@ -101,7 +101,7 @@
         {{--  --}}
         @if(count($leaves) == 0)        
             <div class="alert alert-warning" role="alert">
-                No leave types shown
+                Currently, there are no leave records available. Please create a new leave entry to proceed.
             </div>
         @else
             {{-- <div class="card">

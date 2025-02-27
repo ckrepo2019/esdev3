@@ -6,12 +6,86 @@ use Illuminate\Http\Request;
 use DB;
 use Session;
 use PDF;
-
 class StudentPregistration extends \App\Http\Controllers\Controller
 {
 
+      public function getStudentImage($id)
+      {
+            $student = DB::table('studinfo')->where('id', $id)->first();
+
+            if ($student && $student->picurl) {
+                  // Check if the file exists in the storage or public folder
+                  $imagePath = public_path($student->picurl);
+                  if (file_exists($imagePath)) {
+                        return response()->json(['success' => true, 'picurl' => asset($student->picurl)]);
+                  }
+            }
+
+            // Return a placeholder image if no valid picurl is found
+            return response()->json(['success' => false, 'picurl' => asset('assets/images/avatars/unknown.png')]);
+      }
+
+
+      public static function markGraduateStatus(Request $request){
+            $status = $request->get('status');
+            try{
+                  DB::table('studinfo')
+                        ->where('id',$request->get('studid'))
+                        ->take(1)
+                        ->update([
+                              'updatedby'=>auth()->user()->id,
+                              'updateddatetime'=>\Carbon\Carbon::now('Asia/Manila'),
+                              'studisgraduate'=>$request->get('status')
+                        ]);
+
+
+                  $studinfo = DB::table('studinfo')
+                                    ->where('id',$request->get('studid'))
+                                    ->first();
+                  if($request->get('status') == 1){
+                        $message = auth()->user()->name.' mark student '.$studinfo->firstname.' '.$studinfo->lastname.' as Not Graduated';
+                  }else{
+                        $message = auth()->user()->name.' mark student '.$studinfo->firstname.' '.$studinfo->lastname.' as Graduated';
+                  }
+
+
+                  DB::table('logs')
+
+                        ->insert([
+                             'dataid'=>$request->get('studid'),
+                             'module'=>21,
+                             'message'=>$message,
+                             'createdby'=>auth()->user()->id,
+                             'createddatetime'=>\Carbon\Carbon::now('Asia/Manila')
+                       ]);
+
+                  if ($status == 1) {
+                        return array((object)[
+                              'status'=>1,
+                              'graduatestatus'=>$status,
+                              'message'=>'Marked Successfully!'
+                        ]);
+                  } else {
+                        return array((object)[
+                              'status'=>1,
+                              'graduatestatus'=>$status,
+                              'message'=>'Unmarked Successfully!'
+                        ]);
+                  }
+
+
+
+            }catch(\Exception $e){
+                  return self::store_error($e);
+            }
+
+
+
+
+      }
+
       public static function markActiveStatus(Request $request){
-            
+
             //module 21 - student active inactive;
 
             try{
@@ -34,8 +108,8 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   }else{
                         $message = auth()->user()->name.' mark student '.$studinfo->firstname.' '.$studinfo->lastname.' as inactive';
                   }
-                  
-                  DB::table('logs') 
+
+                  DB::table('logs')
                         ->insert([
                              'dataid'=>$request->get('studid'),
                              'module'=>21,
@@ -47,13 +121,13 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   return array((object)[
                         'status'=>1,
                         'message'=>'Marked Successfully!'
-                  ]);  
+                  ]);
 
             }catch(\Exception $e){
                   return self::store_error($e);
             }
 
-           
+
 
 
       }
@@ -91,7 +165,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   if(count($all_students) == 0){
                         $all_students = $gshs_enrolled;
                   }
-                
+
 
                   $sh_enrolled = DB::table('sh_enrolledstud')
                                     ->join('gradelevel',function($join) use($all_acad){
@@ -119,14 +193,14 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     ->distinct('studid')
                                     ->select('studid')
                                     ->get();
-                                    
+
 
                   $item->count = count($gshs_enrolled) + count($sh_enrolled) + count($college_enrolled);
 
                   $all_students = $all_students->merge($gshs_enrolled);
                   $all_students = $all_students->merge($sh_enrolled);
                   $all_students = $all_students->merge($college_enrolled);
-            
+
             }
 
             $not_enrolled = DB::table('studinfo')
@@ -161,7 +235,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
             $vac_info = DB::table('apmc_midinfo')
                               ->where('deleted',0)
                               ->distinct('studid');
-                              
+
             if($studid != null){
                   $vac_info = $vac_info->where('studid',$studid);
             }
@@ -209,7 +283,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                               ->distinct('studid')
                               ->get();
 
-        
+
             foreach($enrolled as $item){
 
                   $temp_middle = '';
@@ -428,7 +502,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   }
 
                   $item->student = $item->lastname.', '.$item->firstname.$temp_middle.$temp_suffix;
-                  
+
                   $collect_vac = collect($vac_info)->where('studid',$item->studid)->first();
                   if(isset($collect_vac)){
                         $item->vacc = $collect_vac->vacc;
@@ -533,7 +607,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     ->where('deleted',0)
                                     ->get();
             }
-          
+
 
             return $temp_fees;
 
@@ -594,8 +668,8 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                               ->get();
 
             foreach($studledger as $item){
-                  $item->balance = 0;     
-                  
+                  $item->balance = 0;
+
                   $ledger = db::table('studledger')
 					->select(DB::raw('SUM(amount) - SUM(payment) as balance'))
 					->where('studid', $studid)
@@ -616,7 +690,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
 
                   if(isset($ledger->balance)){
                         if($ledger->balance > 0){
-                              $item->balance = $ledger->balance;     
+                              $item->balance = $ledger->balance;
                         }
                   }
 
@@ -632,7 +706,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
 
       public static function cancel_readytoenroll(Request $request){
             try{
-                  
+
                   $studid = $request->get('studid');
                   $syid = $request->get('syid');
                   $semid = $request->get('semid');
@@ -645,11 +719,11 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                               ->where('semid',$semid)
                               ->first();
 
-                 
+
                   $prereg_id = $check->id;
 
                   if($utype == 4 || $utype == 15  || Session::get('currentPortal') == 4  || Session::get('currentPortal') == 15){
-                        
+
                         DB::table('student_prereginfo')
                               ->where('id',$prereg_id)
                               ->where('deleted',0)
@@ -664,7 +738,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   }
 
                   if($utype == 8  || Session::get('currentPortal') == 8){
-                        
+
                         DB::table('student_prereginfo')
                               ->where('id',$prereg_id)
                               ->where('deleted',0)
@@ -685,7 +759,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   ]);
 
             }catch(\Exception $e){
-                  
+
                   return array((object)[
                         'status'=>0,
                         'message'=>'Something went wrong!'
@@ -723,7 +797,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
 
 
                   if($utype == 4 || $utype == 15  || Session::get('currentPortal') == 4  || Session::get('currentPortal') == 15){
-                        
+
                         DB::table('student_prereginfo')
                               ->where('id',$id)
                               ->where('deleted',0)
@@ -738,7 +812,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   }
 
                   if($utype == 8  || Session::get('currentPortal') == 8){
-                        
+
                         DB::table('student_prereginfo')
                               ->where('id',$id)
                               ->where('deleted',0)
@@ -782,7 +856,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                               ->where('semid',$semid)
                               ->where('deleted',0)
                               ->count();
-                  
+
                   if($check == 0){
                         DB::table('student_allownodp')
                               ->insert([
@@ -798,7 +872,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                               'status'=>1,
                               'message'=>'No DP Approved!'
                         ]);
-                        
+
                   }else{
 
                         return array((object)[
@@ -808,7 +882,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
 
                   }
 
-                  
+
 
             }catch(\Exception $e){
 
@@ -851,7 +925,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                         'message'=>'Something went wrong!'
                   ]);
             }
-      
+
 
       }
 
@@ -871,24 +945,24 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   $acadprog = DB::table('academicprogram')
                                           ->select('id')
                                           ->get();
-      
+
             }
             else{
-      
+
                   $teacherid = DB::table('teacher')
                                     ->where('tid',auth()->user()->email)
                                     ->select('id')
                                     ->first()
                                     ->id;
-      
+
                   if(auth()->user()->type == 2 || Session::get('currentPortal') == 2){
-      
+
                         $acadprog = DB::table('academicprogram')
                                           ->where('principalid',$teacherid)
                                           ->get();
-      
+
                   }else{
-      
+
                         $acadprog = DB::table('teacheracadprog')
                                     ->where('teacherid',$teacherid)
                                     ->where('deleted',0)
@@ -936,12 +1010,17 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                           ->where('deleted',0)
                                           ->where('syid',$syid)
                                           ->where('sectionid',$item->id)
+                                          ->where( function($query) use ($request) {
+                                                if ($request->has('semid')) {
+                                                      $query->where('semid', $request->input('semid'));
+                                                }
+                                          })
                                           ->whereIn('studstatus',[1,2,4])
                                           ->distinct('studid')
                                           ->count();
                   }else{
                         $enrolled  = DB::table('enrolledstud')
-                                         
+
                                           ->where('deleted',0)
                                           ->where('syid',$syid)
                                           ->where('sectionid',$item->id)
@@ -952,7 +1031,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   $item->enrolled = $enrolled;
                   $capacity = $item->capacity  == null ? 0 : $item->capacity;
                   $item->text = $item->sectionname . ' (' .$item->enrolled.'/'.$capacity.')';
-                  
+
                   array_push($temp_sections,$item);
             }
 
@@ -978,7 +1057,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                               )
                               ->get();
 
-            
+
 
 
            // $sections = collect($sections)->values();
@@ -1070,7 +1149,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
             //                         ->where('college_classsched.deleted',0)
             //                         ->get();
 
-            
+
 
             // foreach($college_sections as $item){
 
@@ -1082,7 +1161,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
             //                         ->whereIn('studstatus',[1,2,4])
             //                         ->distinct('studid')
             //                         ->count();
-                 
+
             //       $item->enrolled = $enrolled;
             //       $capacity = $item->capacity  == null ? 0 : $item->capacity;
             //       $item->text = $item->sectionname . ' (' .$item->enrolled.'/'.$capacity.')';
@@ -1094,57 +1173,57 @@ class StudentPregistration extends \App\Http\Controllers\Controller
 
       }
 
-      public static function getstudentsection(Request $request){
+        public static function getstudentsection(Request $request){
             $studid = $request->get('studid');
             $syid = $request->get('syid');
             $semid = $request->get('semid');
 
             $sectionlist = DB::table('college_studsched')
-                              ->join('college_classsched',function($join) use($syid){
-                                    $join->on('college_studsched.schedid','=','college_classsched.id');
-                                    $join->where('college_classsched.syid',$syid);
-                                    $join->where('college_classsched.deleted',0);
-                              })
-                              ->join('college_schedgroup_detail',function($join){
-                                    $join->on('college_classsched.id','=','college_schedgroup_detail.schedid');
-                                    $join->where('college_schedgroup_detail.deleted',0);
-                              })
-                              ->join('college_schedgroup',function($join){
-                                    $join->on('college_schedgroup_detail.groupid','=','college_schedgroup.id');
-                                    $join->where('college_schedgroup.deleted',0);
-                              })
-                              ->leftJoin('college_courses',function($join){
-                                    $join->on('college_schedgroup.courseid','=','college_courses.id');
-                                    $join->where('college_courses.deleted',0);
-                              })
-                              ->leftJoin('gradelevel',function($join){
-                                    $join->on('college_schedgroup.levelid','=','gradelevel.id');
-                                    $join->where('gradelevel.deleted',0);
-                              })
-                              ->leftJoin('college_colleges',function($join){
-                                    $join->on('college_schedgroup.collegeid','=','college_colleges.id');
-                                    $join->where('college_colleges.deleted',0);
-                              })
-                              ->select(
-                                    'college_schedgroup.courseid',
-                                    'college_schedgroup.levelid',
-                                    'college_schedgroup.collegeid',
-                                    'courseDesc',
-                                    'collegeDesc',
-                                    'levelname',
-                                    'courseabrv',
-                                    'collegeabrv',
-                                    'college_classsched.sectionID as id',
-                                    'college_schedgroup.schedgroupdesc',
-                                    'schedgroupdesc as text',
-                                    'college_studsched.schedid',
-                                    'college_schedgroup_detail.groupid'
-                              )
-                              ->distinct('groupid')
-                              ->where('college_studsched.studid',$studid)
-                              ->where('college_studsched.schedstatus','!=','DROPPED')
-                              ->where('college_studsched.deleted',0)
-                              ->get();
+                ->join('college_classsched',function($join) use($syid){
+                    $join->on('college_studsched.schedid','=','college_classsched.id');
+                    $join->where('college_classsched.syid',$syid);
+                    $join->where('college_classsched.deleted',0);
+                })
+                ->join('college_schedgroup_detail',function($join){
+                    $join->on('college_classsched.id','=','college_schedgroup_detail.schedid');
+                    $join->where('college_schedgroup_detail.deleted',0);
+                })
+                ->join('college_schedgroup',function($join){
+                    $join->on('college_schedgroup_detail.groupid','=','college_schedgroup.id');
+                    $join->where('college_schedgroup.deleted',0);
+                })
+                ->leftJoin('college_courses',function($join){
+                    $join->on('college_schedgroup.courseid','=','college_courses.id');
+                    $join->where('college_courses.deleted',0);
+                })
+                ->leftJoin('gradelevel',function($join){
+                    $join->on('college_schedgroup.levelid','=','gradelevel.id');
+                    $join->where('gradelevel.deleted',0);
+                })
+                ->leftJoin('college_colleges',function($join){
+                    $join->on('college_schedgroup.collegeid','=','college_colleges.id');
+                    $join->where('college_colleges.deleted',0);
+                })
+                ->select(
+                    'college_schedgroup.courseid',
+                    'college_schedgroup.levelid',
+                    'college_schedgroup.collegeid',
+                    'courseDesc',
+                    'collegeDesc',
+                    'levelname',
+                    'courseabrv',
+                    'collegeabrv',
+                    'college_classsched.sectionID as id',
+                    'college_schedgroup.schedgroupdesc',
+                    'schedgroupdesc as text',
+                    'college_studsched.schedid',
+                    'college_schedgroup_detail.groupid'
+                )
+                ->distinct('groupid')
+                ->where('college_studsched.studid',$studid)
+                ->where('college_studsched.schedstatus','!=','DROPPED')
+                ->where('college_studsched.deleted',0)
+                ->get();
 
             foreach($sectionlist as $item){
                   $text = '';
@@ -1160,7 +1239,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
             return $sectionlist;
             // return collect($sectionlist)->unique('text')->values();
 
-      }
+        }
 
 
       public static function get_gradelevel(Request $request, $syid = null){
@@ -1170,7 +1249,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
             }
 
             $acad = self::get_acad($syid);
-
+            return
             $gradelevel = DB::table('gradelevel')
                               ->where('deleted',0)
                               ->whereIn('acadprogid',$acad)
@@ -1198,10 +1277,24 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                           ->select('id')
                                           ->get();
             }elseif(auth()->user()->type == 14 || Session::get('currentPortal') == 14 ){
-                  $acadprog = DB::table('academicprogram')
-                                    ->where('id',6)
-                                    ->select('id')
+
+                  $user = auth()->user()->id;
+                  $teacher = DB::table('teacher')
+                              ->where('userid',$user)     
+                              ->select('id')
+                              ->first();
+                  
+
+                  $acadprog = DB::table('college_colleges')
+                                    ->where('dean',$teacher->id)
+                                    ->where('deleted',0)
+                                    ->select('acadprogid as id')
                                     ->get();
+                  
+                  // $acadprog = DB::table('academicprogram')
+                  //                   ->whereIn('id',6)
+                  //                   ->select('id')
+                  //                   ->get();
             }
             else{
 
@@ -1302,8 +1395,6 @@ class StudentPregistration extends \App\Http\Controllers\Controller
 
       public static function preenrolledstudents(Request $request){
 
-
-
             $syid = $request->get('syid');
             $studstat = $request->get('studstat');
             $paystat = $request->get('paystat');
@@ -1318,7 +1409,9 @@ class StudentPregistration extends \App\Http\Controllers\Controller
             $all_enrolledstudents = array();
 
             $search = $request->get('search');
-            $search = isset($search['value']) ? $search['value'] : '';
+            // $search = $search['value'];
+            $search = isset($search['value']) ? $search['value'] : null;
+
             $transdate = $request->get('transdate');
             $processtype = $request->get('procctype');
             $enrollmentdate = $request->get('enrollmentdate');
@@ -1331,7 +1424,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     ->acadprogid;
             }
 
-     
+
 
             if($processtype != ""){
 
@@ -1370,7 +1463,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     ->get();
 
                   $preenrolled = $basiced->merge($withsem);
-                
+
             }
 
             $all_gradelevel = DB::table('gradelevel')
@@ -1409,7 +1502,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                         $enddate = \Carbon\Carbon::create($temptransdate[1])->isoFormat('YYYY-MM-DD');
                         $enrolled  =  $enrolled->whereBetween('enrolledstud.dateenrolled', [$startdate,$enddate]);
                   }
-                  
+
 
             }
 
@@ -1456,19 +1549,20 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     'studmol',
                                     'early_enrollment_setup.type'
                               )
-                              ->distinct('studid')
+                              // ->distinct('studid')
+                              ->groupBy('studid')
                               ->get();
 
             foreach($enrolled as $item){
                   array_push($all_enrolledstudents,$item);
             }
-            
+
 
             $enrolled = DB::table('sh_enrolledstud')
                               ->join('studentstatus',function($join){
                                     $join->on('sh_enrolledstud.studstatus','=','studentstatus.id');
                               });
-                              
+
             if($studstat != 0 && $studstat != ''){
                   $enrolled  =  $enrolled->where('studstatus',$studstat);
 
@@ -1541,25 +1635,32 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     'early_enrollment_setup.type',
                                     'strandcode'
                               )
-                              ->distinct('studid')
+                              // ->distinct('studid')
+                              ->groupBy('studid')
                               ->get();
 
             foreach($enrolled as $item){
                   array_push($all_enrolledstudents,$item);
             }
 
+            //mao nani dapit college sections
+
             $enrolled = DB::table('college_enrolledstud')
-                              ->join('studentstatus',function($join){
-                                    $join->on('college_enrolledstud.studstatus','=','studentstatus.id');
-                              })
-                              ->leftJoin('college_sections',function($join){
-                                    $join->on('college_enrolledstud.sectionID','=','college_sections.id');
-                                    $join->where('college_sections.deleted',0);
-                              })
-                              ->leftJoin('college_classsched',function($join){
-                                    $join->on('college_sections.id','=','college_classsched.sectionid');
-                                    $join->where('college_classsched.deleted',0);
-                              });
+            ->when(isset($fillsectionid) && $fillsectionid != 0 && $fillsectionid != '', function($query) use($fillsectionid){
+                  return $query->where('college_enrolledstud.sectionID',$fillsectionid);
+
+            })
+            ->join('studentstatus',function($join){
+                  $join->on('college_enrolledstud.studstatus','=','studentstatus.id');
+            })
+            ->leftJoin('college_sections',function($join){
+                  $join->on('college_enrolledstud.sectionID','=','college_sections.id');
+                  $join->where('college_sections.deleted',0);
+            })
+            ->leftJoin('college_classsched',function($join){
+                  $join->on('college_sections.id','=','college_classsched.sectionid');
+                  $join->where('college_classsched.deleted',0);
+            });
 
             if($studstat != 0 && $studstat != ''){
                   $enrolled  =  $enrolled->where('studstatus',$studstat);
@@ -1587,7 +1688,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
             }
 
             if($fillsectionid != 0 && $fillsectionid != ''){
-                  if($levelacad == 5){
+                  if($levelacad == 5 || $levelacad == 6){
                         $enrolled  =  $enrolled->where('college_enrolledstud.sectionID',$fillsectionid);
                   }
             }
@@ -1601,7 +1702,6 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     $join->on('college_enrolledstud.admissiontype','=','early_enrollment_setup.id');
                                     $join->where('early_enrollment_setup.deleted',0);
                               })
-                              ->where('college_enrolledstud.syid',$syid)
                               ->where('college_enrolledstud.syid',$syid)
                               ->where('college_enrolledstud.semid',$semid)
                               ->where('college_enrolledstud.deleted',0)
@@ -1625,7 +1725,8 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     'regStatus',
                                     'college_classsched.id as schedid'
                               )
-                              ->distinct('studid')
+                              // ->distinct('studid')
+                              ->groupBy('studid')
                               ->get();
 
             if(count($enrolled) > 0){
@@ -1668,10 +1769,10 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                         foreach($enrolled as $item){
                               $courseid = $item->courseid;
                               $checkcoursegroup = collect($collegesection)->where('schedid',$item->schedid)->where('courseid',$courseid)->values();
-                              if(count($checkcoursegroup) != 0){
+                              if(count($checkcoursegroup) > 0){
                                     $text = $checkcoursegroup[0]->courseabrv;
                                     $text .= '-'.$checkcoursegroup[0]->levelname[0] . ' '.$checkcoursegroup[0]->schedgroupdesc;
-                                    $item->sectionname = $text;   
+                                    $item->sectionname = $text;
                               }else{
                                     $collegeid = DB::table('college_courses')
                                                       ->where('id',$courseid)
@@ -1679,46 +1780,50 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                                       ->first();
                                     if(isset($collegeid)){
                                           $checkcoursegroup = collect($collegesection)->where('schedid',$item->schedid)->where('collegeid',$collegeid->collegeid)->values();
-                                          if(count($checkcoursegroup) != 0){
+                                          if(count($checkcoursegroup) > 0){
                                                 $text = $checkcoursegroup[0]->collegeabrv;
                                                 $text .= '-'.$checkcoursegroup[0]->levelname[0] . ' '.$checkcoursegroup[0]->schedgroupdesc;
-                                                $item->sectionname = $text;  
+                                                $item->sectionname = $text;
                                           }else{
-                                                $item->sectionname = 'Not Found';
+                                                $item->sectionname = 'Section Not Found';
                                           }
                                     }else{
-                                          $item->sectionname = null;
+                                          $item->sectionname = 'Course Not Found';
                                     }
                               }
                         }
             }
-                                    
-            // $enrolled = DB::table('college_enrolledstud')
-            //              ->whereIn('yearLevel',collect($all_gradelevel)->pluck('id'));
 
-            // if($studstat != 0 && $studstat != ''){
-            //       $enrolled  =  $enrolled->where('studstatus',$studstat);
+
+            // Iterate through each enrolled student
+            foreach($enrolled as $item){
+                  // If the section is not found, default to 'Section Information Unavailable'
+                  $item->sectionname = DB::table('college_sections')
+                                          ->where('id', $item->sectionid)
+                                          ->value('sectionDesc') ?? 'Section Information Unavailable';
+
+            }
+
+            // Fallback for section name if it's still not set
+            // foreach($enrolled as $item){
+            //       if(!isset($item->sectionname) || in_array($item->sectionname, ['Section Not Found', 'Course Not Found'])){
+            //             $item->sectionname = DB::table('college_sections')
+            //                                    ->where('id', $item->sectionid)
+            //                                    ->value('sectionDesc') ?? 'Section Information Unavailable';
+            //       }
             // }
 
-            // if($fillevelid != 0 && $fillevelid != ''){
-            //       $enrolled  =  $enrolled->where('college_enrolledstud.yearLevel',$fillevelid);
+            // foreach($enrolled as $item){
+            //       if(!isset($item->sectionname) || $item->sectionname == 'Section Not Found' || $item->sectionname == 'Course Not Found'){
+            //             // Fetch section information directly from college_sections table
+            //             $sectionInfo = DB::table('college_sections')
+            //                              ->where('id', $item->sectionid)
+            //                              ->select('sectionDesc')
+            //                              ->first();
+            //             // Set sectionname to sectionDesc if available, otherwise use a default message
+            //             $item->sectionname = $sectionInfo ? $sectionInfo->sectionDesc : 'Section Information Unavailable';
+            //       }
             // }
-
-            // $enrolled = $enrolled->where('college_enrolledstud.syid',$syid)
-            //                         ->where('college_enrolledstud.semid',$semid)
-            //                         ->where('college_enrolledstud.deleted',0)
-            //                         ->select(
-            //                               'date_enrolled as dateenrolled',
-            //                               'yearLevel as levelid',
-            //                               'sectionID as sectionid',
-            //                               'studid',
-            //                               'studstatus',
-            //                               'promotionstatus',
-            //                               'studmol',
-            //                               'admissiontype'
-            //                         )
-            //                         ->distinct('studid')
-            //                         ->get();
 
             foreach($enrolled as $item){
                   array_push($all_enrolledstudents,$item);
@@ -1766,7 +1871,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     )
                                     ->get();
 
-        
+
 
                   $college_chrngtrans = DB::table('chrngtrans');
 
@@ -1793,8 +1898,8 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                                 'transno'
                                           )
                                           ->get();
-                                         
-             
+
+
 
                   $sh_chrngtrans = DB::table('chrngtrans')
                                           ->join('studinfo',function($join){
@@ -1822,7 +1927,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                           ->get();
 
                   $data = $gshs_chrngtrans->merge($sh_chrngtrans);
-                  $data = $data->merge($college_chrngtrans);               
+                  $data = $data->merge($college_chrngtrans);
 
                   $cashtrans = DB::table('chrngcashtrans')
                                     ->where('syid',$syid)
@@ -1868,14 +1973,14 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     ->get();
 
                   $no_dp_data = $no_dp_gshs->merge($no_dp_sh);
-                  $no_dp_data = $no_dp_data->merge($no_dp_college);     
+                  $no_dp_data = $no_dp_data->merge($no_dp_college);
 
 
                   //merge cashtrans and no dp
-                  $cashtrans = $cashtrans->merge($no_dp_data);     
+                  $cashtrans = $cashtrans->merge($no_dp_data);
 
             }
-            
+
 
             $all_students = DB::table('studinfo')
                               ->where('studinfo.deleted',0)
@@ -1900,7 +2005,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                               });
             }
 
-          
+
 
             if($studstat != 0 && $studstat != ''){
                   $all_students = $all_students->whereIn('studinfo.id',$student_array);
@@ -1928,49 +2033,85 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   }
             }
 
-            // Check if 'length' and 'start' parameters are present in the request
-            if ($request->has('length') && $request->has('start')) {
-                  $all_students = $all_students->take($request->get('length'))
-                                          ->skip($request->get('start'));
-            }
-            
-            // Continue with the rest of the query
-            $all_students = $all_students->orderBy('lastname')
-                                          ->select(
-                                                'collegeid',
-                                                'contactno',
-                                                'ismothernum',
-                                                'isfathernum',
-                                                'isguardannum',
-                                                'mcontactno',
-                                                'fcontactno',
-                                                'gcontactno',
-                                                'mothername',
-                                                'fathername',
-                                                'guardianname',
-                                                'gradelevel.levelname',
-                                                'gradelevel.levelname as curlevelname',
-                                                'studinfo.levelid as curlevelid',
-                                                'studinfo.levelid',
-                                                'studinfo.sectionid',
-                                                'studinfo.grantee',
-                                                'studinfo.pantawid',
-                                                'studinfo.mol',
-                                                'lastname',
-                                                'firstname',
-                                                'middlename',
-                                                'suffix',
-                                                'sid',
-                                                'strandname',
-                                                'strandid',
-                                                'gradelevel.sortid',
-                                                'studstatus',
-                                                'courseid',
-                                                'studinfo.id as studid',
-                                                'studisactive'
-                                          )->get();
+            if ($request->get('actiontype') == "exportidprint") {
+                  $all_students = $all_students
+                        ->orderBy('lastname')
+                        ->select(
+                              'collegeid',
+                              'contactno',
+                              'ismothernum',
+                              'isfathernum',
+                              'isguardannum',
+                              'mcontactno',
+                              'fcontactno',
+                              'gcontactno',
+                              'mothername',
+                              'fathername',
+                              'guardianname',
+                              'gradelevel.levelname',
+                              'gradelevel.levelname as curlevelname',
+                              'studinfo.levelid as curlevelid',
+                              'studinfo.levelid',
+                              'studinfo.sectionid',
+                              'studinfo.grantee',
+                              'studinfo.pantawid',
+                              'studinfo.mol',
+                              'lastname',
+                              'firstname',
+                              'middlename',
+                              'suffix',
+                              'sid',
+                              'strandname',
+                              'strandid',
+                              'gradelevel.sortid',
+                              'studstatus',
+                              'courseid',
+                              'studinfo.id as studid',
+                              'studisactive'
+                        )->get();
 
-          
+            } else {
+                  $all_students = $all_students->take($request->get('length'))
+                        ->skip($request->get('start'))
+                        ->orderBy('lastname')
+                        ->select(
+                              'collegeid',
+                              'contactno',
+                              'ismothernum',
+                              'isfathernum',
+                              'isguardannum',
+                              'mcontactno',
+                              'fcontactno',
+                              'gcontactno',
+                              'mothername',
+                              'fathername',
+                              'guardianname',
+                              'gradelevel.levelname',
+                              'gradelevel.levelname as curlevelname',
+                              'studinfo.levelid as curlevelid',
+                              'studinfo.levelid',
+                              'studinfo.sectionid',
+                              'studinfo.grantee',
+                              'studinfo.pantawid',
+                              'studinfo.mol',
+                              'lastname',
+                              'firstname',
+                              'middlename',
+                              'suffix',
+                              'sid',
+                              'strandname',
+                              'strandid',
+                              'gradelevel.sortid',
+                              'studstatus',
+                              'courseid',
+                              'studinfo.id as studid',
+                              'studisactive'
+                        )->get();
+            }
+
+
+
+
 
             $student_count = DB::table('studinfo')
                                     ->join('gradelevel',function($join) use($all_acad){
@@ -1987,7 +2128,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     $query->orWhere('sid','like','%'.$search.'%');
                               });
             }
-            
+
             if($activestatus != null && $activestatus != ""){
                   $student_count  =  $student_count->where('studinfo.studisactive',$activestatus);
             }
@@ -1996,12 +2137,12 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   $student_count = $student_count->whereIn('studinfo.id',$student_array);
             }else if($studstat == 0 && $studstat != ''){
                   $student_count = $student_count->whereNotIn('studinfo.id',$student_array);
-            }  
-            
+            }
+
             if($processtype != ""){
                   $student_count  =  $student_count->whereIn('studinfo.id',collect($preenrolled)->pluck('studid'));
             }
-            
+
             if($paystat != "" && $paystat != null && ($studstat == 0 || $studstat == '')){
                   if($paystat == 1){
                         $student_count  =  $student_count->whereIn('studinfo.id',collect($cashtrans)->pluck('studid'));
@@ -2009,11 +2150,11 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                         $student_count  =  $student_count->whereNotIn('studinfo.id',collect($cashtrans)->pluck('studid'));
                   }
             }
-            
+
             if($fillevelid != 0 && $fillevelid != '' &&  ($studstat == 0 || $studstat == '')){
                   $student_count  =  $student_count->where('studinfo.levelid',$fillevelid);
             }
-            
+
             $student_count = $student_count->count();
 
             $students = DB::table('student_pregistration')
@@ -2060,9 +2201,9 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                               ->get();
 
 
-                        
 
-                              
+
+
             $modeoflearning = DB::table('modeoflearning_student')
                                     ->where('deleted',0)
                                     ->whereIn('studid',collect($all_students)->pluck('studid'))
@@ -2073,11 +2214,11 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     )
                                     ->get();
 
-                                    
-          
-                                
+
+
+
             $school_info = DB::table('schoolinfo')->select('abbreviation')->first();
-            
+
             if($school_info->abbreviation == 'BCT'){
                   $payment_info = db::table('chrngtrans')
                                     ->select('chrngtrans.id', 'chrngtransdetail.amount', 'items','studid','semid')
@@ -2088,7 +2229,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
             }else if($school_info->abbreviation == 'VNBC' || $school_info->abbreviation == 'MAC' || $school_info->abbreviation == 'HCB' || $school_info->abbreviation == 'FMC MA SCH'){
 
 
-                  $chngtrans = DB::table('chrngtransdetail')				
+                  $chngtrans = DB::table('chrngtransdetail')
                                     ->select('studid', 'chrngtrans.syid', 'chrngtrans.semid', 'itemkind', 'payschedid', 'items.isdp',db::raw('SUM(chrngtrans.`amountpaid`) AS amount'))
                                     ->join('chrngtrans', 'chrngtransdetail.chrngtransid', '=', 'chrngtrans.id')
                                     ->join('items', 'chrngtransdetail.payschedid', '=', 'items.id')
@@ -2101,7 +2242,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     ->get();
 
 
-                                   
+
 
             }else if($school_info->abbreviation == 'SAIT'){
 
@@ -2109,14 +2250,14 @@ class StudentPregistration extends \App\Http\Controllers\Controller
 			$payment_info_gshs = [];
 			$payment_info_college = [];
                   $chngtrans = [];
-                  
+
             }
             else if($school_info->abbreviation == 'HCCSI' ){
                   $chngtrans = [];
                   $cashtrans = [];
 
 
-                 
+
 
             }else{
 
@@ -2134,7 +2275,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                           )
                                           ->get();
 
-                      
+
 
                         $cashtrans = DB::table('chrngcashtrans')
                                           ->where('syid',$syid)
@@ -2254,9 +2395,9 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   //check enrollment
                   $check = collect($all_enrolledstudents)->where('studid',$item->studid)->first();
                   $item->strandcode = null;
-                  
+
                   if(isset($check->studid)){
-                  
+
                         if($check->dateenrolled == null){
                               $item->dateenrolled = '';
                               $item->enrollment = '';
@@ -2270,7 +2411,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                         $item->promotionstatus = $check->promotionstatus;
                         $item->description = $check->description;
                         $item->studstatus = $check->studstatus;
-                       
+
                         $item->sectionname = $check->sectionname;
                         $item->levelid = $check->levelid;
                         $item->levelname = $check->levelname;
@@ -2282,7 +2423,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                               $item->strandid = null;
                         }
 
-                        if($check->levelid >= 17 && $check->levelid <= 21){
+                        if($check->levelid >= 17){
                               $item->courseid = $check->courseid;
                               $item->regStatus = $check->regStatus;
                               $item->studstatdate = null;
@@ -2297,7 +2438,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                                       ->values();
 
                   }else{
-                  
+
                         $item->promotionstatus = 0;
                         $item->enrollment = '';
                         $item->description = 'NOT ENROLLED';
@@ -2315,7 +2456,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                               $item->mol = $item->mol;
                         }
                   }
-                 
+
 
                   $item->levelname = str_replace(' COLLEGE','',$item->levelname);
                   $item->curlevelname = str_replace(' COLLEGE','',$item->curlevelname);
@@ -2327,7 +2468,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                                 ->where('studid',$item->studid)
                                                 ->where('semid',$semid)
                                                 ->values();
-                        
+
                         $check_nodp = collect($no_dp)->where('studid',$item->studid)->where('semid',$semid)->count();
                         $item->semid = $semid;
                   }
@@ -2351,7 +2492,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                                             ->values();
                               }
                         }
-                        
+
                         $check_nodp = collect($no_dp)->where('studid',$item->studid)->where('semid',$semid)->count();
                         $item->semid = $semid;
                   }else{
@@ -2385,10 +2526,10 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                                       ->values();
                               }
                         }
-                        
+
                         $check_nodp = collect($no_dp)->where('studid',$item->studid)->count();
                   }
-                  
+
                   //no_dp
                   if($check_nodp == 0){
                         $item->nodp = 0;
@@ -2405,10 +2546,10 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   if($school_info->abbreviation == 'SAIT'){
                         $item->nodp = 1;
                   }
-				  
+
                   if(count($temp_chrngrans) > 0){
                         $item->withpayment = 1;
-                       
+
                         if($school_info->abbreviation == 'VNBC' && $school_info->abbreviation == 'MAC' || $school_info->abbreviation == 'HCB' || $school_info->abbreviation == 'FMC MA SCH'){
                               $item->payment  = collect($chngtrans)
                                                       ->where('studid',$item->studid)
@@ -2428,16 +2569,16 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     $item->withpayment = 0;
                                     $item->payment = 0;
                               }
-                             
+
                         }
-                        
+
                         if($school_info->abbreviation == 'VNBC' || $school_info->abbreviation == 'MAC' || $school_info->abbreviation == 'HCB' || $school_info->abbreviation == 'FMC MA SCH'){
                               $chngtrans = collect($chngtrans)->where('studid','!=' , $item->studid)->values();
                         }else{
                               $chngtrans = collect($chngtrans)->whereNotIn('transno', collect($temp_chrngrans)->pluck('transno'))->values();
                               $cashtrans = collect($cashtrans)->whereNotIn('transno', collect($temp_chrngrans)->pluck('transno'))->values();
                         }
-                     
+
                   }else{
                          $item->withpayment = 0;
                          $item->payment = 0;
@@ -2450,6 +2591,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   }
 
             }
+
             // return $all_students;
             if ($request->get('action') == "export") {
                   $pdf = PDF::loadView('superadmin.pages.student.studentinfoprint', compact('all_students', 'student_count'));
@@ -2463,7 +2605,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
             ]);
 
             // foreach($students as $item){
-                  
+
             //       $temp_middle = '';
             //       $temp_suffix = '';
             //       if(isset($item->middlename)){
@@ -2475,7 +2617,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
             //             $temp_suffix = ' '.$item->suffix;
             //       }
             //       $item->student = $item->lastname.', '.$item->firstname.$temp_middle.$temp_suffix;
-               
+
 
             //       $check = collect($all_enrolledstudents)->where('studid',$item->studid)
             //                         ->first();
@@ -2484,7 +2626,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
             //       $item->isearly = 0;
 
             //       if(isset($check->studid)){
-                       
+
             //             if($check->dateenrolled == null){
             //                   $item->dateenrolled = '';
             //                   $item->enrollment = '';
@@ -2506,7 +2648,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
             //             }else{
             //                   $item->strandid = null;
             //             }
-                       
+
             //             $all_enrolledstudents = collect($all_enrolledstudents)
             //                                           ->where('studid','!=',$check->studid)
             //                                           // ->where('admissiontype',$item->admission_type)
@@ -2530,7 +2672,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
             //             }
             //       }
 
-                  
+
 
             //       $item->levelname = str_replace(' COLLEGE','',$item->levelname);
             //       $item->curlevelname = str_replace(' COLLEGE','',$item->curlevelname);
@@ -2546,18 +2688,18 @@ class StudentPregistration extends \App\Http\Controllers\Controller
             //             }else{
             //                   $check_payment = collect($payment_info)->where('studid',$item->studid)->where('semid',$semid)->values();
             //             }
-                       
+
             //             $item->semid = $semid;
             //       }else{
             //             $item->semid = 1;
             //             $check_payment = collect($payment_info)->where('studid',$item->studid)->values();
             //       }
-                 
-				  
+
+
             //       if(count($check_payment) > 0){
             //              $item->withpayment = 1;
             //              $item->payment = collect($check_payment)->sum('amount');
-                         
+
             //       }else{
             //              $item->withpayment = 0;
             //              $item->payment = 0;
@@ -2568,15 +2710,268 @@ class StudentPregistration extends \App\Http\Controllers\Controller
             //       }else{
             //             $item->can_enroll = 0;
             //       }
-                  
+
             // }
 
+
             $students = $all_students;
-           
+
             return $students;
       }
 
-      public static function enrollment_history(Request $request){
+      // public static function enrollment_history(Request $request){
+
+      //       $studid = $request->get('studid');
+      //       $courseid = $request->get('courseid');
+
+      //       $enrollment_list = array();
+
+      //       $get_enrollment = DB::table('enrolledstud')
+      //                               ->where('studid',$studid)
+      //                               ->where('enrolledstud.deleted',0)
+      //                               ->join('sections',function($join){
+      //                                     $join->on('enrolledstud.sectionid','=','sections.id');
+      //                               })
+      //                               ->join('gradelevel',function($join){
+      //                                     $join->on('enrolledstud.levelid','=','gradelevel.id');
+      //                               })
+      //                               ->join('sy',function($join){
+      //                                     $join->on('enrolledstud.syid','=','sy.id');
+      //                               })
+      //                               ->select(
+      //                                     'acadprogid',
+      //                                     'dateenrolled',
+      //                                     'enrolledstud.levelid',
+      //                                     'syid',
+      //                                     'sydesc',
+      //                                     'levelname',
+      //                                     'sectionname',
+      //                                     'sy.isactive',
+      //                                     'sectionid'
+      //                               )
+      //                               ->get();
+
+      //       foreach($get_enrollment as $item){
+
+      //             $item->semid = 1;
+      //             $item->dateenrolled = \Carbon\Carbon::create($item->dateenrolled)->isoFormat('MMM DD, YYYY');
+      //             array_push($enrollment_list,$item);
+      //       }
+
+      //       $get_enrollment = DB::table('sh_enrolledstud')
+      //                               ->where('studid',$studid)
+      //                               ->where('sh_enrolledstud.deleted',0)
+      //                               ->join('sections',function($join){
+      //                                     $join->on('sh_enrolledstud.sectionid','=','sections.id');
+      //                               })
+      //                               ->join('gradelevel',function($join){
+      //                                     $join->on('sh_enrolledstud.levelid','=','gradelevel.id');
+      //                               })
+      //                               ->join('sh_strand',function($join){
+      //                                     $join->on('sh_enrolledstud.strandid','=','sh_strand.id');
+      //                                     $join->where('sh_enrolledstud.deleted',0);
+      //                               })
+      //                               ->join('sy',function($join){
+      //                                     $join->on('sh_enrolledstud.syid','=','sy.id');
+      //                               })
+      //                               ->join('semester',function($join){
+      //                                     $join->on('sh_enrolledstud.semid','=','semester.id');
+      //                               })
+      //                               ->select(
+      //                                     'semid',
+      //                                     'acadprogid',
+      //                                     'dateenrolled',
+      //                                     'sh_enrolledstud.levelid',
+      //                                     'strandcode',
+      //                                     'syid',
+      //                                     'sydesc',
+      //                                     'levelname',
+      //                                     'sectionname',
+      //                                     'semester',
+      //                                     'sy.isactive',
+      //                                     'sectionid',
+      //                                     'sh_enrolledstud.strandid'
+      //                               )
+      //                               ->get();
+
+      //       foreach($get_enrollment as $item){
+      //             $item->semester = str_replace(" Semester"," Sem",$item->semester);
+      //             $item->dateenrolled = \Carbon\Carbon::create($item->dateenrolled)->isoFormat('MMM DD, YYYY');
+      //             array_push($enrollment_list,$item);
+      //       }
+
+
+      //       $get_enrollment = DB::table('college_enrolledstud')
+      //                               ->where('studid',$studid)
+      //                               ->where('college_enrolledstud.deleted',0)
+      //                               ->join('college_sections',function($join){
+      //                                     $join->on('college_enrolledstud.sectionid','=','college_sections.id');
+      //                               })
+      //                               ->join('college_classsched',function($join){
+      //                                     $join->on('college_sections.id','=','college_classsched.sectionid');
+      //                               })
+      //                               ->join('gradelevel',function($join){
+      //                                     $join->on('college_enrolledstud.yearLevel','=','gradelevel.id');
+      //                               })
+      //                               ->join('sy',function($join){
+      //                                     $join->on('college_enrolledstud.syid','=','sy.id');
+      //                               })
+      //                               ->join('college_courses',function($join){
+      //                                     $join->on('college_enrolledstud.courseid','=','college_courses.id');
+      //                                     $join->where('college_courses.deleted',0);
+      //                               })
+      //                               ->join('semester',function($join){
+      //                                     $join->on('college_enrolledstud.semid','=','semester.id');
+      //                               })
+      //                               ->select(
+      //                                     'semid',
+      //                                     'semester',
+      //                                     'acadprogid',
+      //                                     'courseabrv',
+      //                                     'date_enrolled as dateenrolled',
+      //                                     'college_enrolledstud.yearLevel as levelid',
+      //                                     'college_enrolledstud.syid',
+      //                                     'sydesc',
+      //                                     'levelname',
+      //                                     'sectionDesc as sectionname',
+      //                                     'college_classsched.id as schedid',
+      //                                     'sy.isactive'
+      //                               )
+      //                               ->get();
+
+
+      //       $collegesection = DB::table('college_schedgroup_detail')
+      //                               ->where('college_schedgroup_detail.deleted',0)
+      //                               ->whereIn('schedid',collect($get_enrollment)->pluck('schedid'))
+      //                               ->join('college_schedgroup',function($join){
+      //                                     $join->on('college_schedgroup_detail.groupid','=','college_schedgroup.id');
+      //                                     $join->where('college_schedgroup.deleted',0);
+      //                               })
+      //                               ->leftJoin('college_courses',function($join){
+      //                                     $join->on('college_schedgroup.courseid','=','college_courses.id');
+      //                                     $join->where('college_courses.deleted',0);
+      //                               })
+      //                               ->leftJoin('gradelevel',function($join){
+      //                                     $join->on('college_schedgroup.levelid','=','gradelevel.id');
+      //                                     $join->where('gradelevel.deleted',0);
+      //                               })
+      //                               ->leftJoin('college_colleges',function($join){
+      //                                     $join->on('college_schedgroup.collegeid','=','college_colleges.id');
+      //                                     $join->where('college_colleges.deleted',0);
+      //                               })
+      //                               ->select(
+      //                                     'college_schedgroup.courseid',
+      //                                     'college_schedgroup.levelid',
+      //                                     'college_schedgroup.collegeid',
+      //                                     'courseDesc',
+      //                                     'collegeDesc',
+      //                                     'levelname',
+      //                                     'courseabrv',
+      //                                     'collegeabrv',
+      //                                     'college_schedgroup.id',
+      //                                     'college_schedgroup.schedgroupdesc',
+      //                                     'schedgroupdesc as text',
+      //                                     'schedid'
+      //                               )
+      //                               ->get();
+
+      //       $collegeid = DB::table('college_courses')
+      //                               ->where('id',$courseid)
+      //                               ->select('collegeid')
+      //                               ->first();
+
+      //       foreach($get_enrollment as $item){
+
+
+      //             $checkcoursegroup = collect($collegesection)->where('schedid',$item->schedid)->where('courseid',$courseid)->values();
+
+      //             if(count($checkcoursegroup) != 0){
+      //                   $text = $checkcoursegroup[0]->courseabrv;
+      //                   $text .= '-'.$checkcoursegroup[0]->levelname[0] . ' '.$checkcoursegroup[0]->schedgroupdesc;
+      //                   $item->sectionname = $text;
+      //             }else{
+      //                   if(isset($collegeid->id)){
+      //                         $checkcoursegroup = collect($collegesection)->where('schedid',$item->schedid)->where('collegeid',$collegeid->id)->values();
+      //                         if(count($checkcoursegroup) != 0){
+      //                               $text = $checkcoursegroup[0]->collegeabrv;
+      //                               $text .= '-'.$checkcoursegroup[0]->levelname[0] . ' '.$checkcoursegroup[0]->schedgroupdesc;
+      //                               $item->sectionname = $text;
+      //                         }else{
+      //                               $item->sectionname = 'Not Found';
+      //                         }
+      //                   }else{
+      //                         $item->sectionname = 'Not Found';
+      //                   }
+      //             }
+
+
+      //             $item->semester = str_replace(" Semester"," Sem",$item->semester);
+      //             $item->levelname = str_replace(" COLLEGE","",$item->levelname);
+      //             $item->dateenrolled = \Carbon\Carbon::create($item->dateenrolled)->isoFormat('MMM DD, YYYY');
+      //             array_push($enrollment_list,$item);
+      //       }
+
+      //       return $enrollment_list;
+
+      // }
+
+      public static function enrollment_history(Request $request)
+      {
+          $studid = $request->get('studid');
+          $enrollment_list = [];
+      
+          // Fetch enrollment history from the `enrollment_history` table
+          $history_records = DB::table('enrollment_history')
+              ->where('enrollment_history.studid', $studid)
+              ->join('gradelevel', 'enrollment_history.levelid', '=', 'gradelevel.id')
+              ->join('sy', 'enrollment_history.syid', '=', 'sy.id')
+              ->leftJoin('semester', 'enrollment_history.semid', '=', 'semester.id')
+              ->join('studentstatus', 'enrollment_history.studstatus', '=', 'studentstatus.id')
+              ->leftJoin('college_sections', function ($join) {
+                  $join->on('enrollment_history.sectionid', '=', 'college_sections.id')
+                       ->whereBetween('enrollment_history.levelid', [17, 25]);
+              })
+              ->leftJoin('sections', function ($join) {
+                  $join->on('enrollment_history.sectionid', '=', 'sections.id')
+                       ->whereNotBetween('enrollment_history.levelid', [17, 25])
+                       ->where('sections.deleted', 0);
+              })
+              ->select(
+                  'enrollment_history.id',
+                  'enrollment_history.studid',
+                  'enrollment_history.levelid',
+                  'enrollment_history.syid',
+                  'enrollment_history.semid',
+                  'enrollment_history.created_at as dateenrolled',
+                  'gradelevel.levelname',
+                  'sy.sydesc',
+                  'semester.semester',
+                  'studentstatus.description as description',
+                  DB::raw("COALESCE(college_sections.sectionDesc, sections.sectionname) as sectionname")
+              )
+              ->orderBy('enrollment_history.created_at', 'desc')
+              ->get();
+      
+          foreach ($history_records as $item) {
+              $item->semester = str_replace(" Semester", " Sem", $item->semester);
+              $item->dateenrolled = \Carbon\Carbon::create($item->dateenrolled)->isoFormat('MMM DD, YYYY');
+              array_push($enrollment_list, $item);
+          }
+      
+          // Fallback to the backup method if no records are found
+          if (count($enrollment_list) == 0) {
+              return self::enrollment_history_backup($request);
+          }
+      
+          return collect($enrollment_list)
+              ->sortByDesc('dateenrolled')
+              ->values()
+              ->all();
+      }
+      
+
+
+      public static function enrollment_history_backup(Request $request){
 
             $studid = $request->get('studid');
             $courseid = $request->get('courseid');
@@ -2585,7 +2980,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
 
             $get_enrollment = DB::table('enrolledstud')
                                     ->where('studid',$studid)
-                                    ->where('enrolledstud.deleted',0)
+                                    // ->where('enrolledstud.deleted',0)
                                     ->join('sections',function($join){
                                           $join->on('enrolledstud.sectionid','=','sections.id');
                                     })
@@ -2595,7 +2990,11 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     ->join('sy',function($join){
                                           $join->on('enrolledstud.syid','=','sy.id');
                                     })
+                                    ->join('studentstatus', function($join){
+                                          $join->on('enrolledstud.studstatus','=','studentstatus.id');
+                                    })
                                     ->select(
+                                          'enrolledstud.id',
                                           'acadprogid',
                                           'dateenrolled',
                                           'enrolledstud.levelid',
@@ -2604,20 +3003,25 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                           'levelname',
                                           'sectionname',
                                           'sy.isactive',
-                                          'sectionid'
+                                          'sectionid',
+                                          'studentstatus.description',
+                                          'enrolledstud.studid',
+                                          'enrolledstud.createddatetime',
                                     )
+                                    ->orderBy('enrolledstud.createddatetime','desc')
+                                    ->groupBy('enrolledstud.id')
                                     ->get();
 
             foreach($get_enrollment as $item){
 
                   $item->semid = 1;
                   $item->dateenrolled = \Carbon\Carbon::create($item->dateenrolled)->isoFormat('MMM DD, YYYY');
-                  array_push($enrollment_list,$item);      
+                  array_push($enrollment_list,$item);
             }
 
             $get_enrollment = DB::table('sh_enrolledstud')
                                     ->where('studid',$studid)
-                                    ->where('sh_enrolledstud.deleted',0)
+                                    // ->where('sh_enrolledstud.deleted',0)
                                     ->join('sections',function($join){
                                           $join->on('sh_enrolledstud.sectionid','=','sections.id');
                                     })
@@ -2634,7 +3038,11 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     ->join('semester',function($join){
                                           $join->on('sh_enrolledstud.semid','=','semester.id');
                                     })
+                                    ->join('studentstatus', function($join){
+                                          $join->on('sh_enrolledstud.studstatus','=','studentstatus.id');
+                                    })
                                     ->select(
+                                          'sh_enrolledstud.id',
                                           'semid',
                                           'acadprogid',
                                           'dateenrolled',
@@ -2647,22 +3055,28 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                           'semester',
                                           'sy.isactive',
                                           'sectionid',
-                                          'sh_enrolledstud.strandid'
+                                          'sh_enrolledstud.strandid',
+                                          'studentstatus.description',
+                                          'sh_enrolledstud.studid',
+                                          'sh_enrolledstud.createddatetime',
                                     )
+                                    ->orderBy('sh_enrolledstud.createddatetime','desc')
+                                    ->groupBy('sh_enrolledstud.id')
                                     ->get();
 
             foreach($get_enrollment as $item){
                   $item->semester = str_replace(" Semester"," Sem",$item->semester);
                   $item->dateenrolled = \Carbon\Carbon::create($item->dateenrolled)->isoFormat('MMM DD, YYYY');
-                  array_push($enrollment_list,$item);      
+                  array_push($enrollment_list,$item);
             }
-                        
+
 
             $get_enrollment = DB::table('college_enrolledstud')
                                     ->where('studid',$studid)
-                                    ->where('college_enrolledstud.deleted',0)
+                                    // ->where('college_enrolledstud.deleted',0)
                                     ->join('college_sections',function($join){
-                                          $join->on('college_enrolledstud.sectionid','=','college_sections.id');
+                                          $join->on('college_enrolledstud.sectionID','=','college_sections.id');
+                                          // $join->on('college_enrolledstud.sectionid','=','college_sections.id');
                                     })
                                     ->join('college_classsched',function($join){
                                           $join->on('college_sections.id','=','college_classsched.sectionid');
@@ -2680,7 +3094,11 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     ->join('semester',function($join){
                                           $join->on('college_enrolledstud.semid','=','semester.id');
                                     })
+                                    ->join('studentstatus', function($join){
+                                          $join->on('college_enrolledstud.studstatus','=','studentstatus.id');
+                                    })
                                     ->select(
+                                          'college_enrolledstud.id',
                                           'semid',
                                           'semester',
                                           'acadprogid',
@@ -2692,83 +3110,27 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                           'levelname',
                                           'sectionDesc as sectionname',
                                           'college_classsched.id as schedid',
-                                          'sy.isactive'
+                                          'sy.isactive',
+                                          'studentstatus.description',
+                                          'college_enrolledstud.studid',
+                                          'college_enrolledstud.createddatetime',
                                     )
+                                    ->orderBy('college_enrolledstud.createddatetime','desc')
+                                    ->groupBy('college_enrolledstud.id')
                                     ->get();
 
-            
-            $collegesection = DB::table('college_schedgroup_detail')
-                                    ->where('college_schedgroup_detail.deleted',0)
-                                    ->whereIn('schedid',collect($get_enrollment)->pluck('schedid'))
-                                    ->join('college_schedgroup',function($join){
-                                          $join->on('college_schedgroup_detail.groupid','=','college_schedgroup.id');
-                                          $join->where('college_schedgroup.deleted',0);
-                                    })
-                                    ->leftJoin('college_courses',function($join){
-                                          $join->on('college_schedgroup.courseid','=','college_courses.id');
-                                          $join->where('college_courses.deleted',0);
-                                    })
-                                    ->leftJoin('gradelevel',function($join){
-                                          $join->on('college_schedgroup.levelid','=','gradelevel.id');
-                                          $join->where('gradelevel.deleted',0);
-                                    })
-                                    ->leftJoin('college_colleges',function($join){
-                                          $join->on('college_schedgroup.collegeid','=','college_colleges.id');
-                                          $join->where('college_colleges.deleted',0);
-                                    })
-                                    ->select(
-                                          'college_schedgroup.courseid',
-                                          'college_schedgroup.levelid',
-                                          'college_schedgroup.collegeid',
-                                          'courseDesc',
-                                          'collegeDesc',
-                                          'levelname',
-                                          'courseabrv',
-                                          'collegeabrv',
-                                          'college_schedgroup.id',
-                                          'college_schedgroup.schedgroupdesc',
-                                          'schedgroupdesc as text',
-                                          'schedid'
-                                    )
-                                    ->get();
-
-            $collegeid = DB::table('college_courses')
-                                    ->where('id',$courseid)
-                                    ->select('collegeid')
-                                    ->first();
 
             foreach($get_enrollment as $item){
-
-
-                  $checkcoursegroup = collect($collegesection)->where('schedid',$item->schedid)->where('courseid',$courseid)->values();
-
-                  if(count($checkcoursegroup) != 0){
-                        $text = $checkcoursegroup[0]->courseabrv;
-                        $text .= '-'.$checkcoursegroup[0]->levelname[0] . ' '.$checkcoursegroup[0]->schedgroupdesc;
-                        $item->sectionname = $text;   
-                  }else{
-                        if(isset($collegeid->id)){
-                              $checkcoursegroup = collect($collegesection)->where('schedid',$item->schedid)->where('collegeid',$collegeid->id)->values();
-                              if(count($checkcoursegroup) != 0){
-                                    $text = $checkcoursegroup[0]->collegeabrv;
-                                    $text .= '-'.$checkcoursegroup[0]->levelname[0] . ' '.$checkcoursegroup[0]->schedgroupdesc;
-                                    $item->sectionname = $text;  
-                              }else{
-                                    $item->sectionname = 'Not Found';
-                              }
-                        }else{
-                              $item->sectionname = 'Not Found';
-                        }
-                  }
-
-
                   $item->semester = str_replace(" Semester"," Sem",$item->semester);
                   $item->levelname = str_replace(" COLLEGE","",$item->levelname);
                   $item->dateenrolled = \Carbon\Carbon::create($item->dateenrolled)->isoFormat('MMM DD, YYYY');
-                  array_push($enrollment_list,$item);      
+                  array_push($enrollment_list,$item);
             }
 
-            return $enrollment_list;
+            return collect($enrollment_list)
+                  ->sortByDesc('createddatetime')
+                  ->values()
+                  ->all();
 
       }
 
@@ -2794,7 +3156,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
 
             // return collect($documents);
 
-         
+
 
             // $schoolinfo = DB::table('schoolinfo')->first();
 
@@ -2896,13 +3258,13 @@ class StudentPregistration extends \App\Http\Controllers\Controller
 
                   $updates = json_decode($update_history[0]->updatequery)[0]->bindings;
 
-                  
+
 
                   $student_info = Db::table('studinfo')
                                     ->where('id',$studid)
                                     ->first();
 
-                  
+
 
                   if($student_info->semail != $updates[3]){
                         array_push($update_list,(object)[
@@ -3058,7 +3420,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   }
 
 
-                  
+
             }
 
             if(count($update_list) == 0){
@@ -3083,29 +3445,29 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   $syid = $request->get('syid');
                   $studid = $request->get('studid');
                   $new_info = array();
-      
+
                   $update_detail = DB::table('student_updateinformation')
                                     ->where('syid',$syid)
                                     ->where('studid',$studid)
                                     ->where('updatedone',0)
                                     ->where('deleted',0)
                                     ->first();
-                                    
-      
+
+
                   if(isset($update_detail->updatequery)){
 
                         $fields = json_decode($update_detail->updatequery);
-      
+
                         if(count($fields) > 0){
 
-                            
-      
+
+
                               $query = $fields[0]->query;
                               $binding = $fields[0]->bindings;
-      
+
                               DB::update($query,$binding);
-      
-                                    
+
+
                               $update_detail = DB::table('student_updateinformation')
                                     ->where('syid',$syid)
                                     ->where('studid',$studid)
@@ -3117,17 +3479,17 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                           'updatedby'=>auth()->user()->id,
                                           'updateddatetime'=>\Carbon\Carbon::now('Asia/Manila')
                                     ]);
-      
+
                               $new_info = $fields[0]->bindings;
                         }
-      
+
                   }
-                  
+
                   return array((object)[
                         'status'=>1,
                         'message'=>'Information Updated!'
                   ]);
-                  
+
             }catch(\Exception $e){
                   return $e;
                   return array((object)[
@@ -3136,7 +3498,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   ]);
             }
 
-            
+
 
       }
 
@@ -3161,7 +3523,6 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   $regStatus = $request->get('regStatus');
                   $studstatdate = $request->get('studstatdate');
 
-                  
 
                   if($mol == null || $mol == ""){
                         $mol = 0;
@@ -3183,20 +3544,20 @@ class StudentPregistration extends \App\Http\Controllers\Controller
 
                   }else{
 
-                        if($levelid == 14 || $levelid == 15 || ($levelid >= 17 && $levelid <= 20)){
+                        if($levelid == 14 || $levelid == 15 || ($levelid >= 17 && $levelid <= 20 || $levelid >= 22)){
                               $admission_type = DB::table('early_enrollment_setup')
                                                 ->join('early_enrollment_setup_type',function($join){
                                                       $join->on('early_enrollment_setup.type','=','early_enrollment_setup_type.id');
                                                       $join->where('early_enrollment_setup.deleted',0);
                                                 })
                                                 ->where('early_enrollment_setup.isactive',1)
-                                                ->whereIn('early_enrollment_setup.acadprogid',[5,6])
+                                                ->whereIn('early_enrollment_setup.acadprogid',[5,6,8])
                                                 ->where('early_enrollment_setup.syid',$syid)
                                                 ->where('early_enrollment_setup.semid',$semid)
                                                 ->select('early_enrollment_setup.id as admission_type')
                                                 ->first();
                         }else{
-      
+
                               $admission_type = DB::table('early_enrollment_setup')
                                                       ->join('early_enrollment_setup_type',function($join) use($acadprogid){
                                                             $join->on('early_enrollment_setup.type','=','early_enrollment_setup_type.id');
@@ -3211,7 +3572,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
 
                   }
 
-                 
+
 
                   // if(!isset($admission_type->admission_type)){
                   //       return array((object)[
@@ -3222,7 +3583,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   //       $admission_type = $admission_type->admission_type;
                   // }
                   $admission_type = null;
-                 
+
 
                   $acadprogid = DB::table('gradelevel')
                                     ->where('id',$levelid)
@@ -3239,12 +3600,12 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     ->first()
                                     ->semester;
 
-                  if($acadprogid != 5 && $acadprogid != 6){
+                  if($acadprogid != 5 && $acadprogid != 6 && $acadprogid != 8){
                         if($semid == 2){
                               $semid = 1;
                         }
                   }
-                 
+
                   if($acadprogid == 5){
                         $check = DB::table('sh_enrolledstud')
                                     ->where('syid',$syid)
@@ -3255,7 +3616,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                    // ->where('promotionstatus',0)
                                     ->count();
 
-                  }else if($acadprogid == 6){
+                  }else if($acadprogid == 6 || $acadprogid == 8){
 
                         $check = DB::table('college_enrolledstud')
                                           ->where('syid',$syid)
@@ -3277,12 +3638,12 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     ->count();
                   }
 
-               
-                  
+
+
                   if($check > 0){
-                      
+
                         $sydesc = DB::table('sy')->where('id',$syid)->first()->sydesc;
-                        if($acadprogid == 5 || $acadprogid == 6){
+                        if($acadprogid == 5 || $acadprogid == 6 || $acadprogid == 8){
                               return array((object)[
                                     'status'=>2,
                                     'message'=>'Enrollment Exist for S.Y. '.$sydesc.'-'.$semester.'!'
@@ -3300,7 +3661,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     ]);
                               }
                         }
-                       
+
                   }
 
                   if($acadprogid == 5){
@@ -3312,7 +3673,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     ->where('promotionstatus',0)
                                     ->where('deleted',0)
                                     ->count();
-                  }else if($acadprogid == 6){
+                  }else if($acadprogid == 6 || $acadprogid == 8 ){
                         $check = DB::table('college_enrolledstud')
                                           ->where('semid',$semid)
                                           ->where('studid',$studid)
@@ -3335,7 +3696,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   if($check > 0){
 
                         $gradelevel = DB::table('gradelevel')->where('id',$levelid)->first()->levelname;
-                       
+
 
                         if($acadprogid == 5 || $acadprogid == 6){
                               return array((object)[
@@ -3356,95 +3717,198 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                               }
                         }
 
-                       
+
                   }
 
                   $sectionname = null;
-      
-                  if($acadprogid == 5){
 
+                  if ($acadprogid == 5) {
                         $sectionname = DB::table('sections')
-                                          ->where('id',$sectionid)
-                                          ->select('sectionname')
-                                          ->first()
-                                          ->sectionname;
-
-                        DB::table('sh_enrolledstud')
-                                    ->insert([
-                                          'studstatdate'=>$studstatdate,
-                                          'studmol'=>$mol,
-                                          // 'isearly'=>$isearly,
-                                          'remarks'=>$remarks,
-                                          'grantee'=>$grantee,
-                                          'studid'=>$studid,
-                                          'syid'=>$syid,
-                                          'levelid'=>$levelid,
-                                          'sectionid'=>$sectionid,
-                                          'strandid'=>$strandid,
-                                          'studstatus'=>$studstatus,
-                                          'semid'=>$semid,
-                                          'dateenrolled'=>$enrollmentdate,
-                                          'createdby'=>auth()->user()->id,
-                                          'createddatetime'=>\Carbon\Carbon::now('Asia/Manila'),
-                                          'admissiontype'=>$admission_type
-                                    ]);
-
-                  }else if($acadprogid == 6){
-
-                        DB::table('college_enrolledstud')
-                              ->insert([
-                                    'studmol'=>$mol,
-                                    // 'isearly'=>$isearly,
-                                    'remarks'=>$remarks,
-                                    'studid'=>$studid,
-                                    'syid'=>$syid,
-                                    'yearLevel'=>$levelid,
-                                    'sectionid'=>$sectionid,
-                                    'courseid'=>$courseid,
-                                    'studstatus'=>$studstatus,
-                                    'semid'=>$semid,
-                                    'date_enrolled'=>$enrollmentdate,
-                                    'createdby'=>auth()->user()->id,
-                                    'createddatetime'=>\Carbon\Carbon::now('Asia/Manila'),
-                                    'admissiontype'=>$admission_type,
-                                    'deleted'=>0,
-                                    'promotionstatus'=>0,
-                                    'regStatus'=>$regStatus
-                              ]);
-                  }else{
+                            ->where('id', $sectionid)
+                            ->select('sectionname')
+                            ->first()
+                            ->sectionname;
+                    
+                        DB::table('sh_enrolledstud')->insert([
+                            'studstatdate' => $studstatdate,
+                            'studmol' => $mol,
+                            'remarks' => $remarks,
+                            'grantee' => $grantee,
+                            'studid' => $studid,
+                            'syid' => $syid,
+                            'levelid' => $levelid,
+                            'sectionid' => $sectionid,
+                            'strandid' => $strandid,
+                            'studstatus' => $studstatus,
+                            'semid' => $semid,
+                            'dateenrolled' => $enrollmentdate,
+                            'createdby' => auth()->user()->id,
+                            'createddatetime' => \Carbon\Carbon::now('Asia/Manila'),
+                            'admissiontype' => $admission_type,
+                        ]);
+                    
+                        DB::table('enrollment_history')->insert([
+                            'studid' => $studid,
+                            'studstatus' => $studstatus,
+                            'syid' => $syid,
+                            'semid' => $semid,
+                            'levelid' => $levelid,
+                            'sectionid' => $sectionid,
+                            'deleted' => 0,
+                            'created_at' => \Carbon\Carbon::now('Asia/Manila'),
+                        ]);
+                  } elseif ($acadprogid == 6 || $acadprogid == 8) {
+                        DB::table('college_enrolledstud')->insert([
+                              'studmol' => $mol,
+                              'remarks' => $remarks,
+                              'studid' => $studid,
+                              'syid' => $syid,
+                              'yearLevel' => $levelid,
+                              'sectionid' => $sectionid,
+                              'courseid' => $courseid,
+                              'studstatus' => $studstatus,
+                              'semid' => $semid,
+                              'date_enrolled' => $enrollmentdate,
+                              'createdby' => auth()->user()->id,
+                              'createddatetime' => \Carbon\Carbon::now('Asia/Manila'),
+                              'admissiontype' => $admission_type,
+                              'deleted' => 0,
+                              'promotionstatus' => 0,
+                              'regStatus' => $regStatus,
+                        ]);
+                  
+                        DB::table('enrollment_history')->insert([
+                              'studid' => $studid,
+                              'studstatus' => $studstatus,
+                              'syid' => $syid,
+                              'semid' => $semid,
+                              'levelid' => $levelid,
+                              'sectionid' => $sectionid,
+                              'deleted' => 0,
+                              'created_at' => \Carbon\Carbon::now('Asia/Manila'),
+                        ]);
+                  } else {
                         $sectionname = DB::table('sections')
-                                    ->where('id',$sectionid)
-                                    ->select('sectionname')
-                                    ->first()
-                                    ->sectionname;
-
-                        DB::table('enrolledstud')
-                                    ->insert([
-                                          'studmol'=>$mol,
-                                          'ghssemid'=>$semid,
-                                          // 'isearly'=>$isearly,
-                                          'remarks'=>$remarks,
-                                          'grantee'=>$grantee,
-                                          'studid'=>$studid,
-                                          'syid'=>$syid,
-                                          'deleted'=>0,
-                                          'levelid'=>$levelid,
-                                          'sectionid'=>$sectionid,
-                                          'studstatus'=>$studstatus,
-                                          'dateenrolled'=>$enrollmentdate,
-                                          'createdby'=>auth()->user()->id,
-                                          'studstatdate'=>$studstatdate,
-                                          'createddatetime'=>\Carbon\Carbon::now('Asia/Manila'),
-                                          'admissiontype'=>$admission_type
-                                    ]);
+                              ->where('id', $sectionid)
+                              ->select('sectionname')
+                              ->first()
+                              ->sectionname;
+                        
+                        DB::table('enrolledstud')->insert([
+                              'studmol' => $mol,
+                              'ghssemid' => ($semid ?? 1) ?: 1,
+                              'remarks' => $remarks,
+                              'grantee' => $grantee,
+                              'studid' => $studid,
+                              'syid' => $syid,
+                              'deleted' => 0,
+                              'levelid' => $levelid,
+                              'sectionid' => $sectionid,
+                              'studstatus' => $studstatus,
+                              'dateenrolled' => $enrollmentdate,
+                              'createdby' => auth()->user()->id,
+                              'studstatdate' => $studstatdate,
+                              'createddatetime' => \Carbon\Carbon::now('Asia/Manila'),
+                              'admissiontype' => $admission_type,
+                        ]);
+                        
+                        DB::table('enrollment_history')->insert([
+                              'studid' => $studid,
+                              'studstatus' => $studstatus,
+                              'syid' => $syid,
+                              // 'semid' => $semid,
+                              'levelid' => $levelid,
+                              'sectionid' => $sectionid,
+                              'deleted' => 0,
+                              'created_at' => \Carbon\Carbon::now('Asia/Manila'),
+                        ]);
                   }
+                    
+
+                  // if($acadprogid == 5){
+
+                  //       $sectionname = DB::table('sections')
+                  //                         ->where('id',$sectionid)
+                  //                         ->select('sectionname')
+                  //                         ->first()
+                  //                         ->sectionname;
+
+                  //       DB::table('sh_enrolledstud')
+                  //                   ->insert([
+                  //                         'studstatdate'=>$studstatdate,
+                  //                         'studmol'=>$mol,
+                  //                         // 'isearly'=>$isearly,
+                  //                         'remarks'=>$remarks,
+                  //                         'grantee'=>$grantee,
+                  //                         'studid'=>$studid,
+                  //                         'syid'=>$syid,
+                  //                         'levelid'=>$levelid,
+                  //                         'sectionid'=>$sectionid,
+                  //                         'strandid'=>$strandid,
+                  //                         'studstatus'=>$studstatus,
+                  //                         'semid'=>$semid,
+                  //                         'dateenrolled'=>$enrollmentdate,
+                  //                         'createdby'=>auth()->user()->id,
+                  //                         'createddatetime'=>\Carbon\Carbon::now('Asia/Manila'),
+                  //                         'admissiontype'=>$admission_type
+                  //                   ]);
+
+                  // }else if($acadprogid == 6 || $acadprogid == 8){
+
+                  //       DB::table('college_enrolledstud')
+                  //             ->insert([
+                  //                   'studmol'=>$mol,
+                  //                   // 'isearly'=>$isearly,
+                  //                   'remarks'=>$remarks,
+                  //                   'studid'=>$studid,
+                  //                   'syid'=>$syid,
+                  //                   'yearLevel'=>$levelid,
+                  //                   'sectionid'=>$sectionid,
+                  //                   'courseid'=>$courseid,
+                  //                   'studstatus'=>$studstatus,
+                  //                   'semid'=>$semid,
+                  //                   'date_enrolled'=>$enrollmentdate,
+                  //                   'createdby'=>auth()->user()->id,
+                  //                   'createddatetime'=>\Carbon\Carbon::now('Asia/Manila'),
+                  //                   'admissiontype'=>$admission_type,
+                  //                   'deleted'=>0,
+                  //                   'promotionstatus'=>0,
+                  //                   'regStatus'=>$regStatus
+                  //             ]);
+                  // }else{
+                  //       $sectionname = DB::table('sections')
+                  //                   ->where('id',$sectionid)
+                  //                   ->select('sectionname')
+                  //                   ->first()
+                  //                   ->sectionname;
+
+                  //       DB::table('enrolledstud')
+                  //                   ->insert([
+                  //                         'studmol'=>$mol,
+                  //                         'ghssemid'=>$semid,
+                  //                         // 'isearly'=>$isearly,
+                  //                         'remarks'=>$remarks,
+                  //                         'grantee'=>$grantee,
+                  //                         'studid'=>$studid,
+                  //                         'syid'=>$syid,
+                  //                         'deleted'=>0,
+                  //                         'levelid'=>$levelid,
+                  //                         'sectionid'=>$sectionid,
+                  //                         'studstatus'=>$studstatus,
+                  //                         'dateenrolled'=>$enrollmentdate,
+                  //                         'createdby'=>auth()->user()->id,
+                  //                         'studstatdate'=>$studstatdate,
+                  //                         'createddatetime'=>\Carbon\Carbon::now('Asia/Manila'),
+                  //                         'admissiontype'=>$admission_type
+                  //                   ]);
+                  // }
 
                   $check_sy = DB::table('sy')
                                     ->where('id',$syid)
                                     ->first();
 
-                 
-                  $studinfo = DB::table('studinfo')  
+
+                  $studinfo = DB::table('studinfo')
                                     ->where('id',$studid)
                                     ->select(
                                           'contactno',
@@ -3489,7 +3953,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     'updateddatetime'=>\Carbon\Carbon::now('Asia/Manila')
                               ]);
                   }else{
-                        
+
                         DB::table('studinfo')
                               ->where('id',$studid)
                               ->take(1)
@@ -3525,8 +3989,8 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                               ]);
                   }
 
-                 
-                  
+
+
 
                   // if($mol != ""){
 
@@ -3556,7 +4020,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   //                         'createddatetime'=>\Carbon\Carbon::now('Asia/Manila'),
                   //                         'createdby'=>auth()->user()->id,
                   //                   ]);
-                                          
+
                   //       }else if(count($check_mol) == 0){
                   //             DB::table('modeoflearning_student')
                   //                   ->insert([
@@ -3577,7 +4041,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   //                   ]);
                   //       }
 
-                       
+
                   // }
 
                   $parent_contact = null;
@@ -3609,7 +4073,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                           'smsstatus' => 0
                                     ]);
                         }
-      
+
                         if($student_contact != null){
                               DB::table('smsbunker')
                                     ->insert([
@@ -3618,7 +4082,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                           'smsstatus' => 0
                                     ]);
                         }
-      
+
 
                   }else{
                         if($parent_contact != null){
@@ -3629,7 +4093,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                           'smsstatus' => 0
                                     ]);
                         }
-      
+
                         if($student_contact != null){
                               DB::table('smsbunker')
                                     ->insert([
@@ -3638,18 +4102,18 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                           'smsstatus' => 0
                                     ]);
                         }
-      
+
                   }
 
-                  
+
                   if(isset($studinfo->feesid)){
                         $request->request->add(['feesid' => $studinfo->feesid]);
                   }else{
                         $request->request->add(['feesid' => null]);
                   }
-                
+
                   $request->request->add(['feesid' => $studinfo->feesid]);
-            
+
                   if($abbr == 'SAIT' || $abbr == 'VNBC' || $abbr == 'MAC'){
                         try{
                               \App\Http\Controllers\FinanceControllers\UtilityController::resetpayment_v2($request);
@@ -3660,10 +4124,10 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                         }catch(\Exception $e){}
                   }
 
-                  
-                  
 
-      
+
+
+
                   if($check == 0){
                         return array((object)[
                               'status'=>1,
@@ -3673,7 +4137,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
             }catch(\Exception $e){
                   return self::store_error($e);
             }
-           
+
 
       }
 
@@ -3702,7 +4166,50 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   if($mol == null || $mol == ""){
                         $mol = 0;
                   }
+                  
 
+                        if($levelid >= 17 && $levelid <= 25){
+                              $checkgrades = DB::table('college_enrolledstud')
+                                          ->join('college_stud_term_grades',function($join) use($studid){
+                                                $join->on('college_enrolledstud.studid','=','college_stud_term_grades.studid');
+                                                $join->where('college_stud_term_grades.studid', $studid);
+                                          })
+                                          ->where('college_enrolledstud.syid',$syid)
+                                          ->where('college_enrolledstud.semid',$semid)
+                                          ->where('college_enrolledstud.deleted',0)
+                                          ->count();
+                        }else if($levelid == 14 || $levelid == 15){
+                              $checkgrades = DB::table('sh_enrolledstud')
+                                          ->join('gradesdetail',function($join) use($studid){
+                                                $join->on('sh_enrolledstud.studid','=','gradesdetail.studid');
+                                                $join->where('gradesdetail.studid', $studid);
+                                          })
+                                          ->join('grades', 'gradesdetail.headerid','=','grades.id')
+                                          ->where('sh_enrolledstud.syid',$syid)
+                                          ->where('sh_enrolledstud.semid',$semid)
+                                          ->where('sh_enrolledstud.deleted',0)
+                                          ->where('grades.levelid',$levelid)
+                                          ->count();
+                        }else {
+                              $checkgrades = DB::table('enrolledstud')
+                                          ->join('gradesdetail',function($join) use($studid){
+                                                $join->on('enrolledstud.studid','=','gradesdetail.studid');
+                                                $join->where('gradesdetail.studid', $studid);
+                                          })
+                                          ->join('grades', 'gradesdetail.headerid','=','grades.id')
+                                          ->where('enrolledstud.syid',$syid)
+                                          ->where('enrolledstud.semid',$semid)
+                                          ->where('enrolledstud.deleted',0)
+                                          ->where('grades.levelid',$levelid)
+                                          ->count();
+                        }
+
+                        if($checkgrades > 0){
+                              return array((object)[
+                                    'status'=>2,
+                                    'message'=>'Student has Existing Grades, Cannot Change Enrollment Status'
+                              ]);
+                        }
 
                   $check_sy = DB::table('sy')
                                     ->where('id',$syid)
@@ -3729,7 +4236,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     ->where('promotionstatus',0)
                                     ->where('deleted',0)
                                     ->count();
-                  }else if($levelid == 17 || $levelid == 18 || $levelid == 19 || $levelid == 20 || $levelid == 21){
+                  }else if($levelid == 17 || $levelid == 18 || $levelid == 19 || $levelid == 20 || $levelid == 21 || ($levelid >= 22 && $levelid <= 25)){
                         $check = DB::table('college_enrolledstud')
                                           ->where('syid','!=',$syid)
                                           ->where('semid',$semid)
@@ -3748,7 +4255,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     ->where('deleted',0)
                                     ->count();
                   }
-                  
+
                   if($check > 0 &&  $studstatus != 0){
                         $gradelevel = DB::table('gradelevel')->where('id',$levelid)->first()->levelname;
                         return array((object)[
@@ -3784,7 +4291,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   //                   ->where('deleted',0)
                   //                   ->count();
                   // }
-                  
+
                   // if($check > 0 &&  $studstatus != 0){
                   //       $sydesc = DB::table('sy')->where('id',$syid)->first()->sydesc;
                   //       return array((object)[
@@ -3840,9 +4347,9 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     'deleteddatetime'=>\Carbon\Carbon::now('Asia/Manila')
                               ]);
                         //remove enrollment from other acad
-                        
 
-                        //check ernrollment 
+
+                        //check ernrollment
                         $check = DB::table('sh_enrolledstud')
                                     ->where('studid',$studid)
                                     ->where('deleted',0)
@@ -3850,7 +4357,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     ->where('semid',$semid)
                                     ->where('promotionstatus',0)
                                     ->count();
-                        //check ernrollment 
+                        //check ernrollment
 
                         //if no enrollment record
                         if($check == 0 ){
@@ -3898,13 +4405,24 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     ]);
                         }
 
+                        DB::table('enrollment_history')->insert([
+                              'studid' => $studid,
+                              'studstatus' => $studstatus,
+                              'syid' => $syid,
+                              'semid' => $semid,
+                              'levelid' => $levelid,
+                              'sectionid' => $sectionid,
+                              'deleted' => 0,
+                              'created_at' => \Carbon\Carbon::now('Asia/Manila'),
+                          ]);
+
                         $sectionname = DB::table('sections')
                               ->where('id',$sectionid)
                               ->select('sectionname')
                               ->first()
                               ->sectionname;
 
-                  }else if($levelid == 17 || $levelid == 18 || $levelid == 19 || $levelid == 20 || $levelid == 21){
+                  }else if($levelid == 17 || $levelid == 18 || $levelid == 19 || $levelid == 20 || $levelid == 21 || ( $levelid >= 22 && $levelid <= 25  )){
 
                         $check = DB::table('college_enrolledstud')
                                           ->where('studid',$studid)
@@ -3949,7 +4467,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                               ]);
                         //remove enrollment from other acad
 
-                         //check ernrollment 
+                         //check ernrollment
                          $check = DB::table('college_enrolledstud')
                                           ->where('studid',$studid)
                                           ->where('deleted',0)
@@ -3968,6 +4486,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                           ->where('promotionstatus',0)
                                           ->count();
                         }
+                        $admission_type = null;
 
                         //if no enrollment record
                         if($check == 0 ){
@@ -4012,12 +4531,29 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     ]);
                         }
 
+                        
+                        DB::table('enrollment_history')->insert([
+                              'studid' => $studid,
+                              'studstatus' => $studstatus,
+                              'syid' => $syid,
+                              'semid' => $semid,
+                              'levelid' => $levelid,
+                              'sectionid' => $sectionid,
+                              'deleted' => 0,
+                              'created_at' => \Carbon\Carbon::now('Asia/Manila'),
+                        ]);
+
                         $sectionname = DB::table('college_sections')
                               ->where('id',$sectionid)
                               ->select('sectionDesc as sectionname')
-                              ->first()
-                              ->sectionname;
-                              
+                              ->first();
+
+                        if(!isset($sectionname)){
+                              $sectionname = null;
+                        }else{
+                              $sectionname = $sectionname->sectionname;
+                        }
+
                   }else{
 
                         $check = DB::table('enrolledstud')
@@ -4027,8 +4563,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     ->where('promotionstatus',1)
                                     ->count();
 
-
-                        if($check > 0){
+                        if($check > 0 && $studstatus != 0){
                               return array((object)[
                                     'status'=>2,
                                     'message'=>'Already promoted for selected year level'
@@ -4061,14 +4596,14 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                               ]);
                         //remove enrollment from other acad
 
-                        //check ernrollment 
+                        //check ernrollment
                         $check = DB::table('enrolledstud')
                                     ->where('studid',$studid)
                                     ->where('deleted',0)
                                     ->where('syid',$syid)
                                     ->where('promotionstatus',0)
                                     ->count();
-                        //check ernrollment 
+                        //check ernrollment
 
                         //if no enrollment record
                         if($check == 0 ){
@@ -4109,6 +4644,17 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     ]);
                         }
 
+                        DB::table('enrollment_history')->insert([
+                              'studid' => $studid,
+                              'studstatus' => $studstatus,
+                              'syid' => $syid,
+                              // 'semid' => $semid,
+                              'levelid' => $levelid,
+                              'sectionid' => $sectionid,
+                              'deleted' => 0,
+                              'created_at' => \Carbon\Carbon::now('Asia/Manila'),
+                        ]);
+
                         $sectionname = DB::table('sections')
                               ->where('id',$sectionid)
                               ->select('sectionname')
@@ -4116,13 +4662,13 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                               ->sectionname;
 
                   }
-                 
+
                   $check_sy = DB::table('sy')
                                     ->where('id',$syid)
                                     ->first();
 
-                 
-                  $studinfo = DB::table('studinfo')  
+
+                  $studinfo = DB::table('studinfo')
                                     ->where('id',$studid)
                                     ->select(
                                           'contactno',
@@ -4148,7 +4694,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     ->first();
 
 
-                  if($check_sy->isactive == 1 ||  $studinfo->studstus == 0){
+                  if($check_sy->isactive == 1 ||  $studinfo->studstatus == 0){
                         DB::table('studinfo')
                               ->where('id',$studid)
                               ->take(1)
@@ -4179,7 +4725,6 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                               ]);
                   }
 
-            
 
                   if($studstatus == 0){
                         if($levelid == 14 || $levelid == 15){
@@ -4195,7 +4740,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                           'deletedby'=>auth()->user()->id,
                                           'deleteddatetime'=>\Carbon\Carbon::now('Asia/Manila')
                                     ]);
-                        }else if($levelid == 17 || $levelid == 18 || $levelid == 19 || $levelid == 20 || $levelid == 21){
+                        }else if($levelid == 17 || $levelid == 18 || $levelid == 19 || $levelid == 20 || $levelid == 21 || ( $levelid >= 22 && $levelid <= 25  ) ){
 
                               DB::table('college_enrolledstud')
                                                 ->where('semid',$semid)
@@ -4228,29 +4773,32 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                                 ->select('classid')
                                                 ->first();
 
-                        DB::table('studpayscheddetail')
-                              ->where('studid',$studid)
-                              ->where('deleted',0)
-                              ->where('syid',$syid)
-                              ->where('semid',$semid)
-                              ->where('classid','!=',$balforwardsetup->classid)
-                              ->update([
-                                    'deleted'=>1,
-                                    'deleteddatetime'=>\Carbon\Carbon::now('Asia/Manila')
-                              ]);
-
                         DB::table('studledger')
-                              ->where('studid',$studid)
-                              ->where('deleted',0)
-                              ->where('syid',$syid)
-                              ->where('semid',$semid)
-                              ->whereNull('ornum')
-                              ->where('classid','!=',$balforwardsetup->classid)
-                              ->update([
-                                    'deleted'=>1,
-                                    'deletedby'=>auth()->user()->id,
-                                    'deleteddatetime'=>\Carbon\Carbon::now('Asia/Manila')
-                              ]);
+                        ->where('studid',$studid)
+                        ->where('deleted',0)
+                        ->where('syid',$syid)
+                        ->where('semid',$semid)
+                        ->whereNull('ornum')
+                        ->where('classid','!=',$balforwardsetup->classid)
+                        ->update([
+                              'deleted'=>1,
+                              'deletedby'=>auth()->user()->id,
+                              'deleteddatetime'=>\Carbon\Carbon::now('Asia/Manila')
+                        ]);
+
+
+                        DB::table('studpayscheddetail')
+                        ->where('studid',$studid)
+                        ->where('deleted',0)
+                        ->where('syid',$syid)
+                        ->where('semid',$semid)
+                        ->where('classid','!=',$balforwardsetup->classid)
+                        ->update([
+                              'deleted'=>1,
+                              'deleteddatetime'=>\Carbon\Carbon::now('Asia/Manila')
+                        ]);
+
+
 
                         DB::table('studledgeritemized')
                               ->where('studid',$studid)
@@ -4273,7 +4821,9 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     'updateddatetime'=>\Carbon\Carbon::now('Asia/Manila')
                               ]);
 
-                              
+
+
+
                         $check_mol = DB::table('modeoflearning_student')
                               ->where('studid',$studid)
                               ->where('syid',$syid)
@@ -4284,7 +4834,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     'deletedby'=>auth()->user()->id,
                                     'deleteddatetime'=>\Carbon\Carbon::now('Asia/Manila')
                               ]);
-                            
+
                   }
 
 
@@ -4316,7 +4866,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                           'createddatetime'=>\Carbon\Carbon::now('Asia/Manila'),
                                           'createdby'=>auth()->user()->id,
                                     ]);
-                                          
+
                         }else if(count($check_mol) == 0){
                               DB::table('modeoflearning_student')
                                     ->insert([
@@ -4337,18 +4887,18 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     ]);
                         }
 
-                       
+
                   }
 
                   return array((object)[
                         'status'=>1,
                         'message'=>'Enrollment Updated!'
                   ]);
-                
+
             }catch(\Exception $e){
                   return self::store_error($e);
             }
-           
+
 
       }
 
@@ -4365,7 +4915,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   $isfathernum = $request->get('isfathernum');
                   $isguardiannum = $request->get('isguardiannum');
 
-             
+
                   DB::table('studinfo')
                         ->where('id',$studid)
                         ->where('deleted',0)
@@ -4393,16 +4943,15 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                         'message'=>'Something went wrong!'
                   ]);
             }
-            
+
 
 
       }
 
       public static function create_student_information(Request $request){
 
-
             try{
-
+                  $allowduplicate = $request->get('allowduplicate');
                   $userid = $request->get('userid');
                   $syid = $request->get('syid');
                   $semid = $request->get('semid');
@@ -4426,6 +4975,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   $isfathernum = $request->get('isfathernum');
                   $isguardiannum = $request->get('isguardiannum');
                   $altsid = $request->get('altsid');
+                  $maidenname = $request->get('maidenname');
 
                   $acadprogid = DB::table('gradelevel')
                                     ->where('id',$levelid)
@@ -4445,12 +4995,24 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   }
 
                   $check = DB::table('studinfo')
-                                    ->where('lastname',$lastname)
-                                    ->where('firstname',$firstname)
-                                    ->where('deleted',0)
+                                    ->join('studinfo_more','studinfo.id','studinfo_more.studid')
+                                    ->where('studinfo.lastname',$lastname)
+                                    ->where('studinfo.firstname',$firstname)
+                                    ->where( function($query) use ($middlename){
+                                          if($middlename != ''){
+                                                $query->where('studinfo.middlename',$middlename);
+                                          }
+                                    })
+                                    ->where('studinfo.dob',$dob)
+                                    ->where( function($query) use ($maidenname) {
+                                          if ($maidenname != '') {
+                                                $query->where('studinfo_more.mothermaiden', $maidenname);
+                                          }
+                                    })
+                                    ->where('studinfo.deleted',0)
                                     ->count();
 
-                  if($check > 0){
+                  if($check > 0 && ($allowduplicate == false || $allowduplicate == 'false') ){
                         return array((object)[
                               'status'=>2,
                               'message'=>'Student Already Exist!'
@@ -4458,12 +5020,12 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   }else{
 
                         $fathername = '';
-                   
+
                         $fathername .= $request->get('flname') != '' ?  $request->get('flname') : '';
                         $fathername .= $request->get('ffname') != '' ?   $request->get('flname') != '' ? ', '.$request->get('ffname') : $request->get('ffname') : '';
                         $fathername .= $request->get('fsuffix') != '' ?  ', '.$request->get('fsuffix') : '';
                         $fathername .= $request->get('fmname') != '' ?  ', '.$request->get('fmname') : '';
-                       
+
                         $mothername = '';
                         $mothername .= $request->get('mlname') != '' ?  $request->get('mlname') : '';
                         $mothername .= $request->get('mfname') != '' ?   $request->get('mlname') != '' ? ', '.$request->get('mfname') : $request->get('mfname') : '';
@@ -4497,6 +5059,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
 
                                           'foccupation'=>strtoupper($request->get('foccupation')),
                                           'moccupation'=>strtoupper($request->get('moccupation')),
+                                          'goccupation'=>strtoupper($request->get('goccupation')),
                                           'guardianrelation'=>strtoupper($request->get('relation')),
 
                                           'mtname'=>strtoupper($request->get('mtname')),
@@ -4540,7 +5103,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                           'fmname'=>strtoupper($request->get('fmname')),
                                           'flname'=>strtoupper($request->get('flname')),
                                           'fsuffix'=>strtoupper($request->get('fsuffix')),
-                                          
+
                                           'mfname'=>strtoupper($request->get('mfname')),
                                           'mmname'=>strtoupper($request->get('mmname')),
                                           'mlname'=>strtoupper($request->get('mlname')),
@@ -4558,6 +5121,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                           'jhsschoolname'=>strtoupper($request->get('jhsschoolname')),
                                           'jhssy'=>$request->get('jhssy'),
                                           'shsschoolname'=>strtoupper($request->get('shsschoolname')),
+                                          'shsstrand'=>$request->get('shsstrand'),
                                           'shssy'=>$request->get('shssy'),
                                           'collegeschoolname'=>strtoupper($request->get('collegeschoolname')),
                                           'collegesy'=>$request->get('collegesy'),
@@ -4573,7 +5137,11 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                           'fea'=>$request->get('fea'),
                                           'mea'=>$request->get('mea'),
                                           'gea'=>$request->get('gea'),
-                                          
+
+                                          'fha'=>$request->get('fha'),
+                                          'mha'=>$request->get('mha'),
+                                          'gha'=>$request->get('gha'),
+
                                           'fmi'=>$request->get('fmi'),
                                           'mmi'=>$request->get('mmi'),
                                           'gmi'=>$request->get('gmi'),
@@ -4581,7 +5149,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                           'fosoi'=>$request->get('fosoi'),
                                           'mosoi'=>$request->get('mosoi'),
                                           'gosoi'=>$request->get('gosoi'),
-                                          
+
                                           'fethnicity'=>$request->get('fethnicity'),
                                           'methnicity'=>$request->get('methnicity'),
                                           'gethnicity'=>$request->get('gethnicity'),
@@ -4620,7 +5188,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                           'med_his'=>$request->get('med_his'),
                                           'other_med_info'=>$request->get('other_med_info'),
 
-                                          
+
                                           'createdby'=>$userid,
                                           'createddatetime'=>\Carbon\Carbon::now('Asia/Manila')
                                     ]);
@@ -4633,8 +5201,8 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                           ->first()
                                           ->acadprogid;
 
-                        if($acadprogid == 6){
-                  
+                        if($acadprogid == 6 || $acadprogid == 8){
+
                               $curriculum = $request->get('curriculum');
 
                               DB::table('college_studentcurriculum')
@@ -4693,6 +5261,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
 
       }
 
+
       public static function update_student_information(Request $request){
             try{
 
@@ -4719,6 +5288,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   $isguardiannum = $request->get('isguardiannum');
                   $studid = $request->get('studid');
                   $altsid = $request->get('altsid');
+                  $maidenname = $request->get('maidenname');
 
                   $acadprogid = DB::table('gradelevel')
                                     ->where('id',$levelid)
@@ -4738,29 +5308,38 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   }
 
                   $check = DB::table('studinfo')
-                                    ->where('id','!=',$studid)
-                                    ->where('lastname',$lastname)
-                                    ->where('firstname',$firstname)
-                                    ->where('deleted',0)
-                                    ->where('studisactive',1)
+                                    ->select('studinfo.id')
+                                    ->where('studinfo.id','!=',$studid)
+                                    ->where('studinfo.lastname',$lastname)
+                                    ->where('studinfo.firstname',$firstname)
+                                    ->where('studinfo.middlename',$middlename)
+                                    ->where('studinfo.dob',$dob)
+                                    ->where('studinfo.deleted',0)
+                                    ->where('studinfo.studisactive',1)
+                                    ->leftJoin('studinfo_more', 'studinfo.id', '=', 'studinfo_more.studid')
+                                    ->where(function($query) use ($maidenname){
+                                          if($maidenname != ''){
+                                                $query->where('studinfo_more.mothermaiden', $maidenname);
+                                          }
+                                    })
                                     ->count();
 
-                  if($check > 0){
+                  if($check > 0 ){
                         return array((object)[
                               'status'=>2,
-                              'message'=>'Student Already Exist!'
+                              'message'=>'Student has Duplicates or Already Exist!'
                         ]);
                   }else{
 
 
                         $fathername = '';
-                   
+
                         $fathername .= $request->get('flname') != '' ?  $request->get('flname') : '';
                         $fathername .= $request->get('ffname') != '' ?   $request->get('flname') != '' ? ', '.$request->get('ffname') : $request->get('ffname') : '';
                         $fathername .= $request->get('fsuffix') != '' ?  ', '.$request->get('fsuffix') : '';
                         $fathername .= $request->get('fmname') != '' ?  ', '.$request->get('fmname') : '';
 
-                       
+
                         $mothername = '';
                         $mothername .= $request->get('mlname') != '' ?  $request->get('mlname') : '';
                         $mothername .= $request->get('mfname') != '' ?   $request->get('mlname') != '' ? ', '.$request->get('mfname') : $request->get('mfname') : '';
@@ -4797,6 +5376,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
 
                                           'foccupation'=>strtoupper($request->get('foccupation')),
                                           'moccupation'=>strtoupper($request->get('moccupation')),
+                                          'goccupation'=>strtoupper($request->get('goccupation')),
                                           'guardianrelation'=>strtoupper($request->get('relation')),
                                           'bloodtype'=>$request->get('bloodtype'),
                                           'barangay'=>strtoupper($request->get('barangay')),
@@ -4834,9 +5414,9 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                           'mol'=>$request->get('mol')
                                     ]);
 
-                              
 
-                              if($acadprogid == 6){
+
+                              if($acadprogid == 6 || $acadprogid == 8) {
 
                                     $curriculum = $request->get('curriculum');
 
@@ -4873,12 +5453,12 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                                 'fmname'=>strtoupper($request->get('fmname')),
                                                 'flname'=>strtoupper($request->get('flname')),
                                                 'fsuffix'=>strtoupper($request->get('fsuffix')),
-                                                
+
                                                 'mfname'=>strtoupper($request->get('mfname')),
                                                 'mmname'=>strtoupper($request->get('mmname')),
                                                 'mlname'=>strtoupper($request->get('mlname')),
                                                 'msuffix'=>strtoupper($request->get('msuffix')),
-      
+
                                                 'gfname'=>strtoupper($request->get('gfname')),
                                                 'gmname'=>strtoupper($request->get('gmname')),
                                                 'glname'=>strtoupper($request->get('glname')),
@@ -4891,8 +5471,10 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                                 'jhsschoolname'=>strtoupper($request->get('jhsschoolname')),
                                                 'jhssy'=>$request->get('jhssy'),
                                                 'shsschoolname'=>strtoupper($request->get('shsschoolname')),
+                                                'shsstrand'=>strtoupper($request->get('shsstrand')),
                                                 'shssy'=>$request->get('shssy'),
                                                 'collegeschoolname'=>strtoupper($request->get('collegeschoolname')),
+                                                'collegecourse'=>strtoupper($request->get('collegecourse')),
                                                 'collegesy'=>$request->get('collegesy'),
 
                                                 'nocitf'=>$request->get('nocitf'),
@@ -4916,7 +5498,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
 
                                                 'createdby'=>$userid,
                                                 'createddatetime'=>\Carbon\Carbon::now('Asia/Manila'),
-                                                 
+
                                                 'mfi'=>$request->get('mfi'),
                                                 'psschooltype'=>$request->get('psschooltype'),
                                                 'gsschooltype'=>$request->get('gsschooltype'),
@@ -4934,12 +5516,12 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                                 'fmname'=>strtoupper($request->get('fmname')),
                                                 'flname'=>strtoupper($request->get('flname')),
                                                 'fsuffix'=>strtoupper($request->get('fsuffix')),
-                                                
+
                                                 'mfname'=>strtoupper($request->get('mfname')),
                                                 'mmname'=>strtoupper($request->get('mmname')),
                                                 'mlname'=>strtoupper($request->get('mlname')),
                                                 'msuffix'=>strtoupper($request->get('msuffix')),
-      
+
                                                 'gfname'=>strtoupper($request->get('gfname')),
                                                 'gmname'=>strtoupper($request->get('gmname')),
                                                 'glname'=>strtoupper($request->get('glname')),
@@ -4952,8 +5534,10 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                                 'jhsschoolname'=>strtoupper($request->get('jhsschoolname')),
                                                 'jhssy'=>$request->get('jhssy'),
                                                 'shsschoolname'=>strtoupper($request->get('shsschoolname')),
+                                                'shsstrand'=>strtoupper($request->get('shsstrand')),
                                                 'shssy'=>$request->get('shssy'),
                                                 'collegeschoolname'=>strtoupper($request->get('collegeschoolname')),
+                                                'collegecourse'=>strtoupper($request->get('collegecourse')),
                                                 'collegesy'=>$request->get('collegesy'),
 
                                                 'nocitf'=>$request->get('nocitf'),
@@ -4961,14 +5545,14 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                                 'oitfitf'=>$request->get('oitf'),
                                                 'glits'=>$request->get('glits'),
                                                 'scn'=>$request->get('scn'),
-                                             
+
                                                 'cmaosla'=>$request->get('cmaosla'),
                                                 'lsah'=>$request->get('lsah'),
 
                                                 'fea'=>$request->get('fea'),
                                                 'mea'=>$request->get('mea'),
                                                 'gea'=>$request->get('gea'),
-                                                
+
                                                 'fmi'=>$request->get('fmi'),
                                                 'mmi'=>$request->get('mmi'),
                                                 'gmi'=>$request->get('gmi'),
@@ -4976,11 +5560,11 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                                 'fosoi'=>$request->get('fosoi'),
                                                 'mosoi'=>$request->get('mosoi'),
                                                 'gosoi'=>$request->get('gosoi'),
-                                                
+
                                                 'fethnicity'=>$request->get('fethnicity'),
                                                 'methnicity'=>$request->get('methnicity'),
                                                 'gethnicity'=>$request->get('gethnicity'),
-                                                
+
                                                 'fha'=>$request->get('fha'),
                                                 'mha'=>$request->get('mha'),
                                                 'gha'=>$request->get('gha'),
@@ -5012,12 +5596,12 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                                 'studid'=>$studid,
                                                 'vacc'=>$request->get('vacc'),
                                                 'vacc_type_id'=>$request->get('vacc_type_1st'),
-                                                'vacc_type_id'=>$request->get('vacc_type_1st'),
+                                                // 'vacc_type_id'=>$request->get('vacc_type_1st'),
 
                                                 'booster_type_id'=>$request->get('vacc_type_booster'),
                                                 'vacc_type_booster'=>$request->get('vacc_type_booster') != null ?  $request->get('vacc_type_text_booster') : null,
                                                 'dose_date_booster'=>$request->get('dose_date_booster'),
-                                                
+
                                                 'vacc_type_2nd_id'=>$request->get('vacc_type_2nd'),
                                                 'vacc_type'=>$request->get('vacc_type_1st') != null ? $request->get('vacc_type_text_1st') : null,
                                                 'vacc_type_2nd'=>$request->get('vacc_type_2nd') != null ?  $request->get('vacc_type_text_2nd') : null,
@@ -5030,7 +5614,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                                 'med_his'=>$request->get('med_his'),
                                                 'other_med_info'=>$request->get('other_med_info'),
 
-                                               
+
 
                                                 'createdby'=>$userid,
                                                 'createddatetime'=>\Carbon\Carbon::now('Asia/Manila')
@@ -5058,15 +5642,15 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                                 'med_his'=>$request->get('med_his'),
                                                 'other_med_info'=>$request->get('other_med_info'),
 
-                                                
+
 
                                                 'updatedby'=>$userid,
                                                 'updateddatetime'=>\Carbon\Carbon::now('Asia/Manila')
                                           ]);
                               }
-      
 
-                              
+
+
 
                         return array((object)[
                               'status'=>1,
@@ -5115,7 +5699,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                                     ->where('admission_type',$admissiontype)
                                     ->count();
 
-                 
+
 
                   if($userid == ''){
                         $userid = auth()->user()->id;
@@ -5159,14 +5743,14 @@ class StudentPregistration extends \App\Http\Controllers\Controller
 
       public static function all_students(Request $request){
 
-        
+
             $syid = $request->get('syid');
             $semid = $request->get('semid');
             $ghssemid = $semid == 3 ? $semid : 1;
 
             $acadprog_list = self::get_acad($syid);
 
-            
+
             $all_enrolledstudents = array();
 
             $enrolled = DB::table('enrolledstud')
@@ -5200,7 +5784,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                               ->distinct('studid')
                               ->get();
 
-        
+
             foreach($enrolled as $item){
                   array_push($all_enrolledstudents,$item);
             }
@@ -5317,11 +5901,11 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                         $item->text =  $item->sid.' - '.$item->student;
                         array_push($all_students,$item);
                   }
-                 
+
             }
 
             return $all_students;
-            
+
       }
 
       public static function student_college_info(Request $request){
@@ -5343,12 +5927,12 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                               'college_sections.id'
                         )
                         ->first();
-                  
+
 
             return array((object)[
                   'section'=>$section
-            ]);  
-           
+            ]);
+
 
       }
 
@@ -5410,11 +5994,11 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   $check = DB::table('gradesdetail')
                               ->where('studid',$studid)
                               ->count();
-                              
+
 
                   if($check > 0){
 
-                  
+
                         return array((object)[
                               'status'=>0,
                               'message'=>'Contains grades'
@@ -5459,7 +6043,7 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                         'status'=>1,
                         'message'=>'Deleted Successfully'
                   ]);
-            
+
             }catch(\Exception $e){
                   return self::store_error($e);
             }
@@ -5476,6 +6060,11 @@ class StudentPregistration extends \App\Http\Controllers\Controller
                   'status'=>0,
                   'data'=>'Something went wrong!'
             ]);
+      }
+
+      public function enroll_updateledger(Request $request)
+      {
+        \App\Http\Controllers\FinanceControllers\UtilityController::resetpayment_v3($request);
       }
 
 }

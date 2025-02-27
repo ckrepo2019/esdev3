@@ -41,11 +41,15 @@
                 $extend = 'guidance.layouts.app2';
             } elseif ($check_refid->refid == 30) {
                 $extend = 'encoder.layouts.app2';
+            } elseif ($check_refid->refid == 35) {
+                $extend = 'tesda.layouts.app2';
             }
         }
     }
 
     $refid = $check_refid->refid;
+
+    $usertype = Auth::user()->type;
 
 @endphp
 
@@ -60,6 +64,7 @@
     <link rel="stylesheet" href="{{ asset('plugins/jquery-image-viewer-magnify/css/jquery.magnify.min.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/jquery-image-viewer-magnify/css/magnify-bezelless-theme.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/daterangepicker/daterangepicker.css') }}">
+    <link rel="stylesheet" href="{{ asset('plugins/croppie/croppie.css') }}">
     <style>
         .select2-container--default .select2-selection--single .select2-selection__clear {
             right: -8px;
@@ -123,19 +128,6 @@
             line-height: 1.5;
             border-radius: 0.2rem;
         }
-
-        /* input[type=search]{
-                                      height: calc(1.7em + 2px) !important;
-                                } */
-        .modal {
-            overflow-y: auto;
-        }
-
-        .has-error .select2-selection {
-            /* border: 1px solid;
-                                      border-radius: 4px; */
-            border-color: #dc3545 !important;
-        }
     </style>
 @endsection
 
@@ -149,6 +141,25 @@
             ->where('active', 1)
             ->get();
         $courses = DB::table('college_courses')->where('deleted', 0)->get();
+
+        $courses1 = DB::table('college_courses')
+            ->join('college_colleges', function ($join) {
+                $join->on('college_courses.collegeid', '=', 'college_colleges.id');
+                $join->where('college_colleges.acadprogid', 6);
+                $join->where('college_colleges.deleted', 0);
+            })
+            ->where('college_courses.deleted', 0)
+            ->select('college_courses.*')
+            ->get();
+        $courses2 = DB::table('college_courses')
+            ->join('college_colleges', function ($join) {
+                $join->on('college_courses.collegeid', '=', 'college_colleges.id');
+                $join->where('college_colleges.acadprogid', 8);
+                $join->where('college_colleges.deleted', 0);
+            })
+            ->where('college_courses.deleted', 0)
+            ->select('college_courses.*')
+            ->get();
         $active_sy = DB::table('sy')->where('isactive', 1)->first()->id;
 
         $grantee = DB::table('grantee')->select('id', 'description as text')->get();
@@ -264,12 +275,64 @@
             ->select('id', 'description', 'description as text')
             ->get();
 
+        $college_section = DB::table('college_sections')->where('deleted', 0)->get();
+
         // $enrollmentsetup = DB::table('early_enrollment_setup')
         //                         ->where('isactive',1)
         //                         ->select('acadprogid')
         //                         ->get();
 
     @endphp
+
+    <!-- Modal Structure -->
+    <div class="modal fade" id="readyToEnrollModal" tabindex="-1" aria-labelledby="readyToEnrollModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header pb-2 pt-2 border-0">
+                    <h5 class="modal-title" id="readyToEnrollModalLabel">Ready to Enroll Students</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4 form-group">
+                            <label for="" class="mb-1">Grade Level</label>
+                            <select class="form-control select2 form-control-sm" id="gradelevel_readytoenroll">
+                                <option value="">Select Grade Level</option>
+                                @foreach (DB::table('gradelevel')->where('deleted', 0)->orderBy('sortid')->get() as $item)
+                                    <option value="{{ $item->id }}">{{ $item->levelname }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Table for listing students -->
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="studentsTable" style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>Student ID</th>
+                                    <th>Name</th>
+                                    <th>Payment</th>
+                                    <th>Grade Level</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Dynamic student rows will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="notifyAll"><i class="fas fa-bell"></i> Notify
+                        All</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
     <div class="modal shadow fade" id="enrollment_modal" style="display: none;" aria-hidden="true" data-backdrop="static"
@@ -346,8 +409,9 @@
                                         <div class="card-body p-2">
                                             <div class="row">
                                                 <div class="col-md-12">
-                                                    <button class="btn btn-sm btn-default" id="view_update_student_info"><i
-                                                            class="fa fa-user"></i> Student Information</button>
+                                                    <button class="btn btn-sm btn-default"
+                                                        id="view_update_student_info"><i class="fa fa-user"></i> Student
+                                                        Information</button>
                                                     <button class="btn btn-danger btn-sm float-right ml-2"
                                                         id="mark_as_inactive"><i class="fa fa-ban mr-1"></i> Mark as
                                                         Inactive</button>
@@ -388,35 +452,9 @@
                             <div class="row">
                                 <div class="col-md-12">
                                     <div class="card shadow">
-                                        <div class="card-body p-2">
+                                        <div class="card-body p-2" id="append_new_load">
 
-                                            <div class="row">
-                                                <div class="col-md-12">
-                                                    <h6 for="">New Information Available</h6>
-                                                    <div class="table-responsive tableFixHead" style="height: 150px;">
-                                                        <table class="table table-sm table-bordered"
-                                                            style="font-size:.7rem !important; " width="100%">
-                                                            <thead>
-                                                                <tr>
-                                                                    <th width="30%" class="p-1">Label</th>
-                                                                    <th width="35%" class="p-1">Current</th>
-                                                                    <th width="35%" class="p-1">New</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody id="new_update_history">
 
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="row mt-2">
-                                                <div class="col-md-12" id="info_footer_holder" hidden>
-                                                    <button class="btn btn-primary btn-sm"
-                                                        style="font-size:.7rem !important"
-                                                        id="udpate_student_information">Update New Information</button>
-                                                </div>
-                                            </div>
 
                                         </div>
                                     </div>
@@ -437,9 +475,11 @@
                                                                     <th width="21%" class="p-1">School Year</th>
                                                                     <th width="12%" class="p-1 align-middle"
                                                                         style="font-size:.6rem !important">Grade Level</th>
-                                                                    <th width="47%" class="p-1">Section</th>
+                                                                    <th width="35%" class="p-1">Section</th>
+                                                                    <th width="12%" class="p-1 align-middle">Status
+                                                                    </th>
                                                                     <th width="14%" class="p-1 align-middle"
-                                                                        style="font-size:.6rem !important">Date Enrolled
+                                                                        style="font-size:.6rem !important">Date
                                                                     </th>
                                                                     <th width="6%" class="p-1"></th>
                                                                 </tr>
@@ -488,11 +528,15 @@
                                     <div class="row">
                                         <div class="col-md-12 form-group mb-2">
                                             <label for="" class="mb-1">Grade Level To Enroll</label>
-                                            <select class="form-control select2 form-control-sm" id="input_gradelevel">
+                                            <select class="form-control select2 form-control-sm" id="input_gradelevel"
+                                                disabled>
                                                 @foreach ($gradelevel as $item)
                                                     <option value="{{ $item->id }}">{{ $item->levelname }}</option>
                                                 @endforeach
                                             </select>
+                                        </div>
+                                        <div class="col-md-12 mb-2">
+                                            <em style="color: red;" id="gradelevel_unenroll">Notes: unenroll to change gradelevel</em>
                                         </div>
                                     </div>
                                     <div class="row" hidden>
@@ -517,11 +561,11 @@
                                     <div id="stdprgEnrollmentForm">
                                         <div class="row is_college" hidden>
                                             <div class="col-md-6 form-group mb-2">
-                                                <label for="" class="mb-1">Enrolled Units</label>
+                                                <label for="" class="mb-1">Loaded Units</label>
                                                 <p id="units_enrolled" class="mb-0"></p>
                                             </div>
                                             <div class="col-md-6 form-group mb-2">
-                                                <label for="" class="mb-1">Enrolled Subjects</label>
+                                                <label for="" class="mb-1">Loaded Subjects</label>
                                                 <p id="subjects_enrolled" class="mb-0"></p>
                                             </div>
                                             <div class="col-md-12 form-group mb-2">
@@ -535,8 +579,8 @@
                                         <div class="row" id="section_holder">
                                             <div class="col-md-12 form-group mb-2">
                                                 <label for="" class="mb-1">Section</label>
-                                                <select class="form-control select2 form-control-sm" id="input_section">
-
+                                                <select class="form-control select2 form-control-sm" id="input_section"
+                                                    style="width: 100% ">
                                                 </select>
                                             </div>
                                         </div>
@@ -790,8 +834,8 @@
                     </div>
                     <div class="row">
                         <div class="col-md-12" style="font-size:15px !important">
-                            <table class="table-hover table table-striped table-sm table-bordered" id="vac_list_datatable"
-                                width="100%">
+                            <table class="table-hover table table-striped table-sm table-bordered table-responsive"
+                                id="vac_list_datatable" width="100%">
                                 <thead>
                                     <tr>
                                         <th width="20%">Student</th>
@@ -912,10 +956,9 @@
         </div>
     </div>
 
-
     <div class="modal fade" id="student_info_modal" style="display: none;" aria-hidden="true" data-backdrop="static"
         data-keyboard="false">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header pb-2 pt-2 border-0">
                     <h4 class="modal-title" style="font-size: 1.1rem !important">Student Information</h4>
@@ -924,7 +967,23 @@
                 </div>
                 <div class="modal-body pt-0" style="font-size:.9rem !important">
                     <div class="row">
-                        <div class="col-md-12 table-responsive " style="height: 476px;" id="studinfo_holder">
+                        <div class="col-md-3">
+                            <div class="card shadow">
+                                <div class="card-body box-profile">
+                                    <div class="text-center" id="image_holder">
+                                    </div>
+                                    <p></p>
+                                    <ul class="list-group list-group-unbordered mb-3">
+                                        <li class="list-group-item">
+                                            <b>Student ID</b> <a class="float-right" id="label_sid"></a>
+                                        </li>
+                                    </ul>
+                                    <button data-toggle="modal" data-target="#image-modal"
+                                        class="btn btn-primary btn-block mt-2"><b>Update Profile Picture</b></button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-9 table-responsive " style="height: 476px;" id="studinfo_holder">
                             <div class="row mb-2">
                                 <div class="col-md-12 bg-primary pt-1">
                                     <h6 class="mb-1">Student Information</h6>
@@ -932,17 +991,32 @@
                             </div>
                             <div class="row">
                                 <div class="col-md-3 form-group mb-2">
-                                    <label for="" class="mb-1">SID</label>
+                                    <label for="" class="mb-1">Stud. ID</label>
                                     <input type="text" class="form-control form-control-sm-form" id="input_sid_new"
                                         placeholder="SID" style="height: calc(1.7rem + 1px);" autocomplete="off"
                                         disabled>
                                 </div>
                                 <div class="col-md-3 form-group mb-2">
-                                    <label for="" class="mb-1">Alternative SID</label>
+                                    <label for="" class="mb-1">Alternative Stud. ID</label>
                                     <input type="text" class="form-control form-control-sm-form" id="input_altsid_new"
                                         placeholder="Alternate SID" style="height: calc(1.7rem + 1px);"
                                         autocomplete="off">
                                 </div>
+                                {{-- <div class="col-md-3 form-group">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <!-- Upload Button -->
+                                        <button class="btn btn-primary btn-sm" id="upload_photo" style="margin: 0;">Upload Photo</button>
+                                    </div>
+                                    <input type="file" id="photo_input" accept="image/*" style="display: none;">
+                                </div>
+                                <div class="col-md-3 form-group">
+                                    <!-- Image Preview -->
+                                    <div id="image-preview-container" style="width: 100px; height: 100px; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                        <img id="image-preview" src="" alt="Preview" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                                    </div>
+                                </div> --}}
+
+
                             </div>
                             <hr class="mb-1 mt-1">
                             <div class="row">
@@ -1013,9 +1087,7 @@
                                     <select name="" id="input_course_new"
                                         class="form-control form-control-sm-form select2" autocomplete="off">
                                         <option value="">Select Course</option>
-                                        @foreach ($courses as $item)
-                                            <option value="{{ $item->id }}">{{ $item->courseDesc }}</option>
-                                        @endforeach
+
                                     </select>
                                 </div>
                                 <div class="col-md-5 form-group mb-2 input_course_holder" hidden>
@@ -1045,11 +1117,19 @@
                                         placeholder="First Name" autocomplete="off">
                                 </div>
                                 <div class="col-md-3 form-group mb-2">
-                                    <label for="" class="mb-1">Middlename</label>
+                                    <label for="input_mname_new" class="mb-1">Middlename</label>
                                     <input onkeyup="this.value = this.value.toUpperCase();" type="text"
                                         class="form-control form-control-sm-form" id="input_mname_new"
                                         placeholder="Middle Name" autocomplete="off">
+
+                                    <!-- Smaller Checkbox for "No Middlename" -->
+                                    <div class="d-inline mt-2">
+                                        <input type="checkbox" id="nomiddlename_new" name="nomiddlename_new"
+                                            value="1" style="transform: scale(0.9);">
+                                        <label for="nomiddlename_new" style="font-size: 0.9rem;">No Middlename</label>
+                                    </div>
                                 </div>
+
                                 <div class="col-md-3 form-group mb-2">
                                     <label for="" class="mb-1"><span class="text-danger">*</span>Last
                                         Name</label>
@@ -1251,8 +1331,8 @@
                                 </div>
                                 <div class="col-md-3 form-group">
                                     <label for="" class="mb-1">Region</label>
-                                    <input type="text" class="form-control form-control-sm-form" id="input_region_new"
-                                        placeholder="Region" autocomplete="off">
+                                    <input type="text" class="form-control form-control-sm-form"
+                                        id="input_region_new" placeholder="Region" autocomplete="off">
                                 </div>
                             </div>
                             <div class="row  mb-2">
@@ -1278,7 +1358,8 @@
                                                 <th class="p-0 text-center" width="11%">Last Name</th>
                                                 <th class="p-0 text-center" width="4%">Suffix</th>
                                                 <th class="p-0 text-center" width="9%">Contact #</th>
-                                                <th class="p-0 text-center" width="13%" hidden>Occupation/Relation</th>
+                                                <th class="p-0 text-center" width="13%" hidden>Occupation/Relation
+                                                </th>
                                                 <th class="p-0 text-center" width="17%" hidden>Educational Attainment
                                                 </th>
                                                 <th class="p-0 text-center" width="18%">Home Address</th>
@@ -1409,7 +1490,8 @@
                                                 <th class="p-0 text-center" width="18%">Occupation</th>
                                                 <th class="p-0 text-center" width="18%">Monthly Income</th>
                                                 <th class="p-0 text-center" width="18%">Other Source of Income</th>
-                                                <th class="p-0 text-center" width="18%">Ethnicity</th>
+                                                <th class="p-0 text-center" width="10%">Ethnicity</th>
+                                                <th class="p-0 text-center" width="8%"></th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -1430,9 +1512,10 @@
                                                         class="form-control form-control-sm-form" id="fosoi"
                                                         autocomplete="off" placeholder="Father Other Source of Income">
                                                 </th>
-                                                <th class="p-0 text-center" width="18%"><input
+                                                <th class="p-0 text-center" width="10%"><input
                                                         class="form-control form-control-sm-form" id="fethnicity"
                                                         autocomplete="off" placeholder="Father Ethnicity"></th>
+                                                <th></th>
                                             </tr>
                                             <tr>
                                                 <th class="p-0" width="10%">Mother</th>
@@ -1448,13 +1531,13 @@
                                                         class="form-control form-control-sm-form" id="mmi"
                                                         autocomplete="off" placeholder="Mother Monthly Income"></th>
                                                 <th class="p-0 text-center" width="18%"><input
-                                                        class="form-control form-control-sm-form" id="gosoi"
+                                                        class="form-control form-control-sm-form" id="mosoi"
                                                         autocomplete="off" placeholder="Mother Other Source of Income">
                                                 </th>
-                                                <th class="p-0 text-center" width="18%"><input
+                                                <th class="p-0 text-center" width="10%"><input
                                                         class="form-control form-control-sm-form" id="methnicity"
                                                         autocomplete="off" placeholder="Mother Ethnicity"></th>
-                                            </tr>
+                                                <th></th>
                                             <tr>
                                                 <th class="p-0" width="10%">Guardian</th>
                                                 <th class="p-0 text-center" width="18%"><input
@@ -1463,8 +1546,8 @@
                                                         placeholder="Guardian Educational Attainment"></th>
                                                 <th class="p-0 text-center" width="18%"><input
                                                         class="form-control form-control-sm-form"
-                                                        id="input_guardian_relation_new" autocomplete="off"
-                                                        placeholder="Occupation/Relation"></th>
+                                                        id="input_guardian_occupation_new" autocomplete="off"
+                                                        placeholder="Occupation"></th>
                                                 <th class="p-0 text-center" width="18%"><input
                                                         class="form-control form-control-sm-form" id="gmi"
                                                         autocomplete="off" placeholder="Guardian Monthly Income"></th>
@@ -1472,9 +1555,14 @@
                                                         class="form-control form-control-sm-form" id="gosoi"
                                                         autocomplete="off"
                                                         placeholder="Guardian Other Source of Income"></th>
-                                                <th class="p-0 text-center" width="18%"><input
+                                                <th class="p-0 text-center" width="10%"><input
                                                         class="form-control form-control-sm-form" id="gethnicity"
                                                         autocomplete="off" placeholder="Guardian Ethnicity"></th>
+                                                <th class="p-0 text-center" width="8%">
+                                                    <input class="form-control form-control-sm-form" name="relation"
+                                                        id="input_guardian_relation_new" autocomplete="off"
+                                                        placeholder="Relation">
+                                                </th>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -1588,9 +1676,14 @@
                                             </tr>
                                             <tr>
                                                 <th class="p-1 align-middle pl-1">Senior High School</th>
-                                                <td class="p-1"> <input class="form-control form-control-sm-form"
+                                                <td class="p-1 d-flex">
+                                                    <input class="form-control form-control-sm-form flex-grow-1 mr-1"
                                                         placeholder="Senior High School School Name" id="shsschoolname"
-                                                        autocomplete="off"></td>
+                                                        name="shsschoolname" autocomplete="off">
+                                                    <input class="form-control form-control-sm-form flex-grow-1"
+                                                        placeholder="SHS Strand" id="shsstrand" name="shsstrand"
+                                                        autocomplete="off">
+                                                </td>
                                                 <td class="p-1 text-center"><input
                                                         class="form-control form-control-sm-form"
                                                         placeholder="____-_____" id="shssy" autocomplete="off">
@@ -1606,9 +1699,14 @@
                                             </tr>
                                             <tr>
                                                 <th class="p-1 align-middle pl-1">College</th>
-                                                <td class="p-1"> <input class="form-control form-control-sm-form"
+                                                <td class="p-1 d-flex">
+                                                    <input class="form-control form-control-sm-form flex-grow-1 mr-1"
                                                         placeholder="College School Name" id="collegeschoolname"
-                                                        autocomplete="off"></td>
+                                                        name="collegeschoolname" autocomplete="off">
+                                                    <input class="form-control form-control-sm-form flex-grow-1"
+                                                        placeholder="Course" id="collegecourse" name="collegecourse"
+                                                        autocomplete="off">
+                                                </td>
                                                 <td class="p-1 text-center"><input
                                                         class="form-control form-control-sm-form"
                                                         placeholder="____-_____" id="collegesy" autocomplete="off">
@@ -1771,11 +1869,42 @@
                         </div>
                         <div class="col-md-6">
                             <button class="btn btn-default btn-sm float-right" id="enrollment_form" hidden><i
-                                    class="fa fa-print"></i> Student Information</button>
+                                    class="fa fa-print"></i> Print (PDF)</button>
 
                         </div>
                     </div>
 
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="image-modal" style="display: none;" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-info">
+                    <h5 class="modal-title">CHANGE PHOTO</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div id="demo"></div>
+                            <input type="file" name="studpic" id="studpic" class="form-control mb-2"
+                                accept=".png, .jpg, .jpeg" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <span class="mt-4"><i><b>Allowed File Type:</b> png, jpg, jpeg</i></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button id="updateimage" class="btn btn-info savebutton">Update</button>
                 </div>
             </div>
         </div>
@@ -2018,12 +2147,12 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1>Student Enrollment</h1>
+                    <h1>Student Information</h1>
                 </div>
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="/home">Home</a></li>
-                        <li class="breadcrumb-item active">Student Enrollment</li>
+                        <li class="breadcrumb-item active">Student Information</li>
                     </ol>
                 </div>
             </div>
@@ -2058,7 +2187,8 @@
                             <div class="row">
                                 <div class="col-md-2  form-group  mb-0">
                                     <label for="" class="mb-1">School Year</label>
-                                    <select class="form-control select2 form-control-sm" id="filter_sy">
+                                    <select class="form-control select2 form-control-sm" id="filter_sy"
+                                        style="width:100%;">
                                         @foreach ($sy as $item)
                                             @if ($item->isactive == 1)
                                                 <option value="{{ $item->id }}" selected="selected">
@@ -2071,7 +2201,8 @@
                                 </div>
                                 <div class="col-md-2  form-group semester_holder">
                                     <label for="" class="mb-1">Semester</label>
-                                    <select class="form-control select2 form-control-sm" id="filter_sem">
+                                    <select class="form-control select2 form-control-sm" id="filter_sem"
+                                        style="width:100%;">
                                         @foreach ($semester as $item)
                                             @if ($item->isactive == 1)
                                                 <option value="{{ $item->id }}" selected="selected">
@@ -2082,6 +2213,41 @@
                                             {{-- <option value="{{$item->id}}">{{$item->semester}}</option> --}}
                                         @endforeach
                                     </select>
+                                </div>
+                                <div class="col-md-3  form-group mb-0">
+                                    <label for="" class="mb-1">Student Status</label>
+                                    <select class="form-control select2 form-control-sm-form" id="filter_studstatus"
+                                        style="width:100%;">
+                                        <option value="">All</option>
+                                        @foreach ($studstatus as $item)
+                                            @if ($item->id == 0)
+                                                <option value="{{ $item->id }}" selected="selected">
+                                                    {{ $item->description }}</option>
+                                            @else
+                                                <option value="{{ $item->id }}">{{ $item->description }}</option>
+                                            @endif
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-2  form-group mb-0" id="filter_gradelevel_holder">
+                                    <label for="" class="mb-1">Grade Level</label>
+                                    <select class="form-control select2 form-control-sm" id="filter_gradelevel"
+                                        style="width:100%;">
+                                    </select>
+                                </div>
+                                <div class="col-md-3  form-group mb-0">
+                                    <label for="" class="mb-1">Section <span
+                                            class="error invalid-feedback">*Select grade level</span></label>
+                                    <select class="form-control select2 form-control-sm" id="filter_section"
+                                        style="width:100%;">
+                                        <option value="">All</option>
+
+                                        @foreach ($college_section as $item)
+                                            <option value="{{ $item->id }}">{{ $item->sectionDesc }}</option>
+                                        @endforeach
+                                    </select>
+                                    <span id="exampleInputEmail1-error" class="error invalid-feedback"
+                                        style="display: block"></span>
                                 </div>
                                 {{-- <div class="col-md-2  form-group mb-0">
                                           <label for=""  class="mb-1">Student Status</label>
@@ -2106,9 +2272,10 @@
                                           <select class="form-control select2 form-control-sm" id="filter_entype">
                                           </select>
                                     </div> --}}
-                                <div class="col-md-2 form-group mb-0">
+                                {{-- <div class="col-md-2 form-group mb-0">
                                     <label for="" class="mb-1">Payment Status</label>
-                                    <select class="form-control select2 form-control-sm" id="filter_paymentstat">
+                                    <select class="form-control select2 form-control-sm" id="filter_paymentstat"
+                                        style="width:100%;">
                                         <option value="">All</option>
                                         <option value="1">Paid / No DP Allowed</option>
                                         <option value="2">Not Paid</option>
@@ -2116,7 +2283,8 @@
                                 </div>
                                 <div class="col-md-2 form-group mb-0">
                                     <label for="" class="mb-1">Active Status</label>
-                                    <select class="form-control select2 form-control-sm" id="filter_activestatus">
+                                    <select class="form-control select2 form-control-sm" id="filter_activestatus"
+                                        style="width:100%;">
                                         <option value="">All</option>
                                         <option value="1" selected>Active</option>
                                         <option value="0">Inactive</option>
@@ -2126,45 +2294,23 @@
 
                                 <div class="col-md-2 form-group">
                                     <label for="" class="mb-1">Online Prereg. Type</label>
-                                    <select class="form-control select2 form-control-sm" id="filter_process">
+                                    <select class="form-control select2 form-control-sm" id="filter_process"
+                                        style="width:100%;">
                                         <option value="">All</option>
                                         @foreach ($enrollmentsetuptype as $item)
                                             <option value="{{ $item->id }}">{{ $item->description }}</option>
                                         @endforeach
                                     </select>
-                                </div>
+                                </div> --}}
 
                             </div>
                             <div class="row">
-                                <div class="col-md-2  form-group mb-0">
-                                    <label for="" class="mb-1">Student Status</label>
-                                    <select class="form-control select2 form-control-sm-form" id="filter_studstatus">
-                                        <option value="">All</option>
-                                        @foreach ($studstatus as $item)
-                                            @if ($item->id == 0)
-                                                <option value="{{ $item->id }}" selected="selected">
-                                                    {{ $item->description }}</option>
-                                            @else
-                                                <option value="{{ $item->id }}">{{ $item->description }}</option>
-                                            @endif
-                                        @endforeach
-                                    </select>
-                                </div>
                                 {{-- <div class="col-md-2  form-group mb-0" hidden>
                                           <label for=""  class="mb-1">Academic Program</label>
                                           <select class="form-control select2 form-control-sm" id="filter_acadprog">
                                           </select>
                                     </div> --}}
-                                <div class="col-md-2  form-group mb-0" id="filter_gradelevel_holder">
-                                    <label for="" class="mb-1">Grade Level</label>
-                                    <select class="form-control select2 form-control-sm" id="filter_gradelevel">
-                                    </select>
-                                </div>
-                                <div class="col-md-3 form-group mb-0">
-                                    <label for="" class="mb-1">Section </label>
-                                    <select class="form-control select2 form-control-sm" id="filter_section"></select>
-                                    {{-- <span id="exampleInputEmail1-error" class="error invalid-feedback" style="display: block"></span> --}}
-                                </div>
+
                                 <div class="col-md-2  form-group mb-0 transdate_holder" id="transdate_holder" hidden>
                                     <label for="" class="mb-1">Enrollment Date</label>
                                     <input class="form-control  form-control-sm-form" id="filter_enrollmentdate"
@@ -2177,12 +2323,19 @@
                                 </div>
 
                             </div>
-                            @if ($refid == 29)
+                            @if ($usertype == 30 || $refid == 29)
                                 <div class="row mt-2">
-                                    <div class="col-md-12 text-right">
-                                        <button type="button" class="btn btn-primary btn-sm" id="print_student_info">Print Student Information</button>
+                                    <div class="col-md-4 col-sm-12 ml-auto text-right">
+                                        <button style="width:100%;" type="button" class="btn btn-primary btn-sm"
+                                            id="print_student_info">Print Student Information </button>
                                     </div>
                                 </div>
+                                {{-- <div class="row mt-2">
+                                    <div class="col-md-4 col-sm-12 ml-auto text-right">
+                                        <button style="width:100%;" type="button" class="btn btn-primary btn-sm"
+                                            id="print_student_info">Print Student Information</button>
+                                    </div>
+                                </div> --}}
                             @endif
                         </div>
                     </div>
@@ -2193,32 +2346,43 @@
                 <div class="col-md-12">
                     <div class="card shadow">
                         <div class="card-body" style="font-size:15px !important">
+                            <div class="row btn_wrap mb-2">
+                            </div>
                             <div class="row">
-                                <div class="col-md-12">
-                                    <table class="table-hover table table-striped table-sm table-bordered"
-                                        id="update_info_request_table" width="100%">
-                                        <thead class="thead-light">
-                                            <tr>
-                                                <th width="7%" class="align-middle prereg_head" data-id="0">ID
-                                                    #</th>
-                                                <th width="25%" class="align-middle prereg_head" data-id="1">
-                                                    Students</th>
-                                                <th width="6%" class="align-middle prereg_head" data-id="1">
-                                                    Payment</th>
-                                                <th width="8%" class="align-middle text-center p-0 prereg_head"
-                                                    style="font-size:.6rem !important" data-id="2"></th>
-                                                <th width="20%" class="align-middle prereg_head" data-id="3">
-                                                    Section</th>
-                                                <th width="11%" class="align-middle prereg_head" data-id="4">
-                                                    Approval</th>
-                                                <th width="10%" class="align-middle prereg_head" data-id="5"
-                                                    style="font-size:.66rem !important" data-id="6">Enrollment Date
-                                                </th>
-                                                <th width="13%" class="align-middle text-center prereg_head"
-                                                    data-id="7"></th>
-                                            </tr>
-                                        </thead>
-                                    </table>
+                                <div class="col-md-12 mt-2">
+                                    <div class="table-responsive">
+                                        <table class="table-hover table table-striped table-sm table-bordered"
+                                            id="update_info_request_table" width="100%">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th width="5%"></th>
+                                                    <th width="7%" class="align-middle prereg_head"
+                                                        data-id="0">ID
+                                                        #</th>
+                                                    <th width="20%" class="align-middle prereg_head"
+                                                        data-id="1">
+                                                        Students</th>
+                                                    <th width="6%" class="align-middle prereg_head"
+                                                        data-id="1">
+                                                        Payment</th>
+                                                    <th width="8%" class="align-middle text-center p-0 prereg_head"
+                                                        style="font-size:.6rem !important" data-id="2"></th>
+                                                    <th width="20%" class="align-middle prereg_head"
+                                                        data-id="3">
+                                                        Section</th>
+                                                    <th width="11%" class="align-middle prereg_head"
+                                                        data-id="4">
+                                                        Approval</th>
+                                                    <th width="10%" class="align-middle prereg_head" data-id="5"
+                                                        style="font-size:.66rem !important" data-id="6">Enrollment
+                                                        Date
+                                                    </th>
+                                                    <th width="13%" class="align-middle text-center prereg_head"
+                                                        data-id="7"></th>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                             <hr class="mb-2">
@@ -2226,10 +2390,76 @@
                                 <div class="col-md-12">
                                     |
                                     @foreach ($studstatus as $item)
-                                        <a href="#" class="badge_stat" data-id="{{ $item->id }}"><span
-                                                class="badge">{{ $item->description }} ( <span
-                                                    class="badge_stat_count" data-id="{{ $item->id }}">0</span>
-                                                )</span> </a> |
+                                        @switch($item->id)
+                                            @case(0)
+                                                <a href="#" class="badge_stat text-secondary"
+                                                    data-id="{{ $item->id }}"><span
+                                                        class="badge">{{ $item->description }} ( <span
+                                                            class="badge_stat_count" data-id="{{ $item->id }}">0</span>
+                                                        )</span> </a> |
+                                            @break
+
+                                            @case(1)
+                                                <a href="#" class="badge_stat text-success"
+                                                    data-id="{{ $item->id }}"><span
+                                                        class="badge">{{ $item->description }} ( <span
+                                                            class="badge_stat_count" data-id="{{ $item->id }}">0</span>
+                                                        )</span> </a> |
+                                            @break
+
+                                            @case(2)
+                                                <a href="#" class="badge_stat " data-id="{{ $item->id }}"
+                                                    style="color: #58715f;"><span class="badge">{{ $item->description }} (
+                                                        <span class="badge_stat_count" data-id="{{ $item->id }}">0</span>
+                                                        )</span> </a> |
+                                            @break
+
+                                            @case(3)
+                                                <a href="#" class="badge_stat text-danger"
+                                                    data-id="{{ $item->id }}"><span
+                                                        class="badge">{{ $item->description }} ( <span
+                                                            class="badge_stat_count" data-id="{{ $item->id }}">0</span>
+                                                        )</span> </a> |
+                                            @break
+
+                                            @case(4)
+                                                <a href="#" class="badge_stat text-primary"
+                                                    data-id="{{ $item->id }}"><span
+                                                        class="badge">{{ $item->description }} ( <span
+                                                            class="badge_stat_count" data-id="{{ $item->id }}">0</span>
+                                                        )</span> </a> |
+                                            @break
+
+                                            @case(5)
+                                                <a href="#" class="badge_stat" data-id="{{ $item->id }}"
+                                                    style="color: #fd7e14;"><span class="badge">{{ $item->description }} (
+                                                        <span class="badge_stat_count" data-id="{{ $item->id }}">0</span>
+                                                        )</span> </a> |
+                                            @break
+
+                                            @case(6)
+                                                <a href="#" class="badge_stat text-warning"
+                                                    data-id="{{ $item->id }}"><span
+                                                        class="badge">{{ $item->description }} ( <span
+                                                            class="badge_stat_count" data-id="{{ $item->id }}">0</span>
+                                                        )</span> </a> |
+                                            @break
+
+                                            @case(7)
+                                                <a href="#" class="badge_stat text-dark"
+                                                    data-id="{{ $item->id }}"><span
+                                                        class="badge">{{ $item->description }} ( <span
+                                                            class="badge_stat_count" data-id="{{ $item->id }}">0</span>
+                                                        )</span> </a> |
+                                            @break
+
+                                            @default
+                                                <a href="#" class="badge_stat text-success"
+                                                    data-id="{{ $item->id }}"><span
+                                                        class="badge">{{ $item->description }} ( <span
+                                                            class="badge_stat_count" data-id="{{ $item->id }}">0</span>
+                                                        )</span> </a> |
+                                        @endswitch
                                     @endforeach
                                 </div>
                             </div>
@@ -2250,7 +2480,152 @@
     <script src="{{ asset('plugins/jquery-image-viewer-magnify/js/jquery.magnify.min.js') }}"></script>
     <script src="{{ asset('plugins/moment/moment.min.js') }}"></script>
     <script src="{{ asset('plugins/daterangepicker/daterangepicker.js') }}"></script>
+    <script src="{{ asset('plugins/croppie/croppie.js') }}"></script>
 
+    <script>
+        $(document).ready(function() {
+            $('#filter_section').select2();
+            $('#filter_section').val('').trigger('change');
+            $('#student_info_modal').on('shown.bs.modal', function() {
+                fetchProfile();
+            });
+
+            $uploadCrop = $('#demo').croppie({
+                enableExif: true,
+                viewport: {
+                    width: 304,
+                    height: 289,
+                },
+
+                boundary: {
+                    width: 304,
+                    height: 289
+                }
+            });
+
+            $("#studpic").change(function() {
+                var selectedFile = this.files[0];
+                var idxDot = selectedFile.name.lastIndexOf(".") + 1;
+                var extFile = selectedFile.name.substr(idxDot, selectedFile.name.length).toLowerCase();
+                if (extFile == "jpg" || extFile == "jpeg" || extFile == "png") {
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        $uploadCrop.croppie('bind', {
+                            url: e.target.result
+                        }).then(function() {
+                            console.log('jQuery bind complete');
+                        });
+                    }
+                    reader.readAsDataURL(this.files[0]);
+                } else {
+                    Swal.fire({
+                        title: 'INVALID FORMAT',
+                        type: 'error',
+                        showConfirmButton: false,
+                        timer: 1500
+                    })
+                    $(this).val('')
+                }
+            });
+
+            $(document).on('click', '#updateimage', function(ev) {
+                if ($('#studpic').val() == '') {
+                    Swal.fire({
+                        title: 'No Image Selected',
+                        text: 'Please select an image to update.',
+                        type: 'info',
+                        confirmButtonText: 'Ok'
+                    });
+                    $('#studpic').addClass('is-invalid')
+                    $('.invalid-feedback').removeAttr('hidden')
+                    return false;
+                }
+
+                $uploadCrop.croppie('result', {
+                    type: 'canvas',
+                    size: 'viewport'
+                }).then(function(resp) {
+                    $.ajax({
+                        url: "/adminstudentrfidassign/uploadphoto",
+                        type: "POST",
+                        data: {
+                            "image": resp,
+                            "studid": selected,
+                            "_token": "{{ csrf_token() }}"
+                        },
+                        success: function(response) {
+                            if (response[0].status == 0) {
+                                $('#studpic').addClass('is-invalid')
+                                $('.invalid-feedback').removeAttr('hidden')
+                                $('.invalid-feedback')[0].innerHTML = '<strong>' + data[
+                                    0].errors.image[0] + '</strong>'
+                            } else {
+                                Toast.fire({
+                                    type: 'success',
+                                    title: 'Updated Successfully!'
+                                });
+                                fetchProfile();
+                                $('#image-modal').modal('hide');
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Oops...',
+                                text: 'Error uploading photo. Please try again.'
+                            });
+                            console.error(error);
+                        }
+                    });
+                });
+            });
+
+            function fetchProfile() {
+                $.ajax({
+                    url: `/get-student-image/${selected}`, // Adjust the ID as needed
+                    method: 'GET',
+                    success: function(response) {
+                        console.log('imagepic..', response);
+                        var onerror_url = @json(asset('dist/img/download.png'));
+                        if (response.success && response.picurl) {
+                            // Display the image
+                            // $('#image_holder').attr('src', response.picurl).show();
+
+                            // var onerror_url = @json(asset('dist/img/download.png'));
+                            var picurl = response.picurl.replace('jpg', 'png') + "?random=" + new Date()
+                                .getTime()
+                            var image = '<img width="100%" src="' + picurl + '" onerror="this.src=\'' +
+                                onerror_url + '\'" alt="" class="img-circle img-fluid" >'
+                            $('#image_holder')[0].innerHTML = image
+                        } else {
+                            $('#image_holder')[0].innerHTML = '<img width="100%" src="' + onerror_url +
+                                '" alt="" class="img-circle img-fluid" >'
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error fetching the image:', error);
+                        $('#image_holder')[0].innerHTML = '<img width="100%" src="' + onerror_url +
+                            '" alt="" class="img-circle img-fluid" >'
+                    }
+                });
+            }
+        })
+    </script>
+
+    <script>
+        // clyde added
+        $(document).ready(function() {
+            // When the checkbox is changed (checked/unchecked)
+            $('#nomiddlename_new').on('change', function() {
+                var isChecked = $(this).prop('checked'); // Check if checkbox is checked
+                $('#input_mname_new').prop('disabled', isChecked); // Disable input when checked
+                if (isChecked) {
+                    $('#input_mname_new').val(''); // Clear the input if checkbox is checked
+                }
+            });
+
+        });
+    </script>
 
     <script>
         function scrolltoview(tempelement) {
@@ -2398,46 +2773,46 @@
         })
 
 
-        $('#filter_section').select2({
-            allowClear: true,
-            placeholder: "All",
-            "language": {
-                "noResults": function() {
-                    if ($('#filter_gradelevel').val() == "") {
-                        return '<span class="text-sm">No grade level selected<span>';
-                    } else {
-                        return "No results found";
-                    }
-                }
-            },
-            escapeMarkup: function(markup) {
-                return markup;
-            },
-            ajax: {
-                url: "{{ route('sctnSelect') }}",
-                data: function(params) {
-                    var query = {
-                        syid: $('#filter_sy').val(),
-                        levelid: $('#filter_gradelevel').val(),
-                        search: params.term,
-                        page: params.page || 0
-                    }
-                    return query;
-                },
-                dataType: 'json',
+        // $('#filter_section').select2({
+        //     allowClear: true,
+        //     placeholder: "All",
+        //     "language": {
+        //         "noResults": function() {
+        //             if ($('#filter_gradelevel').val() == "") {
+        //                 return '<span class="text-sm">No grade level selected<span>';
+        //             } else {
+        //                 return "No results found";
+        //             }
+        //         }
+        //     },
+        //     escapeMarkup: function(markup) {
+        //         return markup;
+        //     },
+        //     ajax: {
+        //         url: "{{ route('sctnSelect') }}",
+        //         data: function(params) {
+        //             var query = {
+        //                 syid: $('#filter_sy').val(),
+        //                 levelid: $('#filter_gradelevel').val(),
+        //                 search: params.term,
+        //                 page: params.page || 0
+        //             }
+        //             return query;
+        //         },
+        //         dataType: 'json',
 
-                processResults: function(data, params) {
-                    params.page = params.page || 0;
-                    return {
-                        results: data.results,
-                        pagination: {
-                            more: data.pagination.more
-                        }
-                    };
+        //         processResults: function(data, params) {
+        //             params.page = params.page || 0;
+        //             return {
+        //                 results: data.results,
+        //                 pagination: {
+        //                     more: data.pagination.more
+        //                 }
+        //             };
 
-                },
-            }
-        })
+        //         },
+        //     }
+        // })
     </script>
 
     <script>
@@ -2528,9 +2903,26 @@
                 $('.input_course_holder').attr('hidden', 'hidden')
                 if ($(this).val() == 14 || $(this).val() == 15) {
                     $('#input_strand_holder').removeAttr('hidden')
-                } else if ($(this).val() == 17 || $(this).val() == 18 || $(this).val() == 19 || $(this)
-                    .val() == 20 || $(this).val() == 21) {
+                } else if ($(this).val() >= 17) {
                     $('.input_course_holder').removeAttr('hidden')
+                }
+
+                if ($(this).val() >= 17 && $(this).val() <= 21) {
+                    $('#input_course_new').empty();
+                    $('#input_course_new').append(`
+                        <option value="">Select Grade Level</option>
+                        @foreach ($courses1 as $item)
+                            <option value="{{ $item->id }}">{{ $item->courseDesc }}</option>
+                        @endforeach
+                    `)
+                } else {
+                    $('#input_course_new').empty();
+                    $('#input_course_new').append(`
+                        <option value="">Select Grade Level</option>
+                        @foreach ($courses2 as $item)
+                            <option value="{{ $item->id }}">{{ $item->courseDesc }}</option>
+                        @endforeach
+                    `)
                 }
 
 
@@ -2844,8 +3236,11 @@
                 activeRequestsTable.destroy();
                 load_update_info_datatable(true)
             })
+            
 
             $(document).on('change', '#filter_section', function() {
+                console.log('wtf');
+                
                 var activeRequestsTable = $('#update_info_request_table').DataTable();
                 activeRequestsTable.state.clear();
                 activeRequestsTable.destroy();
@@ -3132,6 +3527,7 @@
                 $('#input_father_sname_new').val("")
                 $('#input_father_contact_new').val("")
                 $('#input_father_occupation_new').val("")
+                $('#fha').val("")
 
                 $('#input_mother_fname_new').val("")
                 $('#input_mother_mname_new').val("")
@@ -3139,13 +3535,16 @@
                 $('#input_mother_sname_new').val("")
                 $('#input_mother_contact_new').val("")
                 $('#input_mother_occupation_new').val("")
+                $('#mha').val("")
 
                 $('#input_guardian_fname_new').val("")
                 $('#input_guardian_mname_new').val("")
                 $('#input_guardian_lname_new').val("")
                 $('#input_guardian_sname_new').val("")
                 $('#input_guardian_contact_new').val("")
+                $('#input_guardian_occupation_new').val("")
                 $('#input_guardian_relation_new').val("")
+                $('#gha').val("")
 
                 $('#studinfo_holder').animate({
                     scrollTop: 0
@@ -3445,11 +3844,8 @@
                         studid: selected,
                     },
                     success: function(data) {
-                        console.log('this is documents');
-                        console.log(data);
                         if (data[0].status == 1) {
                             data[0].data.forEach(function(b) {
-                                console.log(b)
                                 var image = 'No File Uploaded!<br>'
                                 var herf = 'href="#"'
                                 if (b.uploaded[0] && b.uploaded[0].picurl != '' && b.uploaded[0]
@@ -3498,26 +3894,26 @@
                 modalHeight: 520
             });
 
-            function get_college_info() {
-                $.ajax({
-                    type: 'GET',
-                    url: '/student/preregistration/student/collegeinfo',
-                    data: {
-                        syid: $('#filter_sy').val(),
-                        semid: $('#filter_sem').val(),
-                        studid: selected,
-                    },
-                    success: function(data) {
-                        if (data[0].section != null) {
-                            var temp_college_section = [data[0].section]
-                            $("#input_section").empty();
-                            $("#input_section").select2({
-                                data: temp_college_section
-                            })
-                        }
-                    }
-                })
-            }
+            // function get_college_info() {
+            //     $.ajax({
+            //         type: 'GET',
+            //         url: '/student/preregistration/student/collegeinfo',
+            //         data: {
+            //             syid: $('#filter_sy').val(),
+            //             semid: $('#filter_sem').val(),
+            //             studid: selected,
+            //         },
+            //         success: function(data) {
+            //             if (data[0].section != null) {
+            //                 var temp_college_section = [data[0].section]
+            //                 $("#input_section").empty();
+            //                 $("#input_section").select2({
+            //                     data: temp_college_section
+            //                 })
+            //             }
+            //         }
+            //     })
+            // }
 
             function update_enrollment_message_reciever_display(temp_studinfo) {
 
@@ -3659,6 +4055,7 @@
                             gsuffix: $('#input_guardian_sname_new').val(),
                             gcontactno: $('#input_guardian_contact_new').val(),
                             relation: $('#input_guardian_relation_new').val(),
+                            goccupation: $('#input_guardian_occupation_new').val(),
 
                             mtname: $('#input_mt_new option:selected').text(),
                             egname: $('#input_egroup_new option:selected').text(),
@@ -3675,6 +4072,7 @@
                             jhsschoolname: $('#jhsschoolname').val(),
                             jhssy: $('#jhssy').val(),
                             shsschoolname: $('#shsschoolname').val(),
+                            shsstrand: $('#shsstrand').val(),
                             shssy: $('#shssy').val(),
                             collegeschoolname: $('collegeschoolname').val(),
                             collegesy: $('#collegesy').val(),
@@ -3731,6 +4129,10 @@
                             fmi: $('#fmi').val(),
                             mmi: $('#mmi').val(),
                             gmi: $('#gmi').val(),
+
+                            fha: $('#fha').val(),
+                            mha: $('#mha').val(),
+                            gha: $('#gha').val(),
 
                             fosoi: $('#fosoi').val(),
                             mosoi: $('#mosoi').val(),
@@ -3814,6 +4216,7 @@
                             province: $('#input_province_new').val(),
                             region: $('#input_region_new').val(),
 
+                            fha: $('#fha').val(),
                             ffname: $('#input_father_fname_new').val(),
                             fmname: $('#input_father_mname_new').val(),
                             flname: $('#input_father_lname_new').val(),
@@ -3821,6 +4224,7 @@
                             fcontactno: $('#input_father_contact_new').val(),
                             foccupation: $('#input_father_occupation_new').val(),
 
+                            mha: $('#mha').val(),
                             mfname: $('#input_mother_fname_new').val(),
                             mmname: $('#input_mother_mname_new').val(),
                             mlname: $('#input_mother_lname_new').val(),
@@ -3828,12 +4232,14 @@
                             mcontactno: $('#input_mother_contact_new').val(),
                             moccupation: $('#input_mother_occupation_new').val(),
 
+                            gha: $('#gha').val(),
                             gfname: $('#input_guardian_fname_new').val(),
                             gmname: $('#input_guardian_mname_new').val(),
                             glname: $('#input_guardian_lname_new').val(),
                             gsuffix: $('#input_guardian_sname_new').val(),
                             gcontactno: $('#input_guardian_contact_new').val(),
                             relation: $('#input_guardian_relation_new').val(),
+                            goccupation: $('#input_guardian_occupation_new').val(),
 
                             mtname: $('#input_mt_new option:selected').text(),
                             egname: $('#input_egroup_new option:selected').text(),
@@ -3850,6 +4256,7 @@
                             jhsschoolname: $('#jhsschoolname').val(),
                             jhssy: $('#jhssy').val(),
                             shsschoolname: $('#shsschoolname').val(),
+                            shsstrand: $('#shsstrand').val(),
                             shssy: $('#shssy').val(),
                             collegeschoolname: $('collegeschoolname').val(),
                             collegesy: $('#collegesy').val(),
@@ -3883,6 +4290,9 @@
                             collegeschooltype: $('#collegeschooltype').val(),
 
                             lastschoolatt: $('#last_school_att').val(),
+                            glits: $('#last_school_lvlid').val(),
+                            scn: $('#last_school_no').val(),
+                            cmaosla: $('#last_school_add').val(),
 
                             pob: $('#pob').val(),
                             maritalstatus: $('#input_marital_new').val(),
@@ -3891,9 +4301,6 @@
                             lsah: $('#input_lsah_new').val(),
                             oitf: oitf,
 
-                            glits: $('#last_school_lvlid').val(),
-                            scn: $('#last_school_no').val(),
-                            cmaosla: $('#last_school_add').val(),
 
                             //socio economic profile start
                             fea: $('#fea').val(),
@@ -3971,17 +4378,298 @@
             })
 
 
+            // $(document).on('click', '.enroll', function() {
+
+            //     $('#enrollment_button_text').text('')
+
+            //     $('.has-error').removeClass('has-error')
+            //     $('.is-invalid').removeClass('is-invalid')
+
+            //     $('#enroll_student_button').text('Enroll Student')
+
+            //     $('#delete_student_button').removeAttr('hidden')
+
+            //     $('#enroll_student_button').attr('data-p', 'create')
+            //     $('#enroll_student_button').addClass('btn-primary')
+            //     $('#enroll_student_button').removeClass('btn-success')
+
+            //     selected = $(this).attr('data-id')
+
+            //     if (usertype == 6 || refid == 28 || refid == 31 || refid == 30) {
+            //         display_student_info()
+            //         return false;
+            //     }
+
+
+
+            //     selected_prereg = $(this).attr('data-preregid')
+            //     var temp_studinfo = all_students.filter(x => x.studid == selected)
+            //     selectedCourse = temp_studinfo[0].courseid
+            //     selectedCollege = temp_studinfo[0].collegeid
+
+            //     $('#view_requirements').attr('href', '/student/requirements?student=' + temp_studinfo[0]
+            //         .sid)
+
+            //     $('#input_gradelevel').val(temp_studinfo[0].levelid).change()
+            //     $('#input_course').val(temp_studinfo[0].courseid).change()
+            //     $('#student_name').text(temp_studinfo[0].sid + ' : ' + temp_studinfo[0].student)
+            //     $('#enroll_student_button').removeAttr('hidden')
+            //     // $('#isEarly').prop('checked',false)
+            //     $('#label_currentgradelevel').text(temp_studinfo[0].curlevelname)
+            //     $('#input_grantee').val(temp_studinfo[0].grantee).change()
+            //     $('#input_mol').val(temp_studinfo[0].mol).change()
+
+
+            //     if (temp_studinfo[0].studisactive == 1) {
+            //         $('#mark_as_active').attr('hidden', 'hidden')
+            //         $('#mark_as_inactive').removeAttr('hidden')
+            //     } else {
+            //         $('#mark_as_inactive').attr('hidden', 'hidden')
+            //         $('#mark_as_active').removeAttr('hidden')
+            //     }
+
+            //     var temp_sem = all_sem.filter(x => x.id == $('#filter_sem').val())
+            //     var temp_sy = sy.filter(x => x.id == $('#filter_sy').val())
+            //     $("#input_sem").empty();
+            //     $("#input_sem").select2({
+            //         data: temp_sem,
+            //         placeholder: "Select Semester",
+            //     })
+
+            //     var date = moment().format('YYYY-MM-DD');
+            //     $('#input_enrollmentdate').val(date)
+
+            //     $('#enroll_student_button').removeAttr('hidden')
+            //     $('#input_gradelevel').removeAttr('disabled')
+            //     $('#input_section').removeAttr('disabled')
+            //     $('#input_grantee').removeAttr('disabled')
+            //     $('#input_studstat').removeAttr('disabled')
+            //     $('#input_enrollmentdate').removeAttr('disabled')
+            //     $('#input_mol').removeAttr('disabled')
+            //     $('#input_strand').removeAttr('disabled')
+            //     $('#input_course').removeAttr('disabled')
+
+            //     if (usertype_session == 8 || usertype_session == 4 || usertype_session == 15 ||
+            //         usertype_session == 14 || temp_sy[0].ended == 1) {
+            //         $('#input_gradelevel').attr('disabled', 'disabled')
+            //         $('#input_section').attr('disabled', 'disabled')
+            //         $('#input_grantee').attr('disabled', 'disabled')
+            //         $('#input_studstat').attr('disabled', 'disabled')
+            //         $('#input_enrollmentdate').attr('disabled', 'disabled')
+            //         $('#input_mol').attr('disabled', 'disabled')
+            //         $('#input_strand').attr('disabled', 'disabled')
+            //         $('#input_course').attr('disabled', 'disabled')
+            //         $('#udpate_student_information').attr('hidden', 'hidden')
+            //     }
+
+            //     $('#input_section').val("").change()
+            //     $('#input_strand').val("").change()
+            //     $('#input_strand').val("").change()
+            //     $('#en_remarks').val("")
+            //     $('#input_studstatdate').val("")
+            //     $('#label_strand_holder').attr('hidden', 'hidden')
+
+
+
+            //     if (temp_studinfo[0].gradelvl_to_enroll == 14 || temp_studinfo[0].gradelvl_to_enroll ==
+            //         15) {
+            //         $('#strand_holder').removeAttr('hidden')
+            //     } else {
+            //         $('#strand_holder').attr('hidden', 'hidden')
+            //     }
+
+            //     if (temp_studinfo[0].levelid == 14 || temp_studinfo[0].levelid == 15) {
+            //         if (temp_studinfo[0].strandname == null) {
+            //             var temp_strand = active_strand.filter(x => x.id == temp_studinfo[0]
+            //                 .admission_strand)
+            //             if (temp_strand.length > 0) {
+            //                 $('#label_strand').text(temp_strand[0].strandname)
+            //             } else {
+            //                 $('#label_strand').text('No strand assigned')
+            //             }
+
+            //         } else {
+            //             $('#label_strand').text(temp_studinfo[0].strandname)
+            //         }
+
+            //         $('#label_strand_holder').removeAttr('hidden')
+            //     }
+
+            //     $('#readytoenroll_student_button').attr('hidden', 'hidden')
+            //     $('#cancel_readytoenroll_student_button').attr('hidden', 'hidden')
+            //     $('#nodp_student_button').attr('hidden', 'hidden')
+            //     $('#cancel_nodp_student_button').attr('hidden', 'hidden')
+
+            //     if (temp_studinfo[0].levelid == 14 || temp_studinfo[0].levelid == 15 || (temp_studinfo[0]
+            //             .levelid >= 17 && temp_studinfo[0].levelid <= 21)) {
+            //         $('#sem_sy_label').text('S.Y.: ' + $('#filter_sy option:selected').text() + ' (' + $(
+            //             '#filter_sem option:selected').text() + ')')
+            //     } else {
+            //         $('#sem_sy_label').text('S.Y.: ' + $('#filter_sy option:selected').text())
+            //     }
+
+            //     if (temp_studinfo[0].levelid >= 17 && temp_studinfo[0].levelid <= 21) {
+            //         update_gradelevel_input($('#input_gradelevel').val(), temp_studinfo[0].sectionid)
+            //     } else {
+            //         update_gradelevel_input($('#input_gradelevel').val(), null)
+            //     }
+
+
+            //     if (temp_studinfo[0].levelid >= 17 && temp_studinfo[0].levelid <= 21) {
+            //         $('#input_section').val(temp_studinfo[0].sectionid).change()
+            //         // $('#input_section').attr('disabled','disabled')
+            //         $('#input_grantee_holder').attr('hidden', 'hidden')
+            //     } else {
+            //         // $('#input_section').removeAttr('disabled')
+            //         $('#input_grantee_holder').removeAttr('hidden')
+            //     }
+
+
+            //     var temp_sy = all_sy.filter(x => x.id == temp_studinfo[0].syid)
+
+            //     $("#input_sy").empty();
+            //     $("#input_sy").select2({
+            //         data: temp_sy,
+            //         placeholder: "Select School Year",
+            //         dropdownCssClass: "myFont"
+            //     })
+
+            //     var temp_sem = all_sem.filter(x => x.id == temp_studinfo[0].semid)
+
+            //     $('#enrollment_message_receiever').empty()
+            //     update_enrollment_message_reciever_display(temp_studinfo)
+
+            //     $('#input_studstat').val(1).change()
+
+            //     load_college_subject_load()
+            //     load_documents()
+            //     get_enrollment_history()
+            //     get_update_info_history()
+            //     balance_history()
+
+
+
+            //     if (usertype_session == 4 || usertype_session == 15) {
+            //         $('#enroll_student_button').attr('hidden', 'hidden')
+            //         $('#delete_student_button').attr('hidden', 'hidden')
+            //         if (temp_studinfo[0].nodp == 1) {
+            //             $('#cancel_nodp_student_button').removeAttr('hidden')
+            //         } else {
+            //             $('#nodp_student_button').removeAttr('hidden')
+            //         }
+            //     } else {
+            //         $('#cancel_nodp_student_button').attr('hidden', 'hidden')
+            //         $('#nodp_student_button').attr('hidden', 'hidden')
+            //     }
+
+            //     if (usertype_session == 4 || usertype_session == 15) {
+            //         $('#enroll_student_button').attr('hidden', 'hidden')
+            //         $('#delete_student_button').attr('hidden', 'hidden')
+            //         $('#readytoenroll_student_button').attr('hidden', 'hidden')
+            //         $('#cancel_readytoenroll_student_button').attr('hidden', 'hidden')
+
+            //         if (temp_studinfo[0].finance_status == 'APPROVED') {
+            //             $('#cancel_readytoenroll_student_button').removeAttr('hidden')
+            //         } else {
+            //             $('#readytoenroll_student_button').removeAttr('hidden')
+            //         }
+            //     }
+
+            //     if (usertype_session == 16 || usertype_session == 14) {
+            //         $('#enroll_student_button').attr('hidden', 'hidden')
+            //         $('#delete_student_button').attr('hidden', 'hidden')
+            //         $('#readytoenroll_student_button').attr('hidden', 'hidden')
+            //         $('#cancel_readytoenroll_student_button').attr('hidden', 'hidden')
+            //     }
+
+            //     if (temp_studinfo[0].levelid == 14) {
+            //         if (usertype_session == 8) {
+            //             $('#nodp_student_button').removeAttr('hidden')
+            //         }
+            //     }
+
+            //     if (usertype_session == 8) {
+            //         $('#delete_student_button').attr('hidden', 'hidden')
+            //         $('#readytoenroll_student_button').attr('hidden', 'hidden')
+            //         $('#cancel_readytoenroll_student_button').attr('hidden', 'hidden')
+            //         $('#enroll_student_button').attr('hidden', 'hidden')
+            //         if (temp_studinfo[0].admission_status == 'APPROVED') {
+            //             $('#cancel_readytoenroll_student_button').removeAttr('hidden')
+            //         } else {
+            //             $('#readytoenroll_student_button').removeAttr('hidden')
+            //         }
+            //     }
+
+            //     $('#enroll_student_button').attr('disabled', 'disabled')
+            //     $('#ribbon_holder').attr('hidden', 'hidden')
+
+            //     // if(usertype_session == 3){
+
+            //     if (temp_studinfo[0].can_enroll == 1) {
+            //         $('#enroll_student_button').removeAttr('disabled')
+            //         $('#ribbon_holder').removeAttr('hidden')
+            //         if (temp_studinfo[0].withpayment == 1) {
+            //             $('#ribbon_text').removeClass('bg-primary')
+            //             $('#ribbon_text').addClass('bg-success')
+            //             $('#ribbon_text')[0].innerHTML = '&nbsp;&nbsp;&nbsp;  DP Paid'
+            //         }
+            //         if (temp_studinfo[0].nodp == 1) {
+            //             $('#ribbon_text').addClass('bg-primary')
+            //             $('#ribbon_text').removeClass('bg-success')
+            //             $('#ribbon_text')[0].innerHTML = 'NO DP<br>Allowed'
+            //         }
+            //     } else {
+            //         $('#enrollment_button_text')[0].innerHTML =
+            //             '<b>No payment found.</b> <br><i>Please proceed to the cashier for student payment or finance to allow no Down Payment.</i>'
+            //     }
+
+
+            //     var temp_id = $('#input_gradelevel').val()
+            //     var temp_acad = gradelevel.filter(x => x.id == temp_id)
+            //     var check_admissionsetup = all_admissionsetup.filter(x => x.acadprogid == temp_acad[0]
+            //         .acadprogid)
+
+            //     if (check_admissionsetup.length == 0) {
+            //         $('#enroll_student_button').attr('disabled', 'disabled')
+            //         $('#enrollment_button_text')[0].innerHTML =
+            //             '<b>No Active Admission Date.</b><br> <i><a href="/admission/setup" target="_blank">Click here</a> to create admission date.</i>'
+            //     }
+
+            //     if (usertype_session == 4 || usertype_session == 15) {
+            //         $('#view_update_student_info').attr('hidden', 'hidden')
+            //     }
+
+            //     // }
+
+            //     if (temp_sy[0].ended == 1) {
+            //         $('#enroll_student_button').attr('disabled', 'disabled')
+            //     } else {
+            //         // $('#enroll_student_button').removeAttr('disabled','disabled')
+            //     }
+
+            //     if (usertype_session == 16 || usertype_session == 14) {
+            //         $('#enroll_student_button').attr('hidden', 'hidden')
+            //         $('#delete_student_button').attr('hidden', 'hidden')
+            //         $('#readytoenroll_student_button').attr('hidden', 'hidden')
+            //         $('#cancel_readytoenroll_student_button').attr('hidden', 'hidden')
+            //         $('#nodp_student_button').attr('hidden', 'hidden')
+            //         $('#mark_as_inactive').attr('hidden', 'hidden')
+            //         $('#view_update_student_info').removeAttr('hidden')
+            //         $('#update_student_information_button').attr('hidden', 'hidden')
+            //     }
+
+            //     $('#student_cor').attr('hidden', 'hidden')
+            //     $('#enrollment_modal').modal()
+            // })
+
             $(document).on('click', '.enroll', function() {
-
+                $('#gradelevel_unenroll').css('display', 'none');
+                $('#input_gradelevel').attr('disabled', 'disabled')
                 $('#enrollment_button_text').text('')
-
                 $('.has-error').removeClass('has-error')
                 $('.is-invalid').removeClass('is-invalid')
-
                 $('#enroll_student_button').text('Enroll Student')
-
                 $('#delete_student_button').removeAttr('hidden')
-
                 $('#enroll_student_button').attr('data-p', 'create')
                 $('#enroll_student_button').addClass('btn-primary')
                 $('#enroll_student_button').removeClass('btn-success')
@@ -3993,10 +4681,12 @@
                     return false;
                 }
 
-
-
                 selected_prereg = $(this).attr('data-preregid')
                 var temp_studinfo = all_students.filter(x => x.studid == selected)
+                //////////////////////////////////////
+                console.log('tempinfo..', temp_studinfo);
+                $('#student_info_modal').attr('data-id', temp_studinfo[0].studid);
+
                 selectedCourse = temp_studinfo[0].courseid
                 selectedCollege = temp_studinfo[0].collegeid
 
@@ -4007,11 +4697,9 @@
                 $('#input_course').val(temp_studinfo[0].courseid).change()
                 $('#student_name').text(temp_studinfo[0].sid + ' : ' + temp_studinfo[0].student)
                 $('#enroll_student_button').removeAttr('hidden')
-                // $('#isEarly').prop('checked',false)
                 $('#label_currentgradelevel').text(temp_studinfo[0].curlevelname)
                 $('#input_grantee').val(temp_studinfo[0].grantee).change()
                 $('#input_mol').val(temp_studinfo[0].mol).change()
-
 
                 if (temp_studinfo[0].studisactive == 1) {
                     $('#mark_as_active').attr('hidden', 'hidden')
@@ -4033,7 +4721,12 @@
                 $('#input_enrollmentdate').val(date)
 
                 $('#enroll_student_button').removeAttr('hidden')
-                $('#input_gradelevel').removeAttr('disabled')
+                // $('#input_gradelevel').removeAttr('disabled')
+                if (temp_studinfo[0].studstatus == 0) {
+                    $('#input_gradelevel').removeAttr('disabled')
+                } else {
+                    $('#input_gradelevel').attr('disabled', 'disabled')
+                }
                 $('#input_section').removeAttr('disabled')
                 $('#input_grantee').removeAttr('disabled')
                 $('#input_studstat').removeAttr('disabled')
@@ -4055,14 +4748,13 @@
                     $('#udpate_student_information').attr('hidden', 'hidden')
                 }
 
-                $('#input_section').val("").change()
+                // $('#input_section').val("").change()
+                // $('#input_section').val(temp_studinfo[0].ensectionid).change()
                 $('#input_strand').val("").change()
-                $('#input_strand').val("").change()
+                // $('#input_strand').val("").change()
                 $('#en_remarks').val("")
                 $('#input_studstatdate').val("")
                 $('#label_strand_holder').attr('hidden', 'hidden')
-
-
 
                 if (temp_studinfo[0].gradelvl_to_enroll == 14 || temp_studinfo[0].gradelvl_to_enroll ==
                     15) {
@@ -4080,11 +4772,9 @@
                         } else {
                             $('#label_strand').text('No strand assigned')
                         }
-
                     } else {
                         $('#label_strand').text(temp_studinfo[0].strandname)
                     }
-
                     $('#label_strand_holder').removeAttr('hidden')
                 }
 
@@ -4094,28 +4784,27 @@
                 $('#cancel_nodp_student_button').attr('hidden', 'hidden')
 
                 if (temp_studinfo[0].levelid == 14 || temp_studinfo[0].levelid == 15 || (temp_studinfo[0]
-                        .levelid >= 17 && temp_studinfo[0].levelid <= 21)) {
+                        .levelid >= 17)) {
                     $('#sem_sy_label').text('S.Y.: ' + $('#filter_sy option:selected').text() + ' (' + $(
                         '#filter_sem option:selected').text() + ')')
                 } else {
                     $('#sem_sy_label').text('S.Y.: ' + $('#filter_sy option:selected').text())
                 }
 
-                if (temp_studinfo[0].levelid >= 17 && temp_studinfo[0].levelid <= 21) {
+                if (temp_studinfo[0].levelid >= 17) {
                     update_gradelevel_input($('#input_gradelevel').val(), temp_studinfo[0].sectionid)
                 } else {
                     update_gradelevel_input($('#input_gradelevel').val(), null)
                 }
 
-
-                if (temp_studinfo[0].levelid >= 17 && temp_studinfo[0].levelid <= 21) {
+                if (temp_studinfo[0].levelid >= 17) {
                     $('#input_section').val(temp_studinfo[0].sectionid).change()
-                    // $('#input_section').attr('disabled','disabled')
                     $('#input_grantee_holder').attr('hidden', 'hidden')
                 } else {
-                    // $('#input_section').removeAttr('disabled')
                     $('#input_grantee_holder').removeAttr('hidden')
                 }
+
+                // console.log(#$('#input_gradelevel').val());
 
 
                 var temp_sy = all_sy.filter(x => x.id == temp_studinfo[0].syid)
@@ -4134,11 +4823,43 @@
 
                 $('#input_studstat').val(1).change()
 
-                load_college_subject_load()
+                // load_college_subject_load()
                 load_documents()
                 get_enrollment_history()
                 get_update_info_history()
                 balance_history()
+                // var syid = $('#filter_sy').val();
+                // var semester = $('#filter_sem').val();
+                // var course = temp_studinfo[0].courseid;
+                // var academic = temp_studinfo[0].levelid;
+
+                // console.log('School Year ID:', syid);
+                // console.log('Semester:', semester);
+                // console.log('Course ID:', course);
+                // console.log('Academic Level ID:', academic);
+
+                // $.ajax({
+                //     url: '/college/section/gets',
+                //     method: 'GET',
+                //     data: {
+                //         syid: syid,
+                //         semester: semester,
+                //         course: course,
+                //         academic: academic
+                //     },
+                // success: function(data) {
+                //     $("#input_section2").empty();
+                //     $("#input_section2").select2({
+                //         data: data.map(section => ({
+                //             id: section.id,
+                //             text: section.sectionDesc
+                //         })),
+                //         placeholder: "Select Section",
+                //     });
+                // },
+                //     error: function(xhr, status, error) {
+                //         console.error("Error fetching sections:", error);
+                //     }
 
 
 
@@ -4196,8 +4917,6 @@
                 $('#enroll_student_button').attr('disabled', 'disabled')
                 $('#ribbon_holder').attr('hidden', 'hidden')
 
-                // if(usertype_session == 3){
-
                 if (temp_studinfo[0].can_enroll == 1) {
                     $('#enroll_student_button').removeAttr('disabled')
                     $('#ribbon_holder').removeAttr('hidden')
@@ -4216,7 +4935,6 @@
                         '<b>No payment found.</b> <br><i>Please proceed to the cashier for student payment or finance to allow no Down Payment.</i>'
                 }
 
-
                 var temp_id = $('#input_gradelevel').val()
                 var temp_acad = gradelevel.filter(x => x.id == temp_id)
                 var check_admissionsetup = all_admissionsetup.filter(x => x.acadprogid == temp_acad[0]
@@ -4232,12 +4950,8 @@
                     $('#view_update_student_info').attr('hidden', 'hidden')
                 }
 
-                // }
-
                 if (temp_sy[0].ended == 1) {
                     $('#enroll_student_button').attr('disabled', 'disabled')
-                } else {
-                    // $('#enroll_student_button').removeAttr('disabled','disabled')
                 }
 
                 if (usertype_session == 16 || usertype_session == 14) {
@@ -4251,13 +4965,418 @@
                     $('#update_student_information_button').attr('hidden', 'hidden')
                 }
 
+
+                function updateSections() {
+                    var studentId = selected;
+                    var syid = $('#filter_sy').val();
+                    var semester = $('#filter_sem').val();
+
+                    var glevel = $('#input_gradelevel').val()
+
+                    if (glevel >= 17) {
+                        $.ajax({
+                            url: '/student/loading/get-added-student-loading/' + studentId +
+                                '/all/' +
+                                syid + '/' + semester + '/0',
+                            method: 'GET',
+                            data: {
+                                studentId: studentId,
+                                syid: syid,
+                                semid: semester
+                            },
+                            dataType: 'json',
+                            success: function(response) {
+                                $("#input_section").empty();
+                                // var option = new Option(response.gensections || '', response
+                                //     .sectionid);
+                                var selectedsection = response.selectedsection
+                                $.each(response.gensections, function(indexInArray, value) {
+                                    if (value.sectionid == selectedsection) {
+                                        $('#input_section').append(`
+                                            <option value=` + value.sectionid + ` selected>` + value.sectiondesc + `</option>
+                                        `)
+                                    } else {
+                                        $('#input_section').append(`
+                                            <option value=` + value.sectionid + `>` + value.sectiondesc + `</option>
+                                        `)
+                                    }
+
+                                });
+
+
+                                // $("#input_section").append(option);
+
+                                // $("#input_section").val(response.sectionid).trigger('change');
+
+
+                                // Remove the clear button and disable search
+                                $("#input_section").select2({
+                                    minimumResultsForSearch: Infinity,
+                                    allowClear: false
+                                });
+
+
+                            },
+                            error: function(xhr, status, error) {
+                                console.error("Error fetching student data:", error);
+                            }
+                        });
+
+                    }
+                }
+
+
+                // function updateSections() {
+                //     var studentId = selected;
+                //     var syid = $('#filter_sy').val();
+                //     var semester = $('#filter_sem').val();
+
+                //     $.ajax({
+                //         url: '/student/loading/Student-Information',
+                //         method: 'GET',
+                //         data: {
+                //             studentId: studentId,
+                //             syid: syid,
+                //             semid: semester
+                //         },
+                //         success: function(data) {
+                //             $("#input_section").empty();
+                //             $("#input_section").select2({
+                //                 data: (function() {
+                //                     var sections = [];
+                //                     sections.push({
+                //                         id: data.sectionId,
+                //                         text: data.sectionDesc || ''
+                //                     });
+                //                     return sections;
+                //                 })(),
+                //                 placeholder: "Select Section"
+                //             }).val(data.sectionId).trigger('change');
+                //         },
+                //         error: function(xhr, status, error) {
+                //             console.error("Error fetching student data:", error);
+                //         }
+                //     });
+                // }
+
+                // $('#input_course, #input_gradelevel, #filter_sem, #filter_sy').change(function() {
+                //     updateSections();
+                // });
+
+                // Initial call to populate sections
+                // updateSections();
+                updateSections();
+
+
+                function updateSubjectLoading() {
+                    var syid = $('#filter_sy').val();
+                    var semester = $('#filter_sem').val();
+                    // var section = $('#input_section').val();
+                    var studentId = selected;
+                    $.ajax({
+                        url: '/student/loading/get-added-student-loading-all',
+                        method: 'GET',
+                        data: {
+                            syid: syid,
+                            semid: semester,
+                            // sectionId: section,
+                            studentId: studentId
+                        },
+                        success: function(response) {
+                            $("#units_enrolled").text(response.totalCreditUnits);
+                            $("#subjects_enrolled").text(response.totalSubjects);
+                            load_subjects_information(response)
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Error fetching section schedule:", error);
+                        }
+                    });
+                }
+
+                // $('#input_section').change(function() {
+                //     updateSubjectLoading();
+                // });
+
+                // Initial call to populate subject loading
+
+
+
+                setTimeout(() => {
+                    updateSubjectLoading();
+
+                }, 500);
+
+
+
+
+
+
                 $('#student_cor').attr('hidden', 'hidden')
                 $('#enrollment_modal').modal()
             })
 
 
-            $(document).on('click', '.view_enrollment', function() {
+            // $(document).on('click', '.view_enrollment', function() {
 
+            //     $('#enrollment_button_text').text('')
+
+            //     $('#delete_student_button').attr('hidden', 'hidden')
+            //     $('#mark_as_inactive').attr('hidden', 'hidden')
+
+            //     $('#enroll_student_button').text('Update Enrollment')
+
+            //     $('#enroll_student_button').attr('data-p', 'update')
+            //     $('#enroll_student_button').addClass('btn-success')
+            //     $('#enroll_student_button').removeClass('btn-primary')
+
+            //     selected = $(this).attr('data-id')
+            //     selected_prereg = $(this).attr('data-preregid')
+            //     var temp_studinfo = all_students.filter(x => x.studid == selected)
+            //     selectedCourse = temp_studinfo[0].courseid
+            //     selectedCollege = temp_studinfo[0].collegeid
+
+            //     if (usertype == 6 || refid == 28 || refid == 29 || refid == 31) {
+            //         display_student_info()
+            //         return false;
+            //     }
+
+
+            //     $('#input_gradelevel').val(temp_studinfo[0].enlevelid).change()
+
+
+            //     $('#student_name').text(temp_studinfo[0].sid + ' : ' + temp_studinfo[0].student)
+            //     $('#enroll_student_button').removeAttr('hidden')
+            //     $('#enroll_student_button').removeAttr('disabled')
+            //     // if(temp_studinfo[0].isearly == 1){
+            //     //       $('#isEarly').prop('checked',true)
+            //     // }else{
+            //     //       $('#isEarly').prop('checked',false)
+            //     // }
+
+
+
+            //     $('#input_grantee').val(temp_studinfo[0].grantee).change()
+            //     $('#input_mol').val(temp_studinfo[0].mol).change()
+            //     $('#input_enrollmentdate').val(temp_studinfo[0].dateenrolled).change()
+            //     $('#input_studstatdate').val(temp_studinfo[0].studstatdate).change()
+            //     $('#label_currentgradelevel').text(temp_studinfo[0].curlevelname)
+            //     $('#input_course').val(temp_studinfo[0].courseid).change()
+
+            //     // $('#input_section').val("").change()
+            //     $('#input_strand').val("").change()
+
+            //     if (temp_studinfo[0].levelid == 14 || temp_studinfo[0].levelid == 15 || (temp_studinfo[0]
+            //             .levelid >= 17 && temp_studinfo[0].levelid <= 21)) {
+            //         $('#sem_sy_label').text('S.Y.: ' + $('#filter_sy option:selected').text() + ' ( ' + $(
+            //             '#filter_sem option:selected').text() + ' )')
+            //     } else {
+            //         $('#sem_sy_label').text('S.Y.: ' + $('#filter_sy option:selected').text())
+            //     }
+
+            //     var temp_sem = all_sem.filter(x => x.id == $('#filter_sem').val())
+            //     var temp_sy = all_sy.filter(x => x.id == $('#filter_sy').val())
+
+            //     $("#input_sem").empty();
+            //     $("#input_sem").select2({
+            //         data: temp_sem,
+            //         placeholder: "Select Semester",
+            //     })
+
+            //     update_gradelevel_input($('#input_gradelevel').val(), temp_studinfo[0].ensectionid)
+
+            //     if ($('#input_gradelevel').val() == 14 || $('#input_gradelevel').val() == 15) {
+            //         update_strand_input(temp_studinfo[0].ensectionid)
+            //     }
+
+
+
+            //     var temp_sy = all_sy.filter(x => x.id == temp_studinfo[0].syid)
+
+            //     if ((temp_studinfo[0].promotionstatus != 0
+            //             // && (temp_studinfo[0].levelid != 14 && temp_studinfo[0].levelid != 15 )
+            //         ) ||
+            //         temp_sy[0].ended == 1 || usertype_session == 8) {
+            //         // if((temp_studinfo[0].levelid != 14 && temp_studinfo[0].levelid != 15 ) || temp_sy[0].ended == 1){
+            //         $('#delete_student_button').attr('hidden', 'hidden')
+            //         $('#enroll_student_button').attr('hidden', 'hidden')
+            //         $('#input_gradelevel').attr('disabled', 'disabled')
+            //         $('#input_section').attr('disabled', 'disabled')
+            //         $('#input_grantee').attr('disabled', 'disabled')
+            //         $('#input_studstat').attr('disabled', 'disabled')
+            //         $('#input_course').attr('disabled', 'disabled')
+            //         $('#input_enrollmentdate').attr('disabled', 'disabled')
+            //         $('#input_regStatus').attr('disabled', 'disabled')
+            //         $('#en_remarks').attr('disabled', 'disabled')
+            //         $('#input_studstatdate').attr('disabled', 'disabled')
+
+            //         // $('#isEarly').attr('disabled','disabled')
+            //         $('#input_mol').attr('disabled', 'disabled')
+            //         $('#input_strand').attr('disabled', 'disabled')
+            //         // }
+            //     } else {
+
+            //         if (usertype_session == 3) {
+            //             $('#input_regStatus').removeAttr('disabled')
+            //             $('#enroll_student_button').removeAttr('hidden')
+            //             $('#input_gradelevel').removeAttr('disabled')
+            //             $('#input_section').removeAttr('disabled')
+            //             $('#input_grantee').removeAttr('disabled')
+            //             $('#input_studstat').removeAttr('disabled')
+            //             $('#input_course').removeAttr('disabled')
+            //             $('#input_enrollmentdate').removeAttr('disabled')
+
+            //             $('#en_remarks').removeAttr('disabled')
+            //             $('#input_studstatdate').removeAttr('disabled')
+
+            //             // $('#isEarly').removeAttr('disabled')
+            //             $('#input_mol').removeAttr('disabled')
+            //             $('#input_strand').removeAttr('disabled')
+            //         }
+            //     }
+
+            //     if (temp_studinfo[0].levelid >= 17 && temp_studinfo[0].levelid <= 21) {
+            //         $('#input_section').val(temp_studinfo[0].sectionid).change()
+            //         // $('#input_section').attr('disabled','disabled')
+            //         $('#input_grantee_holder').attr('hidden', 'hidden')
+            //         $('#student_cor').removeAttr('hidden')
+            //         $('#input_regStatus').val(temp_studinfo[0].regStatus).change()
+
+            //     } else {
+            //         $('#input_grantee_holder').removeAttr('hidden')
+            //     }
+
+
+
+
+            //     $("#input_sy").empty();
+            //     $("#input_sy").select2({
+            //         data: temp_sy,
+            //         placeholder: "Select School Year",
+            //         dropdownCssClass: "myFont"
+            //     })
+
+            //     $('#readytoenroll_student_button').attr('hidden', 'hidden')
+            //     $('#nodp_student_button').attr('hidden', 'hidden')
+            //     $('#cancel_nodp_student_button').attr('hidden', 'hidden')
+
+            //     $('#cancel_readytoenroll_student_button').attr('hidden', 'hidden')
+
+            //     $('#input_studstat').val(temp_studinfo[0].studstatus).change()
+            //     $('#en_remarks').val(temp_studinfo[0].remarks).change()
+
+            //     $('#enrollment_message_receiever').empty()
+            //     update_enrollment_message_reciever_display(temp_studinfo)
+
+            //     load_college_subject_load()
+            //     load_documents()
+            //     get_enrollment_history()
+            //     get_update_info_history()
+            //     balance_history()
+            //     if (usertype_session == 4 || usertype_session == 15 || usertype_session == 8 ||
+            //         usertype_session == 14) {
+            //         $('#delete_student_button').attr('hidden', 'hidden')
+            //         $('#enroll_student_button').attr('hidden', 'hidden')
+            //     }
+
+            //     if (usertype_session == 4 || usertype_session == 15) {
+            //         $('#view_update_student_info').attr('hidden', 'hidden')
+            //     }
+            //     if (temp_studinfo[0].can_enroll == 1) {
+            //         $('#enroll_student_button').removeAttr('disabled')
+            //         $('#ribbon_holder').removeAttr('hidden')
+            //         if (temp_studinfo[0].withpayment == 1) {
+            //             $('#ribbon_text').removeClass('bg-primary')
+            //             $('#ribbon_text').addClass('bg-success')
+            //             $('#ribbon_text')[0].innerHTML = '&nbsp;&nbsp;&nbsp;  DP Paid'
+            //         }
+            //         if (temp_studinfo[0].nodp == 1) {
+            //             $('#ribbon_text').addClass('bg-primary')
+            //             $('#ribbon_text').removeClass('bg-success')
+            //             $('#ribbon_text')[0].innerHTML = 'NO DP<br>Allowed'
+            //         }
+            //     }
+
+            //     function updateSections() {
+            //         var syid = $('#filter_sy').val();
+            //         var semester = $('#filter_sem').val();
+            //         var course = $('#input_course').val();
+            //         var academic = $('#input_gradelevel').val();
+
+            //         $.ajax({
+            //             url: '/college/section/gets',
+            //             method: 'GET',
+            //             data: {
+            //                 syid: syid,
+            //                 semester: semester,
+            //                 course: course,
+            //                 academic: academic
+            //             },
+            //             success: function(data) {
+            //                 $("#input_section").empty();
+            //                 $("#input_section").select2({
+            //                     data: (function() {
+            //                         var sections = [];
+            //                         data.forEach(function(section) {
+            //                             sections.push({
+            //                                 id: section.id,
+            //                                 text: section
+            //                                     .sectionDesc
+            //                             });
+            //                         });
+            //                         return sections;
+            //                     })(),
+            //                     placeholder: "Select Section"
+            //                 }).val(null).trigger('change');
+            //             },
+            //             error: function(xhr, status, error) {
+            //                 console.error("Error fetching sections:", error);
+            //             }
+            //         });
+            //     }
+
+            //     $('#input_course, #input_gradelevel, #filter_sem, #filter_sy').change(function() {
+            //         updateSections();
+            //     });
+
+            //     // Initial call to populate sections
+            //     updateSections();
+
+            //     function updateSubjectLoading() {
+            //         var syid = $('#filter_sy').val();
+            //         var semester = $('#filter_sem').val();
+            //         var section = $('#input_section').val();
+
+            //         $.ajax({
+            //             url: '/student/loading/get-section-schedule',
+            //             method: 'GET',
+            //             data: {
+            //                 syid: syid,
+            //                 semid: semester,
+            //                 section_id: section
+            //             },
+            //             success: function(response) {
+            //                 $("#units_enrolled").text(response.totalCreditUnitsPerSection);
+            //                 $("#subjects_enrolled").text(response.totalSubjectsPerSection);
+            //             },
+            //             error: function(xhr, status, error) {
+            //                 console.error("Error fetching section schedule:", error);
+            //             }
+            //         });
+            //     }
+
+            //     $('#input_section').change(function() {
+            //         updateSubjectLoading();
+            //     });
+
+            //     // Initial call to populate subject loading
+            //     updateSubjectLoading();
+
+            //     $('#enrollment_modal').modal()
+            // })
+
+            $(document).on('click', '.view_enrollment', function() {
+                $('#gradelevel_unenroll').css('display', 'block');
+                $('#input_gradelevel').attr('disabled', 'disabled')
                 $('#enrollment_button_text').text('')
 
                 $('#delete_student_button').attr('hidden', 'hidden')
@@ -4272,6 +5391,9 @@
                 selected = $(this).attr('data-id')
                 selected_prereg = $(this).attr('data-preregid')
                 var temp_studinfo = all_students.filter(x => x.studid == selected)
+                console.log('tempinfo..', temp_studinfo);
+                $('#student_info_modal').attr('data-id', temp_studinfo[0].studid);
+
                 selectedCourse = temp_studinfo[0].courseid
                 selectedCollege = temp_studinfo[0].collegeid
 
@@ -4287,13 +5409,6 @@
                 $('#student_name').text(temp_studinfo[0].sid + ' : ' + temp_studinfo[0].student)
                 $('#enroll_student_button').removeAttr('hidden')
                 $('#enroll_student_button').removeAttr('disabled')
-                // if(temp_studinfo[0].isearly == 1){
-                //       $('#isEarly').prop('checked',true)
-                // }else{
-                //       $('#isEarly').prop('checked',false)
-                // }
-
-
 
                 $('#input_grantee').val(temp_studinfo[0].grantee).change()
                 $('#input_mol').val(temp_studinfo[0].mol).change()
@@ -4302,13 +5417,15 @@
                 $('#label_currentgradelevel').text(temp_studinfo[0].curlevelname)
                 $('#input_course').val(temp_studinfo[0].courseid).change()
 
-                $('#input_section').val("").change()
+                $('#input_section').val(temp_studinfo[0].ensectionid).change()
                 $('#input_strand').val("").change()
 
-                if (temp_studinfo[0].levelid == 14 || temp_studinfo[0].levelid == 15 || (temp_studinfo[0]
-                        .levelid >= 17 && temp_studinfo[0].levelid <= 21)) {
-                    $('#sem_sy_label').text('S.Y.: ' + $('#filter_sy option:selected').text() + ' ( ' + $(
-                        '#filter_sem option:selected').text() + ' )')
+                if (temp_studinfo[0].levelid == 14 || temp_studinfo[0].levelid == 15 || (temp_studinfo[
+                            0]
+                        .levelid >= 17)) {
+                    $('#sem_sy_label').text('S.Y.: ' + $('#filter_sy option:selected').text() + ' ( ' +
+                        $(
+                            '#filter_sem option:selected').text() + ' )')
                 } else {
                     $('#sem_sy_label').text('S.Y.: ' + $('#filter_sy option:selected').text())
                 }
@@ -4328,15 +5445,11 @@
                     update_strand_input(temp_studinfo[0].ensectionid)
                 }
 
-
-
                 var temp_sy = all_sy.filter(x => x.id == temp_studinfo[0].syid)
 
-                if ((temp_studinfo[0].promotionstatus != 0
-                        // && (temp_studinfo[0].levelid != 14 && temp_studinfo[0].levelid != 15 ) 
-                    ) ||
+                // (temp_studinfo[0].promotionstatus != 0)
+                if (
                     temp_sy[0].ended == 1 || usertype_session == 8) {
-                    // if((temp_studinfo[0].levelid != 14 && temp_studinfo[0].levelid != 15 ) || temp_sy[0].ended == 1){
                     $('#delete_student_button').attr('hidden', 'hidden')
                     $('#enroll_student_button').attr('hidden', 'hidden')
                     $('#input_gradelevel').attr('disabled', 'disabled')
@@ -4348,45 +5461,35 @@
                     $('#input_regStatus').attr('disabled', 'disabled')
                     $('#en_remarks').attr('disabled', 'disabled')
                     $('#input_studstatdate').attr('disabled', 'disabled')
-
-                    // $('#isEarly').attr('disabled','disabled')
                     $('#input_mol').attr('disabled', 'disabled')
                     $('#input_strand').attr('disabled', 'disabled')
-                    // }
                 } else {
-
                     if (usertype_session == 3) {
                         $('#input_regStatus').removeAttr('disabled')
                         $('#enroll_student_button').removeAttr('hidden')
-                        $('#input_gradelevel').removeAttr('disabled')
+                        if (temp_studinfo[0].studstatus == 0) {
+                            $('#input_gradelevel').removeAttr('disabled')
+                        }
                         $('#input_section').removeAttr('disabled')
                         $('#input_grantee').removeAttr('disabled')
                         $('#input_studstat').removeAttr('disabled')
                         $('#input_course').removeAttr('disabled')
                         $('#input_enrollmentdate').removeAttr('disabled')
-
                         $('#en_remarks').removeAttr('disabled')
                         $('#input_studstatdate').removeAttr('disabled')
-
-                        // $('#isEarly').removeAttr('disabled')
                         $('#input_mol').removeAttr('disabled')
                         $('#input_strand').removeAttr('disabled')
                     }
                 }
 
-                if (temp_studinfo[0].levelid >= 17 && temp_studinfo[0].levelid <= 21) {
+                if (temp_studinfo[0].levelid >= 17) {
                     $('#input_section').val(temp_studinfo[0].sectionid).change()
-                    // $('#input_section').attr('disabled','disabled')
                     $('#input_grantee_holder').attr('hidden', 'hidden')
                     $('#student_cor').removeAttr('hidden')
                     $('#input_regStatus').val(temp_studinfo[0].regStatus).change()
-
                 } else {
                     $('#input_grantee_holder').removeAttr('hidden')
                 }
-
-
-
 
                 $("#input_sy").empty();
                 $("#input_sy").select2({
@@ -4398,7 +5501,6 @@
                 $('#readytoenroll_student_button').attr('hidden', 'hidden')
                 $('#nodp_student_button').attr('hidden', 'hidden')
                 $('#cancel_nodp_student_button').attr('hidden', 'hidden')
-
                 $('#cancel_readytoenroll_student_button').attr('hidden', 'hidden')
 
                 $('#input_studstat').val(temp_studinfo[0].studstatus).change()
@@ -4436,8 +5538,153 @@
                     }
                 }
 
+                // function updateSections() {
+                //     var studentId = selected;
+                //     var syid = $('#filter_sy').val();
+                //     var semester = $('#filter_sem').val();
+
+                //     var glevel = $('#input_gradelevel').val()
+
+                //     if(glevel >= 17 && glevel <= 21){
+                //         $.ajax({
+                //             url: '/student/loading/Student-Information',
+                //             method: 'GET',
+                //             data: {
+                //                 studentId: studentId,
+                //                 syid: syid,
+                //                 semid: semester
+                //             },
+                //             dataType: 'json',
+                //             success: function(response) {
+                //                 $("#input_section").empty();
+                //                 var option = new Option(response.sectionDesc || '', response
+                //                     .sectionID);
+                //                 $("#input_section").append(option);
+
+
+                //                 $("#input_section").val(response.sectionID).trigger('change');
+
+
+                //                 // Remove the clear button and disable search
+                //                 $("#input_section").select2({
+                //                     minimumResultsForSearch: Infinity,
+                //                     allowClear: false
+                //                 });
+                //             },
+                //             error: function(xhr, status, error) {
+                //                 console.error("Error fetching student data:", error);
+                //             }
+                //         });
+                //     }
+                // }
+
+                function updateSections() {
+                    var studentId = selected;
+                    var syid = $('#filter_sy').val();
+                    var semester = $('#filter_sem').val();
+
+                    var glevel = $('#input_gradelevel').val()
+
+                    if (glevel >= 17) {
+                        $.ajax({
+                            url: '/student/loading/get-added-student-loading/' + studentId +
+                                '/all/' +
+                                syid + '/' + semester + '/0',
+                            method: 'GET',
+                            data: {
+                                studentId: studentId,
+                                syid: syid,
+                                semid: semester
+                            },
+                            dataType: 'json',
+                            success: function(response) {
+                                $("#input_section").empty();
+                                // var option = new Option(response.gensections || '', response
+                                //     .sectionid);
+                                var selectedsection = response.selectedsection
+                                $.each(response.gensections, function(indexInArray, value) {
+                                    if (value.sectionid == selectedsection) {
+                                        $('#input_section').append(`
+                                            <option value=` + value.sectionid + ` selected>` + value.sectiondesc + `</option>
+                                        `)
+                                    } else {
+                                        $('#input_section').append(`
+                                            <option value=` + value.sectionid + `>` + value.sectiondesc + `</option>
+                                        `)
+                                    }
+
+                                });
+
+
+                                // $("#input_section").append(option);
+
+                                // $("#input_section").val(response.sectionid).trigger('change');
+
+
+                                // Remove the clear button and disable search
+                                $("#input_section").select2({
+                                    minimumResultsForSearch: Infinity,
+                                    allowClear: false
+                                });
+
+
+                            },
+                            error: function(xhr, status, error) {
+                                console.error("Error fetching student data:", error);
+                            }
+                        });
+
+                    }
+                }
+
+                // $('#input_course, #input_gradelevel, #filter_sem, #filter_sy').change(function() {
+                //     updateSections();
+                // });
+
+                // Initial call to populate sections
+                updateSections();
+
+
+                function updateSubjectLoading() {
+                    var syid = $('#filter_sy').val();
+                    var semester = $('#filter_sem').val();
+                    // var section = $('#input_section').val();
+                    var studentId = selected;
+                    $.ajax({
+                        url: '/student/loading/get-added-student-loading-all',
+                        method: 'GET',
+                        data: {
+                            syid: syid,
+                            semid: semester,
+                            // sectionId: section,
+                            studentId: studentId
+                        },
+                        success: function(response) {
+                            $("#units_enrolled").text(response.totalCreditUnits);
+                            $("#subjects_enrolled").text(response.totalSubjects);
+                            load_subjects_information(response)
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Error fetching section schedule:", error);
+                        }
+                    });
+                }
+
+                // $('#input_section').change(function() {
+                //     updateSubjectLoading();
+                // });
+
+                // Initial call to populate subject loading
+                // updateSubjectLoading();
+
+                setTimeout(() => {
+                    updateSubjectLoading();
+
+                }, 500);
+
                 $('#enrollment_modal').modal()
             })
+
 
             $("#input_addtype_old").empty();
             $("#input_addtype_old").select2({
@@ -4584,7 +5831,8 @@
                 }
 
                 if ($('#input_add_gradelevel').val() == 17 || $('#input_add_gradelevel').val() == 18 || $(
-                        '#input_adinput_add_gradeleveld_course').val() == 19 || $('#input_add_gradelevel').val() ==
+                        '#input_adinput_add_gradeleveld_course').val() == 19 || $('#input_add_gradelevel')
+                    .val() ==
                     20) {
                     if ($('#input_add_course').val() == "" || $('#input_add_strand').val() == null) {
                         Toast.fire({
@@ -4616,7 +5864,8 @@
                 if (school_setup.setup == 1) {
                     $.ajax({
                         type: 'GET',
-                        url: school_setup.es_cloudurl + 'student/preregistration/addstudenttoprereg',
+                        url: school_setup.es_cloudurl +
+                            'student/preregistration/addstudenttoprereg',
                         data: {
                             userid: userid,
                             syid: $('#filter_sy').val(),
@@ -4638,7 +5887,8 @@
                                     title: data[0].message
                                 })
 
-                                var temp_info = all_studinfo.filter(x => x.id == $('#input_add_student')
+                                var temp_info = all_studinfo.filter(x => x.id == $(
+                                        '#input_add_student')
                                     .val())
                                 student_to_enroll = temp_info[0].sid
 
@@ -4692,18 +5942,24 @@
                                 var info_index = all_students.findIndex(x => x.studid == $(
                                     '#input_add_student').val())
 
-                                all_students[info_index].admission_strand = $('#input_add_strand').val()
-                                all_students[info_index].admission_course = $('#input_add_course').val()
-                                all_students[info_index].admission_type = $('#input_addtype_old').val()
-                                all_students[info_index].gradelvl_to_enroll = $('#input_add_gradelevel')
+                                all_students[info_index].admission_strand = $(
+                                    '#input_add_strand').val()
+                                all_students[info_index].admission_course = $(
+                                    '#input_add_course').val()
+                                all_students[info_index].admission_type = $(
+                                    '#input_addtype_old').val()
+                                all_students[info_index].gradelvl_to_enroll = $(
+                                        '#input_add_gradelevel')
                                     .val()
-                                all_students[info_index].levelid = $('#input_add_gradelevel').val()
+                                all_students[info_index].levelid = $('#input_add_gradelevel')
+                                    .val()
                                 all_students[info_index].admission_type_desc = $(
                                     '#input_addtype_old option:selected').text()
                                 all_students[info_index].withprereg = 1
                                 all_students[info_index].id = data[0].id
 
-                                var temp_info = all_studinfo.filter(x => x.id == $('#input_add_student')
+                                var temp_info = all_studinfo.filter(x => x.id == $(
+                                        '#input_add_student')
                                     .val())
                                 student_to_enroll = temp_info[0].sid
                                 $('#add_stud_prereg_modal').modal('hide')
@@ -4737,23 +5993,23 @@
 
 
 
-                if ($('#input_section').val() == "" || $('#input_section').val() == null) {
-                    if (school_setup.abbreviation == 'DCC') {
-                        if ($('#input_gradelevel').val() < 17) {
-                            Toast.fire({
-                                type: 'warning',
-                                title: 'No Section Selected!'
-                            })
-                            return false
-                        }
-                    } else {
-                        Toast.fire({
-                            type: 'warning',
-                            title: 'No Section Selected!'
-                        })
-                        return false
-                    }
-                }
+                // if ($('#input_section').val() == "" || $('#input_section').val() == null) {
+                //     if (school_setup.abbreviation == 'DCC') {
+                //         if ($('#input_gradelevel').val() < 17) {
+                //             Toast.fire({
+                //                 type: 'warning',
+                //                 title: 'No Section Selected!'
+                //             })
+                //             return false
+                //         }
+                //     } else {
+                //         Toast.fire({
+                //             type: 'warning',
+                //             title: 'No Section Selected!'
+                //         })
+                //         return false
+                //     }
+                // }
 
                 if ($('#input_gradelevel').val() == 14 || $('#input_gradelevel').val() == 15) {
                     if ($('#input_strand').val() == "" || $('#input_strand').val() == null) {
@@ -4765,7 +6021,7 @@
                     }
                 }
 
-                if ($('#input_gradelevel').val() >= 17 && $('#input_gradelevel').val() <= 20) {
+                if ($('#input_gradelevel').val() >= 17) {
                     if ($('#units_enrolled').text() == 0) {
                         Toast.fire({
                             type: 'warning',
@@ -4775,6 +6031,13 @@
                     }
                 }
 
+                if (!$('#input_section').val()) {
+                    Toast.fire({
+                        type: 'warning',
+                        title: 'No Section Selected!'
+                    })
+                    return false
+                }
 
                 // var isearly = 0
 
@@ -4813,7 +6076,8 @@
                         title: 'No Student Contact #'
                     })
                     return false;
-                } else if ((student_contact != null && parent_contact == '') && student_contact.toString().length !=
+                } else if ((student_contact != null && parent_contact == '') && student_contact.toString()
+                    .length !=
                     11) {
                     Toast.fire({
                         type: 'warning',
@@ -4826,7 +6090,8 @@
                         title: 'No Parent Contact #'
                     })
                     return false;
-                } else if ((parent_contact != null && parent_contact == '') && parent_contact.toString().length !=
+                } else if ((parent_contact != null && parent_contact == '') && parent_contact.toString()
+                    .length !=
                     11) {
                     Toast.fire({
                         type: 'warning',
@@ -4881,7 +6146,8 @@
                             var selected_section = $('#input_section').val()
                             var selected_strand = $('#input_strand').val()
 
-                            var section_index = all_sections.findIndex(x => x.id == $('#input_section')
+                            var section_index = all_sections.findIndex(x => x.id == $(
+                                    '#input_section')
                                 .val() && x.levelid == $('#input_gradelevel').val())
 
                             if (section_index == -1) {
@@ -4900,18 +6166,24 @@
 
                                     var cap = all_sections[section_index].capacity == null ? 0 :
                                         all_sections[section_index].capacity
-                                    all_sections[section_index].text = all_sections[section_index]
-                                        .sectionname + ' (' + all_sections[section_index].enrolled +
+                                    all_sections[section_index].text = all_sections[
+                                            section_index]
+                                        .sectionname + ' (' + all_sections[section_index]
+                                        .enrolled +
                                         '/' + cap + ')'
 
-                                    if ($('#input_gradelevel').val() == 17 || $('#input_gradelevel')
+                                    if ($('#input_gradelevel').val() == 17 || $(
+                                            '#input_gradelevel')
                                         .val() == 18 || $('#input_gradelevel').val() == 19 || $(
                                             '#input_gradelevel').val() == 20) {
-                                        var temp_sections = all_sections.filter(x => x.levelid ==
-                                            all_sections[section_index].levelid || x.levelid == null
+                                        var temp_sections = all_sections.filter(x => x
+                                            .levelid ==
+                                            all_sections[section_index].levelid || x
+                                            .levelid == null
                                         )
                                     } else {
-                                        var temp_sections = all_sections.filter(x => x.levelid ==
+                                        var temp_sections = all_sections.filter(x => x
+                                            .levelid ==
                                             all_sections[section_index].levelid)
                                     }
 
@@ -4989,7 +6261,7 @@
 
                 var temp_studinfo = all_students.filter(x => x.studid == selected)
                 var parent_contact = null
-                var student_contact = temp_studinfo[0].contactno;
+                var student_contact = temp_studinfo[0].contactno ?? null;
 
                 if (temp_studinfo[0].ismothernum == 1 && temp_studinfo[0].mcontactno != '') {
                     parent_contact = temp_studinfo[0].mcontactno
@@ -5008,7 +6280,8 @@
                         title: 'No Student Contact #'
                     })
                     return false;
-                } else if ((student_contact != null && parent_contact == '') && student_contact.toString().length !=
+                } else if ((student_contact != null && parent_contact == '') && student_contact.toString()
+                    .length !=
                     11) {
                     Toast.fire({
                         type: 'warning',
@@ -5021,7 +6294,8 @@
                         title: 'No Parent Contact #'
                     })
                     return false;
-                } else if ((parent_contact != null && parent_contact == '') && parent_contact.toString().length !=
+                } else if ((parent_contact != null && parent_contact == '') && parent_contact.toString()
+                    .length !=
                     11) {
                     Toast.fire({
                         type: 'warning',
@@ -5074,7 +6348,7 @@
                                 type: 'success',
                                 title: data[0].message
                             })
-
+                            load_all_sections()
                             // if($('#input_studstat').val() == 0){
                             //       $('#enrollment_modal').modal('hide')
                             //       load_update_info_datatable()
@@ -5086,11 +6360,13 @@
 
                             var prereg_index = all_students.findIndex(x => x.studid == selected)
 
-                            var section_index = all_sections.findIndex(x => x.id == temp_studinfo[0]
+                            var section_index = all_sections.findIndex(x => x.id ==
+                                temp_studinfo[0]
                                 .ensectionid && x.levelid == $('#input_gradelevel').val())
 
                             if (section_index == -1) {
-                                var section_index = all_sections.findIndex(x => x.id == temp_studinfo[0]
+                                var section_index = all_sections.findIndex(x => x.id ==
+                                    temp_studinfo[0]
                                     .ensectionid && x.levelid == null)
                             }
 
@@ -5101,31 +6377,39 @@
                                 var cap = all_sections[section_index].capacity == null ? 0 :
                                     all_sections[section_index].capacity
                                 all_sections[section_index].text = all_sections[section_index]
-                                    .sectionname + ' (' + all_sections[section_index].enrolled + '/' +
+                                    .sectionname + ' (' + all_sections[section_index].enrolled +
+                                    '/' +
                                     cap + ')'
                             }
 
                             if (prereg_index != -1 && section_index != -1) {
-                                all_students[prereg_index].studstatus = $('#input_studstat').val();
+                                all_students[prereg_index].studstatus = $('#input_studstat')
+                                    .val();
                                 all_students[prereg_index].description = $(
                                     '#input_studstat option:selected').text();
 
-                                all_students[prereg_index].ensectionid = $('#input_section').val();
-                                all_students[prereg_index].sectionname = all_sections[section_index]
+                                all_students[prereg_index].ensectionid = $('#input_section')
+                                    .val();
+                                all_students[prereg_index].sectionname = all_sections[
+                                        section_index]
                                     .sectionname;
 
-                                all_students[prereg_index].dateenrolled = $('#input_enrollmentdate')
+                                all_students[prereg_index].dateenrolled = $(
+                                        '#input_enrollmentdate')
                                     .val();
                                 all_students[prereg_index].enrollment = temp_date;
 
-                                all_students[prereg_index].enlevelid = $('#input_gradelevel').val();
+                                all_students[prereg_index].enlevelid = $('#input_gradelevel')
+                                    .val();
                                 all_students[prereg_index].levelname = $(
-                                    '#input_gradelevel option:selected').text().replace(' COLLEGE',
+                                    '#input_gradelevel option:selected').text().replace(
+                                    ' COLLEGE',
                                     '');
 
                                 if ($('#input_gradelevel').val() == 14 || $('#input_gradelevel')
                                     .val() == 15) {
-                                    all_students[prereg_index].strandid = $('#input_strand').val();
+                                    all_students[prereg_index].strandid = $('#input_strand')
+                                        .val();
                                 } else {
                                     all_students[prereg_index].strandid = null
                                 }
@@ -5143,7 +6427,8 @@
                             var selected_strand = $('#input_strand').val()
 
 
-                            var section_index = all_sections.findIndex(x => x.id == $('#input_section')
+                            var section_index = all_sections.findIndex(x => x.id == $(
+                                    '#input_section')
                                 .val() && x.levelid == $('#input_gradelevel').val())
 
                             if (section_index == -1) {
@@ -5172,8 +6457,10 @@
                             //       all_sections[section_index].text = all_sections[section_index].sectionname+' ('+all_sections[section_index].enrolled+'/'+cap+')'
                             // }
 
-                            if ($('#input_gradelevel').val() == 17 || $('#input_gradelevel').val() ==
-                                18 || $('#input_gradelevel').val() == 19 || $('#input_gradelevel')
+                            if ($('#input_gradelevel').val() == 17 || $('#input_gradelevel')
+                                .val() ==
+                                18 || $('#input_gradelevel').val() == 19 || $(
+                                    '#input_gradelevel')
                                 .val() == 20) {
                                 var temp_sections = all_sections.filter(x => x.levelid == $(
                                     '#input_gradelevel').val() || x.levelid == null)
@@ -5185,7 +6472,8 @@
                             if (section_index != -1) {
 
                                 $("#input_section").empty();
-                                $("#input_section").append('<option value="">Select Section</option>');
+                                $("#input_section").append(
+                                    '<option value="">Select Section</option>');
                                 $("#input_section").select2({
                                     data: temp_sections,
                                     allowClear: true,
@@ -5348,16 +6636,16 @@
                         dropdownCssClass: "myFont"
                     })
 
-
+                    //$('#input_section').val(unique_section[0].id).change()
                 }
             }
 
             function update_gradelevel_input(gradelevel, sectionid = null) {
 
 
-                if (gradelevel >= 17 && gradelevel <= 21) {
+                if (gradelevel >= 17) {
                     // var temp_sections = all_sections.filter( x=>  ( x.levelid >= 17 || x.levelid == null ) && x.semid == $('#filter_sem').val())
-                    getcollegesection(sectionid)
+                    // getcollegesection(sectionid)
                 } else {
                     var temp_sections = all_sections.filter(x => x.levelid == gradelevel)
                     updateSectionOption(temp_sections, sectionid)
@@ -5374,7 +6662,7 @@
                 }
 
                 if (school_setup.abbreviation == 'DCC') {
-                    if (gradelevel >= 17 && gradelevel <= 21) {
+                    if (gradelevel >= 17) {
                         $('.is_dcc').removeAttr('hidden')
                         $('#section_holder').attr('hidden', 'hidden')
                         // get_college_info()
@@ -5383,7 +6671,7 @@
                         $('#section_holder').removeAttr('hidden')
                     }
                 } else {
-                    if (gradelevel >= 17 && gradelevel <= 21) {
+                    if (gradelevel >= 17) {
                         $('.is_college').removeAttr('hidden')
                         // get_college_info()
                     } else {
@@ -5402,7 +6690,8 @@
                     return false
                 }
 
-                var temp_strand = all_strand.filter(x => x.sectionid == sectionid && x.syid == $('#filter_sy')
+                var temp_strand = all_strand.filter(x => x.sectionid == sectionid && x.syid == $(
+                        '#filter_sy')
                     .val())
                 $("#input_strand").empty();
                 $("#input_strand").append('<option value="">Select Strand</option>');
@@ -5432,6 +6721,8 @@
 
                         all_enrollment_history.filter(x => x.syid == $('#filter_sy').val())
 
+                        console.log('all_enrollment_history...', all_enrollment_history);
+
                         display_enrollment_history(data)
                     }
                 })
@@ -5450,8 +6741,10 @@
                         if (data.length > 0) {
                             $.each(data, function(a, b) {
                                 $('#balance_history').append('<tr><td> ' + b.sydesc +
-                                    '</td><td>&#8369;  ' + parseFloat(b.balance).toFixed(2)
-                                    .replace(/\d(?=(\d{3})+\.)/g, "$&,") + '</td></tr>')
+                                    '</td><td>&#8369;  ' + parseFloat(b.balance)
+                                    .toFixed(2)
+                                    .replace(/\d(?=(\d{3})+\.)/g, "$&,") +
+                                    '</td></tr>')
                             })
                         }
                     }
@@ -5459,24 +6752,89 @@
             }
 
 
+            // function display_enrollment_history(data) {
+            //     $('#enrollment_history').empty()
+            //     if (data.length == 0) {
+            //         $('#enrollment_history').append('<tr><td colspan="5">No Records Found.</td></tr>')
+            //     } else {
+            //         $.each(data, function(a, b) {
+
+            //             var print_button =
+            //                 '<button class="btn btn-default btn-sm print_button" style="font-size:.7rem !important; padding: 0rem 0.25rem !important;" data-sy="' +
+            //                 b.syid + '" data-sem="' + b.semid + '" data-lvlid="' + b.levelid +
+            //                 '"><i class="fas fa-print"></i></button>'
+
+            //             if (usertype_session == 15 || usertype_session == 4) {
+            //                 print_button = ''
+            //             }
+
+            //             var other = ''
+            //             var semdesc = ''
+            //             if (b.acadprogid == 5) {
+            //                 other = '<span class="text-success"> : ' + b.strandcode + '</span>'
+            //                 semdesc = '<span class="text-success"> : ' + b.semester + '</span>'
+            //             }
+            //             if (b.acadprogid == 6) {
+            //                 other = '<span class="text-success"> : ' + b.courseabrv + '</span>'
+            //                 semdesc = '<span class="text-success"> : ' + b.semester + '</span>'
+            //             }
+            //             $('#enrollment_history').append('<tr><td class="align-middle">' + b.sydesc +
+            //                 semdesc + '</td><td class="align-middle">' + b.levelname +
+            //                 '</td><td class="align-middle">' + b.sectionname + other +
+            //                 '</td><td style="font-size:.6rem !important;" class="align-middle">' + b
+            //                 .dateenrolled + '</td><td class="text-center align-middle">' +
+            //                 print_button + '</td></tr>')
+            //         })
+            //     }
+            // }
+
             function display_enrollment_history(data) {
+                console.log('enrollment_history...', data);
+
                 $('#enrollment_history').empty()
                 if (data.length == 0) {
                     $('#enrollment_history').append('<tr><td colspan="5">No Records Found.</td></tr>')
                 } else {
-                    $.each(data, function(a, b) {
 
+                    $('#enroll_student_button').attr('data-p', 'update')
+
+                    // Create an object to store unique enrollments
+                    var uniqueEnrollments = [];
+
+                    // Iterate through the data and store only unique enrollments
+                    $.each(data, function(a, b) {
+                        console.log('desc', b.description);
+
+                        // Create a unique key using syid, semid, and levelid
+                        var key = b.syid + '-' + b.semid + '-' + b.levelid;
+
+                        // If this key doesn't exist, add the enrollment to uniqueEnrollments
+                        // if (!uniqueEnrollments[key]) {
+                        //     uniqueEnrollments[key] = [];
+                        // }
+                        uniqueEnrollments.push(b);
+
+                    });
+
+                    console.log('uniqueEnrollments...', uniqueEnrollments);
+
+
+                    // Iterate through the unique enrollments and display them
+                    $.each(uniqueEnrollments, function(key, b) {
                         var print_button =
                             '<button class="btn btn-default btn-sm print_button" style="font-size:.7rem !important; padding: 0rem 0.25rem !important;" data-sy="' +
                             b.syid + '" data-sem="' + b.semid + '" data-lvlid="' + b.levelid +
                             '"><i class="fas fa-print"></i></button>'
 
-                        if (usertype_session == 15 || usertype_session == 4) {
+                        // Hide print button for certain user types
+                        if (usertype_session == 15 || usertype_session == 4 || b.description
+                            .toLowerCase() == 'not enrolled') {
                             print_button = ''
                         }
 
                         var other = ''
                         var semdesc = ''
+                        // Add strand or course information for specific academic programs
                         if (b.acadprogid == 5) {
                             other = '<span class="text-success"> : ' + b.strandcode + '</span>'
                             semdesc = '<span class="text-success"> : ' + b.semester + '</span>'
@@ -5485,10 +6843,19 @@
                             other = '<span class="text-success"> : ' + b.courseabrv + '</span>'
                             semdesc = '<span class="text-success"> : ' + b.semester + '</span>'
                         }
-                        $('#enrollment_history').append('<tr><td class="align-middle">' + b.sydesc +
+
+                        // Append the enrollment information to the table
+                        var rowStyle = ''
+                        if (key != 0) {
+                            rowStyle = 'style="background-color:lightgray;"'
+                        }
+                        $('#enrollment_history').append('<tr ' + rowStyle + '><td class="align-middle">' + b
+                            .sydesc +
                             semdesc + '</td><td class="align-middle">' + b.levelname +
                             '</td><td class="align-middle">' + b.sectionname + other +
-                            '</td><td style="font-size:.6rem !important;" class="align-middle">' + b
+                            '</td><td>' + b.description +
+                            '</td><td style="font-size:.6rem !important;" class="align-middle">' +
+                            b
                             .dateenrolled + '</td><td class="text-center align-middle">' +
                             print_button + '</td></tr>')
                     })
@@ -5502,7 +6869,7 @@
                 var date = moment(new Date()).format("YYYY-MM-DD");
 
                 $('#printable_list_holder').empty();
-                if (temp_lvl >= 17 && temp_lvl <= 21) {
+                if (temp_lvl >= 17) {
                     $('#printable_list_holder').append(
                         '<a class="btn btn-sm btn-default mt-2" target="_blank" href="/printcor/' +
                         selected + '?semid=' + temp_semid + '&syid=' + temp_syid + '&levelid=' +
@@ -5511,7 +6878,8 @@
                         selected + '?semid=' + temp_semid + '&syid=' + temp_syid + '&levelid=' +
                         temp_lvl + '&format=2' +
                         '"><i class="fas fa-print"></i> COR (Format 1)</a><hr><a class="btn btn-sm btn-default " target="_blank" href="/college/grades/summary/print/pdf?semid=' +
-                        temp_semid + '&syid=' + temp_syid + '&studid=' + selected +
+                        temp_semid + '&syid=' + temp_syid + '&studid=' + selected + '&registarid=' +
+                        userid +
                         '"><i class="fas fa-print"></i> Grades</a>')
                 } else if (temp_lvl == 14 || temp_lvl == 15) {
                     $('#printable_list_holder').append(
@@ -5553,12 +6921,14 @@
                                 var old = b.old == null ? 'No record' : b.old
                                 var newdata = b.new == null ? 'No record' : b.new
                                 $('#new_update_history').append('<tr><td>' + b.field +
-                                    '</td><td>' + old + '</td><td>' + newdata + '</td></tr>'
+                                    '</td><td>' + old + '</td><td>' + newdata +
+                                    '</td></tr>'
                                 )
                             })
                         } else {
                             $('#new_update_history').append(
-                                '<tr><td colspan="3">No New Information Available</td></tr>')
+                                '<tr><td colspan="3">No New Information Available</td></tr>'
+                            )
                         }
                     }
                 })
@@ -5630,9 +7000,6 @@
         }
 
         if (usertype == 6 || refid == 28 || refid == 29) {
-            $('#filter_process').attr('disabled', 'disabled')
-        }
-        if (usertype == 6 || refid == 28) {
             $('#delete_student_button').remove()
             $('#mark_as_inactive').remove()
             $('#enroll_student_button').remove()
@@ -5649,6 +7016,7 @@
             $('#filter_gradelevel').removeAttr('disabled')
             $('#filter_paymentstat').removeAttr('disabled')
             $('#filter_activestatus').removeAttr('disabled')
+            $('#filter_section').removeAttr('disabled')
 
             $('#filter_studstatus').val("").change()
 
@@ -5657,8 +7025,7 @@
         if (usertype_session == 14 || usertype_session == 16) {
             $('#update_student_information_button').remove()
             $('#enrollment_form').remove()
-            $('input').attr('disabled', 'disabled')
-            $('select').attr('disabled', 'disabled')
+
 
             $('#filter_studstatus').removeAttr('disabled')
             $('#filter_sy').removeAttr('disabled')
@@ -5666,6 +7033,7 @@
             $('#filter_gradelevel').removeAttr('disabled')
             $('#filter_paymentstat').removeAttr('disabled')
             $('#filter_activestatus').removeAttr('disabled')
+            $('#filter_section').removeAttr('disabled')
 
             $('#filter_studstatus').val("").change()
 
@@ -5719,6 +7087,8 @@
                     syid: $('#filter_sy').val()
                 },
                 success: function(data) {
+                    console.log('asdasdasasdasdads', data);
+                    
                     all_sections = data
                 }
             })
@@ -5976,13 +7346,10 @@
                         transdate: $('#filter_transdate').val(),
                         enrollmentdate: $('#filter_enrollmentdate').val(),
                         processtype: $('#filter_process').val(),
-                        action: 'generatedata'
                     },
                     dataSrc: function(json) {
 
                         all_students = json.data
-
-                        console.log(all_students, 'all students');
                         if (withpromp) {
 
                             Toast.fire({
@@ -5992,6 +7359,534 @@
 
                             firstPrompt = false
                         }
+                        return json.data;
+                    }
+                },
+                // order: [[ 1, "asc" ]],
+                columns: [{
+                        "data": null,
+                        'orderable': false,
+                        "className": 'align-middle',
+                        "render": function(data, type, row) {
+                            var html = ''
+                            if (row.studstatus == 0) {
+                                html =
+                                    '<div class="bg-secondary" style="width:20px;height:20px;margin:0 auto;"></div>'
+                            } else if (row.studstatus == 1) {
+                                html =
+                                    '<div style="width:20px;height:20px;background-color:green;margin:0 auto;"></div>'
+                            } else if (row.studstatus == 2) {
+                                html =
+                                    '<div style="width:20px;height:20px;background-color:#58715f;margin:0 auto;"></div>'
+                            } else if (row.studstatus == 3) {
+                                html =
+                                    '<div style="width:20px;height:20px;background-color:red;margin:0 auto;"></div>'
+                            } else if (row.studstatus == 4) {
+                                html =
+                                    '<div class="bg-primary" style="width:20px;height:20px;margin:0 auto;"></div>'
+                            } else if (row.studstatus == 5) {
+                                html =
+                                    '<div style="width:20px;height:20px;background-color:#fd7e14;margin:0 auto;"></div>'
+                            } else if (row.studstatus == 6) {
+                                html =
+                                    '<div class="bg-warning" style="width:20px;height:20px;margin:0 auto;"></div>'
+                            } else if (row.studstatus == 7) {
+                                html =
+                                    '<div style="width:20px;height:20px;background-color:black;margin:0 auto;"></div>'
+                            }
+                            return '<div class="text-center">' + html + '</div>'
+                        }
+
+                    },
+                    {
+                        "data": "sid"
+                    },
+                    {
+                        "data": "student"
+                    },
+                    {
+                        "data": null
+                    },
+                    {
+                        "data": "sortid"
+                    },
+                    {
+                        "data": "sectionname",
+                        "render": function(data, type, row) {
+                            return data ? data.toUpperCase() : '';
+                        }
+                    },
+                    {
+                        "data": "description"
+                    },
+                    {
+                        "data": "enrollment"
+                    },
+                    {
+                        "data": "search"
+                    },
+                ],
+                columnDefs: [{
+                        'targets': 1,
+                        'orderable': false,
+                        'createdCell': function(td, cellData, rowData, row, col) {
+                            $(td).addClass('align-middle')
+                        }
+                    },
+                    {
+                        'targets': 2,
+                        'orderable': false,
+                        'createdCell': function(td, cellData, rowData, row, col) {
+                            var text = rowData.student
+
+                            // if(rowData.nodp == 1){
+                            // //      text += '<br>'
+                            //      text += ' <span class="badge-primary badge">No DP Allowed</span>'
+                            // }
+
+                            // if(rowData.withpayment == 1){
+                            //      if(rowData.nodp == 1 == 0){
+                            //       // text += '<br>'
+                            //      }
+                            //      text += ' <span class="badge-success badge">Payment : &#8369;'+rowData.payment+'</span>'
+                            // }
+
+                            $(td)[0].innerHTML = text
+
+                            $(td).addClass('align-middle')
+                        }
+                    },
+                    {
+                        'targets': 3,
+                        'orderable': false,
+                        'createdCell': function(td, cellData, rowData, row, col) {
+                            if (usertype_session != 6 && usertype_session != 14 && usertype_session != 16 &&
+                                refid != 28 && refid != 29) {
+                                var text = ''
+
+                                if (usertype == 6 || refid == 28) {
+                                    $(td)[0].innerHTML = text
+                                    $(td).addClass('align-middle')
+                                    return false;
+                                }
+
+                                if (rowData.nodp == 1) {
+                                    var text = ' <span class="badge-primary badge">No DP Allowed</span>'
+                                    $(td).addClass('bg-primary')
+                                    $(td).addClass('text-center')
+                                }
+
+                                if (rowData.withpayment == 1) {
+
+                                    if (rowData.studstatus == 1 || rowData.studstatus == 2 || rowData
+                                        .studstatus == 4) {
+                                        var text = 'DP Paid'
+                                        $(td).addClass('text-center')
+                                    } else {
+                                        var text =
+                                            '<span style="font-size:.7rem !important"> &#8369; &nbsp;' +
+                                            rowData.payment.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, "$&,") +
+                                            '</span>'
+                                        $(td).addClass('text-right')
+                                    }
+
+
+
+                                    $(td).addClass('bg-success')
+                                }
+
+                                $(td)[0].innerHTML = text
+                                $(td).addClass('align-middle')
+                            } else {
+                                var text = null
+                                $(td)[0].innerHTML = text
+                                $(td).addClass('align-middle')
+                            }
+
+                        }
+                    },
+                    {
+                        'targets': 4,
+                        'orderable': false,
+                        'createdCell': function(td, cellData, rowData, row, col) {
+                            if (rowData.studstatus == 0) {
+                                // $(td).text(rowData.levelname)
+                                $(td)[0].innerHTML = '<span  style="font-size:13px !important">' + rowData
+                                    .levelname + '</span>'
+                            } else {
+                                $(td)[0].innerHTML = '<span style="font-size:13px !important">' + rowData
+                                    .levelname + '</span>'
+                            }
+                            $(td).addClass('align-middle')
+                            $(td).addClass('text-center')
+                        }
+                    },
+                    {
+                        'targets': 5,
+                        'orderable': false,
+                        'createdCell': function(td, cellData, rowData, row, col) {
+                            console.log(rowData,'askjdhaksjdhasdakhdkajsd');
+                            
+                            $(td).removeAttr('hidden')
+                            if (filter_status == 0 && filter_status != '') {
+                                if (rowData.withprereg == 1) {
+                                    $(td)[0].innerHTML = rowData.admission_type_desc + ' : ' +
+                                        '<span class="text-success" style="font-size:11px !important">' +
+                                        rowData.submission + '</span>'
+                                } else {
+                                    $(td).text(null)
+                                }
+
+                            } else {
+                                if (rowData.enlevelid == 14 || rowData.enlevelid == 15) {
+                                    $(td)[0].innerHTML = rowData.sectionname +
+                                        ' : <span class="text-success" style="font-size:11px !important">' +
+                                        rowData.strandcode + '</span>'
+                                }
+
+                            }
+                            $(td).addClass('align-middle')
+                        }
+                    },
+                    {
+                        'targets': 6,
+                        'orderable': false,
+                        'createdCell': function(td, cellData, rowData, row, col) {
+                            $(td)[0].innerHTML = '<span style="font-size:.7rem !important">' + rowData
+                                .description + '</span>'
+                            if (filter_status == 0 && filter_status != '') {
+
+                                var text = ''
+                                if (rowData.finance_status == 'APPROVED') {
+                                    text +=
+                                        '<span class="badge badge-success d-block mt-1">Finance Approved</span> '
+                                }
+                                if (rowData.admission_status == 'APPROVED') {
+                                    text +=
+                                        '<span class="badge badge-warning d-block mt-1">Admission Approved</span> '
+                                }
+
+                                $(td)[0].innerHTML = text
+                            } else {
+
+                                if (school_setup.withMOL == 1) {
+                                    var temp_mol = all_mol.filter(x => x.id == rowData.mol)
+                                    if (temp_mol.length > 0) {
+                                        $(td).text(temp_mol[0].description)
+                                    } else {
+                                        $(td).text(null)
+                                    }
+                                } else {
+                                    $(td).text(null)
+                                }
+                                // if(rowData.studstatus == 0){
+                                //       $(td)[0].innerHTML = '<span style="font-size:.7rem !important">'+rowData.description+'</span>'
+                                // }else{
+                                //       // $(td)[0].innerHTML = '<a href="javascript:void(0)" data-preregid="'+rowData.id+'" class="view_enrollment" data-id="'+rowData.studid+'" style="font-size:.7rem !important">'+rowData.description+'</a>'
+                                //       rowData.description
+                                // }
+                                $(td).removeAttr('hidden')
+
+                            }
+
+                            if (rowData.studstatus == 1 || rowData.studstatus == 2 || rowData.studstatus ==
+                                4) {
+                                // $(td).addClass('bg-success')
+                            } else if (rowData.studstatus == 0) {
+
+                            } else {
+                                // $(td).addClass('bg-secondary')
+                            }
+
+                            $(td).addClass('align-middle')
+                        }
+                    },
+                    {
+                        'targets': 7,
+                        'orderable': false,
+                        'createdCell': function(td, cellData, rowData, row, col) {
+                            if (rowData.studstatus == 0) {
+                                // $(td).text(rowData.submission)
+                            } else {
+                                $(td).text(rowData.enrollment)
+                            }
+                            $(td).addClass('align-middle')
+                        }
+                    },
+                    {
+                        'targets': 8,
+                        'orderable': false,
+                        'createdCell': function(td, cellData, rowData, row, col) {
+                            // $(row).addClass('enroll')
+                            // $(row).addClass('enroll')
+                            // if(rowData.studstatus == 0 && temp_sy.ended == 0){
+                            //       $(td).addClass('text-center')
+                            //       if(usertype == 8 || usertype == 4 || usertype == 15 || usertype_session == 8 || usertype_session == 4 || usertype_session == 15){
+                            //           var buttons = '<button data-preregid="'+rowData.id+'" data-id="'+rowData.studid+'" class="btn btn-sm btn-primary enroll btn-block" style="font-size:.5rem !important">VIEW INFO.</button>';
+                            //       }else{
+                            //             // if(rowData.withprereg == 1){
+                            //                   var buttons = '<button data-preregid="'+rowData.id+'" data-id="'+rowData.studid+'" class="btn btn-sm btn-primary enroll btn-block" style="font-size:.5rem !important">ENROLL</button>';
+                            //             // }else{
+                            //             //       var buttons = '<button data-preregid="'+rowData.id+'" data-id="'+rowData.studid+'" class="btn btn-sm btn-secondary add_student_to_prereg btn-block" style="font-size:.5rem !important">ADD TO PREREG</button>';
+                            //             // }
+                            //       }
+                            //       $(td)[0].innerHTML =  buttons
+
+                            // }else if(rowData.studstatus == 1 || rowData.studstatus == 2 || rowData.studstatus == 4){
+                            //       // if(rowData.isearly == 1){
+                            //       //       $(td).addClass('bg-warning')
+                            //       //       $(td).text('EARLY')
+                            //       // }else{
+                            //       //       $(td).addClass('bg-success')
+                            //       //       $(td).text('REGULAR')
+                            //       // }
+                            //       $(td).text(null)
+                            // }
+                            // else if(temp_sy.ended == 1){
+                            //       $(td).text(null)
+                            // }else{
+                            //       $(td).text(null)
+                            // }
+
+                            if (rowData.studstatus == 1 || rowData.studstatus == 2 || rowData.studstatus ==
+                                4) {
+                                var desc = all_admissiontype.filter(x => x.id == rowData.type)
+                                if (desc.length > 0) {
+                                    // $(td).text(desc[0].description)
+                                    $(td)[0].innerHTML = '<span style="font-size:.7rem !important">' + desc[
+                                        0].description + '</span>'
+                                } else {
+                                    $(td).text(null)
+                                }
+
+                            } else {
+                                $(td).text(null)
+                            }
+
+
+                            $(td).addClass('align-middle')
+                            $(td).addClass('text-center')
+                        }
+                    },
+                ],
+                createdRow: function(row, data, dataIndex) {
+
+
+                    $(row).attr("data-id", data.studid);
+                    $(row).attr("data-preregid", data.id);
+
+                    // if(usertype == 8 || usertype == 4 || usertype == 15 || usertype_session == 8 || usertype_session == 4 || usertype_session == 15){
+                    //       $(row).addClass("enroll");
+                    // }
+
+                    if (data.studstatus != 0) {
+                        $(row).addClass("view_enrollment");
+                    } else {
+                        $(row).addClass("enroll");
+                    }
+                },
+
+            });
+
+
+            var mol_options =
+                '<div class="btn-group ml-2 col-sm-12 col-md-3">' +
+                '<button type="button" class="btn btn-default btn-sm">Printables</button>' +
+                '<button type="button" class="btn btn-default dropdown-toggle dropdown-icon btn-sm" data-toggle="dropdown">' +
+                '<span class="sr-only">Toggle Dropdown</span>' +
+                '</button>' +
+                '<div class="dropdown-menu" role="menu">' +
+                '<a class="dropdown-item print_mol" data-id="1" href="#">MOL By MOL</a>' +
+                '<a class="dropdown-item print_mol" data-id="2" href="#">MOL By Grade Level</a>' +
+                '<a class="dropdown-item print_mol" data-id="3" href="#">MOL By Section</a>' +
+                '<a class="dropdown-item print_sf1" data-id="pdf" href="#">SF1(PDF)</a>' +
+                '<a class="dropdown-item print_sf1" data-id="excel" href="#">SF1(EXCEL)</a>' +
+                '<a class="dropdown-item print_enrollment"  href="#" >Enrollment</a>' +
+                '</div>' +
+                '</div>'
+            var btn_readyto_enroll =
+                '<button type="button" class="btn btn-sm ml-2 btn-warning" id="ready_to_enroll"><i class="fa fa-check-circle"></i> Ready to Enroll</button>'
+
+
+
+            if (school_setup.abbreviation == 'BCT') {
+                if (usertype_session == 8) {
+                    var label_text = $($('#update_info_request_table_wrapper')[0].children[0])[0].children[0]
+                    // $(label_text)[0].innerHTML = '<button class="btn btn-primary btn-sm add_student_to_prereg">Add Student to Preregistration</button><button class="btn btn-primary btn-sm ml-2" id="reservation_list">Reservation List</button>'
+                    $(label_text)[0].innerHTML =
+                        ' <button class="btn btn-primary btn-sm" id="create_new_student"><i class="fa fa-plus"></i> Create New Student</button> <button class="btn btn-default btn-sm ml-2" id="vac_info"><i class="fa fa-medkit"></i> Vaccine Information</button>' +
+                        mol_options
+                }
+
+            } else {
+                // var label_text = $($('#update_info_request_table_wrapper')[0].children[0])[0].children[0]
+                var label_text = $('.btn_wrap')
+                if (usertype_session == 3 || usertype_session == 17 || usertype_session == 8) {
+                    // $(label_text)[0].innerHTML = '<button class="btn btn-primary btn-sm add_student_to_prereg" >Add Student to Preregistration</button>'
+                    $(label_text)[0].innerHTML =
+                        ' <div class="col-md-3 col-sm-12">' +
+                        ' <button style="width:100% !important" class="btn btn-primary btn-sm d-block d-sm-inline-block" id="create_new_student"><i class="fa fa-plus"></i> Create New Student</button>' +
+                        ' </div>' +
+                        ' <div class="col-md-3 col-sm-12 mt-2 mt-md-0">' +
+                        ' <button style="width:100% !important" class="btn btn-default btn-sm d-block d-sm-inline-block" id="vac_info"><i class="fa fa-medkit"></i> Vaccine Information</button>' +
+                        ' </div>' +
+                        ' <div class="col-md-3 col-sm-12 mt-2 mt-md-0">' +
+                        ' <button style="width:100% !important" class="btn btn-warning btn-sm d-block d-sm-inline-block" id="ready_to_enroll"><i class="fa fa-check-circle"></i> Ready to Enroll</button>' +
+                        ' </div>' +
+                        ' <div class="col-md-3 col-sm-12 mt-2 mt-md-0">' +
+                        mol_options +
+                        ' </div>'
+                } else if (refid == 30) {
+                    $(label_text)[0].innerHTML =
+                        ' <div class="col-md-3 col-sm-12">' +
+                        ' <button style="width:100% !important" class="btn btn-primary btn-sm d-block d-sm-inline-block" id="create_new_student"><i class="fa fa-plus"></i> Create New Student</button>' +
+                        ' </div>'
+                } else {
+                    $(label_text)[0].innerHTML = ''
+                }
+            }
+
+            if (temp_sy.ended == 1) {
+                $('.add_student_to_prereg').remove()
+            }
+
+
+            // if(usertype == 3 || usertype_session == 3 || usertype == 17 || usertype_session == 17){
+            //       if(student_to_enroll != null && student_to_enroll != ""){
+            //             var oTable = $('#update_info_request_table').DataTable();
+            //             oTable.search( student_to_enroll ).draw();
+            //       }
+            // }
+
+            // if(student_to_enroll == null || student_to_enroll == ""){
+            //       var oTable = $('#update_info_request_table').DataTable();
+            //       oTable.search("").draw();
+            // }
+
+            $('#gradelevel_readytoenroll').select2();
+            $(document).on('change', '#gradelevel_readytoenroll', function() {
+                fetchReadyToEnrollStud();
+            });
+            // Trigger the modal when the button is clicked
+            $(document).on('click', '#ready_to_enroll', function() {
+                fetchReadyToEnrollStud();
+            });
+
+            $('#notifyAll').on('click', function() {
+                Swal.fire(
+                    'Success!',
+                    'Notified Successfully!',
+                    'success'
+                )
+            });
+
+            // Handle applying filters (You can replace this with an AJAX request to filter data)
+            $('#applyFilters').on('click', function() {
+                var startDate = $('#startDate').val();
+                var endDate = $('#endDate').val();
+                var gradeLevel = $('#gradeLevel').val();
+
+                // Example of handling the filter - in practice, you can use AJAX to load filtered data
+
+
+                // Close the modal after applying filters
+                $('#readyToEnrollModal').modal('hide');
+            });
+
+            $(document).on('click', '.notify_individual', function() {
+                var phone = $(this).data('phone');
+                var parentphone = $(this).data('parentphone');
+                if (phone == null || phone == '') {
+                    phone = parentphone;
+                }
+
+                if (phone.length != 11) {
+                    Swal.fire(
+                        'Error!',
+                        'Phone number is not valid!',
+                        'error'
+                    )
+                } else {
+                    phone = "+63" + phone.substr(1);
+                }
+
+                $(this).html('<i class="fas fa-bell"></i>');
+
+                $.ajax({
+                    url: '{{ route('notify_individual_student') }}',
+                    method: 'POST',
+                    data: {
+                        phone: phone,
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(data) {
+                        if (data.status == 'success') {
+
+                            Swal.fire(
+                                'Success!',
+                                'Student successfully notified!',
+                                'success'
+                            )
+                        } else {
+                            Swal.fire(
+                                data.status,
+                                data.message,
+                            )
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        Swal.fire(
+                            'Error!',
+                            xhr.responseText,
+                            'error'
+                        )
+                    }
+                });
+            })
+        }
+
+
+        function fetchReadyToEnrollStud() {
+
+            $("#studentsTable").DataTable({
+                destroy: true,
+                // data:temp_data,
+                autoWidth: false,
+                stateSave: true,
+                serverSide: true,
+                processing: true,
+                // ajax:'/student/preregistration/list',
+                ajax: {
+                    url: '/student/preregistration/list',
+                    type: 'GET',
+                    data: {
+                        syid: $('#filter_sy').val(),
+                        semid: $('#filter_sem').val(),
+                        addtype: $('#filter_entype').val(),
+                        paystat: 1,
+                        procctype: $('#filter_process').val(),
+                        studstat: 0,
+                        fillevelid: $('#gradelevel_readytoenroll').val() ? $('#gradelevel_readytoenroll').val() : $(
+                            '#filter_gradelevel').val(),
+                        fillsectionid: $('#filter_section').val(),
+                        activestatus: $('#filter_activestatus').val(),
+                        transdate: $('#filter_transdate').val(),
+                        enrollmentdate: $('#filter_enrollmentdate').val(),
+                        processtype: $('#filter_process').val(),
+                    },
+                    dataSrc: function(json) {
+
+                        $('#notifyAll').prop('disabled', json.data.length == 0);
+                        // all_students = json.data
+                        // if (withpromp) {
+
+                        //     Toast.fire({
+                        //         type: 'info',
+                        //         title: json.recordsTotal + ' student(s) found.'
+                        //     })
+
+                        //     firstPrompt = false
+                        // }
                         return json.data;
                     }
                 },
@@ -6009,16 +7904,21 @@
                         "data": "sortid"
                     },
                     {
-                        "data": "sectionname"
-                    },
-                    {
-                        "data": "description"
-                    },
-                    {
-                        "data": "enrollment"
-                    },
-                    {
-                        "data": "search"
+                        "data": null,
+                        "render": function(data, type, row) {
+                            var mainphone = ''
+                            if (row.isfathernum == 1) {
+                                mainphone = row.fcontactno
+                            } else if (row.ismothernum == 1) {
+                                mainphone = row.mcontactno
+                            } else if (row.isguardannum == 1) {
+                                mainphone = row.gcontactno
+                            }
+
+                            return '<a href="#" class="text-primary notify_individual" data-parentphone="' +
+                                mainphone + '" data-phone="' + row.contactno +
+                                '"><i class="far fa-bell "></i></a>'
+                        }
                     },
                 ],
                 columnDefs: [{
@@ -6116,239 +8016,34 @@
                             $(td).addClass('text-center')
                         }
                     },
-                    {
-                        'targets': 4,
-                        'orderable': false,
-                        'createdCell': function(td, cellData, rowData, row, col) {
-                            $(td).removeAttr('hidden')
-                            if (filter_status == 0 && filter_status != '') {
-                                if (rowData.withprereg == 1) {
-                                    $(td)[0].innerHTML = rowData.admission_type_desc + ' : ' +
-                                        '<span class="text-success" style="font-size:11px !important">' +
-                                        rowData.submission + '</span>'
-                                } else {
-                                    $(td).text(null)
-                                }
 
-                            } else {
-                                if (rowData.enlevelid == 14 || rowData.enlevelid == 15) {
-                                    $(td)[0].innerHTML = rowData.sectionname +
-                                        ' : <span class="text-success" style="font-size:11px !important">' +
-                                        rowData.strandcode + '</span>'
-                                }
-
-                            }
-                            $(td).addClass('align-middle')
-                        }
-                    },
-                    {
-                        'targets': 5,
-                        'orderable': false,
-                        'createdCell': function(td, cellData, rowData, row, col) {
-                            $(td)[0].innerHTML = '<span style="font-size:.7rem !important">' + rowData
-                                .description + '</span>'
-                            if (filter_status == 0 && filter_status != '') {
-
-                                var text = ''
-                                if (rowData.finance_status == 'APPROVED') {
-                                    text +=
-                                        '<span class="badge badge-success d-block mt-1">Finance Approved</span> '
-                                }
-                                if (rowData.admission_status == 'APPROVED') {
-                                    text +=
-                                        '<span class="badge badge-warning d-block mt-1">Admission Approved</span> '
-                                }
-
-                                $(td)[0].innerHTML = text
-                            } else {
-
-                                if (school_setup.withMOL == 1) {
-                                    var temp_mol = all_mol.filter(x => x.id == rowData.mol)
-                                    if (temp_mol.length > 0) {
-                                        $(td).text(temp_mol[0].description)
-                                    } else {
-                                        $(td).text(null)
-                                    }
-                                } else {
-                                    $(td).text(null)
-                                }
-                                // if(rowData.studstatus == 0){
-                                //       $(td)[0].innerHTML = '<span style="font-size:.7rem !important">'+rowData.description+'</span>'
-                                // }else{
-                                //       // $(td)[0].innerHTML = '<a href="javascript:void(0)" data-preregid="'+rowData.id+'" class="view_enrollment" data-id="'+rowData.studid+'" style="font-size:.7rem !important">'+rowData.description+'</a>'
-                                //       rowData.description
-                                // }
-                                $(td).removeAttr('hidden')
-
-                            }
-
-                            if (rowData.studstatus == 1 || rowData.studstatus == 2 || rowData.studstatus ==
-                                4) {
-                                // $(td).addClass('bg-success')
-                            } else if (rowData.studstatus == 0) {
-
-                            } else {
-                                // $(td).addClass('bg-secondary')
-                            }
-
-                            $(td).addClass('align-middle')
-                        }
-                    },
-                    {
-                        'targets': 6,
-                        'orderable': false,
-                        'createdCell': function(td, cellData, rowData, row, col) {
-                            if (rowData.studstatus == 0) {
-                                // $(td).text(rowData.submission)
-                            } else {
-                                $(td).text(rowData.enrollment)
-                            }
-                            $(td).addClass('align-middle')
-                        }
-                    },
-                    {
-                        'targets': 7,
-                        'orderable': false,
-                        'createdCell': function(td, cellData, rowData, row, col) {
-                            // $(row).addClass('enroll')
-                            // $(row).addClass('enroll')
-                            // if(rowData.studstatus == 0 && temp_sy.ended == 0){
-                            //       $(td).addClass('text-center')
-                            //       if(usertype == 8 || usertype == 4 || usertype == 15 || usertype_session == 8 || usertype_session == 4 || usertype_session == 15){
-                            //           var buttons = '<button data-preregid="'+rowData.id+'" data-id="'+rowData.studid+'" class="btn btn-sm btn-primary enroll btn-block" style="font-size:.5rem !important">VIEW INFO.</button>';
-                            //       }else{
-                            //             // if(rowData.withprereg == 1){
-                            //                   var buttons = '<button data-preregid="'+rowData.id+'" data-id="'+rowData.studid+'" class="btn btn-sm btn-primary enroll btn-block" style="font-size:.5rem !important">ENROLL</button>';
-                            //             // }else{
-                            //             //       var buttons = '<button data-preregid="'+rowData.id+'" data-id="'+rowData.studid+'" class="btn btn-sm btn-secondary add_student_to_prereg btn-block" style="font-size:.5rem !important">ADD TO PREREG</button>';
-                            //             // }
-                            //       }
-                            //       $(td)[0].innerHTML =  buttons
-
-                            // }else if(rowData.studstatus == 1 || rowData.studstatus == 2 || rowData.studstatus == 4){
-                            //       // if(rowData.isearly == 1){
-                            //       //       $(td).addClass('bg-warning')
-                            //       //       $(td).text('EARLY')
-                            //       // }else{
-                            //       //       $(td).addClass('bg-success')
-                            //       //       $(td).text('REGULAR')
-                            //       // }
-                            //       $(td).text(null)
-                            // }
-                            // else if(temp_sy.ended == 1){
-                            //       $(td).text(null)
-                            // }else{
-                            //       $(td).text(null)
-                            // }
-
-                            if (rowData.studstatus == 1 || rowData.studstatus == 2 || rowData.studstatus ==
-                                4) {
-                                var desc = all_admissiontype.filter(x => x.id == rowData.type)
-                                if (desc.length > 0) {
-                                    // $(td).text(desc[0].description)
-                                    $(td)[0].innerHTML = '<span style="font-size:.7rem !important">' + desc[
-                                        0].description + '</span>'
-                                } else {
-                                    $(td).text(null)
-                                }
-
-                            } else {
-                                $(td).text(null)
-                            }
-
-
-                            $(td).addClass('align-middle')
-                            $(td).addClass('text-center')
-                        }
-                    },
                 ],
-                createdRow: function(row, data, dataIndex) {
+                // createdRow: function(row, data, dataIndex) {
 
 
-                    $(row).attr("data-id", data.studid);
-                    $(row).attr("data-preregid", data.id);
+                //     $(row).attr("data-id", data.studid);
+                //     $(row).attr("data-preregid", data.id);
 
-                    // if(usertype == 8 || usertype == 4 || usertype == 15 || usertype_session == 8 || usertype_session == 4 || usertype_session == 15){
-                    //       $(row).addClass("enroll");
-                    // }
+                //     // if(usertype == 8 || usertype == 4 || usertype == 15 || usertype_session == 8 || usertype_session == 4 || usertype_session == 15){
+                //     //       $(row).addClass("enroll");
+                //     // }
 
-                    if (data.studstatus != 0) {
-                        $(row).addClass("view_enrollment");
-                    } else {
-                        $(row).addClass("enroll");
-                    }
-                },
+                //     if (data.studstatus != 0) {
+                //         $(row).addClass("view_enrollment");
+                //     } else {
+                //         $(row).addClass("enroll");
+                //     }
+                // },
 
             });
 
 
-            var mol_options =
-                '<div class="btn-group ml-2">' +
-                '<button type="button" class="btn btn-default btn-sm">Printables</button>' +
-                '<button type="button" class="btn btn-default dropdown-toggle dropdown-icon btn-sm" data-toggle="dropdown">' +
-                '<span class="sr-only">Toggle Dropdown</span>' +
-                '</button>' +
-                '<div class="dropdown-menu" role="menu">' +
-                '<a class="dropdown-item print_mol" data-id="1" href="#">MOL By MOL</a>' +
-                '<a class="dropdown-item print_mol" data-id="2" href="#">MOL By Grade Level</a>' +
-                '<a class="dropdown-item print_mol" data-id="3" href="#">MOL By Section</a>' +
-                '<a class="dropdown-item print_sf1" data-id="pdf" href="#">SF1(PDF)</a>' +
-                '<a class="dropdown-item print_sf1" data-id="excel" href="#">SF1(EXCEL)</a>' +
-                '<a class="dropdown-item print_enrollment"  href="#" >Enrollment</a>' +
-                '</div>' +
-                '</div>'
-
-
-
-            if (school_setup.abbreviation == 'BCT') {
-                if (usertype_session == 8) {
-                    var label_text = $($('#update_info_request_table_wrapper')[0].children[0])[0].children[0]
-                    // $(label_text)[0].innerHTML = '<button class="btn btn-primary btn-sm add_student_to_prereg">Add Student to Preregistration</button><button class="btn btn-primary btn-sm ml-2" id="reservation_list">Reservation List</button>'
-                    $(label_text)[0].innerHTML =
-                        ' <button class="btn btn-primary btn-sm" id="create_new_student"><i class="fa fa-plus"></i> Create New Student</button> <button class="btn btn-default btn-sm ml-2" id="vac_info"><i class="fa fa-medkit"></i> Vaccine Information</button>' +
-                        mol_options
-                }
-
-            } else {
-                var label_text = $($('#update_info_request_table_wrapper')[0].children[0])[0].children[0]
-                if (usertype_session == 3 || usertype_session == 17 || usertype_session == 8) {
-                    // $(label_text)[0].innerHTML = '<button class="btn btn-primary btn-sm add_student_to_prereg" >Add Student to Preregistration</button>'
-                    $(label_text)[0].innerHTML =
-                        ' <button class="btn btn-primary btn-sm" id="create_new_student"><i class="fa fa-plus"></i> Create New Student</button><button class="btn btn-default btn-sm ml-2" id="vac_info"><i class="fa fa-medkit"></i> Vaccine Information</button>' +
-                        mol_options
-                } else if (refid == 30) {
-                    $(label_text)[0].innerHTML =
-                        ' <button class="btn btn-primary btn-sm" id="create_new_student"><i class="fa fa-plus"></i> Create New Student</button>'
-                } else {
-                    $(label_text)[0].innerHTML = ''
-                }
-
-            }
-
-            if (temp_sy.ended == 1) {
-                $('.add_student_to_prereg').remove()
-            }
-
-
-            // if(usertype == 3 || usertype_session == 3 || usertype == 17 || usertype_session == 17){
-            //       if(student_to_enroll != null && student_to_enroll != ""){
-            //             var oTable = $('#update_info_request_table').DataTable();    
-            //             oTable.search( student_to_enroll ).draw();
-            //       }
-            // }
-
-            // if(student_to_enroll == null || student_to_enroll == ""){
-            //       var oTable = $('#update_info_request_table').DataTable();    
-            //       oTable.search("").draw();
-            // }
-
-
-
-
+            $('#readyToEnrollModal').modal('show');
         }
 
-        $(document).on('click', '#print_student_info', function(){
+        $(document).on('click', '#print_student_info', function() {
             print_student_info()
+
         })
 
         function print_student_info() {
@@ -6365,7 +8060,8 @@
                 transdate: $('#filter_transdate').val(),
                 enrollmentdate: $('#filter_enrollmentdate').val(),
                 processtype: $('#filter_process').val(),
-                action: 'export'
+                action: 'export',
+                actiontype: 'exportidprint'
             });
 
             // Open the URL in a new window or tab
@@ -6375,6 +8071,7 @@
 
     <script>
         $(document).ready(function() {
+
             $(document).on('click', '.print_mol', function() {
                 window.open('/student/enrollment/report/mol/?datatype=' + $(this).attr('data-id') +
                     '&syid=' + $('#filter_sy').val(), '_blank');
@@ -6813,6 +8510,7 @@
 
                     $('#input_altsid_new').val(temp_studinfo.altsid)
                     $('#input_sid_new').val(temp_studinfo.sid)
+                    $('#label_sid').text(temp_studinfo.sid)
 
 
                     $('#input_mol_new').val(temp_studinfo.mol).change()
@@ -6823,6 +8521,11 @@
                     $('#input_addtype_new').val(temp_studinfo.levelid)
                     $('#input_strand_new').val(temp_studinfo.strandid).change()
                     $('#input_course_new').val(temp_studinfo.courseid).change()
+                    if (temp_curriculum.length > 0) {
+                        $('#input_curriculum_new').val(temp_curriculum[0].curriculumid).change()
+                    } else {
+                        $('#input_curriculum_new').val("").change()
+                    }
 
                     $('#input_fname_new').val(temp_studinfo.firstname)
                     $('#input_lname_new').val(temp_studinfo.lastname)
@@ -6917,6 +8620,7 @@
                         $('#gssy').val(temp_studinfomore.gssy)
                         $('#jhsschoolname').val(temp_studinfomore.jhsschoolname)
                         $('#jhssy').val(temp_studinfomore.jhssy)
+                        $('#shsstrand').val(temp_studinfomore.shsstrand)
                         $('#shsschoolname').val(temp_studinfomore.shsschoolname)
                         $('#shssy').val(temp_studinfomore.shssy)
                         $('#collegeschoolname').val(temp_studinfomore.collegeschoolname)
@@ -7065,6 +8769,7 @@
 
                     $('#input_guardian_contact_new').val(temp_studinfo.gcontactno)
                     $('#input_guardian_relation_new').val(temp_studinfo.guardianrelation)
+                    $('#input_guardian_occupation_new').val(temp_studinfo.goccupation)
 
                     if (all_enrollment_history.length > 0) {
                         $('#input_gradelevel_new').attr('disabled', 'disabled')
@@ -7110,7 +8815,7 @@
             })
         }
 
-        //student information 
+        //student information
         $(document).on('click', '#view_update_student_info , .view_update_student_info_vac', function() {
 
             if ($(this).attr('data-id') != null) {
@@ -7154,6 +8859,7 @@
                 if ($('#input_oitf_new').val() != "") {
                     oitf = $('#input_oitf_new').val()
                 }
+                console.log($('#input_course_new').val(), )
 
                 $.ajax({
                     type: 'GET',
@@ -7239,8 +8945,10 @@
                         jhsschoolname: $('#jhsschoolname').val(),
                         jhssy: $('#jhssy').val(),
                         shsschoolname: $('#shsschoolname').val(),
+                        shsstrand: $('#shsstrand').val(),
                         shssy: $('#shssy').val(),
                         collegeschoolname: $('#collegeschoolname').val(),
+                        collegecourse: $('#collegecourse').val(),
                         collegesy: $('#collegesy').val(),
 
                         vacc: $('input[name="vacc"]:checked').val(),
@@ -7292,6 +9000,7 @@
 
                         moccupation: $('#input_mother_occupation_new').val(),
                         foccupation: $('#input_father_occupation_new').val(),
+                        goccupation: $('#input_guardian_occupation_new').val(),
                         relation: $('#input_guardian_relation_new').val(),
 
                         fmi: $('#fmi').val(),
@@ -7495,7 +9204,7 @@
                     $("#input_strand_new").next().addClass("has-error");
                     return false;
                 }
-            } else if (levelid == 17 || levelid == 18 || levelid == 19 || levelid == 20) {
+            } else if (levelid >= 17) {
                 if ($('#input_course_new').val() == "") {
                     Toast.fire({
                         type: 'info',
@@ -8562,7 +10271,7 @@
             // original length
             var original_len = input_val.length;
 
-            // initial caret position 
+            // initial caret position
             var caret_pos = input.prop("selectionStart");
 
             // check for decimal
@@ -8802,6 +10511,30 @@
             selected_ethnicgroup = $('#input_egroup_new').val()
             $('#ethnicgroup_form_modal').modal()
         })
+
+        function load_subjects_information(loaded) {
+            console.log(loaded, 'loadead')
+            $.each(loaded.studentLoading, function(index, studentLoading) {
+                $('#loaded_subject_info').append(`
+                    <tr class="loaded_subjects">
+                        <td>${studentLoading.subjCode} ${studentLoading.subjDesc}</td>
+                        <td class="text-center">${studentLoading.lecunits == null ? '' : studentLoading.lecunits}</td>
+                        <td class="text-center">${studentLoading.labunits == null ? '' : studentLoading.labunits}</td>
+                        <td class="text-center">${studentLoading.credunits == null ? '' : studentLoading.credunits}</td>
+                    </tr>
+                `)
+            })
+            $('#loaded_subject_total').text(loaded.totalCreditUnits == null ? '' : loaded.totalCreditUnits)
+            $('#loaded_subject_lecture').text(loaded.totalLecUnits)
+            $('#loaded_subject_laboratory').text(loaded.totalLabUnits)
+        }
+
+        $('#enrollment_modal').on('hidden.bs.modal', function() {
+            $('.loaded_subjects').remove()
+            $('#loaded_subject_total').text('')
+            $('#loaded_subject_lecture').text('')
+            $('#loaded_subject_laboratory').text('')
+        })
     </script>
     <script>
         var all_vac_list = []
@@ -8977,6 +10710,82 @@
             $(document).on('change', '#filter_vac_vactype', function() {
                 display_vaclist()
             })
+            // $(document).on('change', '#filter_gradelevel', function() {
+            //    var number = $(this).val()
+            //    append_new_load(number)
+            // });
+
+            $(document).on('change', '#input_gradelevel', function() {
+                var number = $(this).val()
+                append_new_load(number)
+            });
+
+            function append_new_load(number) {
+                if (number >= 17) {
+                    $('#append_new_load').html(`
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h6 for="">Loaded Subjects Information</h6>
+                                <div class="table-responsive tableFixHead" style="height: 150px;">
+                                    <table class="table table-sm table-bordered"
+                                        style="font-size:.7rem !important; " width="100%">
+                                        <thead>
+                                            <tr>
+                                                <th width="60%" class="p-1 align-middle">Loaded Subjects</th>
+                                                <th width="13%" class="p-1 text-center align-middle">Lecture Units</th>
+                                                <th width="13%" class="p-1 text-center align-middle">Laboratory Units</th>
+                                                <th width="13%" class="p-1 text-center align-middle">Cred Units</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="loaded_subject_info">
+
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <th class="p-1 text-center align-middle">Total Loaded Units</th>
+                                                <th class="p-1 text-center align-middle" id="loaded_subject_lecture"></th>
+                                                <th class="p-1 text-center align-middle" id="loaded_subject_laboratory"></th>
+                                                <th class="p-1 text-center align-middle" id="loaded_subject_total"></th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    `)
+                } else {
+                    $('#append_new_load').html(`
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h6 for="">New Information Available</h6>
+                                <div class="table-responsive tableFixHead" style="height: 150px;">
+                                    <table class="table table-sm table-bordered"
+                                        style="font-size:.7rem !important; " width="100%">
+                                        <thead>
+                                            <tr>
+                                                <th width="30%" class="p-1">Label</th>
+                                                <th width="35%" class="p-1">Current</th>
+                                                <th width="35%" class="p-1">New</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="new_update_history">
+
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-2">
+                            <div class="col-md-12" id="info_footer_holder" hidden>
+                                <button class="btn btn-primary btn-sm"
+                                    style="font-size:.7rem !important"
+                                    id="udpate_student_information">Update New Information</button>
+                            </div>
+                        </div>
+                    `)
+                }
+            }
 
             function get_vac_list() {
                 $.ajax({
@@ -9002,7 +10811,11 @@
                         display_vaclist()
                     },
                 })
+
+
             }
+
+
 
 
 

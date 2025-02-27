@@ -394,7 +394,7 @@
 
 
     var enrolled_form_modal = `<div class="modal fade" id="enrolled_modal" style="display: none;" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-                  <div class="modal-dialog modal-lg">
+                  <div class="modal-dialog">
                         <div class="modal-content">
                               <div class="modal-header pb-2 pt-2 border-0">
                                     <h4 class="modal-title" style="font-size: 1.1rem !important">Student List <span id="student_list_type"></span></h4>
@@ -436,9 +436,6 @@
         },
 
     ]
-
-    var school  = "HCCC";
-
 
     if(school == 'HCCC'){
             var sched_classification = [
@@ -1044,9 +1041,8 @@
                 }
             }
         })
-        
-        console.log(sched_tobe_updated,'masaya');
-    
+
+
         $.ajax({
             type: 'GET',
             url: '/college/schedule/list/update/sched',
@@ -1855,20 +1851,14 @@
             'Select only the days you want to update. The unselected day will not be removed. If you want to remove a schedule click the delete button <i class="fas fa-trash-alt text-danger"></i> and select the days that you want to remove.'
         var stime = $(this).attr('data-start')
         var etime = $(this).attr('data-end')
-
-        console.log(stime, etime);
         var classification = $(this).attr('data-classification')
         var roomid = $(this).attr('data-roomid')
         var temp_time = moment(stime, 'HH:mm a').format('hh:mm A') + ' - ' + moment(etime, 'HH:mm a').format(
             'hh:mm A')
         var temp_info = all_sched.filter(x => x.id == seleted_id)
+        var temp_data = all_sched_detail.filter(x => x.etime == etime && x.stime == stime && x
+            .schedotherclass == classification && x.headerID == seleted_id)
 
-        if (classification == null || classification == "null") {
-            var temp_data = all_sched_detail.filter(x => x.etime == etime && x.stime == stime && x.schedotherclass == null && x.headerID == seleted_id)
-        } else {
-            var temp_data = all_sched_detail.filter(x => x.etime == etime && x.stime == stime && x.schedotherclass == classification && x.headerID == seleted_id)
-        }
-      
         if (classification != null && classification != "null") {
             temp_data = temp_data.filter(x => x.schedotherclass == classification)
         }
@@ -1922,7 +1912,6 @@
         var temp_time = moment(stime, 'HH:mm a').format('hh:mm A') + ' - ' + moment(etime, 'HH:mm a').format(
             'hh:mm A')
         var temp_info = all_sched.filter(x => x.id == seleted_id)
-
         var temp_data = all_sched_detail.filter(x => x.etime == etime && x.stime == stime && x
             .schedotherclass == classification && x.headerID == seleted_id)
 
@@ -2104,7 +2093,7 @@
 
         var label_text = $($('#student_list_wrapper')[0].children[0])[0].children[0]
         $(label_text)[0].innerHTML =
-            '<button class="btn btn-sm btn-default mr-2" onclick="print_student_excell()"><i class="fas fa-file-excel text-success"></i> Student List</button><button class="btn btn-sm btn-default mr-2" onclick="print_student()"><i class="fas fa-print"></i> Student List</button><button class="btn btn-sm btn-default" id="print_grade" onclick="todeanmodal()"><i class="fas fa-print"></i> Grading Sheet</button>'
+            '<button class="btn btn-sm btn-default mr-2" onclick="print_student()"><i class="fas fa-print"></i> Student List</button><button class="btn btn-sm btn-default" id="print_grade" onclick="todeanmodal()"><i class="fas fa-print"></i> Grading Sheet</button>'
     }
 
 
@@ -2146,15 +2135,5 @@
         var semid = $('#filter_semester').val()
         window.open('/college/teacher/student/information/pdf?syid=' + syid + '&semid=' + semid + '&schedid=' + schedid,
             '_blank');
-    }
-
-    function print_student_excell() {
-
-    var temp_info = all_sched.filter(x => x.id == printable_id)
-    var schedid = temp_info[0].dataid
-    var syid = $('#filter_sy').val()
-    var semid = $('#filter_semester').val()
-    window.open('/college/teacher/student/information/excell?syid=' + syid + '&semid=' + semid + '&schedid=' + schedid,
-        '_blank');
     }
 </script>

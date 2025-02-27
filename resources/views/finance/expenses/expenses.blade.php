@@ -1,16 +1,16 @@
 @extends('finance.layouts.app')
 
 @section('content')
-	
+
   <section class="content">
     <div class="row">
-      
+
       <div class="col-md-12">
         <div class="row">
           <div class="col-md-10">
             <h1 class="m-0 text-dark">
               Expenses
-            </h1>  
+            </h1>
           </div>
           <div class="col-md-2 text-right">
             {{-- <button id="expenses_setup" class="btn btn-default btn-lg" data-toggle="tooltip" title="Expenses Setup">
@@ -31,21 +31,21 @@
           <div class="col-md-2">
             <div class="input-group">
               <input id="datefrom" type="date" name="" class="form-control" value="{{date('Y-m-01', strtotime(App\FinanceModel::getServerDateTime()))}}">
-              
-            </div>  
+
+            </div>
           </div>
           <div class="col-md-2">
             <div class="input-group">
               <input id="dateto" type="date" name="" class="form-control" value="{{date('Y-m-d', strtotime(App\FinanceModel::getServerDateTime()))}}">
               <input id="datenow" type="date" hidden="" class="form-control" value="{{date('Y-m-d', strtotime(App\FinanceModel::getServerDateTime()))}}">
-            </div>  
+            </div>
           </div>
 
           <div class="col-md-4">
             <div class="input-group">
               <input id="search" type="text" class="form-control" placeholder="Search Expenses">
               <div class="input-group-append">
-                <span class="input-group-text"><i class="fa fa-search"></i></span>    
+                <span class="input-group-text"><i class="fa fa-search"></i></span>
               </div>
             </div>
           </div>
@@ -61,7 +61,7 @@
             </div>
       		</div>
           <div class="card-body">
-            
+
             <div class="row">
               <div class="col-md-12 table-responsive table_main">
                 <table class="table table-striped table-sm text-sm">
@@ -72,22 +72,22 @@
                     <th>Pay To</th>
                     <th class="text-right">Amount</th>
                     <th></th>
-                    
-                    
+
+
                   </thead>
                   <tbody id="expense-list" style="cursor: pointer">
-                    
+
                   </tbody>
                   <tfoot>
                     <tr id="expense-total">
-                      
+
                     </tr>
                   </tfoot>
                 </table>
               </div>
             </div>
           </div>
-        </div>  
+        </div>
       </div>
     </div>
   </section>
@@ -130,7 +130,7 @@
             <div class="col-md-4">
               <div class="form-group">
                 <label>Remarks</label>
-                <textarea id="remarks" class="form-control" rows="2" placeholder="Notes ..."></textarea>
+                <textarea id="remarks" class="form-control validate is-invalid" rows="2" placeholder="Notes ..."></textarea>
               </div>
             </div>
           </div>
@@ -141,9 +141,9 @@
                 <select id="requestby" class="select2bs4 validate is-invalid">
                 </select>
                 {{-- <div class="input-group"> --}}
-                  
+
                   {{-- <span class="input-group-append">
-                    <button id="company_new" class="btn btn-primary text-sm" data-toggle="tooltip" title="Add Company/Person"><i class="fas fa-external-link-alt"></i></button>      
+                    <button id="company_new" class="btn btn-primary text-sm" data-toggle="tooltip" title="Add Company/Person"><i class="fas fa-external-link-alt"></i></button>
                   </span> --}}
                 {{-- </div> --}}
               </div>
@@ -163,8 +163,8 @@
                     CHEQUE
                   </label>
                 </div>
-              </div>  
-                  
+              </div>
+
               {{-- <div class="form-group">
                 <label>Expense to</label>
                 <div class="row">
@@ -179,7 +179,7 @@
                 </div>
               </div> --}}
             </div>
-            
+
             <div class="col-md-3">
               <label>Bank</label>
                 {{-- <input id="description" type="text" class="form-control form-control-lg text-lg validate is-invalid" placeholder="Description"> --}}
@@ -190,18 +190,18 @@
                   @endforeach
                 </select>
             </div>
-            
+
             <div class="col-md-4">
               <div class="row">
                 <div class="col-md-6">
                   <label>Check No.</label>
-                  <input id="expense_checkno" class="form-control" type="" name="">  
+                  <input id="expense_checkno" class="form-control" type="" name="">
                 </div>
                 <div class="col-md-6">
                   <label>Check Date</label>
-                  <input id="expense_checkdate" class="form-control" type="date" name="" >  
+                  <input id="expense_checkdate" class="form-control" type="date" name="" >
                 </div>
-              </div>  
+              </div>
             </div>
           </div>
         </div>
@@ -217,7 +217,7 @@
                   <th class="text-right">Total</th>
                 </thead>
                 <tbody id="expense-detail" style="cursor: pointer">
-                  
+
                 </tbody>
                 <tfoot>
                   <tr>
@@ -225,7 +225,7 @@
                     <u><a href="#" id="additem">Add item</a></u>
                   </td>
                   <tr id="gtotal">
-                    
+
                   </tr>
                  </tr>
                 </tfoot>
@@ -243,7 +243,7 @@
                   </button>
                   {{-- <button id="gen_credit" class="btn btn-primary btn-sm text-sm">GENERATE CREDIT JE</button> --}}
                 </div>
-                  
+
               </div>
               <table class="table table-head-fixed table-sm text-sm">
                 <thead>
@@ -272,7 +272,7 @@
                     <td>
                       <button class="btn btn-primary btn-sm mt-1">
                         <i class="fas fa-download"></i>
-                      </button> 
+                      </button>
                     </td>
                   </tr> --}}
                 </tbody>
@@ -311,10 +311,10 @@
                   <input id="je_creditamount" type="number" class="form-control calc text-right p-1 text-sm" name="" pattern="^\$\d{1,3}(,\d{3})*(\.\d+)?$" value="" data-type="" data-toggle="tooltip" title="Press enter to save" placeholder="0.00">
                 </div>
                 <div class="col-md-2" style="padding-top: 3px">
-                  <button id="float_je_save" class="btn btn-primary btn-sm"><i class="fas fa-save"></i></button>
+                  <button id="float_je_save" class="btn btn-primary btn-sm" hidden><i class="fas fa-save"></i></button>
                   <button id="float_je_close" class="btn btn-danger btn-sm"><i class="fas fa-ban"></i></button>
                 </div>
-                
+
               </div>
             </div>
           </div>
@@ -339,8 +339,8 @@
     </div> {{-- dialog --}}
   </div>
 
-  <div class="modal fade show mt-5" id="modal-item" aria-modal="true" style="display: none;">
-    <div class="modal-dialog modal-md">
+  <div class="modal fade show" id="modal-item" aria-modal="true" style="display: none;">
+    <div class="modal-dialog modal-md" style="margin-top: 5px">
       <div class="modal-content">
         <div class="modal-header bg-primary">
           <h4 class="modal-title">Item - <span id="itemaction" class="text-bold"></span></h4>
@@ -354,13 +354,13 @@
               <div class="form-group">
                 <label>Item</label>
                 <div class="input-group">
-                  <select id="itemdesc" class="select2bs4">
+                  <select id="itemdesc" class="select2bs4 form-control form-control-sm">
                     @foreach(App\FinanceModel::expenseitems() as $item)
                       <option value="{{$item->id}}">{{$item->description}}</option>
                     @endforeach
                   </select>
                   <span class="input-group-append">
-                    <button id="btncreateItem" class="btn btn-primary" data-toggle="tooltip" title="Create Items"><i class="fas fa-external-link-alt"></i></button>      
+                    <button id="btncreateItem" class="btn btn-primary btn-sm" data-toggle="tooltip" title="Create Items"><i class="fas fa-external-link-alt"></i></button>
                   </span>
                 </div>
               </div>
@@ -370,7 +370,7 @@
             <div class="col-md-12">
               <div class="form-group">
                 <label>Amount</label>
-                <input id="itemamount" type="text" class="form-control calc">
+                <input id="itemamount" type="text" class="form-control form-control-sm calc">
               </div>
             </div>
           </div>
@@ -379,16 +379,16 @@
             <div class="col-md-12">
               <div class="form-group">
                 <label>QTY</label>
-                <input id="itemqty" type="number" class="form-control calc">
+                <input id="itemqty" type="number" class="form-control form-control-sm calc">
               </div>
             </div>
           </div>
-          
+
           <div class="row">
             <div class="col-md-12">
               <div class="form-group">
                 <label>Total</label>
-                <input id="totalamount" type="text" class="form-control" placeholder="0.00" disabled="">
+                <input id="totalamount" type="text" class="form-control form-control-sm" placeholder="0.00" disabled="">
               </div>
             </div>
           </div>
@@ -396,20 +396,20 @@
             <div class="col-md-12">
               <div class="form-group">
                 <label>Remarks/Explanation</label>
-                <textarea id="item_remarks" type="text" class="form-control" placeholder=""></textarea>
+                <textarea id="item_remarks" type="text" class="form-control form-control-sm" placeholder=""></textarea>
               </div>
             </div>
           </div>
           <hr>
           <div class="row form-group">
             <div class="col-md-8">
-              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>  
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
             <div class="col-md-2">
-              <button id="btndel" type="button" data-id="0" class="btn btn-danger" data-dismiss="modal">Delete</button>  
+              <button id="btndel" type="button" data-id="0" class="btn btn-danger" data-dismiss="modal">Delete</button>
             </div>
             <div class="col-md-2">
-              <button id="btnadd" type="button" data-id="0" class="btn btn-primary" data-dismiss="modal">Save</button>  
+              <button id="btnadd" type="button" data-id="0" class="btn btn-primary" data-dismiss="modal">Save</button>
             </div>
           </div>
         </div>
@@ -460,9 +460,9 @@
                 </div>
               </div>
 
-              
 
-              
+
+
             </div>
             <!-- /.card-body -->
             <!-- /.card-footer -->
@@ -506,7 +506,7 @@
                   <input type="text" class="form-control form-control-sm validation" id="company_department" placeholder="Department" onkeyup="this.value = this.value.toUpperCase();">
                 </div>
               </div>
-              
+
             </div>
             <!-- /.card-body -->
             <!-- /.card-footer -->
@@ -665,7 +665,7 @@
                   <input type="text" class="form-control form-control-sm validation" id="sup_department" placeholder="Department" onkeyup="this.value = this.value.toUpperCase();">
                 </div>
               </div>
-              
+
             </div>
             <!-- /.card-body -->
             <!-- /.card-footer -->
@@ -682,8 +682,8 @@
               <button id="sup_save" type="button" class="btn btn-primary" data-id="0">Save</button>
             </div>
           </div>
-          
-          
+
+
         </div>
       </div>
     </div> {{-- dialog --}}
@@ -741,8 +741,8 @@
                   </select>
                 </div>
               </div>
-              
-              
+
+
             </div>
             <!-- /.card-body -->
             <!-- /.card-footer -->
@@ -759,8 +759,8 @@
               <button id="item_save" type="button" class="btn btn-primary" data-id="0">Save</button>
             </div>
           </div>
-          
-          
+
+
         </div>
       </div>
     </div> {{-- dialog --}}
@@ -769,7 +769,7 @@
 
 @endsection
 @section('js')
-  
+
   <script>
     // Jquery Dependency
 
@@ -777,7 +777,7 @@
       keyup: function() {
         formatCurrency($(this));
       },
-      blur: function() { 
+      blur: function() {
         formatCurrency($(this), "blur");
       }
   });
@@ -792,19 +792,19 @@
   function formatCurrency(input, blur) {
     // appends $ to value, validates decimal side
     // and puts cursor back in right position.
-    
+
     // get input value
     var input_val = input.val();
-    
+
     // don't validate empty input
     if (input_val === "") { return; }
-    
+
     // original length
     var original_len = input_val.length;
 
-    // initial caret position 
+    // initial caret position
     var caret_pos = input.prop("selectionStart");
-      
+
     // check for decimal
     if (input_val.indexOf(".") >= 0) {
 
@@ -822,12 +822,12 @@
 
       // validate right side
       right_side = formatNumber(right_side);
-      
+
       // On blur make sure 2 numbers after decimal
       if (blur === "blur") {
         right_side += "00";
       }
-      
+
       // Limit decimal to only 2 digits
       right_side = right_side.substring(0, 2);
 
@@ -840,13 +840,13 @@
       // remove all non-digits
       input_val = formatNumber(input_val);
       input_val = input_val;
-      
+
       // final formatting
       if (blur === "blur") {
         input_val += ".00";
       }
     }
-    
+
     // send updated string to input
     input.val(input_val);
 
@@ -859,7 +859,7 @@
 
   <script type="text/javascript">
     $(document).ready(function(){
- 
+
       $('.select2bs4').select2({
         theme: 'bootstrap4'
       });
@@ -904,7 +904,7 @@
             $('#expense-list').html(data.list);
             // $('#expense-total').html(data.gtotal);
           }
-        });         
+        });
       }
 
       $('[data-toggle="tooltip"]').tooltip({trigger: 'focus'})
@@ -942,14 +942,14 @@
             $('#gtotal').html(data.gtotal);
             var status = data.status
 
-            
+
             loadje(headerid)
-            
 
 
-            
+
+
           }
-        });          
+        });
       }
 
       function genje(headerid, status)
@@ -988,7 +988,7 @@
             console.log(data)
             if(status != 'APPROVED')
             {
-              $.each(data.coalist, function (index, val) { 
+              $.each(data.coalist, function (index, val) {
                 // if(val.debit == 0)
                 if(1 > 0) //cancell if statement
                 {
@@ -1002,12 +1002,12 @@
                       </td>
                       <td class="je_credit text-right" credit-val="`+val.credit+`" style="vertical-align: middle;">
                         `+parseFloat(val.credit, 10).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString()+`
-                        
+
                       </td>
                       <td>
                         <button class="btn btn-danger btn-sm text-sm mt-1 je_button" data-button="delete" style="padding:3px">
                           <i class="far fa-trash-alt"></i>
-                        </button> 
+                        </button>
                       </td>
                     </tr>
                   `)
@@ -1023,7 +1023,7 @@
                       </td>
                       <td class="je_credit text-right" credit-val="`+val.credit+`">
                         `+parseFloat(val.credit, 10).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString()+`
-                        
+
                       </td>
                       <td>
                       </td>
@@ -1033,7 +1033,7 @@
               });
             }
             else{
-              $.each(data, function (index, val) { 
+              $.each(data, function (index, val) {
                 $('#je_accounts').append(`
                     <tr data-id="`+val.id+`">
                       <td class="je_acc" coa-id="`+val.glid+`" style="width: 21em">
@@ -1044,10 +1044,10 @@
                       </td>
                       <td class="je_credit text-right" credit-val="`+val.credit+`">
                         `+parseFloat(val.credit, 10).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString()+`
-                        
+
                       </td>
                       <td>
-                        
+
                       </td>
                     </tr>
                   `)
@@ -1157,7 +1157,7 @@
                 saveexpensedetail($('#btnsaveheader').attr('data-id'))
               }
             }
-          }); 
+          });
         }
         else {
           const Toast = Swal.mixin({
@@ -1196,7 +1196,24 @@
           },
           // dataType: "dataType",
           success: function (data) {
-            
+            if(data == 'error')
+            {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: "top-end",
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.onmouseenter = Swal.stopTimer;
+                        toast.onmouseleave = Swal.resumeTimer;
+                    }
+                    });
+                    Toast.fire({
+                        type: "error",
+                        title: "No amount entered!"
+                    });
+            }
           }
         });
       }
@@ -1227,9 +1244,9 @@
           {
             // genje(headerid, status)
             loadexpensedetail($('#btnsaveheader').attr('data-id'));
-            
+
           }
-        }); 
+        });
       }
 
       function validate()
@@ -1247,8 +1264,8 @@
           }
           else
          {
-            $('#btnsaveheader').prop('disabled', false);           
-         } 
+            $('#btnsaveheader').prop('disabled', false);
+         }
 
         });
       }
@@ -1266,11 +1283,11 @@
           {
             $('#itemdesc').html(data.list);
           }
-        }); 
+        });
       }
 
       $(document).on('change', '.validate', function(){
-        
+
           if($(this).val() != '' && $(this).val() != null)
           {
             $(this).removeClass('is-invalid');
@@ -1279,7 +1296,7 @@
           else
           {
             $(this).addClass('is-invalid');
-            $(this).removeClass('is-valid'); 
+            $(this).removeClass('is-valid');
           }
 
         validate();
@@ -1306,7 +1323,7 @@
 
         $('#btnapprove').hide();
         $('#btndisapprove').hide();
-        
+
         $('#description').val('');
         $('#employee').prop('checked', false);
         $('#company').prop('checked', false);
@@ -1343,16 +1360,18 @@
         $('#voucherno').css('background-color', 'white')
         $('#voucherno').val('');
 
-
         $('#btnsaveheader').prop('disabled', false)
 
         $('#expense_bank').val(0).trigger('change')
         $('#expense_checkno').val('')
         $('#expense_checkdate').val('')
+        $('#div_je_entry').hide();
+
+        checktype()
 
         validate();
       });
-      
+
       $(document).on('click', '#additem', function(){
         $('#modal-item').modal('show');
         $('#itemaction').text('Add');
@@ -1367,11 +1386,33 @@
       });
 
       $(document).on('click', '#btnsaveheader', function(){
-        saveExpense(1);
+        items = $('#expense-detail tr').length;
+
+        if(items > 0)
+        {
+            saveExpense(1);
+        }
+        else{
+            const Toast = Swal.mixin({
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.onmouseenter = Swal.stopTimer;
+                toast.onmouseleave = Swal.resumeTimer;
+            }
+            });
+            Toast.fire({
+            type: "error",
+            title: "No items found"
+            });
+        }
       });
 
       $(document).on('click', '#btnadd', function(){
-        
+
         if($('#btnsaveheader').attr('data-id') == '')
         {
           saveExpense(0);
@@ -1401,7 +1442,7 @@
           $('#btnapprove').hide();
           $('#btndisapprove').hide();
         @endif
-        
+
 
         $.ajax({
           url:"{{route('loadexpense')}}",
@@ -1473,12 +1514,12 @@
               $('#btnsaveheader').prop('disabled', true)
               $('#additem').text('');
               $('#expense_print').prop('disabled', false);
-              
+
               setTimeout(function(){
                 $('.je_button').prop('disabled', true)
                 $('#je_add').prop('disabled', true)
               }, 1000)
-                
+
             }
             else if(data.status == 'DISAPPROVED')
             {
@@ -1488,7 +1529,7 @@
               $('#modal-expense .modal-header').addClass('bg-danger');
               $('#btndisapprove').prop('disabled', true);
               $('#btnapprove').prop('disabled', true);
-              $('#btnsaveheader').prop('disabled', true) 
+              $('#btnsaveheader').prop('disabled', true)
               $('#additem').text('');
               $('#expense_print').prop('disabled', true);
 
@@ -1515,7 +1556,7 @@
               $('#expense_bank').prop('disabled', false)
               $("#expense_checkno").prop('disabled', false)
               $('#expense_checkdate').prop('disabled', false)
-              
+
               $('#description').prop('disabled', false)
               $('#transDate').prop('disabled', false)
               $('#requestby').prop('disabled', false)
@@ -1534,7 +1575,7 @@
 
             $('#modal-expense').modal('show');
           }
-        }); 
+        });
 
       });
 
@@ -1546,7 +1587,7 @@
         $('#dept').text(dept);
         // $('#dept').text($(this).find('option:selected').attr('data-dept').toUpperCase());
       });
-      
+
       $(document).on('click', '#btncreateItem', function(){
         $('#modal-item-new').modal('show');
       });
@@ -1609,7 +1650,7 @@
                     'Approved!',
                     'Expenses has been approved.',
                     'success'
-                  );    
+                  );
                 }
                 else if(data == 2)
                 {
@@ -1618,7 +1659,7 @@
                     title: 'Oops...',
                     text: 'Something went wrong.',
                     footer: ''
-                  }); 
+                  });
                 }
                 else
                 {
@@ -1632,7 +1673,7 @@
                 searchexpense();
                 $('#modal-expense').modal('hide');
               }
-            });      
+            });
           }
         })
       });
@@ -1667,7 +1708,7 @@
                       'Disapprove!',
                       'Expenses has been disapproved.',
                       'success'
-                    );    
+                    );
                   }
                   else if(data == 2)
                   {
@@ -1676,7 +1717,7 @@
                       title: 'Oops...',
                       text: 'Something went wrong.',
                       footer: ''
-                    }); 
+                    });
                   }
                   else
                   {
@@ -1690,7 +1731,7 @@
 
                   $('#modal-expense').modal('hide');
                 }
-              }); 
+              });
             }
           });
       });
@@ -1704,7 +1745,7 @@
       });
 
       $(document).on('click', '#expense-detail tr', function(){
-        
+
         var detailid = $(this).attr('data-id');
 
         if($('#lblrefnum').attr('data-status') != 'APPROVED' && $('#lblrefnum').attr('data-status') != 'DISAPPROVED')
@@ -1729,11 +1770,11 @@
               $('#totalamount').val(data.total);
               $('#item_remarks').val(data.remarks);
               $('#totalamount').trigger('keyup');
-              
+
               $('#btndel').show();
               $('#modal-item').modal('show');
             }
-          }); 
+          });
         }
 
       });
@@ -1799,7 +1840,7 @@
               Toast.fire({
                 type: 'error',
                 title: 'Company already exist'
-              }); 
+              });
             }
           }
         });
@@ -1834,11 +1875,11 @@
             loadexpensedetail($('#btnsaveheader').attr('data-id'));
           }
         });
-        
+
       });
 
-      
-      
+
+
       function getItems()
       {
         var filter = $('#item_filter').val()
@@ -1853,7 +1894,7 @@
           success: function (data) {
             $('#item_list').empty()
 
-            $.each(data, function (index, val) { 
+            $.each(data, function (index, val) {
               var itemcode = ''
               var itemdesc = ''
 
@@ -1906,7 +1947,7 @@
         var address = $('#sup_address').val()
         var department = $('#sup_department').val()
         var dataid = $('#sup_save').attr('data-id')
-        
+
         if(dataid == 0)
         {
           $.ajax({
@@ -2066,7 +2107,7 @@
                   'Deleted!',
                   'Supplier has been deleted.',
                   'success'
-                )    
+                )
 
                 $('#modal-supplierdetail').modal('hide')
                 getSupplier()
@@ -2101,7 +2142,7 @@
         $('#modal-itemdetail').modal('show')
       })
 
-      
+
 
       $(document).on('click', '#item_delete', function(){
         var dataid = $('#item_save').attr('data-id')
@@ -2144,11 +2185,11 @@
                   title: 'Item successfully deleted'
                 })
               }
-            });    
+            });
           }
         })
 
-        
+
       })
 
       $(document).on('click', '#employee', function(){
@@ -2156,7 +2197,7 @@
       })
 
       var acc_coa = '';
-      
+
       getcoa()
 
       function getcoa()
@@ -2186,7 +2227,7 @@
               </select>
             </td>
             <td class="je_debit" debit-val="0" style="width: 8em">
-              
+
             </td>
             <td class="je_credit" credit-val="0" style="width: 8em">
               <input type="number" class="form-control text-right je_input credit" value="`+totaldebit+`">
@@ -2194,10 +2235,10 @@
             <td>
               <button class="btn btn-primary btn-sm mt-1 je_button">
                 <i class="fas fa-download"></i>
-              </button> 
+              </button>
               <button class="btn btn-danger btn-sm mt-1 je_delete">
                 <i class="far fa-trash-alt"></i>
-              </button> 
+              </button>
             </td>
           </tr>
         `)
@@ -2237,7 +2278,7 @@
                 // dataType: "dataType",
                 success: function (data) {
                   loadje(data)
-                  
+
                   const Toast = Swal.mixin({
                     toast: true,
                     position: 'top-end',
@@ -2254,14 +2295,14 @@
                     type: 'success',
                     title: 'Journal successfully deleted'
                   })
-                  
+
                 }
               });
 
 
 
 
-              
+
             }
           })
 
@@ -2277,12 +2318,12 @@
               jeid:jeid
             },
             success: function (data) {
-              
-              
+
+
 
               // var rowcount = $('#je_accounts').length;
               // var td = $('#je_accounts tr[data-id="'+jeid+'"]').find('.je_acc')
-              
+
               // var acc = $('<select class="form-control select2bs4 je_input je_coa" coa-id="'+data.glid+'">')
               // acc.append(data[0].accounts)
               // td.html(acc)
@@ -2297,7 +2338,7 @@
 
               // text = $('#je_accounts tr[data-id="'+data.id+'"]').closest('td').find('.je_acc').text()
               // console.log(td)
-        
+
               // $('#je_accounts').append(`
               //   <tr>
               //     <td class="je_acc" coa-id="0" style="width: 21em">
@@ -2314,7 +2355,7 @@
               //     <td>
               //       <button class="btn btn-primary btn-sm mt-1 je_button">
               //         <i class="fas fa-download"></i>
-              //       </button> 
+              //       </button>
               //     </td>
               //   </tr>
               // `)
@@ -2344,14 +2385,14 @@
               genje(headerid, '')
             }
           });
-          
+
         }
 
         $(document).on('click', '.je_delete', function(){
           $(this).closest('tr').remove()
         })
 
-        
+
 
       })
 
@@ -2363,13 +2404,13 @@
       $(document).on('click', '#expense_print', function(){
         var id = $('#btnsaveheader').attr('data-id')
         window.open('/finance/expenses_print?id='+id+'&action=print', '_blank');
-        
+
         $('#modal-expense').modal('hide');
-        
+
         setTimeout(() => {
           searchexpense()
         }, 3000);
-      })     
+      })
 
       $(document).on('click', '#gen_credit', function(){
         var headerid = $('#btnsaveheader').attr('data-id')
@@ -2449,7 +2490,27 @@
       $(document).on('click', '#je_add_account', function(){
         if($('#div_je_entry').css('display') == 'none')
         {
-          $('#div_je_entry').show();
+            if($('#btnsaveheader').attr('data-id') > 0)
+            {
+                $('#div_je_entry').show();
+            }
+            else{
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: "top",
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.onmouseenter = Swal.stopTimer;
+                        toast.onmouseleave = Swal.resumeTimer;
+                    }
+                });
+                    Toast.fire({
+                    type: "error",
+                    title: "Please add an item first."
+                });
+            }
         }
         else{
           $('#je_debitamount').val('');
@@ -2457,10 +2518,10 @@
           $('#float_je_account').val('');
           $('#div_je_entry').hide();
         }
-          
-        
-        
-        
+
+
+
+
         setTimeout(() => {
           $('#float_je_account').focus()
         }, 500);
@@ -2483,7 +2544,6 @@
         var creditamount = ($('#je_creditamount').val() != '') ? $('#je_creditamount').val() : 0;
         var debitamount = ($('#je_debitamount').val() != '') ? $('#je_debitamount').val() : 0;
 
-
         $.ajax({
           type: "GET",
           url: "{{route('expense_saveje')}}",
@@ -2496,28 +2556,51 @@
           // dataType: "dataType",
           success: function (data) {
             // genje(headerid, '')
-            const Toast = Swal.mixin({
-              toast: true,
-              position: 'top',
-              showConfirmButton: false,
-              timer: 3000,
-              timerProgressBar: true,
-              didOpen: (toast) => {
-                toast.addEventListener('mouseenter', Swal.stopTimer)
-                toast.addEventListener('mouseleave', Swal.resumeTimer)
-              }
-            })
+            if(data == 'error')
+            {
+              const Toast = Swal.mixin({
+                toast: true,
+                position: 'top',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                  toast.addEventListener('mouseenter', Swal.stopTimer)
+                  toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+              })
 
-            Toast.fire({
-              type: 'success',
-              title: 'Account added'
-            })
+              Toast.fire({
+                type: 'error',
+                title: 'No amount entered!'
+              })
+            }
+            else{
+              const Toast = Swal.mixin({
+                toast: true,
+                position: 'top',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                  toast.addEventListener('mouseenter', Swal.stopTimer)
+                  toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+              })
 
-            $('#je_creditamount').val('')
-            $("#je_debitamount").val('')
-            
-            loadje(headerid)
-          }
+              Toast.fire({
+                type: 'success',
+                title: 'Account added'
+              })
+
+              $('#je_creditamount').val('')
+              $("#je_debitamount").val('')
+
+              loadje(headerid)
+
+
+            }
+		  }
         });
       })
 
@@ -2553,7 +2636,52 @@
         }
       })
 
-      // function posteddisplay(status) 
+      $(document).on('click', '#expense_cash', function(){
+        checktype()
+      })
+
+      $(document).on('click', '#expense_cheque', function(){
+        checktype()
+      })
+
+      function checktype()
+      {
+        if($('#expense_cash').prop('checked') == true)
+        {
+            $('#expense_bank').prop('disabled', true)
+            $('#expense_checkno').prop('disabled', true)
+            $('#expense_checkdate').prop('disabled', true)
+
+            getVoucherNo('EXP', 'CASH')
+        }
+        else{
+            $('#expense_bank').prop('disabled', false)
+            $('#expense_checkno').prop('disabled', false)
+            $('#expense_checkdate').prop('disabled', false)
+
+            getVoucherNo('EXP', 'CHECK')
+        }
+      }
+
+      function getVoucherNo(type, paytype)
+      {
+        $.ajax({
+            type: "GET",
+            url: "{{ route('expenses_getvoucherno') }}",
+            data: {
+                type:type,
+                paytype:paytype
+            },
+            success: function (data) {
+
+                $('#voucherno').val(data);
+            }
+        });
+      }
+
+
+
+      // function posteddisplay(status)
       // {
       //   if(status == 'POSTED')
       //   {

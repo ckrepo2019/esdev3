@@ -11,6 +11,7 @@ use Dompdf\Dompdf;
 use Session;
 use Auth;
 use Hash;
+use App\Http\Controllers\DeanControllers\CollegeStudentLoadingController;
 
 
 //version - 071320200205
@@ -254,10 +255,10 @@ class FinanceController extends Controller
 					->where('items.deleted', 0)
 					->orderBy('items.description', 'asc')
 					->get();
-					
+
 
 			// return $items;
-			
+
 			$output = '';
 			$array=[];
 			foreach($items as $item)
@@ -282,10 +283,10 @@ class FinanceController extends Controller
 			echo json_encode($data);
 		}
 	}
-	
+
 	public function loadNEW()
 	{
-		$classification = db::table('itemclassification')	
+		$classification = db::table('itemclassification')
 				->where('deleted', 0)
 				->get();
 
@@ -294,7 +295,7 @@ class FinanceController extends Controller
 		foreach($classification as $class)
 		{
 			$output .='
-				<option value="'.$class->id.'">'.$class->description.'</option>				
+				<option value="'.$class->id.'">'.$class->description.'</option>
 			';
 		}
 
@@ -376,7 +377,7 @@ class FinanceController extends Controller
 				{
 					$output .='
 						<option value="'.$class->id.'">'.$class->description.'</option>
-					';	
+					';
 				}
 			}
 
@@ -413,7 +414,7 @@ class FinanceController extends Controller
 					->update([
 						'itemcode' => $itemcode,
 						'description' => $itemdesc,
-						'classid' => $classid, 
+						'classid' => $classid,
 						'amount' => $amount,
 						'isdp' => $isdp,
 						'isreceivable' => $isreceivable
@@ -436,7 +437,7 @@ class FinanceController extends Controller
 					]);
 		}
 	}
-	
+
 	public function item_edit(Request $request)
 	{
 		$dataid = $request->get('dataid');
@@ -461,7 +462,7 @@ class FinanceController extends Controller
 		echo json_encode($data);
 
 	}
-	
+
 	public function item_update(Request $request)
 	{
 		$dataid = $request->get('dataid');
@@ -488,7 +489,7 @@ class FinanceController extends Controller
 			}
 			else
 			{
-				db::table('items')	
+				db::table('items')
 					->insert([
 						'itemcode' => $code,
 						'classcode' => $classcode,
@@ -663,7 +664,7 @@ class FinanceController extends Controller
 						->where('paymentid', $headerid)
 						->where('deleted', 0)
 						->get();
-						
+
 				if(count($chkdue) == 0)
 				{
 					$putdue = db::table('paymentsetupdetail')
@@ -699,7 +700,7 @@ class FinanceController extends Controller
 					'noofpayment' => $noofpayment
 				]);
 
-		
+
 		$data = [
 			'mop' => $mop,
 			'mopdetail' => $mopdetail
@@ -755,12 +756,12 @@ class FinanceController extends Controller
 		if($request->ajax())
 		{
 			$mopid = $request->get('mopid');
-			
+
 			$paycount = $request->get('paycount');
 			$paymentno = $request->get('paymentno');
 			$duedate = $request->get('duedate');
 			$noofpayment = $request->get('noofpayment');
-			
+
 			$putData = db::table('paymentsetupdetail')
 				->insert([
 					'paymentid' => $mopid,
@@ -867,7 +868,7 @@ class FinanceController extends Controller
 			$mop = db::table('paymentsetupdetail')
 					->where('id', $mopid)
 					->update([
-						'percentamount' => $percentamount	
+						'percentamount' => $percentamount
 					]);
 		}
 	}
@@ -923,7 +924,7 @@ class FinanceController extends Controller
 
 
 
-			// return 'syid: ' . $syid . ' semid: ' . $semid . ' levelid: ' . $levelid; 
+			// return 'syid: ' . $syid . ' semid: ' . $semid . ' levelid: ' . $levelid;
 			$plan = db::table('schoolinfo')->first()->paymentplan;
 
 			if($levelid != '')
@@ -956,7 +957,7 @@ class FinanceController extends Controller
 					->where('tuitionheader.deleted', 0)
 					->orderBy('gradelevel.sortid', 'asc')
 					->orderBy('tuitionheader.description', 'asc')
-					->get();	
+					->get();
 			}
 
 			// return $sFees;
@@ -980,7 +981,7 @@ class FinanceController extends Controller
 							<td class="">'.strtoupper($fee->semester).'</td>
 							<td class="">'.$fee->grantee.'</td>
 							<td>'.number_format($totalAmount, 2).'</td>
-							
+
 						</tr>
 					';
 				}
@@ -995,7 +996,7 @@ class FinanceController extends Controller
 						<td class="">'.strtoupper($fee->semester).'</td>
 						<td class="">'.$fee->grantee.'</td>
 						<td>'.number_format($totalAmount, 2).'</td>
-						
+
 					</tr>
 				';
 				}
@@ -1156,7 +1157,7 @@ class FinanceController extends Controller
 
 		}
 	}
-	
+
 	public function loadItems(Request $request)
 	{
 		if($request->ajax())
@@ -1207,7 +1208,7 @@ class FinanceController extends Controller
 			$detailID = $request->get('detailID');
 			$headerid = $request->get('headerid');
 
-			$put = db::table('tuitionitems')		
+			$put = db::table('tuitionitems')
 					->insert([
 						'tuitiondetailid' => $detailID,
 						'itemid' => $itemid,
@@ -1232,7 +1233,7 @@ class FinanceController extends Controller
 
 			$payclassTotal = FinanceModel::FCPayTotal($headerid);
 
-			
+
 
 			// $payTotal = db::select('select SUM(amount) as paytotal from tuitiondetail where headerid = ?', [$headerid]);
 
@@ -1242,7 +1243,7 @@ class FinanceController extends Controller
 			$itemTotal = FinanceModel::FCItemTotal($detailID);
 
 
-			
+
 
 			$data = array(
 				'items' => $itemLayout,
@@ -1295,14 +1296,14 @@ class FinanceController extends Controller
 			{
 				$semid = 1;
 			}
-			
+
 			if($levelid == 15 || $levelid == 14)
 			{
 				$semid = $request->get('semid');
 			}
-			elseif($levelid >= 17 && $levelid <= 21)
+			elseif($levelid >= 17 && $levelid <= 25)
 			{
-				$semid = $request->get('semid');	
+				$semid = $request->get('semid');
 			}
 			else{
 				$semid = 1;
@@ -1341,7 +1342,7 @@ class FinanceController extends Controller
 						'deleted' => 0,
 						'createdby' => auth()->user()->id,
 						'createddatetime' => FinanceModel::getServerDateTime()
-					]);	
+					]);
 			}
 		}
 	}
@@ -1349,7 +1350,7 @@ class FinanceController extends Controller
 	public function feesedit($id)
 	{
 		$headerid = $id;
-		
+
 		$glevel = DB::table('gradelevel')
 			->where('deleted', 0)
 			->orderBy('sortid', 'asc')
@@ -1398,7 +1399,7 @@ class FinanceController extends Controller
 				'courseid' => $headerinfo->courseid
 			);
 
-			echo json_encode($data);	
+			echo json_encode($data);
 
 		}
 	}
@@ -1429,7 +1430,7 @@ class FinanceController extends Controller
 						'updatedby' => auth()->user()->id,
 						'updateddatetime' => FinanceModel::getServerDateTime()
 					]);
-			
+
 			$payClassList = FinanceModel::getFCPayClassList($headerid);
 			$itemList = FinanceModel::getFCItemList($detailid);
 			$itemTotal = FinanceModel::FCItemTotal($detailid);
@@ -1438,9 +1439,9 @@ class FinanceController extends Controller
 
 			echo json_encode($payClassList);
 		}
-		
+
 	}
-	
+
 	public function deleteFCpayclass(Request $request)
 	{
 		if($request->ajax())
@@ -1509,7 +1510,7 @@ class FinanceController extends Controller
 
 
 			$payclassList = FinanceModel::getFCPayClassList($headerid);
-			
+
 			$data = array(
 				'tDetail' => $payclassList['tDetail'],
 				'pAmount' => $payclassList['pAmount'],
@@ -1551,7 +1552,7 @@ class FinanceController extends Controller
 					]);
 
 			$payClassList = FinanceModel::getFCPayClassList($headerid);
-			
+
 
 			$data = array(
 				'tDetail' => $payClassList['tDetail'],
@@ -1612,7 +1613,7 @@ class FinanceController extends Controller
 							->update([
 								'deleted' => 1,
 								'deletedby' => auth()->user()->id,
-								'deleteddatetime' => FinanceModel::getServerDateTime()	
+								'deleteddatetime' => FinanceModel::getServerDateTime()
 							]);
 				}
 
@@ -1645,7 +1646,7 @@ class FinanceController extends Controller
 			foreach($schoolyear as $sy)
 			{
 				if($sy->isactive == 1)
-				{	
+				{
 						$sydesc .='
 						<option value="'.$sy->id.'" selected>'.$sy->sydesc.'</option>
 					';
@@ -1774,7 +1775,7 @@ class FinanceController extends Controller
 			if($enrolled)
 			{
 				$levelid = $enrolled->levelid;
-				$levelname = db::table('gradelevel')->where('id', $levelid)->first()->levelname;	
+				$levelname = db::table('gradelevel')->where('id', $levelid)->first()->levelname;
 				$studstatus = $enrolled->studstatus;
 				$feesid = $enrolled->feesid;
 
@@ -1880,7 +1881,7 @@ class FinanceController extends Controller
 				// $feesid = $tuitionheader->id;
 			}
 
-			
+
 
 			$stat = db::table('studentstatus')
 				->where('id', $studstatus)
@@ -1908,9 +1909,9 @@ class FinanceController extends Controller
 					})
 					->where('deleted', 0)
 					->orderBy('createddatetime', 'asc')
-					->get();				
+					->get();
 			}
-			elseif($levelid >= 17 && $levelid <= 20)
+			elseif($levelid >= 17 && $levelid <= 25)
 			{
 				$getLedger = db::table('studledger')
 					->where('studid', $studid)
@@ -1918,7 +1919,7 @@ class FinanceController extends Controller
 					->where('semid', $semid)
 					->where('deleted', 0)
 					->orderBy('createddatetime', 'asc')
-					->get();				
+					->get();
 			}
 			else
 			{
@@ -1931,11 +1932,11 @@ class FinanceController extends Controller
 			}
 
 
-			
+
 			$bal = 0;
 			$debit = 0;
 			$credit = 0;
-			
+
 			foreach($getLedger as $led)
 			{
 
@@ -1944,7 +1945,7 @@ class FinanceController extends Controller
 					$debit += $led->amount;
 			        $credit += $led->payment;
 			    }
-				
+
 
 		        $lDate = date_create($led->createddatetime);
 		        $lDate = date_format($lDate, 'm-d-Y');
@@ -1977,7 +1978,7 @@ class FinanceController extends Controller
 							<tr data-id="'.$led->id.'">
 					          <td class="">' .$lDate.' </td>
 					          <td>
-					          	'.$led->particulars.' 
+					          	'.$led->particulars.'
 					          	<span class="text-sm text-danger adj_delete" style="cursor:pointer" data-id="'.$led->ornum.'">
 					          		<i class="far fa-trash-alt"></i>
 					          	</span>
@@ -1994,7 +1995,7 @@ class FinanceController extends Controller
 							<tr data-id="'.$led->id.'">
 					          <td class="">' .$lDate.' </td>
 					          <td>
-					          	'.$led->particulars.' 
+					          	'.$led->particulars.'
 					          	<span class="text-sm text-danger discount_delete" style="cursor:pointer" data-id="'.$led->ornum.'">
 					          		<i class="far fa-trash-alt"></i>
 					          	</span>
@@ -2003,7 +2004,7 @@ class FinanceController extends Controller
 					          <td class="text-right">'.$payment.'</td>
 					          <td class="text-right">'.number_format($bal, 2).'</td>
 					        </tr>
-						';	
+						';
         			}
         			elseif(strpos($led->particulars, 'Balance forwarded from') !== false)
         			{
@@ -2011,7 +2012,7 @@ class FinanceController extends Controller
 							<tr data-id="'.$led->id.'">
 					          <td class="">' .$lDate.' </td>
 					          <td>
-					          	'.$led->particulars.' 
+					          	'.$led->particulars.'
 					          	<span class="text-sm text-danger ledgeroa_delete" style="cursor:pointer" data-id="'.$led->id.'">
 					          		<i class="far fa-trash-alt"></i>
 					          	</span>
@@ -2020,7 +2021,7 @@ class FinanceController extends Controller
 					          <td class="text-right">'.$payment.'</td>
 					          <td class="text-right">'.number_format($bal, 2).'</td>
 					        </tr>
-						';		
+						';
         			}
         			else
         			{
@@ -2035,7 +2036,7 @@ class FinanceController extends Controller
 						';
         			}
 
-	        			
+
 		        }
 		        else
 		        {
@@ -2047,7 +2048,7 @@ class FinanceController extends Controller
 				          <td class="text-right text-danger"><del>'.$payment.'</del></td>
 				          <td class="text-right text-danger"><del>'.number_format($bal, 2).'</del></td>
 				        </tr>
-						';	
+						';
 		        }
 
 
@@ -2110,7 +2111,7 @@ class FinanceController extends Controller
 			echo json_encode($data);
 		}
 	}
-	
+
 	public function printledger(Request $request)
 	{
 		$studid = $request->get('studid');
@@ -2150,7 +2151,7 @@ class FinanceController extends Controller
 					}
 				}
 			}
-			elseif($stud->levelid >= 17 && $stud->levelid <= 21)
+			elseif($stud->levelid >= 17 && $stud->levelid <= 25)
 			{
 				$q->where('semid', $semid);
 			}
@@ -2167,15 +2168,15 @@ class FinanceController extends Controller
           ->where('deleted', 0)
           ->orderBy('id', 'asc')
           ->get();
-		
+
 		$curDate = date_create(FinanceModel::getServerDateTime());
 		$curDate = date_format($curDate, 'm-d-Y h:i A');
-		
+
 		$sydesc = db::table('sy')
 		  ->where('id', $syid)
 		  ->first()
 		  ->sydesc;
-		
+
 		$semester = db::table('semester')
 		  ->where('id', $semid)
 		  ->first()
@@ -2183,7 +2184,7 @@ class FinanceController extends Controller
 
 		$levelid = $stud->levelid;
 
-		
+
 		$pdf = PDF::loadview('finance.pdfledger', compact('stud', 'ledger', 'sinfo', 'curDate', 'sydesc', 'semester', 'levelid'));
 
 		return $pdf->stream('studledger.pdf');
@@ -2215,8 +2216,8 @@ class FinanceController extends Controller
               <th class="text-center">CHARGES</th>
               <th class="text-center">PAYMENT</th>
               <th class="text-center">BALANCE</th>
-            </tr>  
-          </thead> 
+            </tr>
+          </thead>
           <tbody id="ledger-list">
       ';
 
@@ -2456,14 +2457,14 @@ class FinanceController extends Controller
 						'deleted' => 0,
 						'createdby' => auth()->user()->id,
 						'createddatetime' => FinanceModel::getServerDateTime()
-					]);	
+					]);
 				return 1;
 			}
 			else
 			{
 				return 0;
 			}
-			
+
 		}
 	}
 
@@ -2578,7 +2579,7 @@ class FinanceController extends Controller
 			$request->request->add(['syid' => $syid]);
 			$request->request->add(['semid' => $semid]);
 
-			$esc = $studinfo->grantee;				
+			$esc = $studinfo->grantee;
 
 			$studledger = db::table('studledger')
 				->where('deleted', 0)
@@ -2602,7 +2603,7 @@ class FinanceController extends Controller
 					->where('studid', $studid)
 					->where('syid', $syid)
 					->where('semid', $semid)
-					->get();	
+					->get();
 			}
 			else
 			{
@@ -2664,7 +2665,7 @@ class FinanceController extends Controller
 										'updateddatetime' => FinanceModel::getServerDateTime(),
                     					'updatedby' => auth()->user()->id
 									]);
-							
+
 
 						}
 						else
@@ -2685,7 +2686,7 @@ class FinanceController extends Controller
 								$_over = 0;
 							}
 						}
-						
+
 					}
 				}
 
@@ -2725,7 +2726,7 @@ class FinanceController extends Controller
 											'updateddatetime' => FinanceModel::getServerDateTime(),
 	                    					'updatedby' => auth()->user()->id
 										]);
-								
+
 
 							}
 							else
@@ -2746,14 +2747,14 @@ class FinanceController extends Controller
 									$_over = 0;
 								}
 							}
-							
+
 						}
 					}
 				}
-				
-				
-				
-				
+
+
+
+
 
 				$insLedger = db::table('studledger')
 						->insert([
@@ -2788,7 +2789,7 @@ class FinanceController extends Controller
 
 		}
 	}
-	
+
 	public function loaddiscount(Request $request)
 	{
 		if($request->ajax())
@@ -2910,7 +2911,7 @@ class FinanceController extends Controller
 			$semid = 0;
 
 			$lists = '';
-			
+
 			if($levelid == 14 || $levelid == 15)
 			{
 				$semid = $request->get('semid');
@@ -2924,7 +2925,7 @@ class FinanceController extends Controller
 						->where('syid', $syid)
 						->where('semid', $semid)
 						->where('tuitionheader.deleted', 0)
-						->get();	
+						->get();
 
 				foreach($tuitionheader as $tui)
 				{
@@ -2946,7 +2947,7 @@ class FinanceController extends Controller
 
 
 			}
-			elseif($levelid >= 17 && $levelid <= 21)
+			elseif($levelid >= 17 && $levelid <= 25)
 			{
 				$tuitionheader = db::table('tuitionheader')
 					->select('tuitionheader.*', 'gradelevel.levelname', 'courseabrv')
@@ -2955,7 +2956,7 @@ class FinanceController extends Controller
 					->where('levelid', $levelid)
 					->where('syid', $syid)
 					->where('tuitionheader.deleted', 0)
-					->get();					
+					->get();
 
 				foreach($tuitionheader as $tui)
 				{
@@ -2983,7 +2984,7 @@ class FinanceController extends Controller
 					->where('levelid', $levelid)
 					->where('syid', $syid)
 					->where('tuitionheader.deleted', 0)
-					->get();				
+					->get();
 
 				foreach($tuitionheader as $tui)
 				{
@@ -3003,9 +3004,9 @@ class FinanceController extends Controller
 				}
 			}
 
-			
 
-				
+
+
 
 			$data = array(
 				'lists' => $lists
@@ -3042,7 +3043,7 @@ class FinanceController extends Controller
 					->orderBy('firstname', 'ASC')
 					->get();
 			}
-			elseif($tuiInfo->levelid >= 17 && $tuiInfo->levelid <= 21)
+			elseif($tuiInfo->levelid >= 17 && $tuiInfo->levelid <= 25)
 			{
 				$enrollList = db::table('college_enrolledstud')
 					->select('college_enrolledstud.id as enrolledstudid', 'studinfo.id as studid', 'lastname', 'firstname', 'middlename', 'suffix', 'sectionname', 'studinfo.studstatus', 'courseabrv as description', 'college_enrolledstud.courseid')
@@ -3057,7 +3058,7 @@ class FinanceController extends Controller
 					->orderBy('lastname', 'ASC')
 					->orderBy('firstname', 'ASC')
 					->get();
-				
+
 				if(count($enrollList) == 0)
 				{
 					$enrollList = db::table('college_enrolledstud')
@@ -3071,10 +3072,10 @@ class FinanceController extends Controller
 						->orderBy('sectionname', 'ASC')
 						->orderBy('lastname', 'ASC')
 						->orderBy('firstname', 'ASC')
-						->get();	
+						->get();
 				}
 
-				
+
 			}
 			else
 			{
@@ -3089,9 +3090,9 @@ class FinanceController extends Controller
 							->orderBy('sectionname', 'ASC')
 							->orderBy('lastname', 'ASC')
 							->orderBy('firstname', 'ASC')
-							->get();	
+							->get();
 			}
-			
+
 
 			$studlists = '';
 			$tui = 0;
@@ -3115,15 +3116,15 @@ class FinanceController extends Controller
   				}
   				elseif($enroll->studstatus == 4)
   				{
-  					$status = 'bg-warning';	
+  					$status = 'bg-warning';
   				}
   				elseif($enroll->studstatus == 5)
   				{
-  					$status = 'bg-secondary';	
+  					$status = 'bg-secondary';
   				}
   				else
 	  			{
-	  				$status = '';		
+	  				$status = '';
 	  			}
 
   				$CheckLedger = 0;
@@ -3155,7 +3156,7 @@ class FinanceController extends Controller
 					}
 	  			}
 
-	  			elseif($tuiInfo->levelid >= 17 || $tuiInfo->levelid <= 21)
+	  			elseif($tuiInfo->levelid >= 17 || $tuiInfo->levelid <= 25)
 	  			{
 					$tuiDetail = db::table('tuitiondetail')
 						->join('tuitionheader', 'tuitiondetail.headerid', '=', 'tuitionheader.id')
@@ -3174,7 +3175,7 @@ class FinanceController extends Controller
 							->where('syid', $tuiInfo->syid)
 							->where('semid', $tuiInfo->semid)
 							->where('tuitiondetail.deleted', 0)
-							->get();					
+							->get();
 					}
 
 					foreach($tuiDetail as $detail)
@@ -3192,7 +3193,7 @@ class FinanceController extends Controller
 							->where('semid', $tuiInfo->semid)
 							->where('deleted', 0)
 							->sum('amount');
-						
+
 						// return $studledger;
 
 		  				if($studledger == 0)
@@ -3223,7 +3224,7 @@ class FinanceController extends Controller
 		  				{
 		  					$CheckLedger += 1;
 		  				}
-					}		
+					}
 	  			}
 
   				$tSetup = '';
@@ -3313,7 +3314,7 @@ class FinanceController extends Controller
 
 			if($tuiInfo->levelid == 14 || $tuiInfo->levelid == 15)
 			{
-				
+
 				$enrollList = db::table('sh_enrolledstud')
 					->select('sh_enrolledstud.*', 'grantee.description', 'studinfo.levelid')
 					->join('studinfo', 'sh_enrolledstud.studid', '=', 'studinfo.id')
@@ -3336,7 +3337,7 @@ class FinanceController extends Controller
 
 					foreach($tDetails as $detail)
 					{
-						$ledger = db::table('studledger')		
+						$ledger = db::table('studledger')
 							->where('studid', $enroll->studid)
 							->where('syid', $enroll->syid)
 							->where('semid', $enroll->semid)
@@ -3345,7 +3346,7 @@ class FinanceController extends Controller
 
 						if(count($ledger) == 0)
 						{
-							
+
 							$ledgerAppend = db::table('studledger')
 									->insert([
 										'studid' => $enroll->studid,
@@ -3414,7 +3415,7 @@ class FinanceController extends Controller
 				  							'duedate' => $sched->duedate,
 				  							'amountdue' => $sched->amount,
 				  							'balance' => $sched->amount
-				  						]);		
+				  						]);
 				  				}
 				  				else
 				  				{
@@ -3430,18 +3431,18 @@ class FinanceController extends Controller
 				  							'duedate' => $sched->duedate,
 				  							'amountdue' => $sched->amount,
 				  							'balance' => $sched->amount
-				  						]);	
+				  						]);
 				  				}
-				  				
+
 				  			}
-			  			
+
 
 						}
 					}
 				}
 
 			}
-			if($tuiInfo->levelid >= 17 && $tuiInfo->levelid <= 21)
+			if($tuiInfo->levelid >= 17 && $tuiInfo->levelid <= 25)
 			{
 				foreach($studarray as $stud)
 				{
@@ -3460,7 +3461,7 @@ class FinanceController extends Controller
 
 					$tuition = db::table('tuitionheader')
 			  			->select('tuitionheader.id', 'tuitiondetail.id as tuitiondetailid', 'syid', 'levelid', 'itemclassification.description as particulars', 'amount', 'itemclassification.id as classid', 'pschemeid', 'semid', 'istuition')
-			  			->leftjoin('tuitiondetail', 'tuitionheader.id', '=', 'tuitiondetail.headerid')	
+			  			->leftjoin('tuitiondetail', 'tuitionheader.id', '=', 'tuitiondetail.headerid')
 			  			->join('itemclassification', 'tuitiondetail.classificationid', '=', 'itemclassification.id')
 			  			->where('levelid', $studinfo->levelid)
 			  			->where('courseid', $studinfo->courseid)
@@ -3474,14 +3475,14 @@ class FinanceController extends Controller
 			  		{
 			  			$tuition = db::table('tuitionheader')
 				  			->select('tuitionheader.id', 'tuitiondetail.id as tuitiondetailid', 'syid', 'levelid', 'itemclassification.description as particulars', 'amount', 'itemclassification.id as classid', 'pschemeid', 'semid', 'istuition')
-				  			->leftjoin('tuitiondetail', 'tuitionheader.id', '=', 'tuitiondetail.headerid')	
+				  			->leftjoin('tuitiondetail', 'tuitionheader.id', '=', 'tuitiondetail.headerid')
 				  			->join('itemclassification', 'tuitiondetail.classificationid', '=', 'itemclassification.id')
 				  			->where('levelid', $studinfo->levelid)
 				  			->where('syid', FinanceModel::getSYID())
 			  				->where('semid', FinanceModel::getsemID())
 				  			->where('tuitionheader.deleted', 0)
 				  			->where('tuitiondetail.deleted', 0)
-				  			->get();		
+				  			->get();
 			  		}
 
 			  		$totalunits = db::select('
@@ -3489,7 +3490,7 @@ class FinanceController extends Controller
 						FROM college_studsched
 						INNER JOIN college_classsched ON college_studsched.`schedid` = college_classsched.`id`
 						INNER JOIN college_prospectus ON college_classsched.`subjectID` = college_prospectus.`id`
-						WHERE college_studsched.`studid` = ? and college_studsched.`deleted` = 0	
+						WHERE college_studsched.`studid` = ? and college_studsched.`deleted` = 0
 		  			', [$studinfo->id]);
 
 			  		$units = $totalunits[0]->totalunits;
@@ -3497,7 +3498,7 @@ class FinanceController extends Controller
 
 			  		foreach($tuition as $tui)
 			  		{
-			  			if($glevel >= 17 && $glevel <=21)
+			  			if($glevel >= 17 && $glevel <=25)
 			  			{
 			  				if($tui->istuition == 1)
 			  				{
@@ -3556,7 +3557,7 @@ class FinanceController extends Controller
 			  			$paytAmount = 0;
 			  			$paydisbalance = 0;
 
-			  			
+
 
 			  			foreach($paymentsetup as $pay)
 			  			{
@@ -3589,7 +3590,7 @@ class FinanceController extends Controller
 			  						$paydisbalance = number_format($paydisbalance, 2, '.', '');
 
 			  						$divPay += $paydisbalance;
-			  						
+
 			  						// echo ' paydisbalance: ' . $paydisbalance;
 			  						// echo ' +divPay: '. $divPay;
 			  						$scheditem = db::table('studpayscheddetail')
@@ -3644,7 +3645,7 @@ class FinanceController extends Controller
 			  		$aPay = 0;
 			  		$_over=0;
 
-			  		$getdp = db::table('chrngtransdetail')				
+			  		$getdp = db::table('chrngtransdetail')
 						->select('studid', 'syid', 'semid', 'itemkind', 'payschedid', 'isdp', 'chrngtransdetail.classid', 'chrngtransdetail.amount')
 						->join('chrngtrans', 'chrngtransdetail.chrngtransid', '=', 'chrngtrans.id')
 						->join('items', 'chrngtransdetail.payschedid', '=', 'items.id')
@@ -3672,7 +3673,7 @@ class FinanceController extends Controller
 									->where('syid', FinanceModel::getSYID())
 									->where('semid', FinanceModel::getSemID())
 									->where('classid', $balforward->classid)
-									->get();							
+									->get();
 
 							if(count($getpaySched) > 0)
 							{
@@ -3730,11 +3731,11 @@ class FinanceController extends Controller
 									{
 										// echo '[' . $dpBal . '>' . $sched->amount . ']';
 										$schedbal = $sched->amount - $sched->amountpay;
-										
+
 										if($dpBal > $schedbal)
 										{
 											$tDP = 0;
-											
+
 											$deductDP = db::table('studpayscheddetail')
 												->where('id', $sched->id)
 												->update([
@@ -3752,7 +3753,7 @@ class FinanceController extends Controller
 											$aPay = $sched->amountpay + $dpBal;
 
 											// echo ' aPay = ' . $aPay;
-											
+
 											$deductDP = db::table('studpayscheddetail')
 												->where('id', $sched->id)
 												->update([
@@ -3761,7 +3762,7 @@ class FinanceController extends Controller
 													'updateddatetime' => FinanceModel::getServerDateTime(),
 													'updatedby' => auth()->user()->id
 												]);
-											
+
 
 											$dpBal = 0;
 										}
@@ -3770,7 +3771,7 @@ class FinanceController extends Controller
 								if($dpBal > 0)
 								{
 									$gpaydetail = db::select('
-										SELECT studid, syid, semid, tuitiondetailid, classid, particulars, SUM(amount) AS amount, SUM(amountpay) AS amountpay, SUM(balance) AS balance 
+										SELECT studid, syid, semid, tuitiondetailid, classid, particulars, SUM(amount) AS amount, SUM(amountpay) AS amountpay, SUM(balance) AS balance
 										FROM studpayscheddetail
 										WHERE studid = ?  AND syid = ? and semid = ? AND deleted = 0 and balance > 0
 										GROUP BY classid
@@ -3787,7 +3788,7 @@ class FinanceController extends Controller
 												->get();
 
 										if($dpBal > 0)
-										{		
+										{
 											foreach($paysched as $sched)
 											{
 												if($dpBal > $sched->balance)
@@ -3806,7 +3807,7 @@ class FinanceController extends Controller
 												{
 													$tDP = $sched->balance - $dpBal;
 													$aPay = $sched->amountpay + $dpBal;
-													
+
 													$deductDP = db::table('studpayscheddetail')
 														->where('id', $sched->id)
 														->update([
@@ -3815,7 +3816,7 @@ class FinanceController extends Controller
 															'updateddatetime' => FinanceModel::getServerDateTime(),
 															'updatedby' => auth()->user()->id
 														]);
-													
+
 
 													$dpBal = 0;
 												}
@@ -3843,11 +3844,11 @@ class FinanceController extends Controller
 										{
 											// echo '[' . $dpBal . '>' . $sched->amount . ']';
 											$schedbal = $sched->amount - $sched->amountpay;
-											
+
 											if($dpBal > $schedbal)
 											{
 												$tDP = 0;
-												
+
 												$deductDP = db::table('studpayscheddetail')
 													->where('id', $sched->id)
 													->update([
@@ -3865,7 +3866,7 @@ class FinanceController extends Controller
 												$aPay = $sched->amountpay + $dpBal;
 
 												// echo ' aPay = ' . $aPay;
-												
+
 												$deductDP = db::table('studpayscheddetail')
 													->where('id', $sched->id)
 													->update([
@@ -3874,7 +3875,7 @@ class FinanceController extends Controller
 														'updateddatetime' => FinanceModel::getServerDateTime(),
 														'updatedby' => auth()->user()->id
 													]);
-												
+
 
 												$dpBal = 0;
 											}
@@ -3883,7 +3884,7 @@ class FinanceController extends Controller
 									if($dpBal > 0)
 									{
 										$gpaydetail = db::select('
-											SELECT studid, syid, semid, tuitiondetailid, classid, particulars, SUM(amount) AS amount, SUM(amountpay) AS amountpay, SUM(balance) AS balance 
+											SELECT studid, syid, semid, tuitiondetailid, classid, particulars, SUM(amount) AS amount, SUM(amountpay) AS amountpay, SUM(balance) AS balance
 											FROM studpayscheddetail
 											WHERE studid = ?  AND syid = ? and semid = ? AND deleted = 0 and balance > 0
 											GROUP BY classid
@@ -3900,7 +3901,7 @@ class FinanceController extends Controller
 													->get();
 
 											if($dpBal > 0)
-											{		
+											{
 												foreach($paysched as $sched)
 												{
 													if($dpBal > $sched->balance)
@@ -3919,7 +3920,7 @@ class FinanceController extends Controller
 													{
 														$tDP = $sched->balance - $dpBal;
 														$aPay = $sched->amountpay + $dpBal;
-														
+
 														$deductDP = db::table('studpayscheddetail')
 															->where('id', $sched->id)
 															->update([
@@ -3928,7 +3929,7 @@ class FinanceController extends Controller
 																'updateddatetime' => FinanceModel::getServerDateTime(),
 																'updatedby' => auth()->user()->id
 															]);
-														
+
 
 														$dpBal = 0;
 													}
@@ -3940,13 +3941,13 @@ class FinanceController extends Controller
 									}
 								}
 							}
-						}	
+						}
 					}
 				}
 			}
 			else
 			{
-				
+
 					$enrollList = db::table('enrolledstud')
 							->select('enrolledstud.*', 'grantee.description', 'studinfo.levelid')
 							->join('studinfo', 'enrolledstud.studid', '=', 'studinfo.id')
@@ -3970,7 +3971,7 @@ class FinanceController extends Controller
 
 					foreach($tDetails as $detail)
 					{
-						$ledger = db::table('studledger')		
+						$ledger = db::table('studledger')
 								->where('studid', $enroll->studid)
 								->where('syid', $enroll->syid)
 								->where('classid', $detail->classificationid)
@@ -3978,7 +3979,7 @@ class FinanceController extends Controller
 
 						if(count($ledger) == 0)
 						{
-							
+
 							$ledgerAppend = db::table('studledger')
 									->insert([
 										'studid' => $enroll->studid,
@@ -4044,7 +4045,7 @@ class FinanceController extends Controller
 			  							'duedate' => $sched->duedate,
 			  							'amountdue' => $sched->amount,
 			  							'balance' => $sched->amount
-			  						]);		
+			  						]);
 			  				}
 			  				else
 			  				{
@@ -4059,11 +4060,11 @@ class FinanceController extends Controller
 			  							'duedate' => $sched->duedate,
 			  							'amountdue' => $sched->amount,
 			  							'balance' => $sched->amount
-			  						]);	
+			  						]);
 			  				}
-			  				
+
 			  			}
-			  			
+
 
 						}
 					}
@@ -4116,7 +4117,7 @@ class FinanceController extends Controller
 			// 			->where('semid', $semid)
 			// 			->where('tuitionheader.deleted', 0)
 			// 			->where('tuitiondetail.deleted', 0)
-			// 			->get();					
+			// 			->get();
 			// 	}
 			// }
 			// else
@@ -4142,10 +4143,10 @@ class FinanceController extends Controller
 			// 			->where('syid', $syid)
 			// 			->where('tuitionheader.deleted', 0)
 			// 			->where('tuitiondetail.deleted', 0)
-			// 			->get();					
+			// 			->get();
 			// 	}
 
-				
+
 			// }
 
 			$studledger = db::table('studledger')
@@ -4212,7 +4213,7 @@ class FinanceController extends Controller
 						ORDER BY lastname, firstname
 					', [$levelid, $syid, $semid]);
 			}
-				
+
 
 			$list ='';
 			$balance = 0;
@@ -4270,7 +4271,7 @@ class FinanceController extends Controller
 			echo json_encode($data);
 		}
 	}
-	
+
 	public function loadStudents()
 	{
 		$stud = db::table('studinfo')
@@ -4366,7 +4367,7 @@ class FinanceController extends Controller
 					->where('id', $studid)
 					->first();
 
-			$fwdsetup = db::table('balforwardsetup')	
+			$fwdsetup = db::table('balforwardsetup')
 					->where('id', 1)
 					->first();
 
@@ -4386,7 +4387,7 @@ class FinanceController extends Controller
 	      		->first();
 
 			if($studinfo->levelid == 14 || $studinfo->levelid == 15)
-			{	
+			{
 				$semid = $request->get('semid');
 
 				$enrollstud = db::table('sh_enrolledstud')
@@ -4399,7 +4400,7 @@ class FinanceController extends Controller
 						->where('studid', $studid)
 						->where('syid', $fwdsy)
 						->where('semid', $fwdsem)
-						->get();	
+						->get();
 
 				$studledger = db::select('
 						SELECT studid, lastname, firstname, middlename, suffix, levelid, amount, payment, SUM(amount) AS totalamount, SUM(payment) AS totalpayment
@@ -4412,7 +4413,7 @@ class FinanceController extends Controller
 
 
 			}
-			elseif($studinfo->levelid >= 17 && $studinfo->levelid <= 20)
+			elseif($studinfo->levelid >= 17 && $studinfo->levelid <= 25)
 			{
 				$semid = $request->get('semid');
 
@@ -4426,7 +4427,7 @@ class FinanceController extends Controller
 						->where('studid', $studid)
 						->where('syid', $fwdsy)
 						->where('semid', $fwdsem)
-						->get();	
+						->get();
 
 				$studledger = db::select('
 						SELECT studid, lastname, firstname, middlename, suffix, levelid, amount, payment, SUM(amount) AS totalamount, SUM(payment) AS totalpayment
@@ -4435,7 +4436,7 @@ class FinanceController extends Controller
 						WHERE studid = ? AND studledger.syid = ? AND studledger.semid = ? AND void = 0 and studledger.deleted = 0
 						GROUP BY studid
 						ORDER BY lastname, firstname
-					', [$studid, $syid, $semid]);				
+					', [$studid, $syid, $semid]);
 			}
 			else
 			{
@@ -4448,7 +4449,7 @@ class FinanceController extends Controller
 				$fwdenrollstud = db::table('enrolledstud')
 						->where('studid', $studid)
 						->where('syid', $fwdsy)
-						->get();	
+						->get();
 
 				$studledger = db::select('
 						SELECT studid, lastname, firstname, middlename, suffix, levelid, amount, payment, SUM(amount) AS totalamount, SUM(payment) AS totalpayment
@@ -4527,8 +4528,8 @@ class FinanceController extends Controller
 						'deleted' => 0,
 						'void' => 0
 					]);
-			}			
-			
+			}
+
 			if($studinfo->levelid == 14 || $studinfo->levelid == 15)
 			{
 				$paysched = db::table('studpayscheddetail')
@@ -4537,7 +4538,7 @@ class FinanceController extends Controller
 						->where('syid', $syid)
 						->where('deleted', 0)
 						->get();
-			}	
+			}
 			else
 			{
 				$paysched = db::table('studpayscheddetail')
@@ -4595,7 +4596,7 @@ class FinanceController extends Controller
 				->insert([
 					'studid' => $studid,
 					'syid' => $fwdsy,
-					'semid' => $fwdsem, 
+					'semid' => $fwdsem,
 					'classificationid' => $fwdclass,
 					'itemamount' => $studbal,
 					'deleted' => 0,
@@ -4645,7 +4646,7 @@ class FinanceController extends Controller
 			$syid = $request->get('syid');
 			$semid = $request->get('semid');
 			$balance = 0;
-			
+
 
 			$studinfo = db::table('studinfo')
 					->select('lastname', 'firstname', 'middlename', 'suffix', 'levelid', 'levelname')
@@ -4670,7 +4671,7 @@ class FinanceController extends Controller
 				$credit = 0;
 				$tdebit = 0;
 				$tcredit = 0;
-				
+
 				foreach($studledger as $ledger)
 				{
 					if($ledger->amount > 0)
@@ -4690,13 +4691,13 @@ class FinanceController extends Controller
 					{
 						$credit = '';
 					}
-					
+
 					if($ledger->void == 0)
 					{
 						$balance += $ledger->amount - $ledger->payment;
 						$tdebit += $ledger->amount;
 						$tcredit += $ledger->payment;
-						
+
 						$ldate = date_create($ledger->createddatetime);
 						$ldate = date_format($ldate, 'm-d-Y');
 
@@ -4720,7 +4721,7 @@ class FinanceController extends Controller
                 <td class="text-danger text-right"><del>'.$credit.'</del></td>
                 <td class="text-danger text-right"><del>'.number_format($balance, 2).'</del></td>
               </tr>
-						';	
+						';
 					}
 				}
 
@@ -4765,7 +4766,7 @@ class FinanceController extends Controller
 						$balance += $ledger->amount - $ledger->payment;
 						$tdebit += $ledger->amount;
 						$tcredit += $ledger->payment;
-						
+
 						$ldate = date_create($ledger->createddatetime);
 						$ldate = date_format($ldate, 'm-d-Y');
 
@@ -4789,7 +4790,7 @@ class FinanceController extends Controller
                 <td class="text-danger text-right"><del>'.$credit.'</del></td>
                 <td class="text-danger text-right"><del>'.number_format($balance, 2).'</del></td>
               </tr>
-						';	
+						';
 					}
 				}
 				$list .= '
@@ -4958,14 +4959,14 @@ class FinanceController extends Controller
 		return view('finance.expenses');
 	}
 	public function salaryrateelevation($id, Request $request)
-	{   
+	{
 		date_default_timezone_set('Asia/Manila');
 		if($id == 'reloadcount'){
 			$data = array(
 				'rateCount' => FinanceModel::countPendingRateElevationRequests(),
 				'OLpayCount' => FinanceModel::countOnlinePayment()
 			);
-			
+
 			echo json_encode($data);
 		}
 		elseif($id == 'view'){
@@ -4989,17 +4990,17 @@ class FinanceController extends Controller
 				// ->where('hr_rateelevation.newsalary','!=',DB::raw('hr_rateelevation.oldsalary'))
 				->orderBy('hr_rateelevation.status','asc')
 				->get();
-				
+
 			if(count($rateelevation) > 0){
-	
+
 				foreach($rateelevation as $rateelev){
-	
+
 					$rateelev->submitteddate = date('F d, Y',strtotime($rateelev->createddatetime));
-	
+
 				}
-	
+
 			}
-			
+
 			return view('finance.rateelevation')
 				->with('rateelevation',$rateelevation);
 		}else{
@@ -5009,7 +5010,7 @@ class FinanceController extends Controller
 			}else{
 				$action = '2';
 			}
-			
+
 			$getupdatedsalary = DB::table('hr_rateelevation')
 			    ->where('id', $request->get('id'))
 				->where('employeeid',$request->get('employeeid'))
@@ -5067,7 +5068,7 @@ class FinanceController extends Controller
 			}
 
 
-			
+
 			if($dataid == '')
 			{
 				$ins = db::table('expense')
@@ -5082,7 +5083,7 @@ class FinanceController extends Controller
 							'createdby' => auth()->user()->id,
 							'deleted' => $delete
 						]);
-				
+
 				$refnum = 'EXP-' . sprintf('%06d', $ins);
 
 				$saveRef = db::table('expense')
@@ -5182,7 +5183,7 @@ class FinanceController extends Controller
 					$total += $expense->amount;
 					$tdate = date_create($expense->transdate);
 					$tdate = date_format($tdate, 'm-d-Y');
-					
+
 					if($expense->status == 'SUBMITTED')
 					{
 						$list .='
@@ -5207,7 +5208,7 @@ class FinanceController extends Controller
 								<td class="text-right">'.number_format($expense->amount, 2).'</td>
 								<td>'.$expense->status.'</td>
 							</tr>
-						';	
+						';
 					}
 					else if($expense->status == 'DISAPPROVED')
 					{
@@ -5220,7 +5221,7 @@ class FinanceController extends Controller
 								<td class="text-right">'.number_format($expense->amount, 2).'</td>
 								<td>'.$expense->status.'</td>
 							</tr>
-						';	
+						';
 					}
 				}
 
@@ -5273,7 +5274,7 @@ class FinanceController extends Controller
 						'deleted' => 0,
 						'updatedby' => auth()->user()->id,
 						'updateddatetime' => FinanceModel::getServerDateTime()
-					]);	
+					]);
 			}
 		}
 	}
@@ -5402,7 +5403,7 @@ class FinanceController extends Controller
 					->where('userid', auth()->user()->id)
 					->count();
 
-				
+
 
 				if($chkelevate > 0)
 				{
@@ -5414,7 +5415,7 @@ class FinanceController extends Controller
 							'approveddatetime' => FinanceModel::getServerDateTime(),
 							'updatedby' => auth()->user()->id,
 							'updateddatetime' => FinanceModel::getServerDateTime()
-						]);	
+						]);
 
 					return 1;
 				}
@@ -5448,7 +5449,7 @@ class FinanceController extends Controller
 					->where('userid', auth()->user()->id)
 					->count();
 
-				
+
 
 				if($chkelevate > 0)
 				{
@@ -5460,7 +5461,7 @@ class FinanceController extends Controller
 							'approveddatetime' => FinanceModel::getServerDateTime(),
 							'updatedby' => auth()->user()->id,
 							'updateddatetime' => FinanceModel::getServerDateTime()
-						]);	
+						]);
 
 					return 1;
 				}
@@ -5564,7 +5565,6 @@ class FinanceController extends Controller
             ->get();
 
 
-
         foreach($lists as $list)
         {
             // $studinfo = DB::table('studinfo')
@@ -5624,12 +5624,11 @@ class FinanceController extends Controller
                     <tr style="cursor: pointer;" data-id="'.$list->id.'">
                         <td class="'.$color.'">'.date_format(date_create($list->paymentdate), 'm/d/Y h:i A').'</td>
                         <td class="'.$color.'">'.strtoupper($studname).'</td>
-                        <td class="'.$color.'">'.$list->refnum.'</td>
+                        <td class="'.$color.'">'.$list->levelname.'</td>
                         <td class="'.$color.'">'.$list->description.'</td>
-                        <td class="'.$color.' text-left">'.number_format($list->amount, 2).'</td>
-                        <td class="'.$color.'">'.$sysem.'</td>
+                        <td class="'.$color.'">'.$list->refnum.'</td>
+                        <td class="'.$color.' text-right">'.number_format($list->amount, 2).'</td>
                         <td class="'.$color.'">'.$status.'</td>
-
                     </tr>
                 ';
 
@@ -5641,8 +5640,9 @@ class FinanceController extends Controller
                     <tr style="cursor: pointer;" data-id="'.$list->id.'">
                         <td style="width: 30%">'.date_format(date_create($list->paymentdate), 'm/d/Y h:i A').'</td>
                         <td style="width: 30%">'.strtoupper($studname).'</td>
-                        <td style="width: 30%">'.$list->refnum.'</td>
+                        <td class="'.$color.'">'.$list->levelname.'</td>
                         <td style="width: 30%">'.$list->description.'</td>
+						<td class="'.$color.'">'.$list->refnum.'</td>
                         <td style="width: 30%" class="text-right">'.number_format($list->amount, 2).'</td>
                         <td style="width: 30%">'.$status.'</td>
                     </tr>
@@ -5651,6 +5651,7 @@ class FinanceController extends Controller
 
 
         }
+		
 
         if($action != 'print')
         {
@@ -5677,83 +5678,233 @@ class FinanceController extends Controller
         }
 
 	}
-	
+
 	public function paydata(Request $request)
 	{
-		if($request->ajax())
-		{
+		if ($request->ajax()) {
 			$dataid = $request->get('dataid');
 
-			$info = db::table('onlinepayments')
-					->select('onlinepayments.*', 'levelname', 'paymenttype.description', 
-						'lastname', 'firstname', 'middlename', 'suffix', 'contactno', 'onlinepayments.picurl')
-					->join('studinfo', 'onlinepayments.queingcode', '=', 'studinfo.qcode')
-					->join('paymenttype', 'onlinepayments.paymenttype', '=', 'paymenttype.id')
-					->join('gradelevel', 'studinfo.levelid', '=', 'gradelevel.id')
-					->where('onlinepayments.id', $dataid)
-					->get();
+			$info = DB::table('onlinepayments')
+				->select(
+					'onlinepayments.*', 
+					'gradelevel.levelname', 
+					'paymenttype.description as paymenttype', 
+					'onlinepayments.isapproved',
+					'studinfo.lastname', 
+					'studinfo.firstname', 
+					'studinfo.middlename', 
+					'studinfo.suffix', 
+					'studinfo.contactno', 
+					'onlinepayments.picurl',
+					DB::raw("
+						CASE 
+							WHEN gradelevel.id BETWEEN 1 AND 16 THEN sections.sectionname
+							WHEN gradelevel.id BETWEEN 17 AND 25 THEN college_sections.sectionDesc
+							ELSE NULL
+						END AS section
+					")
+				)
+				->join('studinfo', 'onlinepayments.queingcode', '=', 'studinfo.qcode')
+				->join('paymenttype', 'onlinepayments.paymenttype', '=', 'paymenttype.id')
+				->join('gradelevel', 'studinfo.levelid', '=', 'gradelevel.id')
+				->leftJoin('sections', function ($join) {
+					$join->on('studinfo.sectionid', '=', 'sections.id')
+						->whereBetween('gradelevel.id', [1, 16]);
+				})
+				->leftJoin('college_sections', function ($join) {
+					$join->on('studinfo.sectionid', '=', 'college_sections.id')
+						->whereBetween('gradelevel.id', [17, 25]);
+				})
+				->where('onlinepayments.id', $dataid)
+				->first();
 
-			if(count($info) == 0)
-			{
-				$info = db::table('onlinepayments')
-					->select('onlinepayments.*', 'levelname', 'paymenttype.description', 
-						'lastname', 'firstname', 'middlename', 'suffix', 'contactno', 'onlinepayments.picurl')
+			// Fallback #1: Check with studinfo.sid
+			if (!$info) {
+				$info = DB::table('onlinepayments')
+					->select(
+						'onlinepayments.*', 
+						'gradelevel.levelname', 
+						'paymenttype.description as paymenttype', 
+						'onlinepayments.isapproved',
+						'studinfo.lastname', 
+						'studinfo.firstname', 
+						'studinfo.middlename', 
+						'studinfo.suffix', 
+						'studinfo.contactno', 
+						'onlinepayments.picurl',
+						DB::raw("
+							CASE 
+								WHEN gradelevel.id BETWEEN 1 AND 16 THEN sections.sectionname
+								WHEN gradelevel.id BETWEEN 17 AND 25 THEN college_sections.sectionDesc
+								ELSE NULL
+							END AS section
+						")
+					)
 					->join('studinfo', 'onlinepayments.queingcode', '=', 'studinfo.sid')
 					->join('paymenttype', 'onlinepayments.paymenttype', '=', 'paymenttype.id')
 					->join('gradelevel', 'studinfo.levelid', '=', 'gradelevel.id')
+					->leftJoin('sections', function ($join) {
+						$join->on('studinfo.sectionid', '=', 'sections.id')
+							->whereBetween('gradelevel.id', [1, 16]);
+					})
+					->leftJoin('college_sections', function ($join) {
+						$join->on('studinfo.sectionid', '=', 'college_sections.id')
+							->whereBetween('gradelevel.id', [17, 25]);
+					})
 					->where('onlinepayments.id', $dataid)
-					->get();	
+					->first();
+			}
 
-
-				if(count($info) == 0)
-				{
-					$info = db::table('onlinepayments')
-					->select('onlinepayments.*', 'levelname', 'paymenttype.description', 
-						'lastname', 'firstname', 'middlename', 'suffix', 'contactno', 'onlinepayments.picurl')
+			// Fallback #2: Check with studinfo.lrn
+			if (!$info) {
+				$info = DB::table('onlinepayments')
+					->select(
+						'onlinepayments.*', 
+						'gradelevel.levelname', 
+						'paymenttype.description as paymenttype', 
+						'onlinepayments.isapproved',
+						'studinfo.lastname', 
+						'studinfo.firstname', 
+						'studinfo.middlename', 
+						'studinfo.suffix', 
+						'studinfo.contactno', 
+						'onlinepayments.picurl',
+						DB::raw("
+							CASE 
+								WHEN gradelevel.id BETWEEN 1 AND 16 THEN sections.sectionname
+								WHEN gradelevel.id BETWEEN 17 AND 25 THEN college_sections.sectionDesc
+								ELSE NULL
+							END AS section
+						")
+					)
 					->join('studinfo', 'onlinepayments.queingcode', '=', 'studinfo.lrn')
 					->join('paymenttype', 'onlinepayments.paymenttype', '=', 'paymenttype.id')
 					->join('gradelevel', 'studinfo.levelid', '=', 'gradelevel.id')
+					->leftJoin('sections', function ($join) {
+						$join->on('studinfo.sectionid', '=', 'sections.id')
+							->whereBetween('gradelevel.id', [1, 16]);
+					})
+					->leftJoin('college_sections', function ($join) {
+						$join->on('studinfo.sectionid', '=', 'college_sections.id')
+							->whereBetween('gradelevel.id', [17, 25]);
+					})
 					->where('onlinepayments.id', $dataid)
-					->get();						
-				}
-
+					->first();
 			}
 
-			// $info = db::table('onlinepayments')
-			// 		->select('onlinepayments.*', 'levelname', 'paymenttype.description', 
-			// 			'lastname', 'firstname', 'middlename', 'suffix', 'contactno', 'onlinepayments.picurl')
-			// 		->join('studinfo', function($join){
-			// 				$join->on('onlinepayments.queingcode','=','studinfo.qcode');
+			// Final check if info is null
+			if (!$info) {
+				return response()->json(['error' => 'No record found'], 404);
+			}
 
-			// 		})
-			// 		->join('paymenttype', 'onlinepayments.paymenttype', '=', 'paymenttype.id')
-			// 		->join('gradelevel', 'studinfo.levelid', '=', 'gradelevel.id')
-			// 		->where('onlinepayments.id', $dataid)
-			// 		->first();
+			$studname = trim("{$info->lastname}, {$info->firstname} {$info->middlename} {$info->suffix}");
 
-			$studname = $info[0]->lastname . ', ' . $info[0]->firstname . ' ' . $info[0]->middlename . ' ' . $info[0]->suffix;
+			$tdate = date('m-d-Y', strtotime($info->TransDate));
 
-			$tdate = $info[0]->TransDate;
+			$url = DB::table('schoolinfo')->first()->es_cloudurl;
 
-			$tdate = date_create($tdate);
-			$tdate = date_format($tdate, 'm-d-Y');
-			
-			$url = db::table('schoolinfo')->first()->es_cloudurl;
-
-			$data = array(
+			$data = [
 				'studname' => strtoupper($studname),
-				'contactno' => $info[0]->contactno,
-				'levelname' => $info[0]->levelname,
-				'amount' => number_format($info[0]->amount, 2),
-				'paymenttype' => $info[0]->description,
-				'picurl' => $url . $info[0]->picurl,
+				'contactno' => $info->contactno,
+				'levelname' => $info->levelname,
+				'amount' => number_format($info->amount, 2),
+				'paymenttype' => $info->paymenttype,
+				'picurl' => $url . $info->picurl,
 				'transdate' => $tdate,
-				'refnum' => $info[0]->refNum
-			);
+				'refnum' => $info->refNum,
+				'isapproved' => $info->isapproved,
+				'section' => $info->section
+			];
 
-			echo json_encode($data);
+			return response()->json($data);
 		}
 	}
+
+
+
+	// public function paydata(Request $request)
+	// {
+	// 	if($request->ajax())
+	// 	{
+	// 		$dataid = $request->get('dataid');
+
+	// 		$info = db::table('onlinepayments')
+	// 				->select('onlinepayments.*', 'levelname', 'paymenttype.description', 'isapproved',
+	// 					'lastname', 'firstname', 'middlename', 'suffix', 'contactno', 'onlinepayments.picurl')
+	// 				->join('studinfo', 'onlinepayments.queingcode', '=', 'studinfo.qcode')
+	// 				->join('paymenttype', 'onlinepayments.paymenttype', '=', 'paymenttype.id')
+	// 				->join('gradelevel', 'studinfo.levelid', '=', 'gradelevel.id')
+	// 				->where('onlinepayments.id', $dataid)
+	// 				->get();
+
+	// 		if(count($info) == 0)
+	// 		{
+	// 			$info = db::table('onlinepayments')
+	// 				->select('onlinepayments.*', 'levelname', 'paymenttype.description', 'isapproved',
+	// 					'lastname', 'firstname', 'middlename', 'suffix', 'contactno', 'onlinepayments.picurl')
+	// 				->join('studinfo', 'onlinepayments.queingcode', '=', 'studinfo.sid')
+	// 				->join('paymenttype', 'onlinepayments.paymenttype', '=', 'paymenttype.id')
+	// 				->join('gradelevel', 'studinfo.levelid', '=', 'gradelevel.id')
+	// 				->where('onlinepayments.id', $dataid)
+	// 				->get();
+
+
+	// 			if(count($info) == 0)
+	// 			{
+	// 				$info = db::table('onlinepayments')
+	// 				->select('onlinepayments.*', 'levelname', 'paymenttype.description', 'isapproved',
+	// 					'lastname', 'firstname', 'middlename', 'suffix', 'contactno', 'onlinepayments.picurl')
+	// 				->join('studinfo', 'onlinepayments.queingcode', '=', 'studinfo.lrn')
+	// 				->join('paymenttype', 'onlinepayments.paymenttype', '=', 'paymenttype.id')
+	// 				->join('gradelevel', 'studinfo.levelid', '=', 'gradelevel.id')
+	// 				->where('onlinepayments.id', $dataid)
+	// 				->get();
+	// 			}
+
+	// 		}
+
+	// 		// $info = db::table('onlinepayments')
+	// 		// 		->select('onlinepayments.*', 'levelname', 'paymenttype.description',
+	// 		// 			'lastname', 'firstname', 'middlename', 'suffix', 'contactno', 'onlinepayments.picurl')
+	// 		// 		->join('studinfo', function($join){
+	// 		// 				$join->on('onlinepayments.queingcode','=','studinfo.qcode');
+
+	// 		// 		})
+	// 		// 		->join('paymenttype', 'onlinepayments.paymenttype', '=', 'paymenttype.id')
+	// 		// 		->join('gradelevel', 'studinfo.levelid', '=', 'gradelevel.id')
+	// 		// 		->where('onlinepayments.id', $dataid)
+	// 		// 		->first();
+
+	// 		$studname = $info[0]->lastname . ', ' . $info[0]->firstname . ' ' . $info[0]->middlename . ' ' . $info[0]->suffix;
+
+	// 		$tdate = $info[0]->TransDate;
+
+	// 		$tdate = date_create($tdate);
+	// 		$tdate = date_format($tdate, 'm-d-Y');
+
+    //         $client = new \GuzzleHttp\Client();
+    //         $response = $client->request('GET', 'https://esvault.essentiel.ph/api/getSchoolList/');
+    //         $result = $response->getBody()->getContents();
+
+    //         // return $result;
+
+	// 		$url = db::table('schoolinfo')->first()->es_cloudurl;
+
+	// 		$data = array(
+	// 			'studname' => strtoupper($studname),
+	// 			'contactno' => $info[0]->contactno,
+	// 			'levelname' => $info[0]->levelname,
+	// 			'amount' => number_format($info[0]->amount, 2),
+	// 			'paymenttype' => $info[0]->description,
+	// 			'picurl' => $url . $info[0]->picurl,
+	// 			'transdate' => $tdate,
+	// 			'refnum' => $info[0]->refNum,
+    //             'isapproved' => $info[0]->isapproved
+	// 		);
+
+	// 		echo json_encode($data);
+	// 	}
+	// }
 
 	public function approvepay(Request $request)
 	{
@@ -5826,7 +5977,7 @@ class FinanceController extends Controller
 								'isapproved' => 6,
 								'updateddatetime' => FinanceModel::getServerDateTime(),
 								'updatedby' => auth()->user()->id
-								
+
 							]);
 						return 1;
 					}
@@ -5907,7 +6058,7 @@ class FinanceController extends Controller
 			'date' => date_format($date, 'm-d-Y')
 		);
 
-		echo json_encode($data);			
+		echo json_encode($data);
 		}
 	}
 
@@ -6029,7 +6180,7 @@ class FinanceController extends Controller
 
 	public function duplicateAll(Request $request)
 	{
-		if($request->ajax())	
+		if($request->ajax())
 		{
 			$cursy = $request->get('cursy');
 			$syid = $request->get('syid');
@@ -6103,14 +6254,14 @@ class FinanceController extends Controller
 
 		if(Session::get('currentPortal') == 15)
 		{
-			return view('finance/setup');	
+			return view('finance/setup');
 		}
 		else
 		{
     	return redirect('/home');
     }
 
-		
+
 	}
 
 	public function clearTerminal(Request $request)
@@ -6156,7 +6307,7 @@ class FinanceController extends Controller
 			echo json_encode($data);
 		}
 	}
-	
+
 	public function removeTerminal(Request $request)
 	{
 		$id = $request->get('id');
@@ -6172,17 +6323,17 @@ class FinanceController extends Controller
 		else{
 			db::table('chrngterminals')
 				->where('id', $id)
-				->delete();	
+				->delete();
 
 			return 'done';
 		}
 
-		
+
 	}
 
 	public function createTerminal(Request $request)
 	{
-		if($request->ajax())		
+		if($request->ajax())
 		{
 			$count = db::table('chrngterminals')
 					->count();
@@ -6201,7 +6352,7 @@ class FinanceController extends Controller
 		if($request->ajax())
 		{
 			$filter = $request->get('filter');
-			
+
 			$coa = db::table('acc_coa')
 					->where('code', 'like', '%'.$filter.'%')
 					->where('deleted', 0)
@@ -6248,7 +6399,7 @@ class FinanceController extends Controller
 					->where('code', $code)
 					->orWhere('account', $account)
 					->count();
-				
+
 			if($coainfo > 0)
 			{
 				return 0;
@@ -6302,7 +6453,7 @@ class FinanceController extends Controller
 					->orWhere('account', $account)
 					->where('id', '!=', $dataid)
 					->count();
-				
+
 			if($coainfo > 0)
 			{
 				return 0;
@@ -6346,7 +6497,7 @@ class FinanceController extends Controller
 						'deleted' => 1,
 						'deletedby' => auth()->user()->id
 						// 'deleteddatetime' => FinanceModel::getServerDateTime()
-					]);	
+					]);
 
 				return 0;
 			}
@@ -6395,7 +6546,7 @@ class FinanceController extends Controller
 					{
 						$opt .='
 							<option value="'.$group->group.'">'.$group->group.'</option>
-						';	
+						';
 					}
 				}
 
@@ -6420,7 +6571,7 @@ class FinanceController extends Controller
 
 			$groups = FinanceModel::getCOAGroup();
 			$opt = '<option value="0">Acount Type</option>';
-			
+
 			foreach($groups as $group)
 			{
 				if($group->group == $groupname)
@@ -6433,7 +6584,7 @@ class FinanceController extends Controller
 				{
 					$opt .='
 						<option value="'.$group->group.'">'.$group->group.'</option>
-					';	
+					';
 				}
 			}
 
@@ -6709,7 +6860,7 @@ class FinanceController extends Controller
 				->where('deleted', 0)
 				->count();
 
-			if($glevel > 0)	
+			if($glevel > 0)
 			{
 				$itemdp = db::table('items_dp')
 					->where('id', $dataid)
@@ -6729,7 +6880,7 @@ class FinanceController extends Controller
 						'itemid' => $itemid,
 						'createdby' => auth()->user()->id,
 						'createddatetime' => FinanceModel::getServerDateTime()
-					]);	
+					]);
 			}
 
 
@@ -6742,7 +6893,7 @@ class FinanceController extends Controller
 					'allowless' => $allowless,
 					'updatedby' => auth()->user()->id,
 					'updateddatetime' => FinanceModel::getServerDateTime()
-				]);	
+				]);
 
 		}
 	}
@@ -6826,7 +6977,7 @@ class FinanceController extends Controller
 
 				return $items;
 			}
-			
+
 
 		}
 	}
@@ -6939,7 +7090,7 @@ class FinanceController extends Controller
 
 			if($headid == 0)
 			{
-				$headid = db::table('tuitionheader')	
+				$headid = db::table('tuitionheader')
 					->insertGetId([
 						'description' => $desc,
 						'levelid' => $levelid,
@@ -6998,7 +7149,7 @@ class FinanceController extends Controller
 				';
 			}
 
-			$itemlist .='	
+			$itemlist .='
 				<tr>
 					<td class="text-right">TOTAL:</td>
 					<td class=""><span class="text-bold">'.number_format($itemtotal, 2).'</span></td>
@@ -7030,11 +7181,11 @@ class FinanceController extends Controller
 			$persubj = $request->get('persubj');
 			$permop = $request->get('permop');
 			$permopid = $request->get('classmopid_mopid');
-			
+
 
 			if($headid == 0)
 			{
-				$headid = db::table('tuitionheader')	
+				$headid = db::table('tuitionheader')
 					->insertGetId([
 						'description' => $desc,
 						'levelid' => $levelid,
@@ -7105,7 +7256,7 @@ class FinanceController extends Controller
 			$totalamount = 0;
 
 			foreach($details as $detail)
-			{	
+			{
 				$totalamount += $detail->amount;
 				$list .='
 					<tr data-id="'.$detail->id.'">
@@ -7128,10 +7279,10 @@ class FinanceController extends Controller
 				'headid' => $headid
 			);
 
-			echo json_encode($data);			
+			echo json_encode($data);
 		}
 	}
-	
+
 	public function editcolFCdetail(Request $request)
 	{
 		if($request->ajax())
@@ -7165,7 +7316,7 @@ class FinanceController extends Controller
 				';
 			}
 
-			$itemlist .='	
+			$itemlist .='
 				<tr>
 					<td class="text-right">TOTAL:</td>
 					<td colspan="2" class=""><span class="text-bold">'.number_format($totalitemamount, 2).'</span></td>
@@ -7187,7 +7338,7 @@ class FinanceController extends Controller
 
 		}
 	}
-	
+
 
 	public function editcolFCitem(Request $request)
 	{
@@ -7248,7 +7399,7 @@ class FinanceController extends Controller
 				';
 			}
 
-			$itemlist .='	
+			$itemlist .='
 				<tr>
 					<td class="text-right">TOTAL:</td>
 					<td class=""><span class="text-bold">'.number_format($totalitemamount, 2).'</span></td>
@@ -7265,7 +7416,7 @@ class FinanceController extends Controller
 		}
 
 
-		
+
 	}
 
 	public function FCHeadInfo(Request $request)
@@ -7326,7 +7477,7 @@ class FinanceController extends Controller
 			$totalamount = 0;
 
 			foreach($details as $detail)
-			{	
+			{
 				$totalamount += $detail->amount;
 				$list .='
 					<tr data-id="'.$detail->id.'">
@@ -7381,7 +7532,7 @@ class FinanceController extends Controller
 				';
 			}
 
-			$itemlist .='	
+			$itemlist .='
 				<tr>
 					<td class="text-right">TOTAL:</td>
 					<td class=""><span class="text-bold">'.number_format($totalitemamount, 2).'</span></td>
@@ -7475,7 +7626,7 @@ class FinanceController extends Controller
 			// return $dtfrom;
 
 			// return collect(url());
-			
+
 			$location = db::table('schoolinfo')
 				->first()
 				->es_cloudurl;
@@ -7502,9 +7653,9 @@ class FinanceController extends Controller
 					->whereBetween('paymentdate', [$dtfrom . ' 00:00', $dtto . ' 23:59'])
 					->where('onlinepayments.queingcode', 'like', '%'.$code.'%')
 					->where('isapproved', $olstatus)
-					->get();	
+					->get();
 			}
-				
+
 
 			$list = '';
 			$url = db::table('schoolinfo')
@@ -7540,7 +7691,7 @@ class FinanceController extends Controller
 					$statClass = 'text-success';
 				}
 
-				
+
 
 
 				$list .='
@@ -7581,9 +7732,9 @@ class FinanceController extends Controller
 					->whereBetween('paymentdate', [$dtfrom . ' 00:00', $dtto . ' 23:59'])
 					->where('onlinepayments.queingcode', 'like', '%'.$code.'%')
 					->where('isapproved', $olstatus)
-					->get();	
+					->get();
 			}
-				
+
 
 			foreach($olpay as $pay)
 			{
@@ -7653,9 +7804,9 @@ class FinanceController extends Controller
 					->whereBetween('paymentdate', [$dtfrom . ' 00:00', $dtto . ' 23:59'])
 					->where('onlinepayments.queingcode', 'like', '%'.$code.'%')
 					->where('isapproved', $olstatus)
-					->get();	
+					->get();
 			}
-				
+
 
 			foreach($olpay as $pay)
 			{
@@ -7711,7 +7862,7 @@ class FinanceController extends Controller
 
 		}
 	}
-	
+
 	public function adjustment()
 	{
 		return view('/finance/adjustment');
@@ -7736,7 +7887,7 @@ class FinanceController extends Controller
 				$glevel = db::table('gradelevel')
 					->where('deleted', 0)
 					->orderBy('sortid', 'ASC')
-					->get();	
+					->get();
 			}
 
 
@@ -7771,12 +7922,12 @@ class FinanceController extends Controller
 
 			$tb = '';
 			if($levelid == 14 || $levelid == 15 || $acadprog == 5)
-			{	
+			{
 				$tb = "sh_enrolledstud";
 			}
-			else if($levelid >= 17 && $levelid <= 21 || $acadprog == 6)
+			else if($levelid >= 17 && $levelid <= 25 || $acadprog == 6)
 			{
-				$tb = "college_enrolledstud";	
+				$tb = "college_enrolledstud";
 			}
 			else
 			{
@@ -7812,8 +7963,8 @@ class FinanceController extends Controller
 							foreach($glevel as $level)
 							{
 								array_push($lvlid, $level->id);
-								
-							}	
+
+							}
 							// return $lvlid;
 							$query->whereIn('studinfo.levelid', $lvlid);
 						}
@@ -7823,7 +7974,7 @@ class FinanceController extends Controller
 					{
 						$query->where('studinfo.levelid', $levelid);
 					}
-					
+
 
 					if($grantee > 0)
 						$query->where('grantee', $grantee);
@@ -7876,10 +8027,10 @@ class FinanceController extends Controller
 			);
 
 			echo json_encode($data);
-			
+
 		}
 	}
-	
+
 	public function appendADJ(Request $request)
 	{
 		if($request->ajax())
@@ -7889,8 +8040,8 @@ class FinanceController extends Controller
 			$grantee = $request->get('grantee');
 			$mol = $request->get('mol');
 			$sc = $request->get('sc');
-			
-			
+
+
 			$adjDesc = $request->get('adjdesc');
 			$classid = $request->get('classid');
 			$amount = str_replace(',','',$request->get('amount'));
@@ -7951,7 +8102,7 @@ class FinanceController extends Controller
 						'studid' => $studid,
 						'createdby' => auth()->user()->id,
 						'createddatetime' => FinanceModel::getServerDateTime()
-					]);	
+					]);
 
 				return $dataheader;
 			}
@@ -7968,7 +8119,7 @@ class FinanceController extends Controller
 			// 		]);
 			// }
 
-			
+
 
 		}
 	}
@@ -8000,9 +8151,9 @@ class FinanceController extends Controller
 			foreach($adjustments as $adj)
 			{
 				$acc = '';
-				
-				if($adj->isdebit == 1)				
-					$acc = 'DEBIT';	
+
+				if($adj->isdebit == 1)
+					$acc = 'DEBIT';
 				else
 					$acc = 'CREDIT';
 
@@ -8130,7 +8281,7 @@ class FinanceController extends Controller
 			$debit = $request->get('isdebit');
 			$credit = $request->get('iscredit');
 
-			$semid = 1;			
+			$semid = 1;
 
 			$adj = db::table('adjustments')
 				->where('id', $adjid)
@@ -8170,7 +8321,7 @@ class FinanceController extends Controller
 
 						$isdebit = 0;
 						$iscredit = 0;
-						if($studinfo->levelid >= 14 && $studinfo->levelid <= 21)
+						if($studinfo->levelid >= 14 && $studinfo->levelid <= 25)
 						{
 							$semid = FinanceModel::getsemID();
 						}
@@ -8187,7 +8338,7 @@ class FinanceController extends Controller
 						else
 						{
 							$isdebit = 0;
-							$iscredit = $amount;	
+							$iscredit = $amount;
 						}
 
 					//--------studLedger------//
@@ -8230,7 +8381,7 @@ class FinanceController extends Controller
 									}
 								}
 							}
-							elseif($studinfo->levelid >= 17 && $studinfo->levelid <= 21)
+							elseif($studinfo->levelid >= 17 && $studinfo->levelid <= 25)
 							{
 								$q->where('semid', FinanceModel::getSemID());
 							}
@@ -8298,7 +8449,7 @@ class FinanceController extends Controller
 												'totalamount' => $itemized->totalamount + $bal,
 												'updatedby' => auth()->user(),
 												'updateddatetime' => FinanceModel::getServerDateTime()
-											]);		
+											]);
 
 										$iAmount -= $bal;
 									}
@@ -8310,7 +8461,7 @@ class FinanceController extends Controller
 												'totalamount' => $itemized->totalamount + $iAmount,
 												'updatedby' => auth()->user(),
 												'updateddatetime' => FinanceModel::getServerDateTime()
-											]);												
+											]);
 
 										$iAmount = 0;
 									}
@@ -8338,7 +8489,7 @@ class FinanceController extends Controller
 												}
 											}
 										}
-										elseif($studinfo->levelid >= 17 && $studinfo->levelid <= 21)
+										elseif($studinfo->levelid >= 17 && $studinfo->levelid <= 25)
 										{
 											$q->where('semid', FinanceModel::getSemID());
 										}
@@ -8371,7 +8522,7 @@ class FinanceController extends Controller
 													'totalamount' => $itemized->totalamount + $bal,
 													'updatedby' => auth()->user(),
 													'updateddatetime' => FinanceModel::getServerDateTime()
-												]);		
+												]);
 
 											$iAmount -= $bal;
 										}
@@ -8383,7 +8534,7 @@ class FinanceController extends Controller
 													'totalamount' => $itemized->totalamount + $iAmount,
 													'updatedby' => auth()->user(),
 													'updateddatetime' => FinanceModel::getServerDateTime()
-												]);												
+												]);
 
 											$iAmount = 0;
 										}
@@ -8396,7 +8547,7 @@ class FinanceController extends Controller
 					//-----------------studledgeritemized--------------//
 
 
-					
+
 
 					//--------------paymentsched--------------//
 
@@ -8415,7 +8566,7 @@ class FinanceController extends Controller
 
 						$schedAmount = $amount / $paymentsetup[0]->noofpayment;
 						$_id = array();
-						
+
 						foreach($paymentsetup as $setup)
 						{
 							if($tAmount > 0)
@@ -8434,7 +8585,7 @@ class FinanceController extends Controller
 
 
 
-								if(count($sched) > 0)									
+								if(count($sched) > 0)
 								{
 									array_push($_id, $sched[0]->id);
 									// echo 'studpayscheddetail+: ' . $sched[0]->id . '; ';
@@ -8515,7 +8666,7 @@ class FinanceController extends Controller
 												'balance' => $pay->balance - $tAmount,
 												'updatedby' => auth()->user()->id,
 												'updateddatetime' => FinanceModel::getServerDateTime(),
-											]);										
+											]);
 
 										$tAmount = 0;
 									}
@@ -8560,10 +8711,10 @@ class FinanceController extends Controller
 													'balance' => $pay->balance - $tAmount,
 													'updatedby' => auth()->user()->id,
 													'updateddatetime' => FinanceModel::getServerDateTime(),
-												]);										
+												]);
 
 											$tAmount = 0;
-										}	
+										}
 									}
 								}
 							}
@@ -8602,10 +8753,10 @@ class FinanceController extends Controller
 												'balance' => $pay->balance - $tAmount,
 												'updatedby' => auth()->user()->id,
 												'updateddatetime' => FinanceModel::getServerDateTime(),
-											]);										
+											]);
 
 										$tAmount = 0;
-									}	
+									}
 								}
 							}
 
@@ -8633,7 +8784,7 @@ class FinanceController extends Controller
 			}
 		}
 	}
-	
+
 	public function disapproveADJ(Request $request)
 	{
 		if($request->ajax())
@@ -8686,7 +8837,7 @@ class FinanceController extends Controller
 						'deleteddatetime' => FinanceModel::getServerDateTime()
 					]);
 
-				return 1;	
+				return 1;
 			}
 			else
 			{
@@ -8694,7 +8845,7 @@ class FinanceController extends Controller
 			}
 		}
 	}
-	
+
 	public function adj_loadclass(Request $request)
 	{
 		$adjtype = $request->get('adjtype');
@@ -8794,7 +8945,7 @@ class FinanceController extends Controller
 				$studname = $stud->lrn . ' | ' . $stud->lastname . ', ' . $stud->firstname . ' ' . $stud->middlename . ' ' . $stud->suffix . ' - ' . $stud->levelname;
 				$list .='
 					<option value="' .$stud->id. '">'.$studname.'</option>
-				';				
+				';
 			}
 
 			echo $list;
@@ -8848,7 +8999,7 @@ class FinanceController extends Controller
 
 		}
 	}
-	
+
 	public function dploadAcadprog(Request $request)
 	{
 		if($request->ajax())
@@ -9008,7 +9159,7 @@ class FinanceController extends Controller
 						'allownodpdatetime' => FinanceModel::getServerDateTime(),
 						'updatedby' => auth()->user()->id,
 						'updateddatetime' => FinanceModel::getServerDateTime()
-					]);	
+					]);
 			}
 
 			if($esc == 0)
@@ -9033,7 +9184,7 @@ class FinanceController extends Controller
 						'allownodpdatetime' => FinanceModel::getServerDateTime(),
 						'updatedby' => auth()->user()->id,
 						'updateddatetime' => FinanceModel::getServerDateTime()
-					]);	
+					]);
 			}
 
 			if($voucher == 0)
@@ -9058,10 +9209,10 @@ class FinanceController extends Controller
 						'allownodpdatetime' => FinanceModel::getServerDateTime(),
 						'updatedby' => auth()->user()->id,
 						'updateddatetime' => FinanceModel::getServerDateTime()
-					]);	
+					]);
 			}
 
-			
+
 		}
 	}
 
@@ -9094,10 +9245,10 @@ class FinanceController extends Controller
 						'allownodpdatetime' => FinanceModel::getServerDateTime(),
 						'updatedby' => auth()->user()->id,
 						'updateddatetime' => FinanceModel::getServerDateTime()
-					]);	
+					]);
 			}
 
-			
+
 		}
 	}
 
@@ -9130,10 +9281,10 @@ class FinanceController extends Controller
 						'allownodpdatetime' => FinanceModel::getServerDateTime(),
 						'updatedby' => auth()->user()->id,
 						'updateddatetime' => FinanceModel::getServerDateTime()
-					]);	
+					]);
 			}
 
-			
+
 		}
 	}
 
@@ -9304,8 +9455,8 @@ class FinanceController extends Controller
 	    }
 
 
-        
-        
+
+
 
 	    $schoolname = $studinfo->schoolname;
 	    $schooladdress = $studinfo->address;
@@ -9317,11 +9468,11 @@ class FinanceController extends Controller
 	    $dtto = date_format($dtto, 'm/d/Y');
 
 	    $daterange = 'PERIOD: ' . $dtfrom . ' - ' . $dtto;
-	    
-	    // return $filter;
-	    
 
-	    
+	    // return $filter;
+
+
+
 
 	    if($filter == '""')
 	    {
@@ -9332,7 +9483,7 @@ class FinanceController extends Controller
 	    	$filter = str_replace('"', '', $filter);
 	    }
 
-	    
+
 
 	    $from = date_create($dtfrom);
 	    // $from = date_create('01/01/2020');
@@ -9343,7 +9494,7 @@ class FinanceController extends Controller
 
 	    $from .= ' 00:00';
 	    $to .= ' 23:59';
-	    	
+
 	    $transactions = db::table('chrngtrans')
 	        ->select('chrngtrans.id', 'ornum', 'transdate', 'totalamount', 'amountpaid', 'studid', 'particulars', 'terminalno', 'transby', 'studname', 'posted', 'sid', 'glevel', 'name', 'cancelled', 'paymenttype.description')
 			->join('users', 'chrngtrans.transby', '=', 'users.id')
@@ -9372,7 +9523,7 @@ class FinanceController extends Controller
 			})
 			->where(function($q) use ($paytype){
 				if($paytype != '')
-				{	
+				{
 					$q->whereIn('paymenttype.id', $paytype);
 				}
 			})
@@ -9540,7 +9691,7 @@ class FinanceController extends Controller
 		if($request->ajax())
 		{
 			$tuitionid = $request->get('tuitionid');
-			
+
 			$headeramount = 0;
 			$divamount = 0;
 			$curAmount = 0;
@@ -9596,11 +9747,11 @@ class FinanceController extends Controller
 								{
 									$month = date_create($detail->duedate);
 									$month = date_format($month, 'F');
-									
+
 									if($paycount < $paysetup->noofpayment)
 									{
-										
-										
+
+
 										$_data = array(
 											'duedate' => $month,
 											'description' => $theader->classdesc,
@@ -9647,11 +9798,11 @@ class FinanceController extends Controller
 													// 'headeramount' => $headeramount,
 													// 'divamount' => $divamount,
 													// 'curAmount' => $curAmount
-												]);	
-											
+												]);
+
 											$curAmount = 0;
 
-											array_push($test_data, $_data);										
+											array_push($test_data, $_data);
 										}
 
 									}
@@ -9672,9 +9823,9 @@ class FinanceController extends Controller
 
 						// return count($paydetail);
 
-						
-						
-							
+
+
+
 						foreach($paydetail as $detail)
 						{
 							$paycount +=1;
@@ -9716,7 +9867,7 @@ class FinanceController extends Controller
 											'payopt' => $paysetup->payopt,
 											// 'curAmount' => $curAmount,
 											// 'headeramount' => $headeramount
-										]);							
+										]);
 
 									$curAmount = 0;
 
@@ -9724,12 +9875,12 @@ class FinanceController extends Controller
 								}
 							}
 						}
-						
+
 						// return $data;
 					}
 
 
-					
+
 
 					$list ='';
 					$totalamount = 0;
@@ -9741,7 +9892,7 @@ class FinanceController extends Controller
 
 					// return $paysched;
 
-					
+
 					foreach($paysched as $psched)
 					{
 
@@ -9771,8 +9922,8 @@ class FinanceController extends Controller
 						                      '.number_format($s->amount, 2).'
 						                    </div>
 						                  </div>
-						                
-							';	
+
+							';
 						}
 
 						$list .='
@@ -9788,17 +9939,17 @@ class FinanceController extends Controller
 					                  </div>
 					                </div>
 					              </div>
-					            </div>            
+					            </div>
 					         </div>
 						';
 
 						$totalamount = 0;
 
 
-						
+
 					}
 
-					
+
 
 
 				}
@@ -9896,7 +10047,7 @@ class FinanceController extends Controller
 									<td> '.$sub->code.' - '.$sub->account.'</td>
 									<td>'.$sub->classification.'</td>
 									<td>'.$sub->mapname.'</td>
-								</tr>			
+								</tr>
 							';
 
 							$itemlist = db::table('acc_coa')
@@ -9919,7 +10070,7 @@ class FinanceController extends Controller
 											<td class="pl-5"> '.$ilist->code.' - '.$ilist->account.'</td>
 											<td>'.$ilist->classification.'</td>
 											<td>'.$ilist->mapname.'</td>
-										</tr>			
+										</tr>
 									';
 								}
 							}
@@ -9979,7 +10130,7 @@ class FinanceController extends Controller
 
 			echo json_encode($data);
 
-			
+
 		}
 	}
 
@@ -10184,7 +10335,7 @@ class FinanceController extends Controller
 
 		}
 	}
-	
+
 	public function editaccname(Request $request)
 	{
 		if($request->ajax())
@@ -10244,7 +10395,7 @@ class FinanceController extends Controller
 					';
 				}
 
-					
+
 			}
 
 
@@ -10252,7 +10403,7 @@ class FinanceController extends Controller
 				'accid' => $account->id,
 				'code' => $account->code,
 				'accname' => $account->account,
-				'mapid' => $account->mapid, 
+				'mapid' => $account->mapid,
 				'maplist' => $maplist,
 				'acclist' => $acclist,
 				'typelist' => $typelist
@@ -10272,7 +10423,7 @@ class FinanceController extends Controller
 			$accname = $request->get('accname');
 			$mapid = $request->get('mapid');
 
-			
+
 
 			$arrayid = array();
 
@@ -10356,7 +10507,7 @@ class FinanceController extends Controller
 				$checkaccname = db::table('acc_coa')
 					->where('account', $accname)
 					->where('deleted', 0)
-					->count();				
+					->count();
 
 				if($checkaccname > 0)
 				{
@@ -10452,7 +10603,7 @@ class FinanceController extends Controller
 		if($request->ajax())
 		{
 			$mapid = $request->get('mapid');
-			
+
 
 			$map = db::table('acc_map')
 				->where('id', $mapid)
@@ -10614,14 +10765,14 @@ class FinanceController extends Controller
 				if($subitem->mapid == $map->id)
 				{
 					$maplist .='
-						<option value="'.$map->id.'" selected>'.$map->mapname.'</option>					
+						<option value="'.$map->id.'" selected>'.$map->mapname.'</option>
 					';
 				}
 				else
 				{
 					$maplist .='
-						<option value="'.$map->id.'">'.$map->mapname.'</option>					
-					';	
+						<option value="'.$map->id.'">'.$map->mapname.'</option>
+					';
 				}
 			}
 
@@ -10670,7 +10821,7 @@ class FinanceController extends Controller
 				$code = $sub->code;
 			}
 
-			
+
 
 			$data = array(
 				'subname' => $sub->account . ' <i class="far fa-edit"></i>',
@@ -10707,14 +10858,14 @@ class FinanceController extends Controller
 				if($sub->mapid == $map->id)
 				{
 					$maplist .='
-						<option value="'.$map->id.'" selected>'.$map->mapname.'</option>					
+						<option value="'.$map->id.'" selected>'.$map->mapname.'</option>
 					';
 				}
 				else
 				{
 					$maplist .='
-						<option value="'.$map->id.'">'.$map->mapname.'</option>					
-					';	
+						<option value="'.$map->id.'">'.$map->mapname.'</option>
+					';
 				}
 			}
 
@@ -10985,7 +11136,7 @@ class FinanceController extends Controller
 			foreach($groups as $group)
 			{
 				$grouplist .= '
-					<option value="'.$group->id.'">'.$group->group.'</option>					
+					<option value="'.$group->id.'">'.$group->group.'</option>
 				';
 			}
 
@@ -11035,7 +11186,7 @@ class FinanceController extends Controller
 	{
 		if($request->ajax())
 		{
-			
+
 		}
 	}
 
@@ -11090,7 +11241,7 @@ class FinanceController extends Controller
 
 				if(count($chrngtrans) > 0)
 				{
-					
+
 					foreach($chrngtrans as $trans)
 					{
 
@@ -11231,13 +11382,13 @@ class FinanceController extends Controller
 												$q->where('description', 'like', '%TUITION%');
 												$q->orWhere('description', 'like', '%ENROLLMENT%');
 											})
-											
+
 											->first();
 
 
 										if($items)
 										{
-											$tuition += $item->amount;	
+											$tuition += $item->amount;
 											$totaltuition += $item->amount;
 											$totals += $item->amount;
 											// echo ' -TUITION- ';
@@ -11249,16 +11400,16 @@ class FinanceController extends Controller
 											->where('id', $item->itemid)
 											->where('description', 'like', '%TEXTBOOK%')
 											->first();
-										
+
 										if($items)
 										{
-											$textbook += $item->amount;	
+											$textbook += $item->amount;
 											$totaltextbook += $item->amount;
 											$totals += $item->amount;
 											// echo ' totalsbk: ' . $totals;
 										}
 									}
-									
+
 								}
 
 								// $totals += $item->amount;
@@ -11296,7 +11447,7 @@ class FinanceController extends Controller
 							// 	$totals += $chrngtransdetail->amount;
 							// 	$totalbalforward += $chrngtransdetail->amount;
 							// }
-							
+
 							$checkTitems = db::table('chrngtransitems')
 								->where('ornum', $trans->ornum)
 								->where('deleted', 0)
@@ -11309,7 +11460,7 @@ class FinanceController extends Controller
 								$chrngtransdetail = db::table('chrngtransdetail')
 									->where('chrngtransid', $trans->id)
 									->get();
-								
+
 								foreach($chrngtransdetail as $detail)
 								{
 									$others += $detail->amount;
@@ -11343,7 +11494,7 @@ class FinanceController extends Controller
 								<td class="text-right">'.number_format($cert, 2).'</td>
 								<td class="text-right">'.number_format($others, 2).'</td>
 								<td class="text-right">'.number_format($totals, 2).'</td>
-								
+
 							</tr>
 						';
 					}
@@ -11372,7 +11523,7 @@ class FinanceController extends Controller
 				);
 
 				// return view('finance/reports/pdf_dailycashcollection/' . $datenow . '/' . 0)->with($data);
-				
+
 				echo json_encode($data);
 			}
 		}
@@ -11382,7 +11533,7 @@ class FinanceController extends Controller
 	{
 		if($request->ajax())
 		{
-			
+
 		}
 	}
 
@@ -11417,7 +11568,7 @@ class FinanceController extends Controller
 		);
 
 		$pdf = PDF::loadView('finance/reports/pdf/pdf_dailycashcollectionsummary', $data);
-		return $pdf->stream('dailycashcollection.pdf'); 
+		return $pdf->stream('dailycashcollection.pdf');
 	}
 
 
@@ -11475,7 +11626,7 @@ class FinanceController extends Controller
 
 		if(count($chrngtrans) > 0)
 		{
-			
+
 			foreach($chrngtrans as $trans)
 			{
 
@@ -11497,7 +11648,7 @@ class FinanceController extends Controller
 				$internetfee = 0;
 				$graduationfee = 0;
 				$textbook = 0;
-				
+
 
 
 				$chrngtransitems = db::table('chrngtransitems')
@@ -11605,13 +11756,13 @@ class FinanceController extends Controller
 										$q->where('description', 'like', '%TUITION%');
 										$q->orWhere('description', 'like', '%ENROLLMENT%');
 									})
-									
+
 									->first();
 
 
 								if($items)
 								{
-									$tuition += $item->amount;	
+									$tuition += $item->amount;
 									$totaltuition += $item->amount;
 									$totals += $item->amount;
 								}
@@ -11621,15 +11772,15 @@ class FinanceController extends Controller
 									->where('id', $item->itemid)
 									->where('description', 'like', '%TEXTBOOK%')
 									->first();
-								
+
 								if($items)
 								{
-									$textbook += $item->amount;	
+									$textbook += $item->amount;
 									$totaltextbook += $item->amount;
 									$totals += $item->amount;
 								}
 							}
-							
+
 						}
 
 
@@ -11664,7 +11815,7 @@ class FinanceController extends Controller
 					// 	$totals += $chrngtransdetail->amount;
 					// 	$totalbalforward += $chrngtransdetail->amount;
 					// }
-				
+
 					$checkTitems = db::table('chrngtransitems')
 						->where('ornum', $trans->ornum)
 						->where('deleted', 0)
@@ -11675,7 +11826,7 @@ class FinanceController extends Controller
 						$chrngtransdetail = db::table('chrngtransdetail')
 							->where('chrngtransid', $trans->id)
 							->get();
-						
+
 						foreach($chrngtransdetail as $detail)
 						{
 							$others += $detail->amount;
@@ -11683,7 +11834,7 @@ class FinanceController extends Controller
 							$totalothers += $detail->amount;
 						}
 					}
-					
+
 				}
 
 				$grandtotal += $totals;
@@ -11733,7 +11884,7 @@ class FinanceController extends Controller
 				// 	// 	<td class="text-right">'.number_format($cert, 2).'</td>
 				// 	// 	<td class="text-right">'.number_format($others, 2).'</td>
 				// 	// 	<td class="text-right">'.number_format($totals, 2).'</td>
-						
+
 				// 	// </tr>
 				// ';
 			}
@@ -11794,7 +11945,7 @@ class FinanceController extends Controller
 		else
 		{
 			$pdf = PDF::loadView('finance/reports/pdf/pdf_dailycashcollectionsummary', $data);
-			return $pdf->stream('dailycashcollection.pdf');	
+			return $pdf->stream('dailycashcollection.pdf');
 		}
 	}
 
@@ -11823,11 +11974,11 @@ class FinanceController extends Controller
 
 				$ledgeritemized = db::select(
 					'SELECT *
-					FROM `studledgeritemized` 
-					WHERE `studid` = ? 
-						AND `syid` = ? 
-						AND `semid` = ? 
-						AND `classificationid` =? 
+					FROM `studledgeritemized`
+					WHERE `studid` = ?
+						AND `syid` = ?
+						AND `semid` = ?
+						AND `classificationid` =?
 						AND `deleted` = 0
 						AND `totalamount` < itemamount', [$trans->studid, $trans->syid, $trans->semid, $trans->classid]
 				);
@@ -11836,10 +11987,10 @@ class FinanceController extends Controller
 				// {
 				// 	$ledgeritemized = db::select(
 				// 		'SELECT *
-				// 		FROM `studledgeritemized` 
-				// 		WHERE `studid` = ? 
-				// 			AND `syid` = ? 
-				// 			AND `semid` = ? 
+				// 		FROM `studledgeritemized`
+				// 		WHERE `studid` = ?
+				// 			AND `syid` = ?
+				// 			AND `semid` = ?
 				// 			AND `totalamount` < itemamount', [$trans->studid, $trans->syid, $trans->semid]
 				// 	);
 				// }
@@ -11926,7 +12077,7 @@ class FinanceController extends Controller
 
 									$transamount = 0;
 								}
-		
+
 							}
 						}
 					}
@@ -12003,7 +12154,7 @@ class FinanceController extends Controller
 			// 				'itemAmount' => $tuition->amount,
 			// 				'itemid' => $tuition->itemid,
 			// 				'deleted' => 0
-			// 			]); 
+			// 			]);
 			// 	}
 			// }
 		}
@@ -12112,7 +12263,7 @@ class FinanceController extends Controller
 				}
 			}
 
-			
+
 
 			// $levelid = $stud->levelid;
 
@@ -12138,9 +12289,9 @@ class FinanceController extends Controller
 	    						$q->where('semid', $semid);
 	    					}
     					}
-	    					
+
     				}
-    				elseif($levelid >= 17 && $levelid <= 21)
+    				elseif($levelid >= 17 && $levelid <= 25)
     				{
     					$q->where('tuitionheader.semid', $semid);
     				}
@@ -12170,13 +12321,13 @@ class FinanceController extends Controller
 		              	<div class="card" style="cursor: pointer">
 							<div class="card-header bg-info text-bold">
 								'.$thead->description.'
-							</div>  
+							</div>
 							<div class="card-body">
 								<span class="text-bold">GRANTEE<span>: <span>'.$thead->grantee.'</span><br>
 								<span class="text-bold">AMOUNT</span>: <span>'.number_format($thead->amount, 2).'</span>
 							</div>
 						</div>
-		            </div>  
+		            </div>
 				';
 			}
 
@@ -12187,7 +12338,7 @@ class FinanceController extends Controller
 			echo json_encode($data);
 		}
 	}
-	
+
 	public function togglepayplan(Request $request)
 	{
 		if($request->ajax())
@@ -12231,7 +12382,7 @@ class FinanceController extends Controller
 					$q->orWhere('sid', 'like', '%'.$searchstud.'%');
 				})
 				->where(function($q) use($courseid, $levelid){
-					if($levelid >= 17 && $levelid <= 21)
+					if($levelid >= 17 && $levelid <= 25)
 					{
 						$q->where('courseid', $courseid);
 					}
@@ -12245,12 +12396,12 @@ class FinanceController extends Controller
 
 			$monthnow = date_create(FinanceModel::getServerDateTime());
 			$monthnow = date_format($monthnow, 'm');
-			
+
 			$payschedlist ='';
 			$studlist ='';
 			$studcount = count($studinfo);
 			$echoarray = array();
-			
+
 
 			foreach($studinfo as $stud)
 			{
@@ -12314,8 +12465,8 @@ class FinanceController extends Controller
 						';
 
 						$balance += $paysched->balance;
-						
-						goto done;	
+
+						goto done;
 					}
 
 				}
@@ -12332,7 +12483,7 @@ class FinanceController extends Controller
 					->count();
 				// return $permittedcount;
 				if($lessthanamount != '')
-				{	
+				{
 					if($balance <= $lessthanamount)
 					{
 						if($allow == 0)
@@ -12347,7 +12498,7 @@ class FinanceController extends Controller
 										<td class="text-center"><button class="btn btn-success btn-sm btn-permit" data-id="'.$stud->id.'" style="width: 111px !important">Permit</button></td>
 									</tr>
 								';
-											
+
 							}
 						}
 						else
@@ -12380,7 +12531,7 @@ class FinanceController extends Controller
 									<td class="text-center"><button class="btn btn-success btn-sm btn-permit" data-id="'.$stud->id.'" style="width: 111px !important">Permit</button></td>
 								</tr>
 							';
-										
+
 						}
 					}
 					else
@@ -12399,7 +12550,7 @@ class FinanceController extends Controller
 					}
 				}
 
-				
+
 
 			}
 
@@ -12470,7 +12621,7 @@ class FinanceController extends Controller
 			$ledgerlist = '';
 			$assessmentlist = '';
 
-			
+
 			//load ledger
 			$studledger = db::table('studledger')
 				->where('studid', $studid)
@@ -12495,7 +12646,7 @@ class FinanceController extends Controller
 				}
 				else
 				{
-					$amount = '';	
+					$amount = '';
 				}
 
 				if($ledger->payment > 0)
@@ -12504,7 +12655,7 @@ class FinanceController extends Controller
 				}
 				else
 				{
-					$payment = '';	
+					$payment = '';
 				}
 
 				$ledgerlist .='
@@ -12591,8 +12742,8 @@ class FinanceController extends Controller
 					';
 
 					$balance += $paysched->balance;
-					
-					goto done;	
+
+					goto done;
 				}
 
 			}
@@ -12622,7 +12773,7 @@ class FinanceController extends Controller
 	// {
 	// 	if($request->ajax())
 	// 	{
-	// 		$qsetup = db::table('quarter_setup')		
+	// 		$qsetup = db::table('quarter_setup')
 	// 			->where('deleted', 0)
 	// 			->get();
 
@@ -12667,7 +12818,7 @@ class FinanceController extends Controller
 	// 			$qlist .='
 	// 				<div class="card collapsed-card mb-1 card-headActive" style="border: 1px solid #ddd; box-shadow:none !important">
 	// 					<div class="card-header">
-	// 						<button type="button" class="btn btn-tool text-primary btn-block" data-card-widget="collapse"> 
+	// 						<button type="button" class="btn btn-tool text-primary btn-block" data-card-widget="collapse">
 	// 							<div class="row">
 	// 								<div class="col-md-5 text-bold text-left">'.$q->description.'</div>
 	// 								<div class="col-md-3">'.$qdate.'</div>
@@ -12697,7 +12848,7 @@ class FinanceController extends Controller
 	// 				</div>
 	// 			';
 
-				
+
 
 	// 			// $qlist .='
 	// 			// 	<tr data-id="'.$q->id.'">
@@ -12788,12 +12939,12 @@ class FinanceController extends Controller
 
 		}
 	}
-	
+
 	public function dpv2(Request $request)
 	{
 		return view('finance/dpv2');
 	}
-	
+
 	public function dpv2_loadclass(Request $request)
 	{
 		if($request->ajax())
@@ -12801,7 +12952,7 @@ class FinanceController extends Controller
 			$levelid = $request->get('levelid');
 			$syid = $request->get('syid');
 			$semid = $request->get('semid');
-			
+
 			$option = '<option value="0">Select Classification</option>';
 
 			$tuitionheader = db::table('tuitionheader')
@@ -12815,7 +12966,7 @@ class FinanceController extends Controller
 							$q->where('semid', $semid);
 						}
 					}
-					if($levelid >= 17 && $levelid <= 20)
+					if($levelid >= 17 && $levelid <= 25)
 					{
 						$q->where('semid', $semid);
 					}
@@ -12829,7 +12980,7 @@ class FinanceController extends Controller
 				$tuitionheader = db::table('tuitionheader')
 					->where('levelid', $levelid)
 					->where('deleted', 0)
-					->first();				
+					->first();
 			}
 
 			if($tuitionheader)
@@ -12865,7 +13016,7 @@ class FinanceController extends Controller
 			$detailid = $request->get('detailid');
 			$list = '';
 			$total = 0;
-			
+
 			$tuitionitems = db::table('tuitionitems')
 				->select('items.description', 'tuitionitems.id', 'itemid', 'tuitionitems.amount')
 				->join('items', 'tuitionitems.itemid', '=', 'items.id')
@@ -12915,7 +13066,7 @@ class FinanceController extends Controller
 				->first();
 
 			$classid = $tuitiondetail->classificationid;
-			
+
 
 			$count = db::table('dpsetup')
 				->where('levelid', $levelid)
@@ -12930,7 +13081,7 @@ class FinanceController extends Controller
 							$q->where('semid', $semid);
 						}
 					}
-					if($levelid >= 17 && $levelid <= 20)
+					if($levelid >= 17 && $levelid <= 25)
 					{
 						$q->where('semid', $semid);
 					}
@@ -13039,7 +13190,7 @@ class FinanceController extends Controller
 								$q->where('semid', $semid);
 							}
 						}
-						if($levelid >= 17 && $levelid <= 20)
+						if($levelid >= 17 && $levelid <= 25)
 						{
 							$q->where('semid', $semid);
 						}
@@ -13097,10 +13248,10 @@ class FinanceController extends Controller
 					'amount' => $amount,
 					'updatedby' => auth()->user()->id,
 					'updateddatetime' => FinanceModel::getServerDateTime()
-				]);	
+				]);
 		}
 	}
-	
+
 	public function ee_save(Request $request)
 	{
 		if($request->ajax())
@@ -13128,11 +13279,11 @@ class FinanceController extends Controller
 					->insert([
 						'classid' => $item->classid,
 						'itemid' =>$item->id
-					]);	
+					]);
 			}
 		}
 	}
-	
+
 	public function sigs_load(Request $request)
 	{
 		$sigid = $request->get('sigid');
@@ -13190,7 +13341,7 @@ class FinanceController extends Controller
 
 		return 'done';
 	}
-	
+
 	public function ledgeradj_loadadjinfo(Request $request)
 	{
 		if($request->ajax())
@@ -13222,7 +13373,7 @@ class FinanceController extends Controller
 							$q->where('semid', $semid);
 						}
 					}
-					if($levelid >= 17 && $levelid <= 20)
+					if($levelid >= 17 && $levelid <= 25)
 					{
 						$q->where('semid', $semid);
 					}
@@ -13239,7 +13390,7 @@ class FinanceController extends Controller
 					<option value="'.$sched->classid.'">'.$sched->particulars.'</option>
 				';
 			}
-			
+
 			$data = array(
 				'name' => $stud->sid . ' - ' . $stud->lastname. ', ' . $stud->firstname . ' ' . $stud->middlename,
 				'levelname' => $stud->levelname,
@@ -13251,7 +13402,7 @@ class FinanceController extends Controller
 			echo json_encode($data);
 		}
 	}
-	
+
 	public function ledgeradj_debitsave(Request $request)
 	{
 		if($request->ajax())
@@ -13382,7 +13533,7 @@ class FinanceController extends Controller
 									$q->where('semid', $semid);
 								}
 							}
-							if($levelid >= 17 && $levelid <= 20)
+							if($levelid >= 17 && $levelid <= 25)
 							{
 								$q->where('semid', $semid);
 							}
@@ -13393,7 +13544,7 @@ class FinanceController extends Controller
 
 
 
-					if(count($sched) > 0)									
+					if(count($sched) > 0)
 					{
 						array_push($_id, $sched[0]->id);
 						// echo 'studpayscheddetail+: ' . $sched[0]->id . '; ';
@@ -13437,7 +13588,7 @@ class FinanceController extends Controller
 
 		}
 	}
-	
+
 	public function ledgeradj_loadcreditinfo(Request $request)
 	{
 		if($request->ajax())
@@ -13459,7 +13610,7 @@ class FinanceController extends Controller
 							$q->where('semid', FinanceModel::getSemID());
 						}
 					}
-					if($levelid >= 17 && $levelid <= 20)
+					if($levelid >= 17 && $levelid <= 25)
 					{
 						$q->where('semid', FinanceModel::getSemID());
 					}
@@ -13582,7 +13733,7 @@ class FinanceController extends Controller
 									'totalamount' => $itemized->totalamount + $bal,
 									'updatedby' => auth()->user(),
 									'updateddatetime' => FinanceModel::getServerDateTime()
-								]);		
+								]);
 
 							$iAmount -= $bal;
 						}
@@ -13594,14 +13745,14 @@ class FinanceController extends Controller
 									'totalamount' => $itemized->totalamount + $iAmount,
 									'updatedby' => auth()->user(),
 									'updateddatetime' => FinanceModel::getServerDateTime()
-								]);												
+								]);
 
 							$iAmount = 0;
 						}
 					}
 				}
 			}
-			//-----------------studledgeritemized--------------//				
+			//-----------------studledgeritemized--------------//
 
 			//--------------paymentsched--------------//
 
@@ -13620,7 +13771,7 @@ class FinanceController extends Controller
 								$q->where('semid', $semid);
 							}
 						}
-						if($levelid >= 17 && $levelid <= 20)
+						if($levelid >= 17 && $levelid <= 25)
 						{
 							$q->where('semid', $semid);
 						}
@@ -13660,7 +13811,7 @@ class FinanceController extends Controller
 										'balance' => $pay->balance - $tAmount,
 										'updatedby' => auth()->user()->id,
 										'updateddatetime' => FinanceModel::getServerDateTime(),
-									]);										
+									]);
 
 								$tAmount = 0;
 							}
@@ -13685,7 +13836,7 @@ class FinanceController extends Controller
 										$q->where('semid', $semid);
 									}
 								}
-								if($levelid >= 17 && $levelid <= 20)
+								if($levelid >= 17 && $levelid <= 25)
 								{
 									$q->where('semid', $semid);
 								}
@@ -13719,10 +13870,10 @@ class FinanceController extends Controller
 											'balance' => $pay->balance - $tAmount,
 											'updatedby' => auth()->user()->id,
 											'updateddatetime' => FinanceModel::getServerDateTime(),
-										]);										
+										]);
 
 									$tAmount = 0;
-								}	
+								}
 							}
 						}
 					}
@@ -13740,7 +13891,7 @@ class FinanceController extends Controller
 									$q->where('semid', $semid);
 								}
 							}
-							if($levelid >= 17 && $levelid <= 20)
+							if($levelid >= 17 && $levelid <= 25)
 							{
 								$q->where('semid', $semid);
 							}
@@ -13776,10 +13927,10 @@ class FinanceController extends Controller
 										'balance' => $pay->balance - $tAmount,
 										'updatedby' => auth()->user()->id,
 										'updateddatetime' => FinanceModel::getServerDateTime(),
-									]);										
+									]);
 
 								$tAmount = 0;
-							}	
+							}
 						}
 					}
 				}
@@ -13798,7 +13949,7 @@ class FinanceController extends Controller
 								$q->where('semid', $semid);
 							}
 						}
-						if($levelid >= 17 && $levelid <= 20)
+						if($levelid >= 17 && $levelid <= 25)
 						{
 							$q->where('semid', $semid);
 						}
@@ -13838,7 +13989,7 @@ class FinanceController extends Controller
 										'balance' => $pay->balance - $tAmount,
 										'updatedby' => auth()->user()->id,
 										'updateddatetime' => FinanceModel::getServerDateTime(),
-									]);										
+									]);
 
 								$tAmount = 0;
 							}
@@ -13851,7 +14002,7 @@ class FinanceController extends Controller
 			//--------------paymentsched--------------//
 		}
 	}
-	
+
 	public function ledger_reminder(Request $request)
 	{
 		$studid = $request->get('studid');
@@ -13883,7 +14034,7 @@ class FinanceController extends Controller
 						$q->where('semid', FinanceModel::getSemID());
 					}
 				}
-				if($levelid >= 17 && $levelid <= 20)
+				if($levelid >= 17 && $levelid <= 25)
 				{
 					$q->where('semid', FinanceModel::getSemID());
 				}
@@ -13918,7 +14069,7 @@ class FinanceController extends Controller
 				array_push($oth, (object)[
 					'particulars' => $sched->particulars,
 					'amount' => number_format($sched->amount, 2)
-				]);	
+				]);
 				$totaloth += $sched->amount;
 			}
 		}
@@ -13990,7 +14141,7 @@ class FinanceController extends Controller
 			return $pdf->stream('Reminder Slip.pdf');
 		}
 	}
-	
+
 	public function ledgeradj_delete(Request $request)
 	{
 		$dataid = $request->get('dataid');
@@ -14018,7 +14169,7 @@ class FinanceController extends Controller
 		$syid = $request->get('syid');
 		$semid = $request->get('semid');
 		$feesid = $request->get('feesid');
-		
+
 		$adj = db::table('studledger')
 			->where('id', $dataid)
 			->update([
@@ -14037,7 +14188,7 @@ class FinanceController extends Controller
 
 		UtilityController::resetpayment_v3($request);
 	}
-	
+
 	public function ledgeroa_delete(Request $request)
 	{
 		$dataid = $request->get('dataid');
@@ -14126,7 +14277,7 @@ class FinanceController extends Controller
 								$q->where('semid', FinanceModel::getSemID());
 							}
 						}
-						if($levelid >= 17 && $levelid <= 20)
+						if($levelid >= 17 && $levelid <= 25)
 						{
 							$q->where('semid', FinanceModel::getSemID());
 						}
@@ -14156,7 +14307,7 @@ class FinanceController extends Controller
 				else
 				{
 					$balance += $paysched->balance;
-					break;	
+					break;
 				}
 
 			}
@@ -14174,7 +14325,7 @@ class FinanceController extends Controller
 								$q->where('semid', FinanceModel::getSemID());
 							}
 						}
-						if($levelid >= 17 && $levelid <= 20)
+						if($levelid >= 17 && $levelid <= 25)
 						{
 							$q->where('semid', FinanceModel::getSemID());
 						}
@@ -14196,7 +14347,7 @@ class FinanceController extends Controller
 			}
 		}
 	}
-	
+
 	public function actvglvlload(Request $request)
 	{
 		$syid = $request->get('syid');
@@ -14208,7 +14359,7 @@ class FinanceController extends Controller
 		{
 			$stat = '';
 			$numofstud = 0;
-			if(count(FinanceModel::checksetup($glevel->id)) > 0)	
+			if(count(FinanceModel::checksetup($glevel->id)) > 0)
 			{
 				$stat = '<i class="fas fa-check-circle text-success"></i>';
 			}
@@ -14237,26 +14388,22 @@ class FinanceController extends Controller
 
 		return $list;
 	}
-	
+
 	public function ledger_studyload(Request $request)
 	{
 		$studid = $request->get('studid');
 		$syid = $request->get('syid');
 		$semid = $request->get('semid');
 		$list = '';
+		$droppedList = ''; // New list for dropped subjects
 		$totalunits = 0;
-		$levelid = 0;
+		$droppedUnits = 0; // Total units of dropped subjects
 		$course = '';
 
-		$sydesc = db::table('sy')
-			->where('id', $syid)
-			->first()->sydesc;
+		$sydesc = db::table('sy')->where('id', $syid)->first()->sydesc;
+		$semdesc = db::table('semester')->where('id', $semid)->first()->semester;
 
-		$semdesc = db::table('semester')
-			->where('id', $semid)
-			->first()->semester;
-
-		$einfo = db::table('college_enrolledstud')		
+		$einfo = db::table('college_enrolledstud')
 			->select('coursedesc', 'courseabrv', 'sectionid')
 			->join('college_courses', 'college_enrolledstud.courseid', '=', 'college_courses.id')
 			->where('studid', $studid)
@@ -14264,65 +14411,87 @@ class FinanceController extends Controller
 			->where('syid', $syid)
 			->where('semid', $semid)
 			->first();
-		
-		if($einfo)
-		{
+
+		if ($einfo) {
 			$course = $einfo->courseabrv;
-			$sections = db::table('college_sections')
-				->where('id', $einfo->sectionid)
-				->first();
-
-			if($sections)
-			{
-				$section = $sections->sectionDesc;
-			}
 		}
-		
-		$loads = db::table('college_studsched')
-			->select(db::raw('subjcode, subjdesc, lecunits + labunits AS units, sectiondesc'))
-			->join('college_classsched', 'college_studsched.schedid', '=', 'college_classsched.id')
-			->join('college_prospectus', 'college_classsched.subjectID', '=', 'college_prospectus.id')
-			->join('college_sections', 'college_classsched.sectionID', '=', 'college_sections.id')
-			->where('college_studsched.studid', $studid)
-			->where('college_studsched.deleted', 0)
-			->where('college_classsched.deleted', 0)
-			->where('college_classsched.syID', $syid)
-			->where('college_classsched.semesterID', $semid)
-			// ->where('college_sections.section_specification', '!=', 2)
-			->where('college_studsched.schedstatus', '!=', 'DROPPED')
-			->get();
 
-		foreach($loads as $load)
-		{
-			$totalunits += $load->units;
+		// ✅ Fetch Active Subjects
+		$loads = CollegeStudentLoadingController::getAddedStudentLoading($studid, 'all', $syid, $semid, 0, $finance = 1);
+		$loads = collect($loads);
+		$loads = $loads['original']['studentLoading'];
 
-			$list .='
+		foreach ($loads as $load) {
+			$totalunits += $load['totalUnits'];
+
+			$list .= '
 				<tr>
-					<td>'.$load->subjcode.'</td>
-					<td>'.$load->subjdesc.'</td>
-					<td class="text-center">'.$load->units.'</td>
+					<td>'.$load['subjCode'].'</td>
+					<td>'.$load['subjDesc'].'</td>
+					<td class="text-center">'.$load['totalUnits'].'</td>
 				</tr>
 			';
 		}
 
-		$list .='
-			<tr>
+		// ✅ Fetch Dropped Subjects
+		$droppedSubjects = DB::table('college_loadsubject')
+			->join('college_classsched', 'college_loadsubject.schedid', '=', 'college_classsched.id')
+			->join('college_prospectus', 'college_classsched.subjectID', '=', 'college_prospectus.id')
+			->where('college_loadsubject.studid', $studid)
+			->where('college_loadsubject.syid', $syid)
+			->where('college_loadsubject.semid', $semid)
+			->where('college_loadsubject.isDropped', 1) // Only dropped subjects
+			// ->where('college_loadsubject.deleted', 0)
+			// ->where('college_classsched.deleted', 0)
+			->select(
+				'college_prospectus.subjCode',
+				'college_prospectus.subjDesc',
+				DB::raw('college_prospectus.lecunits + college_prospectus.labunits AS totalUnits')
+			)
+			->get();
+
+		foreach ($droppedSubjects as $dropped) {
+			$droppedUnits += $dropped->totalUnits;
+
+			$droppedList .= '
+				<tr class="text-danger"> <!-- Red text for dropped subjects -->
+					<td>'.$dropped->subjCode.'</td>
+					<td>'.$dropped->subjDesc.' (Dropped)</td>
+					<td class="text-center">'.$dropped->totalUnits.'</td>
+				</tr>
+			';
+		}
+
+		// ✅ Total Row for Active Subjects
+		$list .= '
+			<tr> 
 				<td colspan="2" class="text-right text-bold">TOTAL: </td>
 				<td class="text-center text-bold">'.$totalunits.'</td>
-				<td>&nbsp;</td>
 			</tr>
 		';
 
-		$data = array(
-			'list' => $list,
+		// ✅ Total Row for Dropped Subjects (if any)
+		if ($droppedList != '') {
+			$droppedList .= '
+				<tr> 
+					<td colspan="2" class="text-right text-bold">TOTAL DROPPED: </td>
+					<td class="text-center text-bold text-danger">'.$droppedUnits.'</td>
+				</tr>
+			';
+		}
+
+		// ✅ Combine both lists
+		$finalList = $list . $droppedList;
+
+		return [
+			'list' => $finalList,
 			'sydesc' => $sydesc,
 			'semdesc' => $semdesc,
 			'course' => $course
-		);
-
-		return $data;
+		];
 	}
-	
+
+
 	public function readytoenroll_load(Request $request)
 	{
 		$syid = FinanceModel::getSYID();

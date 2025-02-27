@@ -172,74 +172,57 @@ li span{
 <table id="example" class="display table-bordered" style="width:100%; font-size: 14px!important;">
 <thead>
     <tr class="text-center">
-        {{-- <th style="width: 10%;">Date Applied</th> --}}
-        <th style="width: 20%;">Name</th>
-        <th style="width: 20%;">Type</th>
         <th style="width: 10%;">Date Applied</th>
+        <th style="width: 20%;">Name</th>
+        <th>Type</th>
         <th style="width: 15%;">Dates Covered</th>
-        <th class="text-left" style="width: 17%;">&nbsp;&nbsp;Purpose/Reason</th>
-        <th style="width: 8%;">Status</th>
-        <th width="10%"></th>
-        {{-- <th class="none">Dates Covered</th>
-        <th class="none">Approvals</th>
-        <th class="none">Attachments</th> --}}
+        <th class="text-left">&nbsp;&nbsp;Purpose/Reason</th>
+        <th style="width: 10%;">Status</th>
+        <th width="8%"></th>
     </tr>
 </thead>
 <tbody>
     @foreach($filedleaves as $leavekey => $filedleave)
         <tr>
-            <!--<td class="p-0 text-left {{--details-control--}}" style="vertical-align: top;">
-                &nbsp;<small>{{date('m/d/Y', strtotime($filedleave->createddatetime))}}</small><br>&nbsp;<small>{{date('h:i A', strtotime($filedleave->createddatetime))}}</small>
-            </td>-->
-            <td style="vertical-align: top; padding-left: 10px;">{{ucwords(strtolower($filedleave->lastname))}}, {{ucwords(strtolower($filedleave->firstname))}}</td>
-            <td style="vertical-align: top;">&nbsp;{{$filedleave->leave_type}}</td>
-            <td class="p-0 text-left {{--details-control--}}" style="vertical-align: top;">
-                &nbsp;<small>{{date('m/d/Y', strtotime($filedleave->createddatetime))}}</small><br>&nbsp;<small>{{date('h:i A', strtotime($filedleave->createddatetime))}}</small>
+            <td class="p-0 text-left {{--details-control--}}" style="vertical-align: top;">&nbsp;<small>{{date('m/d/Y', strtotime($filedleave->createddatetime))}}</small><br>&nbsp;<small>{{date('h:i A', strtotime($filedleave->createddatetime))}}</small>
             </td>
-            <td class="pl-2 text-left" style="vertical-align: top; font-weight: bold;">
-                {{-- @dd($filedleave->dates); --}}
+            <td style="vertical-align: top; border-right: none; padding-left: 10px;">{{ucwords(strtolower($filedleave->lastname))}}, {{ucwords(strtolower($filedleave->firstname))}}</td>
+            <td style="vertical-align: top; border-right: none;">{{$filedleave->leave_type}}</td>
+            <td class="text-right pr-2" style="vertical-align: top; font-weight: bold; border-right: none;">
                 @php
                     $leaveDatesArray = [];
                 @endphp
 
                 @if(count($filedleave->dates)>0)
-                    <small><span class="text-info">{{$filedleave->duration}}</span></small><br>
-                    {{-- @foreach($filedleave->dates as $eachdate)
+                    @foreach($filedleave->dates as $eachdate)
                         <small class="leavedates" leavedates="{{$eachdate->id}}">{{date('D , M d, Y', strtotime($eachdate->ldate))}}<br/><span class="text-info">{{$eachdate->daystatus}}</span></small><br>
                         @php
                             $leaveDatesArray[] = $eachdate->id;
                         @endphp
-                    @endforeach --}}
-                    {{-- @if(date('D , M d, Y', strtotime(collect($filedleave->dates)->first()->ldate)) == date('D , M d, Y', strtotime(collect($filedleave->dates)->last()->ldate)))
-                        {{date('D , M d, Y', strtotime(collect($filedleave->dates)->first()->ldate))}}
-                    @else
-                        {{date('D , M d, Y', strtotime(collect($filedleave->dates)->first()->ldate))}}<br/> to {{date('D , M d, Y', strtotime(collect($filedleave->dates)->last()->ldate))}}
-                    @endif --}}
+                    @endforeach
                 @endif
             </td>
-            {{-- <td style="vertical-align: top; border-right: none;">{{$filedleave->remarks}}</td> --}}
-            <td style="vertical-align: top;">
-                {{-- @php
+            <td style="vertical-align: top; border-right: none;">
+                @php
                     $dataExists = false;
-                @endphp --}}
+                @endphp
             
                 @if(count($filedleave->dates) > 0)
-                    - <small><span class="text-info">{{$filedleave->remarks}}</span></small><br>
-                    {{-- @foreach($filedleave->dates as $eachdate)
+                    @foreach($filedleave->dates as $eachdate)
                         @if(!empty($eachdate->remarks))
                             - <small>{{$eachdate->remarks}}</small> <br><span>&nbsp;</span><br>
                             @php
                                 $dataExists = true;
                             @endphp
                         @endif
-                    @endforeach --}}
+                    @endforeach
                 @endif
             
-                {{-- @if(!$dataExists)
+                @if(!$dataExists)
                     - <small>{{$filedleave->remarks}}</small>
-                @endif --}}
+                @endif
             </td>
-            <td class="text-center" style="vertical-align: top;">
+            <td class="text-center" style="vertical-align: top; border-right: none;">
                 @if(collect($filedleave->approvals)->where('userid', auth()->user()->id)->count() > 0)
                     @foreach($filedleave->approvals as $approval)
                         @if($approval->userid == auth()->user()->id)
@@ -247,31 +230,24 @@ li span{
                                 @php
                                     $pending += 1;
                                 @endphp
-                            {{-- <button type="button" class="btn btn-sm btn-warning btn-modalstatus" data-status="0" data-remarks="{{$approval->remarks}}" data-id="{{$filedleave->id}}"> --}}
                                 Pending
-                            {{-- </button> --}}
                             @elseif($approval->appstatus == 1)
                                 @php
                                     $approved += 1;
                                 @endphp
-                            {{-- <button type="button" class="btn btn-sm btn-success btn-modalstatus" data-status="1" data-remarks="{{$approval->remarks}}" data-id="{{$filedleave->id}}"> --}}
                                 Approved
-                            {{-- </button> --}}
                             @elseif($approval->appstatus == 2)
                                 @php
                                     $disapproved += 1;
                                 @endphp
-                            {{-- <button type="button" class="btn btn-sm btn-danger btn-modalstatus" data-status="2" data-remarks="{{$approval->remarks}}" data-id="{{$filedleave->id}}"> --}}
                                 <button type="button" class="btn btn-sm btn-outline-danger pr-1 pl-1 pt-0 pb-0" data-toggle="tooltip" data-placement="left" title="Reason for disapproval: {{$approval->remarks}}"> Rejected</button>
-                                
-                            {{-- </button> --}}
                             @endif
                         @endif
                     @endforeach
                 
                 @endif
             </td>
-            <th class="text-center" style="vertical-align: top;">
+            <th class="text-center" style="vertical-align: top; border-right: none;">
                 @if(collect($filedleave->approvals)->where('userid', auth()->user()->id)->count() > 0)
                     @foreach(collect($filedleave->approvals)->where('userid', auth()->user()->id)->values() as $approval)
                         @if($filedleave->display == 1)
@@ -288,53 +264,6 @@ li span{
                     @endforeach
                 @endif
             </th>
-            {{-- <td class="text-center">{{$filedleave->numdaysleft}}/{{$filedleave->days}}</td> --}}
-            {{-- <td class="pl-2">
-                @foreach($filedleave->dates as $date)
-                    <span class="right badge badge-default border" style="font-size: 11px !important;">{{date('D - M d, Y', strtotime($date->ldate))}}</span>
-                @endforeach
-            </td>
-            <td class="pl-2">
-                @if(count($filedleave->approvals)>0)
-                    <div class="row">
-                        <div class="col-md-12">
-                            @foreach($filedleave->approvals as $approval)
-                                <span class="right badge @if($approval->appstatus == 0) badge-warning @elseif($approval->appstatus == 1) badge-success @elseif($approval->appstatus == 2) badge-danger @endif border" style="font-size: 11px !important;">{{ucwords(strtolower($approval->lastname))}}, {{ucwords(strtolower($approval->firstname))}}</span>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-            </td>
-            <td class="p-0">
-                @if(count($filedleave->attachments)>0)
-                    <div class="row">                            
-                        @foreach($filedleave->attachments as $attachment)
-                        <div class="col-1">
-                            @php
-                                if(strtolower($attachment->extension) == 'jpg')
-                                {
-                                    $attachment->extensionpicurl = 'assets/images/jpg_ico.png';
-                                }elseif(strtolower($attachment->extension) == 'png')
-                                {
-                                    $attachment->extensionpicurl = 'assets/images/png_ico.png';
-                                }elseif(strtolower($attachment->extension) == 'pdf')
-                                {
-                                    $attachment->extensionpicurl = 'assets/images/pdf.png';
-                                }else{
-                                    $attachment->extensionpicurl = 'assets/images/unknown_type.png';
-                                }
-                            @endphp
-                            <a href="{{asset($attachment->picurl)}}" target="_blank" >
-                                <img src="{{asset($attachment->extensionpicurl)}}" class="img-fluid mb-2" alt="{{$attachment->filename}}" style="width: 50px; height: 50px;" data-toggle="tooltip"  data-placement="bottom" title="{{$attachment->filename}}"/>
-                            </a>
-                            <a href="{{asset($attachment->picurl)}}" class="btn btn-sm btn-success p-0 text-white" download style="font-size: 11px; width: 100%; float: right; color: inherit;" data-toggle="tooltip" data-placement="bottom" title="Download">
-                                <i class="fa fa-download"></i>
-                            </a>
-                        </div>
-                        @endforeach
-                    </div>
-                @endif
-            </td> --}}
         </tr>
         @if(collect($filedleave->approvals)->where('userid','!=', auth()->user()->id)->count() > 0)
         
@@ -347,12 +276,11 @@ li span{
                 <td style="border: none;"></td>
                 <td style="border: none;"></td>
             </tr>
-            {{-- @foreach(collect($filedleave->approvals)->where('userid','!=', auth()->user()->id)->values() as $eachapproval) --}}
             @foreach(collect($filedleave->approvals)->values() as $eachapproval)
                 <tr>
                     <td style="border-top: none;"><span style="display:none;">{{$eachapproval->lastname}}, {{$eachapproval->firstname}}</span></td>
-                    <td style="border: none; font-size: 11.5px!important;font-weight: 500; padding-left: 10px;">{{$eachapproval->lastname}}, {{$eachapproval->firstname}}</td>
-                    <td style="border: none;padding-left: 10px;">
+                    <td style="border: none; font-size: 12px!important;font-weight: 500; padding-left: 10px;">{{$eachapproval->lastname}}, {{$eachapproval->firstname}}</td>
+                    <td style="border: none;">
                         @if($eachapproval->appstatus == 0)
                             <span class="badge badge-warning">Pending</span>
                         @elseif($eachapproval->appstatus == 1)
@@ -456,323 +384,49 @@ li span{
         $('#spanbox-pending').text('{{$pending}}')
         $('#spanbox-approved').text('{{$approved}}')
         $('#spanbox-disapproved').text('{{$disapproved}}')
-        $(document).on('click','.btn-modalstatus', function(){
-            var currentstatus = $(this).attr('data-status');
-            var employeeleaveid = $(this).attr('data-id');
-            var remarks = $(this).attr('data-remarks');
 
-
-            console.log(currentstatus);
-            console.log(employeeleaveid);
-            console.log(remarks);
-            $('#btn-submitstatus').attr('data-id', employeeleaveid)
-            $('#btn-submitstatus').attr('data-id', employeeleaveid)
-            
-            var reason = $('#textarea-reason').val(remarks)
-            
-            if(currentstatus == 0)
-            {
-                $('#input-status-pending').prop('checked',true);
-                Swal.fire({
-                    title: 'Changing Status...',
-                    text: 'Would you like to continue?',
-                    type: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Continue',
-                    allowOutsideClick: false
-                }).then((result) => {
-                    if (result.value) {
-                        $.ajax({
-                            url: '/hr/leaves/changestatus',
-                            type:"GET",
-                            dataType:"json",
-                            data:{
-                                id: employeeleaveid,
-                                selectedstatus: currentstatus,
-                                reason: ''
-                            },
-                            success: function(data){
-                                if(data == 1)
-                                {
-                                    $('#textarea-reason').val('');
-                                    toastr.success('Pending successfully!')
-                                    $('#btn-generate').click();
-                                }else{
-                                    toastr.error('Something went wrong!')
-                                }
-                            }
-                        })
-                    }
-                })
-            }
-            else if(currentstatus == 1)
-            {
-                $('#input-status-approve').prop('checked',true);
-                
-                var closestRow = $(this).closest('tr');
-
-                // Find elements with class 'leavedates' within the closest row
-                var leaveDatesArray = closestRow.find('.leavedates').map(function() {
-                    return $(this).attr('leavedates');
-                }).get();
-
-                Swal.fire({
-                    title: 'Changing Status...',
-                    text: 'Would you like to continue?',
-                    type: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Continue',
-                    allowOutsideClick: false
-                }).then((result) => {
-                    if (result.value) {
-                        $.ajax({
-                            url: '/hr/leaves/changestatus',
-                            type:"GET",
-                            dataType:"json",
-                            data:{
-                                id: employeeleaveid,
-                                selectedstatus: currentstatus,
-                                reason: '',
-                                leaveDatesArray : leaveDatesArray
-                            },
-                            success: function(data){
-                                console.log(data);
-                                if(data == 1)
-                                {
-                                    $('#textarea-reason').val('');
-                                    toastr.success('Pending successfully!')
-                                    $('#btn-generate').click();
-                                }else{
-                                    toastr.error('Something went wrong!')
-                                }
-                            }
-                        })
-                    }
-                })
-            }else if(currentstatus == 3)
-            {
-                $('#input-status-approve').prop('checked',true);
-                
-                var closestRow = $(this).closest('tr');
-
-                // Find elements with class 'leavedates' within the closest row
-                var leaveDatesArray = closestRow.find('.leavedates').map(function() {
-                    return $(this).attr('leavedates');
-                }).get();
-
-                Swal.fire({
-                    title: 'Delete Leave?',
-                    text: 'Would you like to continue?',
-                    type: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Continue',
-                    allowOutsideClick: false
-                }).then((result) => {
-                    if (result.value) {
-                        $.ajax({
-                            url: '/hr/leaves/changestatus',
-                            type:"GET",
-                            dataType:"json",
-                            data:{
-                                id: employeeleaveid,
-                                selectedstatus: currentstatus,
-                                reason: '',
-                                leaveDatesArray : leaveDatesArray
-                            },
-                            success: function(data){
-                                if(data == 1)
-                                {
-                                    $('#textarea-reason').val('');
-                                    toastr.success('Deleted successfully!')
-                                    $('#btn-generate').click();
-                                }else{
-                                    toastr.error('Something went wrong!')
-                                }
-                            }
-                        })
-                    }
-                })
-            }
-            else if(currentstatus == 2)
-            {
-                $('#modal-changestatus').modal('show');
-                $('#input-status-disapprove').prop('checked',true);
-            }
-        })
-        $('#btn-submitstatus').on('click', function(){
-            var employeeleaveid = $(this).attr('data-id');
-            var selectedstatus  = $('.input-status:checked').val();
-            var reason = $('#textarea-reason').val();
-            Swal.fire({
-                title: 'Changing Status...',
-                text: 'Would you like to continue?',
-                type: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Continue',
-                allowOutsideClick: false
-            }).then((result) => {
-                if (result.value) {
-                    console.log(selectedstatus)
-                    $.ajax({
-                        url: '/hr/leaves/changestatus',
-                        type:"GET",
-                        dataType:"json",
-                        data:{
-                            id: employeeleaveid,
-                            selectedstatus: selectedstatus,
-                            reason: reason
-                        },
-                        success: function(data){
-                            $('.btn-close').click();
-                            if(data == 1)
-                            {
-                                $('#textarea-reason').val('');
-                                toastr.success('Pending successfully!')
-                                $('#btn-generate').click();
-                            }else{
-                                toastr.error('Something went wrong!')
-                            }
-                        }
-                    })
-                }
-            })
-        })
+        
+        // $('#btn-submitstatus').on('click', function(){
+        //     var employeeleaveid = $(this).attr('data-id');
+        //     var selectedstatus  = $('.input-status:checked').val();
+        //     var reason = $('#textarea-reason').val();
+        //     Swal.fire({
+        //         title: 'Changing Status...',
+        //         text: 'Would you like to continue?',
+        //         type: 'warning',
+        //         showCancelButton: true,
+        //         confirmButtonColor: '#3085d6',
+        //         cancelButtonColor: '#d33',
+        //         confirmButtonText: 'Continue',
+        //         allowOutsideClick: false
+        //     }).then((result) => {
+        //         if (result.value) {
+        //             console.log(selectedstatus)
+        //             $.ajax({
+        //                 url: '/hr/leaves/changestatus',
+        //                 type:"GET",
+        //                 dataType:"json",
+        //                 data:{
+        //                     id: employeeleaveid,
+        //                     selectedstatus: selectedstatus,
+        //                     reason: reason
+        //                 },
+        //                 success: function(data){
+        //                     $('.btn-close').click();
+        //                     if(data == 1)
+        //                     {
+        //                         $('#textarea-reason').val('');
+        //                         toastr.success('Pending successfully!')
+        //                         $('#btn-generate').click();
+        //                     }else{
+        //                         toastr.error('Something went wrong!')
+        //                     }
+        //                 }
+        //             })
+        //         }
+        //     })
+        // })
 
     })
 </script>
 @endif
-{{-- @if(count($filedleaves)>0)
-<div class="row">
-    <div class="col-md-4">
-        <input class="filter form-control" placeholder="Search employee" />
-    </div>
-</div>
-<div class="row">
-    <div class="col-md-8">&nbsp;</div>
-    @foreach($filedleaves as $filedleave)
-        <div class="col-md-12 eachfiledleave" data-string="{{$filedleave->lastname}}, {{$filedleave->firstname}} {{$filedleave->utype}}<">
-            <div class="card card-widget widget-user-2 shadow"  style="border: unset; box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;">
-                <div class="card-header">
-                    <div class="row">
-                        <div class="col-3 text-center">
-                            @php
-                                $avatar = 'assets/images/avatars/unknown.png';
-                            @endphp
-                            <img class="img-circle elevation-2" src="{{asset($filedleave->picurl)}}" onerror="this.onerror = null, this.src='{{asset($avatar)}}'" alt="User Avatar" width="40%"><br/>
-                            <small>{{$filedleave->utype}}</small>
-                        </div>
-                        <div class="col-9">
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <h4 class="text-uppercase">{{$filedleave->lastname}}, {{$filedleave->firstname}}</h4>
-                                </div>
-                                <div class="col-3">
-                                    <label>Leave Type</label>:
-                                </div>
-                                <div class="col-9">
-                                    {{$filedleave->leave_type}}
-                                </div>
-                                <div class="col-3">
-                                    <label>Reasons/Purpose</label>:
-                                </div>
-                                <div class="col-9 pr-2">
-                                    {{$filedleave->remarks}}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body p-1">
-                    <div class="row">
-                        <div class="col-md-7">
-                            <label>Dates ({{count($filedleave->dates)}})</label>
-                            <table class="table" style="margin: 0px;">
-                                <tbody>
-                                    @if(count($filedleave->dates)>0)
-                                        @foreach($filedleave->dates as $selecteddate)
-                                            <tr>
-                                                <td style="vertical-align: middle; width: 8%; font-size: 12px;">
-                                                    <div>@if($selecteddate->dayshift == 0)<span class="badge badge-info">Whole day</span>@elseif($selecteddate->dayshift == 1) <span class="badge badge-info">AM</span> @elseif($selecteddate->dayshift == 2) <span class="badge badge-info">PM</span> @endif</div>
-                                                </td>
-                                                <td style="vertical-align: middle; width: 30%; font-size: 15px;">
-                                                    <small>{{date('D - M d, Y', strtotime($selecteddate->ldate))}}</small>
-                                                </td>
-                                                <td class="p-1 text-danger text-right each-date" style="cursor: pointer; width: 60%; font-size: 12px;">
-                                                    @if(collect($selecteddate->approvals)->where('userid', auth()->user()->id)->count()>0)
-                                                        @foreach(collect($selecteddate->approvals)->where('userid', auth()->user()->id) as $approval)
-                                                                <button type="button" class="btn btn-sm btn-pending p-0 pr-1 pl-1 @if($approval->appstatus == 0)btn-warning @else btn-default @endif" data-id="{{$selecteddate->id}}"  data-toggle="tooltip" data-placement="bottom" title="@foreach(collect($selecteddate->approvals)->where('appstatus','0')->values() as $pending) {{$pending->firstname}} {{$pending->lastname}}, @endforeach" >Pending ({{collect($selecteddate->approvals)->where('appstatus','0')->count()}})</button>
-                                                                <button type="button" class="btn btn-sm btn-approve p-0 pr-1 pl-1 @if($approval->appstatus == 1)btn-success @else btn-default @endif" data-id="{{$selecteddate->id}}" data-toggle="tooltip" data-placement="bottom" title="@foreach(collect($selecteddate->approvals)->where('appstatus','1')->values() as $approved) {{$approved->firstname}} {{$approved->lastname}}, @endforeach"><i class="fa fa-thumbs-up"></i> ({{collect($selecteddate->approvals)->where('appstatus','1')->count()}})</button>
-                                                                <button type="button" class="btn btn-sm btn-disapprove p-0 pr-1 pl-1 @if($approval->appstatus == 2)btn-danger @else btn-default @endif" data-id="{{$selecteddate->id}}" data-toggle="tooltip" data-placement="bottom" title="@foreach(collect($selecteddate->approvals)->where('appstatus','2')->values() as $disapproved) {{$disapproved->firstname}} {{$disapproved->lastname}}, @endforeach" ><i class="fa fa-thumbs-down"></i> ({{collect($selecteddate->approvals)->where('appstatus','2')->count()}})</button>
-                                                        @endforeach
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    @endif
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="col-md-1">&nbsp;</div>
-                        <div class="col-md-4">
-                            @if(count($filedleave->attachments)>0)
-                            <div class="row m-0 p-0 d-flex">
-                                <div class="col-12 p-0">
-                                    <small class="text-bold">Attachments</small>
-                                </div>
-                                @foreach($filedleave->attachments as $attachment)
-                                    <div class="col-3">
-                                        <script>
-                                            function UrlExists(url) 
-                                            {
-                                            var http = new XMLHttpRequest();
-                                            http.open('HEAD', url, false);
-                                            http.send();
-                                            return http.status!=404;
-                                            }
-                                            
-                                            document.onreadystatechange = function() 
-                                            {
-                                                if (UrlExists('{{asset($attachment->picurl)}}')) {
-                                                    @php
-                                                    $anchorhref=asset($attachment->picurl); 
-                                                    @endphp
-                                                }
-                                                else {
-                                                    @php
-                                                    $anchorhref=asset('assets/images/error-404-page-file-found.jpg'); 
-                                                    @endphp
-                                                }
-
-                                                @php
-                                                    $attachment->althref = $anchorhref;
-                                                @endphp
-                                                
-                                                return false;
-                                            }
-                                        </script>
-                                        <a href="{{asset($attachment->picurl)}}" target="_blank" >
-                                            <img src="{{asset($attachment->picurl)}}" class="img-fluid mb-2" alt="{{$attachment->filename}}" onerror="this.onerror = null, this.src='{{asset('assets/images/error-404-page-file-found.jpg')}}'" style="width: 50px; height: 50px;"/>
-                                        </a>
-                                        <a href="{{asset($attachment->picurl)}}" class="btn btn-sm btn-success p-0 text-white" download style="font-size: 11px; width: 100%; float: right; color: inherit;" data-toggle="tooltip" data-placement="bottom" title="Download">
-                                            <i class="fa fa-download"></i>
-                                        </a>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endif
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endforeach
-</div>
-@endif --}}

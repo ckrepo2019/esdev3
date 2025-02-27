@@ -842,7 +842,10 @@ class HomeController extends Controller
                         'transactions' => $datasets,
                     ]);
 
-                } else {
+                } else if($refid == 35) {
+                    return view('tesda.pages.home');
+                }
+                else {
 
                     $schoolcalendar = DB::table('schoolcal')
                         ->select('schoolcal.id', 'schoolcal.description', 'schoolcal.datefrom', 'schoolcal.dateto', 'schoolcaltype.typename', 'schoolcal.noclass', 'schoolcal.annual')

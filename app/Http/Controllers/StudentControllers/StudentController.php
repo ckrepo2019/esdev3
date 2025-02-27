@@ -31,6 +31,32 @@ use Auth;
 
 class StudentController extends \App\Http\Controllers\Controller
 {
+    public function notify_individual_student(Request $request){
+        
+        $abbrv = DB::table('schoolinfo')->first()->abbreviation;
+        
+        $message = "LDCU: Hello! You can now proceed with enrollment at $abbrv. Please ensure to complete it before the enrollment date";
+        
+
+        $inserted = DB::table('tapbunker')->insert([
+            'smsstatus' => 1,
+            'message' => $message,
+            'receiver' => $request->get('phone'),
+            'createddatetime' => now('Asia/Manila')
+        ]);
+
+        if($inserted){
+            return response()->json([
+                'status' => "success", 
+                'studmsg' => $message
+            ]);
+        }else{
+            return response()->json([
+                'status' => "error", 
+                "message" => "Something went wrong. Pls try again!",  
+            ]);
+        }
+    }
 
     public function loadStudentSchedule(){
 

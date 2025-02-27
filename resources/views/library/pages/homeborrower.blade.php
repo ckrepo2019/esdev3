@@ -1,4 +1,21 @@
-@extends('layouts.borrower')
+@php
+    $extends = 'library.layouts.borrower';
+
+    $check_refid = DB::table('usertype')
+        ->where('id', Session::get('currentPortal'))
+        ->select('refid', 'resourcepath')
+        ->first();
+
+    if (isset($check_refid->refid) && $check_refid->refid == 34) {
+        $extends = 'library.layouts.backend';
+    } elseif (auth()->user()->type == 7) {
+        // $extends = 'studentPortal.layouts.app2';
+    }
+@endphp
+
+@extends($extends)
+
+{{-- @extends('library.layouts.borrower') --}}
 
 @section('css_before')
     <link rel="stylesheet" href="{{ asset('js/plugins/datatables/dataTables.bootstrap4.css') }}">
@@ -14,17 +31,22 @@
 @section('content')
     <!-- Main Container -->
     <main>
-       
-        @php
-            
-            $userid= 0;
-            $utype= DB::table('usertype')->where('id', auth()->user()->type)->value('utype');
-            if(auth()->user()->type == 7){
-                $userid = DB::table('studinfo')->where('userid', auth()->user()->id)->value('id');
-            }else{
-                $userid = DB::table('teacher')->where('userid', auth()->user()->id )->value('id');
-            }
 
+        @php
+
+            $userid = 0;
+            $utype = DB::table('usertype')
+                ->where('id', auth()->user()->type)
+                ->value('utype');
+            if (auth()->user()->type == 7) {
+                $userid = DB::table('studinfo')
+                    ->where('userid', auth()->user()->id)
+                    ->value('id');
+            } else {
+                $userid = DB::table('teacher')
+                    ->where('userid', auth()->user()->id)
+                    ->value('id');
+            }
 
             $circulations = \DB::table('library_circulation')
                 ->leftJoin('library_books', 'library_circulation.circulation_book_id', '=', 'library_books.id')
@@ -61,8 +83,14 @@
             <div class="row">
                 <div class="col-lg-4 mb-2">
                     <div class="mb-1 bg-gray p-2">
-                        <img src="https://tse1.mm.bing.net/th?id=OIP.-9N4K3Syg-OgbET8dgDwqAHaHa&pid=Api&rs=1&c=1&qlt=95&w=123&h=123"
-                            alt="QR CODE">
+                        {{-- <img src="https://tse1.mm.bing.net/th?id=OIP.-9N4K3Syg-OgbET8dgDwqAHaHa&pid=Api&rs=1&c=1&qlt=95&w=123&h=123"
+                            alt="QR CODE"> --}}
+                        <div style="display: flex; justify-content: center; align-items: center;">
+                            <img src="{{ $dataUri }}" alt="QR Code">
+                        </div>
+                        {{-- <div style="display: flex; justify-content: center; align-items: center; height: 100vh;">
+                            <img src="{{ $dataUri }}" alt="QR Code">
+                        </div> --}}
                     </div>
 
                     <h3 class="block-title font-size-sm mb-0">Member</h3>
@@ -71,20 +99,20 @@
                             <div class="content content-full d-flex align-items-center">
                                 <div class="my-3">
                                     <img class="img-avatar img-avatar-thumb" src="{{ asset('media/avatars/avatar13.jpg') }}"
-                                        alt="" style="height: 80px; width: 80px;">
+                                        alt="" style="height: 50px; width: 50px;">
                                 </div>
-                                <div class="ml-3" style="width: 100%; overflow: hidden;">
-                                    <h3 class="text-white text-start mb-0" style="white-space: nowrap;">
-                                        {{ auth()->user()->name }}</h3>
-                                    <table style="width: 100%;">
+                                <div class="ml-2" style="width: 100%; overflow: hidden;">
+                                    <h5 class="text-white text-start mb-0">
+                                        {{ auth()->user()->name }}</h5>
+                                    <table style="width: 100%; font-size: 12px; ">
                                         <tr>
-                                            <th class="text-white font-w500 mb-0">Card ID</th>
+                                            <td class="text-white font-w500 mb-0">CardID</td>
                                             <td class="text-white font-w500 mb-0">
-                                                00000
+                                                {{ auth()->user()->email }}
                                             </td>
                                         </tr>
                                         <tr>
-                                            <th class="text-white font-w500 mb-0">Class/Position</th>
+                                            <td class="text-white font-w500 mb-0">Class</td>
                                             <td class="text-white font-w500 mb-0">
                                                 {{ DB::table('usertype')->where('id', auth()->user()->type)->value('utype') }}
                                             </td>
@@ -99,22 +127,33 @@
 
                         @php
                             $jsonData = \DB::table('library_circulation')
-                            ->leftJoin('library_books', 'library_circulation.circulation_book_id', '=', 'library_books.id')
-                            ->join('library_status', 'library_circulation.circulation_status', '=', 'library_status.id')
-                            ->join('libraries', 'library_books.library_branch', '=', 'libraries.id')
-                            ->where('library_circulation.circulation_deleted', 0)
-                            ->where('circulation_members_id', $userid)
-                            ->where('circulation_utype', $utype)
-                            ->where('library_circulation.circulation_status', '!=', 3)
-                            ->whereNotNull('library_circulation.circulation_due_date') // Ensure there is a due date
-                            ->whereDate('library_circulation.circulation_due_date', '<', now()) // Filter overdue items
-                            ->select(
-                                'library_circulation.*', 
-                                'library_books.book_title', 
-                                'library_books.book_author', 
-                                'libraries.library_name', 
-                                'library_status.status_name')
-                            ->get();
+                                ->leftJoin(
+                                    'library_books',
+                                    'library_circulation.circulation_book_id',
+                                    '=',
+                                    'library_books.id',
+                                )
+                                ->join(
+                                    'library_status',
+                                    'library_circulation.circulation_status',
+                                    '=',
+                                    'library_status.id',
+                                )
+                                ->join('libraries', 'library_books.library_branch', '=', 'libraries.id')
+                                ->where('library_circulation.circulation_deleted', 0)
+                                ->where('circulation_members_id', $userid)
+                                ->where('circulation_utype', $utype)
+                                ->where('library_circulation.circulation_status', '!=', 3)
+                                ->whereNotNull('library_circulation.circulation_due_date') // Ensure there is a due date
+                                ->whereDate('library_circulation.circulation_due_date', '<', now()) // Filter overdue items
+                                ->select(
+                                    'library_circulation.*',
+                                    'library_books.book_title',
+                                    'library_books.book_author',
+                                    'libraries.library_name',
+                                    'library_status.status_name',
+                                )
+                                ->get();
 
                             foreach ($jsonData as $item) {
                                 $item->circulation_due_date = new \DateTime($item->circulation_due_date);
@@ -165,8 +204,9 @@
                                 <div class="tab-pane fade{{ $loop->last ? ' show active' : '' }}"
                                     id="tab_{{ strtolower($tab) }}" role="tabpanel">
                                     <div class="table-responsive">
-                                        <table class="table table-hover table-borderless table-striped table-vcenter js-dataTable-full" id="tb_{{ strtolower($tab) }}"
-                                            style="width: 100%;">
+                                        <table
+                                            class="table table-hover table-borderless table-striped table-vcenter js-dataTable-full"
+                                            id="tb_{{ strtolower($tab) }}" style="width: 100%;">
                                             <thead class="bg-primary text-light">
                                                 <tr>
                                                     <th>Book Title</th>
@@ -185,28 +225,22 @@
                     </div>
                     <div class="block block-rounded">
                         <div class="block-header">
-                            <h3 class="block-title text-warning"><i class="si si-pin mr-2 text-dark"></i>Requested books</h3>
+                            <h3 class="block-title text-warning"><i class="si si-pin mr-2 text-dark"></i>Requested books
+                            </h3>
                         </div>
                         <div class="block-content pb-4">
                             <div class="row">
-                                @foreach (
-                                    DB::table('library_requested_books')
-                                    ->where('requested_deleted', 0) 
-                                    ->where('requested_userid', auth()->user()->id) 
-                                    ->join('library_books', 'library_requested_books.requested_bookid', '=', 'library_books.id')
-                                    ->select(
-                                        'library_requested_books.*',
-                                        'library_books.book_img',
-                                        'library_books.book_title',
-                                    )
-                                    ->get() as $item)
+                                @foreach (DB::table('library_requested_books')->where('requested_deleted', 0)->where('requested_userid', auth()->user()->id)->join('library_books', 'library_requested_books.requested_bookid', '=', 'library_books.id')->select('library_requested_books.*', 'library_books.book_img', 'library_books.book_title')->get() as $item)
                                     <div class="col-md-4 col-sm-6">
                                         <div class="m-1 position-relative image-wrap">
-                                            <p class="text-center font-size-sm font-w500" style="white-space: nowrap;">{{ $item->book_title }}</p>
+                                            <p class="text-center font-size-sm font-w500" style="white-space: nowrap;">
+                                                {{ $item->book_title }}</p>
                                             <div class="d-flex justify-content-center align-items-center position-relative">
-                                                <i class="far fa-trash-alt text-light p-2 bg-danger trash-icon" data-id="{{ $item->id }}" data-toggle="tooltip" title="Remove"
+                                                <i class="far fa-trash-alt text-light p-2 bg-danger trash-icon"
+                                                    data-id="{{ $item->id }}" data-toggle="tooltip" title="Remove"
                                                     style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);"></i>
-                                                <img class="shadow" src="{{ asset($item->book_img ?? 'books/default.png') }}"
+                                                <img class="shadow"
+                                                    src="{{ asset($item->book_img ?? 'books/default.png') }}"
                                                     style="height:150px; width:130px;" />
                                             </div>
                                         </div>
@@ -240,21 +274,23 @@
         var lost = {!! json_encode($lost) !!};
 
         console.log(borrowed)
-    
+
         $(document).ready(function() {
             loadDataTable('tb_borrowed', borrowed);
             loadDataTable('tb_issued', issued);
             loadDataTable('tb_lost', lost);
             loadDataTable('tb_returned', returned);
-    
+
             $('.trash-icon').on('click', function() {
                 var id = $(this).data('id');
                 var trashIcon = $(this);
                 trashIcon.tooltip('dispose');
-    
+
                 $.ajax({
                     type: 'GET',
-                    data: { id: id },
+                    data: {
+                        id: id
+                    },
                     url: '{{ route('delete.pin') }}',
                     success: function(data) {
                         notify(data.status, data.message);
@@ -263,7 +299,7 @@
                 });
             });
         });
-    
+
         function loadDataTable(tableId, data) {
             $('#' + tableId).DataTable({
                 autowidth: false,
@@ -271,38 +307,61 @@
                 responsive: true,
                 stateSave: true,
                 data: data,
-                language: { emptyTable: 'No Records Found' },
-                columns: [
-                    { data: 'book_title', render: titleRenderer },
-                    { data: 'circulation_date_borrowed', className: 'text-center', render: dateRenderer },
-                    { data: 'circulation_due_date', className: 'text-center', render: dateRenderer },
-                    { data: 'circulation_date_returned', className: 'text-center', render: dateRenderer },
-                    { data: 'circulation_penalty', className: 'text-center', render: penaltyRenderer },
-                    { data: 'status_name', className: 'text-right', render: statusRenderer },
+                language: {
+                    emptyTable: 'No Records Found'
+                },
+                columns: [{
+                        data: 'book_title',
+                        render: titleRenderer
+                    },
+                    {
+                        data: 'circulation_date_borrowed',
+                        className: 'text-center',
+                        render: dateRenderer
+                    },
+                    {
+                        data: 'circulation_due_date',
+                        className: 'text-center',
+                        render: dateRenderer
+                    },
+                    {
+                        data: 'circulation_date_returned',
+                        className: 'text-center',
+                        render: dateRenderer
+                    },
+                    {
+                        data: 'circulation_penalty',
+                        className: 'text-center',
+                        render: penaltyRenderer
+                    },
+                    {
+                        data: 'status_name',
+                        className: 'text-right',
+                        render: statusRenderer
+                    },
                 ],
             });
         }
-    
+
         function titleRenderer(type, data, row) {
             return `<span class="font-size-sm font-w500" style="white-space:nowrap;">${capitalizeFirstLetter(row.book_title)}</span>`;
         }
-    
+
         function dateRenderer(type, data, row) {
             return `<span class="font-size-sm" style="white-space:nowrap;">${row.circulation_date_borrowed}</span>`;
         }
-    
+
         function penaltyRenderer(data, type, row) {
             var penalty = parseFloat(row.circulation_penalty).toFixed(2);
             return `<span class="font-size-sm font-w600 text-danger">₱${penalty}</span>`;
         }
-    
+
         function statusRenderer(type, data, row) {
             return `<span class="font-size-sm">${row.status_name}</span>`;
         }
-    
+
         function capitalizeFirstLetter(string) {
             return string.toLowerCase().replace(/\b\w/g, match => match.toUpperCase());
         }
     </script>
-    
 @endsection

@@ -1321,6 +1321,7 @@
 
     // Load Select 2 salary type (Ex. Monthly, Daily, Weekly)
     function load_salarytype(){
+        console.log('load salaribasistype');
         console.log(salaribasistype);
         $('#select-salarytype').empty()
         $('#select-salarytype').append('<option value="">Select Salary Type</option>')
@@ -1349,6 +1350,8 @@
             type: "GET",
             url: "/hr/payrollv3/salarybasistype",
             success: function (data) {
+                console.log('DATA',data);
+                
                 salaribasistype = data
                 load_salarytype()
             }

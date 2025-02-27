@@ -8,7 +8,7 @@
                 <div class="row mb-2">
                     <div class="col-md-12">
                         <label>School Name</label>
-                        <input type="text" class="form-control" id="editinput-schoolname" value="{{$recordinfo->schoolid}}"/>
+                        <input type="text" class="form-control" id="editinput-schoolname" value="{{$recordinfo->schoolname}}"/>
                     </div>
                 </div>
                 <div class="row mb-2">

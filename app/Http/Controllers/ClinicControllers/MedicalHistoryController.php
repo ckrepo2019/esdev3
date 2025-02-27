@@ -11,7 +11,7 @@ class MedicalHistoryController extends Controller
 {
     public function index(Request $request)
     {
-        
+        $extends = '';
         $refid = DB::table('usertype')
             ->where('id', Session::get('currentPortal'))
             ->first();
@@ -20,10 +20,8 @@ class MedicalHistoryController extends Controller
         {
             $extends = 'clinic';
         }elseif($refid->refid == '24'){
-
             $extends = 'clinic_nurse';
         }elseif($refid->refid == '25'){
-
             $extends = 'clinic_doctor';
         }
         $users  = SchoolClinic::users();
@@ -227,5 +225,42 @@ class MedicalHistoryController extends Controller
         }
 
         
+    }
+
+    public function get_experiences()
+    {
+
+        $experiences = DB::table('clinic_experiences')
+        ->where('deleted', '0')
+        ->select(
+            'id',
+            'description',
+        )
+        ->get();
+        return $experiences;
+    }
+
+    public function update_experiences(Request $request){
+        $option = $request->get('option');
+        $id = $request->get('id');
+        DB::table('clinic_experiences')
+        ->where('id', $id)
+        ->update([
+            'description' => $option,
+            'updatedby' => auth()->user()->id,
+            'updateddatetime'=> \Carbon\Carbon::now('Asia/Manila')
+        ]);
+    }
+
+    public function delete_experiences(Request $request)
+    {
+
+        DB::table('clinic_experiences')
+        ->where('id', $request->get('id'))
+        ->update([
+            'deleted'    =>     1,
+            'deletedby'      => auth()->user()->id,
+            'deleteddatetime'=> \Carbon\Carbon::now('Asia/Manila')
+        ]);
     }
 }

@@ -5401,6 +5401,7 @@ class Form10Controller extends Controller
                         $template = 'registrar/forms/deped/form10_elem';
                     }elseif($format == 'deped-2')//old
                     {
+                        // return 'hello';
                         $template = 'registrar/pdf/pdf_schoolform10_elem';
                     }elseif($format == 'school'){
                         $template = 'registrar/pdf/pdf_schoolform10_junior';
@@ -5423,7 +5424,14 @@ class Form10Controller extends Controller
                 }else{
                     $papersize = null;
                 }
-                $pdf = PDF::loadview($template,compact('eligibility','studinfo','records','maxgradecount','footer','format','acadprogid','schoolinfo','subjects','gradelevels','papersize')); 
+                
+                $eachgradesignatories = DB::table('sf10bylevelsign')
+                    ->where('studid',$studentid)
+                    ->where('semid', 0)            
+                    ->where('deleted','0')
+                    ->get();
+                
+                $pdf = PDF::loadview($template,compact('eligibility','studinfo','records','maxgradecount','footer','format','acadprogid','schoolinfo','subjects','gradelevels','papersize','eachgradesignatories')); 
                 return $pdf->stream('School Form 10 - '.$studinfo->lastname.' - '.$studinfo->firstname.'.pdf');
                 //     // return $subjects;
                 // // $subjects = collect($subjects)->unique('subjdesc')->values();
@@ -8395,6 +8403,7 @@ class Form10Controller extends Controller
                 // return collect($schoolinfo);
                 // return $records[0][0]->schoolname;
                 $layout = $request->get('layout');
+                // return $template;
                 $pdf = PDF::loadview($template,compact('eligibility','studinfo','records','maxgradecount','footer','format','acadprogid','schoolinfo','subjects','gradelevels','layout','papersize')); 
                 return $pdf->stream('School Form 10 - '.$studinfo->lastname.' - '.$studinfo->firstname.'.pdf');  
 
@@ -15680,7 +15689,7 @@ class Form10Controller extends Controller
         }
     }
     public function updatesigneachsem(Request $request)
-    {
+    { 
         date_default_timezone_set('Asia/Manila');
         $checkifexists = DB::table('sf10bylevelsign')
             ->where('studid', $request->get('studentid'))

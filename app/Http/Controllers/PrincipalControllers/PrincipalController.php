@@ -202,7 +202,7 @@ class PrincipalController extends \App\Http\Controllers\Controller
 
     public static function enrolled_students(Request $request)
     {
-        
+
         $strandid = $request->get('strand');
         $sectionid = $request->get('section');
         $acadprog = $request->get('acad');
@@ -214,7 +214,7 @@ class PrincipalController extends \App\Http\Controllers\Controller
         $enrolled = [];
 
         if ($acadprog == 4 || $acadprog == 3 || $acadprog == 2) {
-           
+
             $enrolled = DB::table('enrolledstud')
                 ->where('enrolledstud.deleted', 0)
                 ->join('studinfo', function ($join) {
@@ -233,6 +233,7 @@ class PrincipalController extends \App\Http\Controllers\Controller
                     $join->where('gradelevel.deleted', 0);
                 });
 
+
             if ($syid != null) {
                 $enrolled = $enrolled->where('enrolledstud.syid', $syid);
             }
@@ -242,11 +243,10 @@ class PrincipalController extends \App\Http\Controllers\Controller
             if ($sectionid != null) {
                 $enrolled = $enrolled->where('enrolledstud.sectionid', $sectionid);
             }
-            
             if ($studid != null) {
                 $enrolled = $enrolled->where('enrolledstud.studid', $studid);
             }
-            
+
             $enrolled = $enrolled
                 ->orderBy('studentname', 'asc')
                 ->select(
@@ -265,9 +265,7 @@ class PrincipalController extends \App\Http\Controllers\Controller
                     'sections.sectionname',
                     DB::raw("CONCAT(studinfo.lastname,' ',studinfo.firstname) as studentname")
                 )
-                ->distinct()
                 ->get();
-                
 
         } else if ($acadprog == 5) {
 
@@ -333,7 +331,6 @@ class PrincipalController extends \App\Http\Controllers\Controller
                     'description',
                     DB::raw("CONCAT(studinfo.lastname,' ',studinfo.firstname) as studentname")
                 )
-                ->distinct()
                 ->get();
 
         }
@@ -396,36 +393,26 @@ class PrincipalController extends \App\Http\Controllers\Controller
                 ->where('deleted', 0)
                 ->get();
         }
-        // $students = array();
-        $students = []; // Initialize the students array
-
+        $students = array();
         foreach ($academicprogram as $item) {
-            // Clone the request to avoid modifying the global object
-            $clonedRequest = clone $request;
-            $clonedRequest->request->add(['acad' => $item->id]);
-            
-            $student = self::enrolled_students($clonedRequest);
-            
+            $request->request->add(['acad' => $item->id]);
+            $student = self::enrolled_students($request);
             foreach ($student as $stud_item) {
-                // Ensure the necessary fields are present and not null
-                $stud_item->id = $stud_item->studid ?? null;
-                $stud_item->search = ($stud_item->student ?? '') . ' ' . ($stud_item->levelname ?? '') . ' ' . ($stud_item->sectionname ?? '') . ' ' . ($stud_item->sid ?? '');
-                
-                $isDuplicate = false;
-                foreach ($students as $existingStudent) {
-                    if ($existingStudent->id === $stud_item->id) {
-                        $isDuplicate = true;
+                $has_same_id = false;
+                foreach ($students as $existing_student) {
+                    if ($existing_student->id == $stud_item->studid) {
+                        $has_same_id = true;
                         break;
                     }
                 }
-        
-                // Add the student only if they are not already in the array
-                if (!$isDuplicate) {
+                if (!$has_same_id) {
+                    $stud_item->id = $stud_item->studid;
+                    $stud_item->search = $stud_item->student . ' ' . $stud_item->levelname . ' ' . $stud_item->sectionname . ' ' . $stud_item->sid;
                     array_push($students, $stud_item);
                 }
+
             }
         }
-
         return $students;
     }
 
@@ -445,6 +432,36 @@ class PrincipalController extends \App\Http\Controllers\Controller
         $request->request->add(['inSF9' => true]);
         $quarter = $request->get('quarter');
 
+        $levelname = '';
+        if(isset($gradelevel)){
+           $levelname = DB::table('gradelevel')->where('id', $gradelevel)->first()->levelname;
+        }
+
+        $award_setup = DB::table('grades_ranking_setup')
+            ->where('deleted',0)
+            ->where('syid',$syid)
+            ->where( function($query) use ($gradelevel) {
+                if(isset($gradelevel) || $gradelevel == null){
+                    $query->where('levelid', $gradelevel);
+                }
+            })
+            ->select(
+                'id',
+                'award',
+                'gto',
+                'gfrom', 
+                'levelid'
+            )
+            ->get();
+
+            if(count($award_setup) == 0){
+                return response()->json([
+                    'status' => 'warning',
+                    'message' => 'No Setup Available for '. $levelname
+              ]);
+            }
+
+
         $sections = DB::table('sections')
             ->where('levelid', $gradelevel)
             ->where('deleted', 0)
@@ -463,6 +480,7 @@ class PrincipalController extends \App\Http\Controllers\Controller
         foreach ($sections as $section_item) {
             $request->request->add(['section' => $section_item->id]);
             $temp_students = \App\Http\Controllers\TeacherControllers\TeacherGradingV4::get_student_data($request);
+            // return $temp_students;
 
             foreach ($temp_students as $student) {
                 if ($student->student != "SUBJECTS") {
@@ -492,7 +510,7 @@ class PrincipalController extends \App\Http\Controllers\Controller
                 $temp_data = collect($item->grades)->where('subjid', 'G1')->values();
             }
 
-            if (count($temp_data) > 0) {                             
+            if (count($temp_data) > 0) {
                 $quarter_grade = 'q' . $quarter;
                 $quarter_award = 'q' . $quarter . 'award';
                 $quarter_comp = 'q' . $quarter . 'comp';

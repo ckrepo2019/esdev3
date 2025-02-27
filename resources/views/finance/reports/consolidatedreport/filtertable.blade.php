@@ -22,7 +22,7 @@
                             <th class="text-right">SHS</th>
                             <th class="text-right">HS</th>
                             <th class="text-right">GS</th>
-                            {{-- <th class="text-right">GENERAL</th> --}}
+                            <th class="text-right">GENERAL</th>
                             <th class="text-right">Total</th>
                         </tr>
                     </thead>
@@ -44,9 +44,9 @@
                             <th class="text-right text-bold">
                                 {{number_format($gentotalgs, 2)}}
                             </th>
-                            {{-- <th class="text-right text-bold">
+                            <th class="text-right text-bold">
                                 {{number_format($gentotalgen, 2)}}
-                            </th> --}}
+                            </th>
                             <th class="text-right text-bold">
                                 {{number_format($gentotal, 2)}}
                             </th>

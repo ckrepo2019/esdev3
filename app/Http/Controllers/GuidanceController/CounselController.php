@@ -72,7 +72,7 @@ class CounselController extends \App\Http\Controllers\Controller
         }
 
         $returnId = DB::table('guidance_referral_setup')->first();
-        if ($returnId->id) {
+        if ($returnId && $returnId->id) {
             DB::table('guidance_referral_setup')
                 ->where('id', $returnId->id)
                 ->update(

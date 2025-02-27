@@ -60,37 +60,33 @@ class PromotionalReport extends Model
                                 ->orderBy('gender','desc')
                                 ->orderBy('lastname')
                                 ->get();
-
             $student_grades = array();
-
             foreach($enrolled_stud as $enrolled_stud_item){
 
                 $sched_array = array();
 
-                $sched = DB::table('college_studsched')
+                $sched = DB::table('college_loadsubject')
                             ->join('college_classsched',function($join)use($syid,$semid){
-                                $join->on('college_studsched.schedid','=','college_classsched.id');
+                                $join->on('college_loadsubject.schedid','=','college_classsched.id');
                                 $join->where('college_classsched.deleted',0);
-                                $join->where('syID',$syid);
+                                $join->where('college_classsched.syID',$syid);
                                 $join->where('semesterID',$semid);
                             })
                             ->join('college_prospectus',function($join)use($syid,$semid){
                                 $join->on('college_classsched.subjectID','=','college_prospectus.id');
                                 $join->where('college_prospectus.deleted',0);
                             })
-                            ->leftJoin('college_studentprospectus',function($join) use($enrolled_stud_item,$syid,$semid){
-                                $join->on('college_prospectus.id','=','college_studentprospectus.prospectusid');
-                                $join->where('college_studentprospectus.deleted',0);
-                                $join->where('college_studentprospectus.studid',$enrolled_stud_item->studid);
-                                $join->where('college_studentprospectus.semid',$semid);
-                                $join->where('college_studentprospectus.syid',$syid);
+                            ->leftJoin('college_stud_term_grades', function ($join) use ($syid, $semid) {
+                                $join->on('college_classsched.id', '=', 'college_stud_term_grades.schedid');
                             })
-                            ->where('schedstatus','REGULAR')
-                            ->where('college_studsched.deleted',0)
-                            ->where('college_studsched.studid',$enrolled_stud_item->studid)
-                            ->select('subjCode','fg as finalgrade')
-                            ->orderBy('subjCode')
-                            ->distinct('subjCode')
+                            // ->where('schedstatus','REGULAR')
+                            ->where('college_loadsubject.deleted', 0)
+                            ->where('college_loadsubject.semid', $semid)
+                            ->where('college_loadsubject.syid', $syid)
+                            ->where('college_loadsubject.studid',$enrolled_stud_item->studid)
+                            ->select('college_prospectus.subjCode','college_stud_term_grades.final_grade_transmuted as finalgrade')
+                            ->orderBy('college_prospectus.subjCode')
+                            ->distinct('college_prospectus.subjCode')
                             ->get();
 
 
@@ -212,7 +208,7 @@ class PromotionalReport extends Model
 
         foreach($courses as $item){
             $temp_level = 1;
-            for($y = 17; $y <= 20; $y++){
+            for($y = 17; $y <= 25; $y++){
              
               
                 
@@ -340,6 +336,6 @@ class PromotionalReport extends Model
 
     }
 
-
+    
 
 }

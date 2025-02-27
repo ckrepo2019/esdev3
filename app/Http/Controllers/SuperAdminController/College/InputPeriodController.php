@@ -29,7 +29,11 @@ class InputPeriodController extends \App\Http\Controllers\Controller
 
 
         foreach($active_inputperiod as $item){
-            $item->endformat2 = \Carbon\Carbon::create($item->dateend)->isoFormat('MMM DD, YYYY hh:mm A');
+            // $item->endformat2 = \Carbon\Carbon::create($item->dateend)->isoFormat('MMM DD, YYYY hh:mm A');
+            $item->endformat2 = \Carbon\Carbon::create($item->dateend)
+            ->isoFormat('MMM DD, YYYY') . '<br>' .
+            \Carbon\Carbon::create($item->dateend)->isoFormat('hh:mm A');
+            
             $item->date = \Carbon\Carbon::create($item->dateend)->isoFormat('DD-MM-YYYY');
         }
 

@@ -55,10 +55,6 @@ class ScholarshipCoorController extends Controller
             ->first();
 
 
-
-
-
-
         //$title = $registrar->title != null ? $registrar->title.' ' : '';
         //$middlename = strlen($registrar->middlename) > 0 ? $registrar->middlename[0].'. ' : '';
 
@@ -77,11 +73,8 @@ class ScholarshipCoorController extends Controller
             if (isset($registrar->suffix)) {
                 $temp_suffix = ', ' . $registrar->suffix;
             }
-            $registrar_sig = $registrar->firstname . $temp_middle . ' ' . $registrar->lastname . ', ' . $temp_title . '. ';
+            $registrar_sig = $registrar->firstname . $temp_middle . ' ' . $registrar->lastname;
         }
-
-
-
 
         if ($request->get('syid') != null) {
             $activeSy = DB::table('sy')->where('id', $request->get('syid'))->select('id', 'sydesc')->first();
@@ -105,13 +98,13 @@ class ScholarshipCoorController extends Controller
 
         // $schedules =  \App\Models\SuperAdmin\SuperAdminData::subject_enrollment_records($activeSy->id, $activeSem->id,  $id);
 
-        $schedules = DB::table('college_studsched')
-            ->where('studid', $id)
-            ->where('college_studsched.deleted', 0)
-            ->where('college_studsched.deleted', 0)
-            ->where('college_studsched.schedstatus', '!=', 'DROPPED')
+        $schedules = DB::table('college_loadsubject')
+            ->where('college_loadsubject.studid', $id)
+            ->where('college_loadsubject.deleted', 0)
+            ->join('college_enrolledstud', 'college_loadsubject.studid', 'college_enrolledstud.studid')
+            ->where('college_enrolledstud.studstatus', '!=', 'DROPPED')
             ->join('college_classsched', function ($join) use ($activeSy, $activeSem) {
-                $join->on('college_studsched.schedid', '=', 'college_classsched.id');
+                $join->on('college_loadsubject.schedid', '=', 'college_classsched.id');
                 $join->where('college_classsched.syid', $activeSy->id);
                 $join->where('college_classsched.deleted', 0);
                 $join->where('college_classsched.semesterID', $activeSem->id);
@@ -135,8 +128,12 @@ class ScholarshipCoorController extends Controller
             ->leftJoin('days', function ($join) {
                 $join->on('college_scheddetail.day', '=', 'days.id');
             })
+            ->leftJoin('college_instructor', function ($join) {
+                $join->where('college_instructor.deleted', 0);
+                $join->on('college_classsched.id', '=', 'college_instructor.classschedid');
+            })
             ->leftJoin('teacher', function ($join) {
-                $join->on('college_classsched.teacherID', '=', 'teacher.id');
+                $join->on('college_instructor.teacherID', '=', 'teacher.id');
             })
             ->leftJoin('rooms', function ($join) {
                 $join->on('college_scheddetail.roomid', '=', 'rooms.id');
@@ -161,12 +158,11 @@ class ScholarshipCoorController extends Controller
                 'lastname',
                 'firstname',
                 'sectionDesc',
-                'day'
+                DB::raw('GROUP_CONCAT( DISTINCT days.id ORDER BY days.id SEPARATOR ", ") as day')
 
             )
+            ->groupBy('college_classsched.id')
             ->get();
-
-
         $schedules = collect($schedules)->sortBy('subjCode')->values();
 
 
@@ -183,8 +179,8 @@ class ScholarshipCoorController extends Controller
                 $byClass = collect($subjitem)->groupBy('schedotherclass');
 
                 foreach ($byClass as $item) {
-
                     $day = '';
+
 
                     foreach (collect($item)->groupBy('etime') as $secondItem) {
 
@@ -202,6 +198,8 @@ class ScholarshipCoorController extends Controller
 
 
                             $details = $thirdItem;
+                            $days = explode(',', $thirdItem->day);
+                            $thirdItem->day = $days;
 
                             // if($thirdItem->description == 'Thursday'){
                             //     $day .= substr($thirdItem->description, 0 , 1).'h';
@@ -212,17 +210,18 @@ class ScholarshipCoorController extends Controller
                             // else{
                             //     $day .= substr($thirdItem->description, -1 , 1);
                             // }
+                            foreach ($days as $d) {
 
-                            $day .= $thirdItem->day == 1 ? 'M' : '';
-                            $day .= $thirdItem->day == 2 ? 'T' : '';
-                            $day .= $thirdItem->day == 3 ? 'W' : '';
-                            $day .= $thirdItem->day == 4 ? 'Th' : '';
-                            $day .= $thirdItem->day == 5 ? 'F' : '';
-                            $day .= $thirdItem->day == 6 ? 'Sat' : '';
-                            $day .= $thirdItem->day == 7 ? 'Sun' : '';
+                                $day .= $d == 1 ? 'M' : '';
+                                $day .= $d == 2 ? 'T' : '';
+                                $day .= $d == 3 ? 'W' : '';
+                                $day .= $d == 4 ? 'Th' : '';
+                                $day .= $d == 5 ? 'F' : '';
+                                $day .= $d == 6 ? 'Sat' : '';
+                                $day .= $d == 7 ? 'Sun' : '';
 
 
-
+                            }
                         }
 
                         // return $dayl;
@@ -258,7 +257,6 @@ class ScholarshipCoorController extends Controller
             }
 
             $schedules = collect($data)->groupBy('subjID');
-
         }
 
 
@@ -372,7 +370,8 @@ class ScholarshipCoorController extends Controller
                 'firstname',
                 'middlename',
                 'suffix',
-                'title'
+                'title',
+                'acadtitle'
             )
             ->first();
 
@@ -513,6 +512,7 @@ class ScholarshipCoorController extends Controller
         //get section
         $schedid = DB::table('college_classsched')
             ->where('sectionID', $studentInfo->sectionID)
+            ->where('deleted', 0)
             ->select('id')
             ->first();
 
@@ -520,53 +520,55 @@ class ScholarshipCoorController extends Controller
 
         if (isset($schedid->id)) {
 
-            $collegesection = DB::table('college_schedgroup_detail')
-                ->where('college_schedgroup_detail.deleted', 0)
-                ->where('schedid', $schedid->id)
-                ->join('college_schedgroup', function ($join) use ($studentInfo) {
-                    $join->on('college_schedgroup_detail.groupid', '=', 'college_schedgroup.id');
-                    $join->where('college_schedgroup.deleted', 0);
-                    $join->where('college_schedgroup.courseid', $studentInfo->courseid);
+            $collegesection = DB::table('college_classsched')
+                ->where('college_classsched.deleted', 0)
+                ->where('college_classsched.id', $schedid->id)
+                ->join('college_sections', function ($join) use ($studentInfo) {
+                    $join->on('college_classsched.sectionID', '=', 'college_sections.id');
+                    $join->where('college_sections.deleted', 0);
+                    $join->where('college_sections.courseID', $studentInfo->courseid);
                 })
                 ->leftJoin('college_courses', function ($join) {
-                    $join->on('college_schedgroup.courseid', '=', 'college_courses.id');
+                    $join->on('college_sections.courseID', '=', 'college_courses.id');
                     $join->where('college_courses.deleted', 0);
                 })
                 ->leftJoin('gradelevel', function ($join) {
-                    $join->on('college_schedgroup.levelid', '=', 'gradelevel.id');
+                    $join->on('college_sections.yearID', '=', 'gradelevel.id');
                     $join->where('gradelevel.deleted', 0);
                 })
                 ->leftJoin('college_colleges', function ($join) {
-                    $join->on('college_schedgroup.collegeid', '=', 'college_colleges.id');
+                    $join->on('college_sections.collegeID', '=', 'college_colleges.id');
                     $join->where('college_colleges.deleted', 0);
                 })
                 ->select(
-                    'college_schedgroup.courseid',
-                    'college_schedgroup.levelid',
-                    'college_schedgroup.collegeid',
-                    'courseDesc',
-                    'collegeDesc',
-                    'levelname',
-                    'courseabrv',
-                    'collegeabrv',
-                    'college_schedgroup.id',
-                    'college_schedgroup.schedgroupdesc',
-                    'schedgroupdesc as text',
-                    'schedid'
+                    'college_sections.courseID',
+                    'college_sections.yearID',
+                    'college_sections.collegeID',
+                    'college_sections.sectionDesc',
+                    'college_courses.courseDesc',
+                    'college_colleges.collegeDesc',
+                    'gradelevel.levelname',
+                    'college_courses.courseabrv',
+                    'college_colleges.collegeabrv',
+                    'college_classsched.id',
+                    'college_courses.id as courseid',
+                    // 'college_classsched.schedgroupdesc',
+                    // 'schedgroupdesc as text',
+                    // 'schedid'
                 )
                 ->first();
 
 
             if (isset($collegesection->id)) {
                 $text = '';
-                if ($collegesection->courseid != null) {
-                    $text = $collegesection->courseabrv;
-                } else {
-                    $text = $collegesection->collegeabrv;
-                }
+                // if ($collegesection->courseid != null) {
+                //     $text = $collegesection->courseabrv;
+                // } else {
+                //     $text = $collegesection->collegeabrv;
+                // }
                 // 		$text .= '-'.$collegesection->levelname[0] . ' '.$collegesection->schedgroupdesc;
 
-                $text = $text . ' - ' . $collegesection->schedgroupdesc;
+                $text = $collegesection->sectionDesc;
                 $sectionDesc = $text;
             }
 
@@ -585,10 +587,34 @@ class ScholarshipCoorController extends Controller
 
         //return collect($registrar);
 
-        //return $tempreg;
 
         if ($request->get('format') == 1) {
-            $pdf = PDF::loadView('scholarshipcoor.pages.corprinting.corpdf', compact('regname', 'registrar_sig', 'schedules', 'schoolInfo', 'studentInfo', 'activeSy', 'activeSem', 'ledger', 'registrar', 'dean'))->setPaper('legal');
+            $abbrv = DB::table('schoolinfo')->value('abbreviation');
+
+            $tempregistrar = '';
+            if ($abbrv && strtolower($abbrv) == 'bcc') {
+                if ($registrar) {
+                    $temp_middle = '';
+                    $temp_suffix = '';
+                    $temp_acadtitle = '';
+                    if (isset($registrar->middlename)) {
+                        $temp_middle = $registrar->middlename[0] . '.';
+                    }
+                    if (isset($registrar->acadtitle)) {
+                        $temp_acadtitle = ', ' . $registrar->acadtitle;
+                    }
+                    if (isset($registrar->suffix)) {
+                        $temp_suffix = ', ' . $registrar->suffix;
+                    }
+                    $tempregistrar = $registrar->firstname . ' ' . $temp_middle . ' ' . $registrar->lastname . $temp_suffix . $temp_acadtitle;
+
+                    // return $tempregistrar;
+                }
+
+                $pdf = PDF::loadView('scholarshipcoor.pages.corprinting.corpdf_bcc', compact('regname', 'registrar_sig', 'schedules', 'schoolInfo', 'studentInfo', 'activeSy', 'activeSem', 'ledger', 'registrar', 'tempregistrar', 'dean'))->setPaper('legal');
+            } else {
+                $pdf = PDF::loadView('scholarshipcoor.pages.corprinting.corpdf', compact('regname', 'registrar_sig', 'schedules', 'schoolInfo', 'studentInfo', 'activeSy', 'activeSem', 'ledger', 'registrar', 'dean'))->setPaper('legal');
+            }
 
         } else if ($request->get('format') == 2) {
             $pdf = PDF::loadView('scholarshipcoor.pages.corprinting.corpdf_2', compact('regname', 'registrar_sig', 'schedules', 'schoolInfo', 'studentInfo', 'activeSy', 'activeSem', 'ledger', 'registrar', 'dean'))->setPaper('legal');

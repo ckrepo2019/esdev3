@@ -2620,6 +2620,7 @@
                 // dataType: "dataType",
                 success: function (data) {
                     $('#supplier_list').empty()
+                    console.log('aaa')
 
                     $.each(data, function (index, value) { 
                         var address = (value.address == null) ? '' : value.address
@@ -2632,9 +2633,9 @@
                                 <td>`+address+`</td>
                             </tr>
                         `)
-
-                        $('#modal-assupplier').modal('show')
                     });
+
+                    $('#modal-assupplier').modal('show')    
                 }
             });
         }

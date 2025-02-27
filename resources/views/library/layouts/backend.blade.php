@@ -147,7 +147,7 @@
                         <i class="fa fa-circle-notch text-primary"></i>
                     </span>
                     <span class="smini-hide font-size-h5 tracking-wider">
-                        LMS<span class="font-w400">CK</span>
+                        {{ DB::table('schoolinfo')->first()->abbreviation }} <span class="font-w400">LIBRARY</span>
                     </span>
                 </a>
                 <!-- END Logo -->
@@ -311,7 +311,8 @@
                                     alt="Header Avatar" style="width: 50px; height:50px;object-fit: cover;">
                                 <p class="mt-2 mb-0 text-white font-w500">{{ auth()->user()->name }}</p>
                                 <p class="mb-0 text-white-50 font-size-sm">
-                                    {{ DB::table('usertype')->where('id', auth()->user()->type)->value('utype') }}
+                                    {{-- {{ DB::table('usertype')->where('id', auth()->user()->type)->value('utype') }} --}}
+                                    LIBRARIAN
                                 </p>
                             </div>
                             <div class="p-2">
@@ -598,10 +599,24 @@
     <!-- END Page Container -->
 
     <!-- OneUI Core JS -->
-    <script src="{{ asset('js/oneui.app.js') }}"></script>
+    {{-- <script src="{{ asset('js/oneui.app.js') }}"></script>
     <script src="{{ asset('js/plugins/sweetalert2/sweetalert2.min.js') }}"></script>
     <script src="{{ asset('js/plugins/es6-promise/es6-promise.auto.min.js') }}"></script>
-    <script src="{{ asset('js/plugins/bootstrap-notify/bootstrap-notify.min.js') }}"></script>
+    <script src="{{ asset('js/plugins/bootstrap-notify/bootstrap-notify.min.js') }}"></script> --}}
+
+    @include('sweetalert::alert')
+    <script src="{{ asset('plugins/jquery/jquery.min.js') }}"></script>
+    <script src="{{ asset('plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ asset('dist/js/adminlte.min.js') }}"></script>
+    <script src="{{ asset('plugins/pace-progress/pace.min.js') }}"></script>
+    <script src="{{ asset('plugins/sweetalert2/sweetalert2.all.min.js') }}"></script>
+
+    <script src="{{ asset('plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ asset('plugins/pace-progress/pace.min.js') }}"></script>
+    <script src="{{ asset('plugins/datatables/jquery.dataTables.js') }}"></script>
+    <script src="{{ asset('plugins/datatables-bs4/js/dataTables.bootstrap4.js') }}"></script>
+    <script src="{{ asset('plugins/select2/js/select2.full.min.js') }}"></script>
+
     <script>
         var Toast = Swal.mixin({
             toast: true,
@@ -625,17 +640,17 @@
 
         function notify(code, message) {
             Toast.fire({
-                icon: code,
+                type: code,
                 title: message,
             });
 
         }
     </script>
-
     <!-- Laravel Scaffolding JS -->
     <!-- <script src="{{ asset('/js/laravel.app.js') }}"></script> -->
 
     @yield('js_after')
+
 </body>
 
 </html>

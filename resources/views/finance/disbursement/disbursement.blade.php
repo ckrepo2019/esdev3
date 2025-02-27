@@ -106,7 +106,8 @@
             <div class="col-md-12">
               <div class="row">
                 <div class="col-md-6">
-                  <h1 id="lblrefnum" class="text-secondary" data-toggle="tooltip" title="Reference Number"> Reference Number</h1>
+                  {{-- <h1 id="lblrefnum" class="text-secondary" data-toggle="tooltip" title="Reference Number"> Reference Number</h1> --}}
+                  <input id="voucherno" type="text" class="form-control border-0 text-xl text-bold" placeholder="Voucher No.">
                 </div>
                 <div class="col-md-6">
                   <button id="d_print" class="btn btn-primary float-right"><i class="fas fa-print"></i> Print</button>
@@ -501,14 +502,17 @@
             $('#disbursement_list').empty()
 
             $.each(data, function(index, val) {
+
+              remarks = (val.remarks == null) ? '' : val.remarks
+              reference = (val.refnum == null) ? '' : val.refnum
               $('#disbursement_list').append(`
                 <tr data-id="`+val.id+`">
                   <td>`+moment(val.transdate).format('MM/DD/YYYY')+`</td>
-                  <td>`+val.refnum+`</td>
+                  <td>`+reference+`</td>
                   <td>`+val.companyname+`</td>
                   <td>`+val.paytype+`</td>
                   <td>`+val.trxstatus+`</td>
-                  <td>`+val.remarks+`</td>
+                  <td>`+remarks+`</td>
                 </tr>
               `)
             });
@@ -546,6 +550,7 @@
 
       $(document).on('click', '#d_create', function(){
         checkpaytype()
+        d_create()
         $.ajax({
           type: "GET",
           url: "{{route('disbursement_loadsupplier')}}",
@@ -610,6 +615,7 @@
       })
 
       $(document).on('click', '#d_save', function(){
+        var voucherno = $('#voucherno').val()
         var supplierid = $('#d_supplier').val()
         var date = $('#d_date').val()
         var bankid = $('#d_bank').val()
@@ -620,91 +626,117 @@
         var rr_array = []
         var jearray = []
 
-        if($('#d_cash').prop('checked') == true)
+        if(supplierid != 0)
         {
-          var paytype = 'CASH'
+            $('#d_save').prop('disabled', true)
+
+            if($('#d_cash').prop('checked') == true)
+            {
+            var paytype = 'CASH'
+            }
+            else{
+            var paytype = 'CHEQUE'
+            }
+
+            $('#d_rrlist tr').each(function(){
+            var rrid = $(this).attr('rr-id')
+            var rramount = $(this).find('.d_rrpayment').val()
+            var dataid = $(this).attr('data-id')
+
+            var obj = {
+                dataid:dataid,
+                rrid:rrid,
+                rramount:rramount
+            }
+
+            rr_array.push(obj)
+            })
+
+            $('#d_jelist tr').each(function(){
+
+            var djeid = $(this).attr('data-id')
+            var glid = $(this).find('.d_account').val()
+            var debit = $(this).find('.d_debit').val()
+            var credit = $(this).find('.d_credit').val()
+
+            var jeobj = {
+                djeid:djeid,
+                glid:glid,
+                debit:debit,
+                credit:credit
+            }
+
+            if(glid != null)
+            {
+                jearray.push(jeobj)
+            }
+            })
+
+            // console.log(jearray)
+            $.ajax({
+            url: '{{route('disbursement_save')}}',
+            type: 'GET',
+            // dataType: 'default: Intelligent Guess (Other values: xml, json, script, or html)',
+            data: {
+                dataid:id,
+                supplierid:supplierid,
+                voucherno:voucherno,
+                date:date,
+                bankid:bankid,
+                checkno:checkno,
+                checkdate:checkdate,
+                remarks:remarks,
+                paytype:paytype,
+                rr_array:rr_array,
+                jearray:jearray
+            },
+            success:function(data)
+            {
+                $('#lblrefnum').text(data.refnum)
+                $('#d_save').attr('data-id', data.dataid)
+                $('#d_supplier').trigger('change')
+
+                disbursement_load()
+                disbursement_loadje(data.dataid)
+
+                const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+                })
+
+                Toast.fire({
+                type: 'success',
+                title: 'Disbursement Successfully Saved'
+                })
+
+                $('#d_save').prop('disabled', false)
+            }
+            });
         }
         else{
-          var paytype = 'CHEQUE'
-        }
-
-        $('#d_rrlist tr').each(function(){
-          var rrid = $(this).attr('rr-id')
-          var rramount = $(this).find('.d_rrpayment').val()
-          var dataid = $(this).attr('data-id')
-
-          var obj = {
-            dataid:dataid,
-            rrid:rrid,
-            rramount:rramount
-          }
-
-          rr_array.push(obj)
-        })
-
-        $('#d_jelist tr').each(function(){
-          var djeid = $(this).attr('data-id')
-          var glid = $(this).find('.d_account').val()
-          var debit = $(this).find('.d_debit').val()
-          var credit = $(this).find('.d_credit').val()
-
-          var jeobj = {
-            djeid:djeid,
-            glid:glid,
-            debit:debit,
-            credit:credit
-          }
-
-          if(glid != null)
-          {
-            jearray.push(jeobj)
-          }
-        })
-
-        // console.log(jearray)
-        $.ajax({
-          url: '{{route('disbursement_save')}}',
-          type: 'GET',
-          // dataType: 'default: Intelligent Guess (Other values: xml, json, script, or html)',
-          data: {
-            dataid:id,
-            supplierid:supplierid,
-            date:date,
-            bankid:bankid,
-            checkno:checkno,
-            checkdate:checkdate,
-            remarks:remarks,
-            paytype:paytype,
-            rr_array:rr_array,
-            jearray:jearray
-          },
-          success:function(data)
-          {
-            $('#lblrefnum').text(data.refnum)
-            $('#d_save').attr('data-id', data.dataid)
-            $('#d_supplier').trigger('change')
-
-            disbursement_load()
-            disbursement_loadje(data.dataid)
-
             const Toast = Swal.mixin({
-              toast: true,
-              position: 'top-end',
-              showConfirmButton: false,
-              timer: 3000,
-              timerProgressBar: true,
-              didOpen: (toast) => {
-                toast.addEventListener('mouseenter', Swal.stopTimer)
-                toast.addEventListener('mouseleave', Swal.resumeTimer)
-              }
-            })
-
+                toast: true,
+                position: "top-end",
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.onmouseenter = Swal.stopTimer;
+                    toast.onmouseleave = Swal.resumeTimer;
+                }
+            });
             Toast.fire({
-              type: 'success',
-              title: 'Disbursement Successfully Saved'
-            })
-          }
-        });
+                type: "error",
+                title: "No supplier selected"
+            });
+        }
       })
 
       $(document).on('click', '#disbursement_list tr', function(){
@@ -720,7 +752,10 @@
           // dataType: "dataType",
           success: function (data){
             $('#modal-overlay').modal('show')
-            $('#lblrefnum').text(data.refnum)
+            // $('#lblrefnum').text(data.refnum)
+            console.log(data.voucherno)
+
+            $('#voucherno').val(data.voucherno)
             $('#d_date').val(data.transdate)
             $('#d_checkno').val(data.checkno)
             $('#d_checkdate').val(data.checkdate)
@@ -807,7 +842,7 @@
           }
 
           // console.log('camount: ' + camount )
-          
+
           // camount = parseFloat(camount)
           totaldebit += parseFloat(camount)
           // totaldebit = totaldebit.replace(/,/g, '')
@@ -825,12 +860,16 @@
 
           if(camount == null || camount == '')
           {
-            camount = 0
+            camount = 0.00
+          }
+          else{
+            camount = camount.toString().replace(/,/g, '')
           }
 
-          camount = camount.toString().replace(/,/g, '')
           totalcredit += parseFloat(camount)
-          totalcredit = totalcredit.toString().replace(/,/g, '')
+        //   camount = camount.toString().replace(/,/g, '')
+        //   totalcredit += parseFloat(camount)
+        //   totalcredit = totalcredit.toString().replace(/,/g, '')
 
           // console.log('totalcredit: ' + totalcredit)
 
@@ -913,10 +952,29 @@
         $('#d_debittotal').text('0.00')
         $('#d_credittotal').text('0.00')
         $('#d_save').attr('data-id', 0)
+        $('#d_save').show()
+        $('#d_save').prop('disabled', false)
+
+        $('#d_supplier').prop('disabled', false)
+        $('#d_date').prop('disabled', false)
+        $('#d_remarks').prop('disabled', false)
+
 
         $('#d_bank').val(0).trigger('change')
 
-        $('#d_post').hide()
+        var paytype = '';
+
+        if($('#d_cash').prop('checked') == true)
+        {
+            paytype = "CASH"
+        }
+        else{
+            paytype = "CHEQUE"
+        }
+
+        getVoucherNo('DSMT', paytype)
+
+        $('#div_posted').hide()
 
         setTimeout(() => {
           checkpaytype()
@@ -927,35 +985,55 @@
       $(document).on('click', '#d_post', function(){
         var id = $('#d_save').attr('data-id')
 
-        Swal.fire({
-          title: 'Post Disbursement?',
-          text: "",
-          type: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#3085d6',
-          cancelButtonColor: '#d33',
-          confirmButtonText: 'POST'
-        }).then((result) => {
-          if (result.value == true) {
-            $.ajax({
-              url: '{{route('disbursement_post')}}',
-              type: 'GET',
-              data: {
-                id:id
-              },
-              success:function(data){
-                Swal.fire(
-                  'Posted',
-                  'Disbursement has been posted.',
-                  'success'
-                )
+        if(id != 0)
+        {
+            Swal.fire({
+            title: 'Post Disbursement?',
+            text: "",
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'POST'
+            }).then((result) => {
+            if (result.value == true) {
+                $.ajax({
+                url: '{{route('disbursement_post')}}',
+                type: 'GET',
+                data: {
+                    id:id
+                },
+                success:function(data){
+                    Swal.fire(
+                    'Posted',
+                    'Disbursement has been posted.',
+                    'success'
+                    )
 
-                disbursement_load()
-                postdisplay(data)
-              }
+                    disbursement_load()
+                    postdisplay(data)
+                }
+                });
+            }
+            })
+        }
+        else{
+            const Toast = Swal.mixin({
+                toast: true,
+                position: "top-end",
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.onmouseenter = Swal.stopTimer;
+                    toast.onmouseleave = Swal.resumeTimer;
+                }
             });
-          }
-        })
+            Toast.fire({
+                type: "error",
+                title: "Can't post unsave disbursement"
+            });
+        }
       })
 
       function postdisplay(trxstatus)
@@ -1014,7 +1092,28 @@
 
       $(document).on('click', '#d_print', function(){
         var id = $('#d_save').attr('data-id')
-        window.open('/finance/disbursement_read?dataid='+id+'&action=print', '_blank');
+
+        if(id != 0)
+        {
+            window.open('/finance/disbursement_read?dataid='+id+'&action=print', '_blank');
+        }
+        else{
+            const Toast = Swal.mixin({
+                toast: true,
+                position: "top-end",
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.onmouseenter = Swal.stopTimer;
+                    toast.onmouseleave = Swal.resumeTimer;
+                }
+            });
+            Toast.fire({
+                type: "error",
+                title: "Please save disbursement before printing."
+            });
+        }
       })
 
       function calc_je()
@@ -1026,11 +1125,13 @@
           var debit = $(this).find('.d_debit').val()
           var credit = $(this).find('.d_credit').val()
 
+          totaldebit = totaldebit.toString().replace(/,/g, '')
+          totalcredit = totalcredit.toString().replace(/,/g, '')
+
           totaldebit += debit
           totalcredit += credit
 
-          totaldebit = totaldebit.toString().replace(/,/g, '')
-          totalcredit = totalcredit.toString().replace(/,/g, '')
+
         })
 
         $('#d_debittotal').text(parseFloat(totaldebit, 10).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString())
@@ -1084,9 +1185,11 @@
           if($('#d_cheque').is(':checked'))
           {
             $('.grp_check').prop('disabled', false)
+            getVoucherNo('DSMT', 'CHEQUE')
           }
           else{
             $('.grp_check').prop('disabled', true)
+            getVoucherNo('DSMT', 'CASH')
           }
         }
       }
@@ -1099,7 +1202,21 @@
         checkpaytype()
       })
 
+      function getVoucherNo(type, paytype)
+      {
+        $.ajax({
+            type: "GET",
+            url: "{{ route('expenses_getvoucherno') }}",
+            data: {
+                type:type,
+                paytype:paytype
+            },
+            success: function (data) {
 
+                $('#voucherno').val(data);
+            }
+        });
+      }
     });
   </script>
 @endsection

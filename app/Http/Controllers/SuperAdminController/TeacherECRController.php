@@ -313,13 +313,13 @@ class TeacherECRController extends \App\Http\Controllers\Controller
             $ecrformat = $request->get('ecrformat');
             $strandid = $request->get('strandid');
 
-            // $gradetype_setup = DB::table('gradetype_setup')
-            //                         ->where('isactive', 1)
-            //                         ->first();
+            $gradetype_setup = DB::table('gradetype_setup')
+                                    ->where('isactive', 1)
+                                    ->first();
 
-            // if($gradetype_setup && $gradetype_setup->gradetype_desc == "PERFECT SCORE & HIGHEST SCORE"){
-            //       return \App\Http\Controllers\SuperAdminController\TeacherECR\TeacherFormatAABController::download_ecr($request);
-            // }
+            if($gradetype_setup && $gradetype_setup->gradetype_desc == "PERFECT SCORE & HIGHEST SCORE"){
+                  return \App\Http\Controllers\SuperAdminController\TeacherECR\TeacherFormatAABController::download_ecr($request);
+            }
 
             if($ecrformat == 2){
                   return \App\Http\Controllers\SuperAdminController\TeacherECR\TeacherFormat2Controller::download_ecr($request);
@@ -1472,15 +1472,15 @@ class TeacherECRController extends \App\Http\Controllers\Controller
                               }
 
                               if($setup == 4){
-                                    //$sheet->setCellValue('A'.$count,$row_count);
-                                    $sheet->setCellValue('AZ'.$count, "");
-                                    $sheet->setCellValue('AZ9', "");
+                                    $sheet->setCellValue('A'.$count,$row_count);
+                                    // $sheet->setCellValue('AZ'.$count, "");
+                                    // $sheet->setCellValue('AZ9', "");
                                     $count +=2;
                                     $row_count += 2;
                               }else{
                                     $sheet->setCellValue('A'.$count,$row_count);
-                                    $sheet->setCellValue('AZ'.$count, "");
-                                    $sheet->setCellValue('AZ9', "");
+                                    // $sheet->setCellValue('AZ'.$count, "");
+                                    // $sheet->setCellValue('AZ9', "");
                                     $count +=1;
                                     $row_count += 1;
                               }
@@ -1676,7 +1676,7 @@ class TeacherECRController extends \App\Http\Controllers\Controller
 
                   $sheet->setCellValue('A'.$count,$row_count);
                   $sheet->setCellValue('B'.$count,$item->student);
-                  $sheet->setCellValue('AZ'.$count, "");
+                  // $sheet->setCellValue('AZ'.$count, "");
                   $sheet->setCellValue('AZ9', "");
                   $count += 1;
                   $row_count += 1;
@@ -1737,6 +1737,14 @@ class TeacherECRController extends \App\Http\Controllers\Controller
             $quarter = $request->get('quarter');
             $schoolinfo = DB::table('schoolinfo')->first();
             $ecrformat = $request->get('ecrformat');
+
+            $gradetype_setup = DB::table('gradetype_setup')
+                                    ->where('isactive', 1)
+                                    ->first();
+
+            if($gradetype_setup && $gradetype_setup->gradetype_desc == "PERFECT SCORE & HIGHEST SCORE"){
+                  return \App\Http\Controllers\SuperAdminController\TeacherECR\TeacherFormatAABController::upload_ecr($request);
+            }
 
             if($ecrformat == 2){
                   return \App\Http\Controllers\SuperAdminController\TeacherECR\TeacherFormat2Controller::upload_ecr($request);
@@ -2603,6 +2611,8 @@ class TeacherECRController extends \App\Http\Controllers\Controller
             $sheet->setCellValue('AH'.$count,$check_detail->qa1 == 0 ? "" : $check_detail->qa1);
             $sheet->setCellValue('AI'.$count,$check_detail->qa2 == 0 ? "" : $check_detail->qa2);
             $sheet->setCellValue('AK'.$count,$check_detail->qahps == 0 ? "" : $check_detail->qahps);
+
+            $sheet->getStyle('F'.$count.':AK'.$count)->getProtection()->setLocked(Protection::PROTECTION_UNPROTECTED);
             
       }
 
@@ -3731,6 +3741,9 @@ class TeacherECRController extends \App\Http\Controllers\Controller
             $quarter = $request->get('quarter');
             $ecrformat = $request->get('ecrformat');
             $schoolinfo = DB::table('schoolinfo')->first();
+            $gradetype_setup = DB::table('gradetype_setup')
+                                    ->where('isactive', 1)
+                                    ->first();
 
             $subjinfo = \App\Http\Controllers\SuperAdminController\SubjectPlotController::list(null,$subjid,$levelid,null,$syid);
 
@@ -4109,7 +4122,34 @@ class TeacherECRController extends \App\Http\Controllers\Controller
 
             }
 
-            $view = 'superadmin.pages.teacher.gradeview';
+            try{
+
+                  $gradeperfectscore = DB::table('grades_perfectscore')
+                                    ->where('headerid',$check_header[0]->id)
+									->take(1)
+                                    ->get();
+
+            }catch(\Exception $e){
+
+
+            }
+
+
+            if($gradetype_setup && $gradetype_setup->gradetype_desc == "PERFECT SCORE & HIGHEST SCORE"){
+                  // with highest score and perfect score
+                  $view = 'superadmin.pages.teacher.gradeview2';
+
+
+                  return view($view)
+                        ->with('hps',$check_header)
+                        ->with('pps',$gradeperfectscore)
+                        ->with('percentage',$gradesetup)
+                        ->with('schoolinfo',$schoolinfo)
+                        ->with('grades',$grades)
+                        ->with('gradesdates',$gradedates);
+            } else {
+                  $view = 'superadmin.pages.teacher.gradeview';
+            }
 
             if($schoolinfo->snr == 'shjms'){
 
@@ -4123,7 +4163,7 @@ class TeacherECRController extends \App\Http\Controllers\Controller
             if($ecrformat == 2){
                   $view = 'superadmin.pages.teacher.gradeview_format2';
             }
-
+            
 
             return view($view)
                         ->with('hps',$check_header)

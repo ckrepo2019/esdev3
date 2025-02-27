@@ -92,6 +92,7 @@ class SPP_Teacher extends Model
 
     }
 
+
     public static function getVacantTeacher($exceptTeacher = null){
 
         
@@ -130,43 +131,20 @@ class SPP_Teacher extends Model
         $teachername = null,
         $acadprogid = null,
         $type = 'all',
-        $isactive = null
-        
+        $isactive = null,
+        $acadprogutype = []
     ){
 
         $data = array();
-    
+        
         $teachers = DB::table('teacher')->where('teacher.deleted',0);
-
+        
         $teachers = $teachers->leftJoin('faspriv',function($join){
                         $join->on('teacher.userid','=','faspriv.userid');
                         $join->where('teacher.usertypeid','!=',1);
                         $join->where('faspriv.deleted',0);
         });
-
-        // if(auth()->user()->type == 2){
-            
-        //     $teachers = $teachers->where(function($query){
-        //         $query->where('usertypeid','1');
-        //         $query->orWhere('usertypeid','2');
-        //         $query->orWhere('usertype','1');
-        //     });
-
-        // }else{
-        //     if(Session::has('prinInfo')){
-    
-        //         if(Session::get('prinInfo')->refid){
-                    
-        //             $teachers = $teachers->where(function($query){
-        //                 $query->where('usertypeid','1');
-        //                 $query->orWhere('usertypeid','2');
-        //                 $query->orWhere('usertype','1');
-        //             });
-        //         }
-
-        //     }
-
-        // }
+        
         if(auth()->user()->type == 2){
             
             $teachers = $teachers->where(function($query){
@@ -202,6 +180,12 @@ class SPP_Teacher extends Model
                        
                     });
 
+        });
+
+        $teachers->where( function($query) use($acadprogutype) {
+            if(isset($acadprogutype) && is_array($acadprogutype) && count($acadprogutype) > 0){
+                $query->whereIn('teacheracadprog.acadprogutype',$acadprogutype);
+            }
         });
 
 
@@ -294,7 +278,9 @@ class SPP_Teacher extends Model
             $teachers->select(
                 'teacher.*',
                 'users.email',
-                'usertype.utype');
+                'usertype.utype',
+                'teacheracadprog.acadprogutype'
+            );
 
         }
         else if($type == 'basic'){

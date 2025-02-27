@@ -87,7 +87,7 @@
                                     <select name="input_acadprogid" id="input_acadprogid" class="select2 form-control">
                                     </select>
                               </div>
-                              <div class="col-md-12 form-group" hidden id="holder_college">
+                              {{-- <div class="col-md-12 form-group" hidden id="holder_college">
                                     <label for="">Enrollment Type</label>
                                     <div class="row">
                                           <div class="col-md-12 pt-1">
@@ -105,7 +105,7 @@
                                                 </div>
                                           </div>
                                     </div>
-                              </div>
+                              </div> --}}
 
                               <div class="col-md-12 form-group" hidden id="holder_semid">
                                     <label for="">Enrollment Type</label>
@@ -554,7 +554,7 @@
               
 
                   $(document).on('change','#input_acadprogid',function(){
-                       if($(this).val() == 5 || $(this).val() == 6){
+                       if($(this).val() == 5 || $(this).val() == 6 || $(this).val() == 8){
                              $('#holder_semid').removeAttr('hidden')
                        }else{
                               $('#holder_semid').attr('hidden','hidden')

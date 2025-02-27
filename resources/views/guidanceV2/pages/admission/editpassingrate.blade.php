@@ -81,6 +81,26 @@
 @endsection
 
 @section('content')
+@php
+$courses1 = DB::table('college_courses')
+            ->join('college_colleges', function($join){
+                $join->on('college_courses.collegeid', '=', 'college_colleges.id');
+                $join->where('college_colleges.acadprogid', 6);
+                $join->where('college_colleges.deleted', 0);
+            })
+            ->where('college_courses.deleted', 0)
+            ->select('college_courses.id as id', 'college_courses.courseabrv')
+            ->get();
+$courses2 =  DB::table('college_courses')
+            ->join('college_colleges', function($join){
+                $join->on('college_courses.collegeid', '=', 'college_colleges.id');
+                $join->where('college_colleges.acadprogid', 8);
+                $join->where('college_colleges.deleted', 0);
+            })
+            ->where('college_courses.deleted', 0)
+            ->select('college_courses.id as id', 'college_courses.courseabrv')
+            ->get();
+@endphp
     <!-- MODAL ADD CATEGORY SETUP -->
     <div class="modal fade" id="modalAddCategory">
         <div class="modal-dialog ">
@@ -96,22 +116,22 @@
                         <div class="row">
                             <div class="form-group col-md-12">
                                 <label for="" class="mb-1 ">Subject Name <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" placeholder="e.g. Math, English and IQ TEST"
+                                <input type="text" class="form-control form-control-sm" placeholder="e.g. Math, English and IQ TEST"
                                     onkeyup="this.value = this.value.toUpperCase();" id="criteria_name">
                             </div>
                             <div class="form-group col-5">
                                 <label for="" class="mb-1 ">Passing Rate <span class="text-danger">*</span></label>
                                 <div class="input-group">
-                                    <input type="number" min="0" class="form-control" placeholder="85"
+                                    <input type="number" min="0" class="form-control form-control-sm" placeholder="85"
                                         id="criteria_percent">
                                     <div class="input-group-append">
-                                        <span class="input-group-text">%</span>
+                                        <span class="input-group-text form-control-sm">%</span>
                                     </div>
                                 </div>
                             </div>
                             <div class="form-group col-4">
                                 <label for="" class="mb-1 ">Total Items <span class="text-danger">*</span></label>
-                                <input type="number" min="0" class="form-control" id="total_items">
+                                <input type="number" min="0" class="form-control form-control-sm" id="total_items">
                             </div>
                             <div class="form-group col-3">
                                 <label for="" class="mb-1 ">Required</label>
@@ -124,20 +144,20 @@
                             <label for="timelimit_hours" class="mb-1 col-md-12"> Time Limit</label>
                             <div class="form-group col-6">
                                 <div class="input-group">
-                                    <input type="number" min="0" class="form-control" placeholder="Hours"
+                                    <input type="number" min="0" class="form-control form-control-sm" placeholder="Hours"
                                         id="timelimit_hours">
                                     <div class="input-group-append">
-                                        <span class="input-group-text">hours</span>
+                                        <span class="input-group-text form-control-sm">hours</span>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="form-group col-6">
                                 <div class="input-group">
-                                    <input type="number" min="0" class="form-control" placeholder="Minutes"
+                                    <input type="number" min="0" class="form-control form-control-sm" placeholder="Minutes"
                                         id="timelimit_minutes">
                                     <div class="input-group-append">
-                                        <span class="input-group-text">minutes</span>
+                                        <span class="input-group-text form-control-sm">minutes</span>
                                     </div>
                                 </div>
                             </div>
@@ -170,22 +190,22 @@
                         <div class="row">
                             <div class="form-group col-md-12">
                                 <label for="" class="mb-1 ">Subject Name</label>
-                                <input type="text" class="form-control" placeholder="e.g. Math, English and IQ TEST"
+                                <input type="text" class="form-control form-control-sm" placeholder="e.g. Math, English and IQ TEST"
                                     onkeyup="this.value = this.value.toUpperCase();" id="edit_criteria_name">
                             </div>
                             <div class="form-group col-md-5">
                                 <label for="" class="mb-1 ">Passing Rate</label>
                                 <div class="input-group">
-                                    <input type="number" min="0" class="form-control" placeholder="85"
+                                    <input type="number" min="0" class="form-control form-control-sm" placeholder="85"
                                         id="edit_criteria_percent">
                                     <div class="input-group-append">
-                                        <span class="input-group-text">%</span>
+                                        <span class="input-group-text form-control-sm">%</span>
                                     </div>
                                 </div>
                             </div>
                             <div class="form-group col-md-4">
                                 <label for="" class="mb-1 ">Total Items</label>
-                                <input type="number" min="0" class="form-control" id="edit_total_items">
+                                <input type="number" min="0" class="form-control form-control-sm" id="edit_total_items">
                             </div>
                             <div class="form-group col-3">
                                 <label for="" class="mb-1 ">Required</label>
@@ -198,20 +218,20 @@
                             <label for="timelimit_hours" class="mb-1 col-md-12"> Time Limit</label>
                             <div class="form-group col-md-6">
                                 <div class="input-group">
-                                    <input type="number" min="0" class="form-control" placeholder="Hours"
+                                    <input type="number" min="0" class="form-control form-control-sm" placeholder="Hours"
                                         id="edit_timelimit_hours">
                                     <div class="input-group-append">
-                                        <span class="input-group-text">hours</span>
+                                        <span class="input-group-text form-control-sm">hours</span>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="form-group col-md-6">
                                 <div class="input-group">
-                                    <input type="number" min="0" class="form-control" placeholder="Minutes"
+                                    <input type="number" min="0" class="form-control form-control-sm" placeholder="Minutes"
                                         id="edit_timelimit_minutes">
                                     <div class="input-group-append">
-                                        <span class="input-group-text">minutes</span>
+                                        <span class="input-group-text form-control-sm">minutes</span>
                                     </div>
                                 </div>
                             </div>
@@ -606,10 +626,10 @@
                                             </div>
                                         </div>
                                         <select class="form-control" id="select-course" style="width: 100%;">
-                                            @foreach (DB::table('college_courses')->where('deleted', 0)->get() as $item)
+                                            {{-- @foreach (DB::table('college_courses')->where('deleted', 0)->get() as $item)
                                                 <option value="{{ $item->id }}">{{ $item->courseabrv }}
                                                 </option>
-                                            @endforeach
+                                            @endforeach --}}
                                         </select>
                                         <span class="invalid-feedback" role="alert">
                                             <strong>Course is required!</strong>
@@ -741,12 +761,28 @@
         $(document).ready(function() {
             console.log(details);
 
-
-
-            if (details.acadprog_id == 6) {
+            $('#acadprog').on('change', function() {
+                if($('#acadprog').val() == 6) {
+                    $('#select-course').empty()
+                    $('#select-course').append(`
+                        @foreach($courses1 as $course)
+                            <option value="{{ $course->id }}">{{ $course->courseabrv }}</option>
+                        @endforeach
+                    `)
+                }else if($('#acadprog').val() == 8) {
+                    $('#select-course').empty()
+                    $('#select-course').append(`
+                        @foreach($courses2 as $course)
+                            <option value="{{ $course->id }}">{{ $course->courseabrv }}</option>
+                        @endforeach
+                    `)
+                }
+            })
+            if (details.acadprog_id == 6 || details.acadprog_id == 8) {
                 $('.strand_container').prop('hidden', true);
                 $('.course_container').prop('hidden', false);
                 $('.department_container').prop('hidden', false);
+               
             } else if (details.acadprog_id == 5) {
                 $('.strand_container').prop('hidden', false);
                 $('.course_container').prop('hidden', true);
@@ -851,13 +887,31 @@
             })
 
             categories_datatable(details.criterias, details.average)
+
+               
+            
             if ($('#acadprog').val()) {
                 var id = $('#acadprog').val()
                 console.log(id);
                 // $('#course_container').prop('hidden', true);
                 if (id > 0) {
 
-                    if (id == 6) {
+                    if (id == 6 || id == 8) {
+                        if($('#acadprog').val() == 6) {
+                            $('#select-course').empty()
+                            $('#select-course').append(`
+                                @foreach($courses1 as $course)
+                                    <option value="{{ $course->id }}">{{ $course->courseabrv }}</option>
+                                @endforeach
+                            `)
+                        }else if($('#acadprog').val() == 8) {
+                            $('#select-course').empty()
+                            $('#select-course').append(`
+                                @foreach($courses2 as $course)
+                                    <option value="{{ $course->id }}">{{ $course->courseabrv }}</option>
+                                @endforeach
+                            `)
+                        }
                         $('#course_container').prop('hidden', false);
                         console.log('Selected acadprog ' + id + ' is college');
 
@@ -884,7 +938,11 @@
                             })
 
                             $('#select-level').val(details.gradelevel.split(',')).change()
-                            $('#select-course').val(details.courses.split(',')).change()
+                            acadprog();
+                            if(details.courses && details.courses.length > 0){
+
+                                $('#select-course').val(details.courses.split(',')).change()
+                            }
                         }
                     })
 
@@ -1043,16 +1101,21 @@
                     data: {
                         id: id
                     },
-                    url: '{{ route('get.category') }}',
-                    success: function(response) {
-                        console.log(response)
-                        $('#edit_isrequired').prop('checked', response.required ? true : false);
-                        $('#edit_criteria_name').val(response.category_name)
-                        $('#edit_criteria_percent').val(response.category_percent)
-                        $('#edit_total_items').val(response.category_totalitems)
-                        $('#edit_timelimit_hours').val(response.category_timelimit_hrs)
-                        $('#edit_timelimit_minutes').val(response.category_timelimit_min)
-                        $('#modalEditCategory').modal();
+                    url: '/guidance/edit-category',
+                    success: function(respo) {
+                        if (respo.status == 'success') {
+                            var response =  respo.result
+                            console.log(response)
+                            $('#edit_isrequired').prop('checked', response.required ? true : false);
+                            $('#edit_criteria_name').val(response.category_name)
+                            $('#edit_criteria_percent').val(response.category_percent)
+                            $('#edit_total_items').val(response.category_totalitems)
+                            $('#edit_timelimit_hours').val(response.category_timelimit_hrs)
+                            $('#edit_timelimit_minutes').val(response.category_timelimit_min)
+                            $('#modalEditCategory').modal();
+                        }else{
+                            notify(respo.status, respo.message)
+                        }
                     }
                 })
 
@@ -1074,7 +1137,7 @@
                     if (result.value) {
                         $.ajax({
                             type: "GET",
-                            url: '{{ route('delete.category') }}',
+                            url: '{{ route('adm.delete.category') }}',
                             data: {
                                 id: itemToDelete
                             },
@@ -1103,7 +1166,7 @@
                         category_timelimit_hrs: $('#edit_timelimit_hours').val(),
                         category_timelimit_min: $('#edit_timelimit_minutes').val(),
                     },
-                    url: '{{ route('update.category') }}',
+                    url: '{{ route('adm.update.category') }}',
                     success: function(response) {
                         console.log(response)
                         notify(response.status, response.message)
@@ -1126,7 +1189,7 @@
             $('#acadprog').on('change', function() {
                 var id = $(this).val()
                 console.log(id);
-                if (id == 6) {
+                if (id == 6 || id == 8) {
                     $('.strand_container').prop('hidden', true);
                     $('.course_container').prop('hidden', false);
                     $('.department_container').prop('hidden', false);
@@ -1309,7 +1372,7 @@
                     $('#select-level').removeClass('is-invalid');
                 }
 
-                if ($('#acadprog').val() == 6) {
+                if ($('#acadprog').val() == 6 || $('#acadprog').val() == 8) {
                     if (!$('#select-course').val().length > 0) {
                         isvalid = false
                         $('#select-course').addClass('is-invalid');
@@ -1347,7 +1410,7 @@
                             exam_setup_id: details.id,
                             description: $('#description').val(),
                             gradelevel: $('#select-level').val().join(','),
-                            courses: $('#acadprog').val() == 6 ? $('#select-course').val().join(
+                            courses: ($('#acadprog').val() == 6 || $('#acadprog').val() == 8) ? $('#select-course').val().join(
                                 ',') : '',
                             alternateCourse: $('#alternate-course').val().join(','),
                             // coursepercentage: JSON.stringify(listCoursePercentage),
@@ -1868,6 +1931,8 @@
         }
 
         function categories_datatable(data, average) {
+            console.log('updating table...');
+            
             $('#average_passing_rate').text(`${average}%`)
             $("#table_test_categories").DataTable({
                 autowidth: false,

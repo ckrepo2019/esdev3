@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use DB;
 use TCPDF;
 use PDF;
+
 class TORController extends Controller
 {
     public function index(Request $request)
@@ -20,231 +21,255 @@ class TORController extends Controller
         //     ->orderBy('lastname','asc')
         //     ->distinct()
         //     ->get();
-            
+
         // return view('registrar.forms.tor.index')
         //     ->with('students', $students);
-        if($request->has('action'))
-        {
+        if ($request->has('action')) {
             $search = $request->get('search');
             $search = $search['value'];
 
             $students = DB::table('college_enrolledstud')
                 // ->select('studinfo.id','sid','lrn','lastname','firstname','middlename','suffix','levelid','gradelevel.levelname')
                 // ->leftJoin('gradelevel','studinfo.levelid','=','gradelevel.id')
-                ->select('studinfo.id','sid','lrn','studinfo.firstname','studinfo.middlename','studinfo.lastname','studinfo.suffix','studinfo.gender','gradelevel.levelname')
-                ->join('studinfo','college_enrolledstud.studid','=','studinfo.id')
-                ->join('gradelevel','college_enrolledstud.yearLevel','=','gradelevel.id')
-                ->where('college_enrolledstud.deleted','0')
-                ->where('gradelevel.acadprogid','6')
-                ->where('studinfo.lastname','!=',null)
-                ->where('studinfo.deleted','0')
-                ->whereIn('college_enrolledstud.studstatus',[1,2,4]);
-            
-            if($search != null){
-                    $students = $students->where(function($query) use($search){
-                                        $query->orWhere('firstname','like','%'.$search.'%');
-                                        $query->orWhere('lastname','like','%'.$search.'%');
-                                        $query->orWhere('sid','like','%'.$search.'%');
-                                        $query->orWhere('levelname','like','%'.$search.'%');
-                                });
+                ->select('studinfo.id', 'sid', 'lrn', 'studinfo.firstname', 'studinfo.middlename', 'studinfo.lastname', 'studinfo.suffix', 'studinfo.gender', 'gradelevel.levelname', 'gradelevel.id as levelid', 'college_courses.courseabrv')
+                ->join('studinfo', 'college_enrolledstud.studid', '=', 'studinfo.id')
+                ->join('college_courses', 'studinfo.courseid', '=', 'college_courses.id')
+                ->join('gradelevel', 'college_enrolledstud.yearLevel', '=', 'gradelevel.id')
+                ->where('college_enrolledstud.deleted', '0')
+                ->whereIn('gradelevel.acadprogid', [6, 8])
+                ->where('studinfo.lastname', '!=', null)
+                ->where('studinfo.deleted', '0')
+                ->whereIn('college_enrolledstud.studstatus', [1, 2, 4]);
+
+            if ($search != null) {
+                $students = $students->where(function ($query) use ($search) {
+                    $query->orWhere('firstname', 'like', '%' . $search . '%');
+                    $query->orWhere('lastname', 'like', '%' . $search . '%');
+                    $query->orWhere('sid', 'like', '%' . $search . '%');
+                    $query->orWhere('levelname', 'like', '%' . $search . '%');
+                });
             }
-            
+
             $students = $students->take($request->get('length'))
                 ->distinct('studinfo.id')
                 ->skip($request->get('start'))
-                ->orderBy('lastname','asc')
+                ->orderBy('lastname', 'asc')
                 // ->whereIn('studinfo.studstatus',[1,2,4])
                 ->get();
-                
+
             $studentscount = DB::table('college_enrolledstud')
-            ->select('studinfo.id','sid','lrn','studinfo.firstname','studinfo.middlename','studinfo.lastname','studinfo.suffix','studinfo.gender','gradelevel.levelname')
-            ->join('studinfo','college_enrolledstud.studid','=','studinfo.id')
-            ->join('gradelevel','college_enrolledstud.yearLevel','=','gradelevel.id')
-            ->where('college_enrolledstud.deleted','0')
-            ->where('studinfo.lastname','!=',null)
-            ->where('studinfo.deleted','0')
-            ->where('gradelevel.acadprogid','6')
-            ->whereIn('college_enrolledstud.studstatus',[1,2,4]);
-                
-            if($search != null){
-                    $studentscount = $studentscount->where(function($query) use($search){
-                                    $query->orWhere('firstname','like','%'.$search.'%');
-                                    $query->orWhere('lastname','like','%'.$search.'%');
-                                    $query->orWhere('sid','like','%'.$search.'%');
-                                    $query->orWhere('levelname','like','%'.$search.'%');
-                                });
+                ->select('studinfo.id', 'sid', 'lrn', 'studinfo.firstname', 'studinfo.middlename', 'studinfo.lastname', 'studinfo.suffix', 'studinfo.gender', 'gradelevel.levelname')
+                ->join('studinfo', 'college_enrolledstud.studid', '=', 'studinfo.id')
+                ->join('gradelevel', 'college_enrolledstud.yearLevel', '=', 'gradelevel.id')
+                ->where('college_enrolledstud.deleted', '0')
+                ->where('studinfo.lastname', '!=', null)
+                ->where('studinfo.deleted', '0')
+                ->whereIn('gradelevel.acadprogid', [6, 8])
+                ->whereIn('college_enrolledstud.studstatus', [1, 2, 4]);
+
+            if ($search != null) {
+                $studentscount = $studentscount->where(function ($query) use ($search) {
+                    $query->orWhere('firstname', 'like', '%' . $search . '%');
+                    $query->orWhere('lastname', 'like', '%' . $search . '%');
+                    $query->orWhere('sid', 'like', '%' . $search . '%');
+                    $query->orWhere('levelname', 'like', '%' . $search . '%');
+                });
             }
-            
-            
-            
+
+
+
             $studentscount = $studentscount
-                ->orderBy('lastname','asc')
+                ->orderBy('lastname', 'asc')
                 ->distinct('studinfo.id')
                 // ->whereIn('studinfo.studstatus',[1,2,4])
                 ->count();
 
-            if($studentscount > 0)
-            {
-                foreach($students as $key=>$student)
-                {
-                    $last_fullname = $student->lastname.', '.$student->firstname.' '.$student->suffix.' '.(isset($student->middlename[0]) ? $student->middlename[0].'.' : '');
-                    $first_fullname = $student->firstname.' '.(isset($student->middlename[0]) ? $student->middlename[0].'.' : '').' '.$student->lastname.' '.$student->suffix;
+            if ($studentscount > 0) {
+                foreach ($students as $key => $student) {
+                    $last_fullname = $student->lastname . ', ' . $student->firstname . ' ' . $student->suffix . ' ' . (isset($student->middlename[0]) ? $student->middlename[0] . '.' : '');
+                    $first_fullname = $student->firstname . ' ' . (isset($student->middlename[0]) ? $student->middlename[0] . '.' : '') . ' ' . $student->lastname . ' ' . $student->suffix;
                     $student->last_fullname = $last_fullname;
                     $student->first_fullname = $first_fullname;
-                    $student->no = $key+1;
+                    $student->no = $key + 1;
                 }
             }
-                
-            return @json_encode((object)[
-                'data'=>$students,
-                'recordsTotal'=>$studentscount,
-                'recordsFiltered'=>$studentscount
+
+            return @json_encode((object) [
+                'data' => $students,
+                'recordsTotal' => $studentscount,
+                'recordsFiltered' => $studentscount
             ]);
 
-        }else{
+        } else {
             $signatories = DB::table('signatory')
                 ->where('createdby', auth()->user()->id)
-                ->where('deleted','0')
-                ->where('form','tor')
-                ->whereIn('title',['School Treasurer','OIC - Registrar'])
+                ->where('deleted', '0')
+                ->where('form', 'tor')
+                ->whereIn('title', ['School Treasurer', 'OIC - Registrar'])
                 ->get();
-                // return $signatories;
+            // return $signatories;
             return view('registrar.forms.tor.index_v2')
-                ->with('signatories',$signatories);
+                ->with('signatories', $signatories);
             //     ->with('students', $students);;
         }
     }
     public function getrecords(Request $request)
     {
-        $studentid          = $request->get('studid');
+        $studentid = $request->get('studid');
         $studentinfo = DB::table('studinfo')
-            ->select('studinfo.*','nationality.nationality','religion.religionname')
-            ->leftJoin('nationality', 'studinfo.nationality','=','nationality.id')
-            ->leftJoin('religion', 'studinfo.religionid','=','religion.id')
+            ->select('studinfo.*', 'nationality.nationality', 'religion.religionname')
+            ->leftJoin('nationality', 'studinfo.nationality', '=', 'nationality.id')
+            ->leftJoin('religion', 'studinfo.religionid', '=', 'religion.id')
             ->where('studinfo.id', $studentid)->first();
 
-
+        // return $studentinfo;
         $schoolyears = Db::table('sy')
-            ->select('id as syid','sydesc'
-            ,'isactive'
+            ->select(
+                'id as syid',
+                'sydesc'
+                ,
+                'isactive'
             )
             ->orderByDesc('sydesc')
             ->get();
-            
+
         $coursename = null;
         $major = null;
         $courses = Db::table('college_courses')
-            ->where('deleted','0')
-            ->orderBy('courseDesc','asc')
+            ->where('deleted', '0')
+            ->orderBy('courseDesc', 'asc')
             ->get();
         $records = \App\Models\College\TOR::getrecords($studentid, $schoolyears);
         // return $records;
-        if(count($records)>0)
-        {
-            foreach($records as $key=>$record)
-            {
+        if (count($records) > 0) {
+            foreach ($records as $key => $record) {
                 // return collect($record);
                 $texts = DB::table('college_tortexts')
-                    ->where('studid',$studentid)
-                    ->where('sydesc',$record->sydesc)
-                    ->where('semid',$record->semid)
-                    ->where('deleted','0')
+                    ->where('studid', $studentid)
+                    ->where('sydesc', $record->sydesc)
+                    ->where('semid', $record->semid)
+                    ->where('deleted', '0')
                     ->get();
-                $record->texts = $texts;     
-                if(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'hccsi')
-                {
+                $record->texts = $texts;
+                if (strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'hccsi') {
                     $record->subjdata = collect($record->subjdata)->sortBy('subjcode_lower')->values()->all();
-                }       
-                if(($key+1) == count($records))
-                {
-                    
-                        $coursename = DB::table('college_courses')
+                }
+                if (($key + 1) == count($records)) {
+
+                    $coursename = DB::table('college_courses')
                         ->where('id', $record->courseid)
-                        ->where('deleted','0')
+                        ->where('deleted', '0')
                         ->first()->courseDesc;
-                }    
+                }
             }
         }
-        if (str_contains(strtolower($coursename), 'major in')) { 
-            $major =  strtoupper(str_replace('major in ', '', strtolower(substr($coursename, strpos(strtolower($coursename), 'major in ')))));
-            $coursename = strtoupper(explode(' major',strtolower($coursename))[0]);
+        if (str_contains(strtolower($coursename), 'major in')) {
+            $major = strtoupper(str_replace('major in ', '', strtolower(substr($coursename, strpos(strtolower($coursename), 'major in ')))));
+            $coursename = strtoupper(explode(' major', strtolower($coursename))[0]);
         }
-        
+
         $details = DB::table('college_tordetail')
-            ->select('college_tordetail.*','dob','gender','mothername','fathername','college_tordetail.acrno','parentaddress','guardianaddress','college_tordetail.citizenship','college_tordetail.civilstatus')
-            ->where('studid', $studentid)
-            ->join('studinfo','college_tordetail.studid','studinfo.id')
-            ->where('college_tordetail.deleted','0')
+            ->select(
+                'college_tordetail.*',
+                'dob',
+                'gender',
+                'mothername',
+                'fathername',
+                'college_tordetail.acrno',
+                'parentaddress',
+                'guardianaddress',
+                'college_tordetail.citizenship',
+                'college_tordetail.civilstatus',
+                'gsschoolname',
+                'jhsschoolname',
+                'shsschoolname',
+                'gssy',
+                'jhssy',
+                'shssy'
+            )
+            ->where('college_tordetail.studid', $studentid)
+            ->join('studinfo', 'college_tordetail.studid', 'studinfo.id')
+            ->join('studinfo_more', 'studinfo.id', 'studinfo_more.studid')
+            ->where('college_tordetail.deleted', '0')
             ->first();
 
-        if(!$details)
-        {
-            $details = (object)array(
-                'studid'            => null,
-                'parentguardian'    => null,
-                'address'           => null,
-                'elemcourse'        => null,
-                'elemdatecomp'      => null,
-                'secondcourse'      => null,
-                'seconddatecomp'    => null,
-                'admissiondate'     => null,
-                'degree'            => null,
-                'basisofadmission'  => null,
-                'major'             => null,
-                'specialorder'      => null,
-                'remarks'           => null,
-                'elemsy'            => null,
-                'secondsy'          => null,
-                'thirdsy'           => null,
-                'graduationdate'    => null,
-                'admissiondatestr'  => null,
-                'collegeof'         => null,
-                'entrancedata'      => null,
-                'intermediategrades'=> null,
-                'intermediatecourse'=> null,
-                'intermediatesy'=> null,
-                'secondarygrades'   => null,
-                'dob'               => null,
-                'gender'               => null,
-                'mothername'               => null,
-                'fathername'               => null,
-                'pob'               => null,
-                'acrno'             => null,
-                'citizenship'       => null,
-                'civilstatus'       => null,
-                'parentaddress'     => null,
-                'guardianaddress'   => null
+        if (!$details) {
+            $studinfomore = DB::table('studinfo_more')
+                ->where('deleted', '0')
+                ->where('studid', $studentid)
+                ->first();
+            // dd($studinfomore);
+
+            $details = (object) array(
+                'studid' => null,
+                'parentguardian' => null,
+                'address' => null,
+                'elemcourse' => null,
+                'elemdatecomp' => null,
+                'secondcourse' => null,
+                'seconddatecomp' => null,
+                'admissiondate' => null,
+                'degree' => null,
+                'basisofadmission' => null,
+                'major' => null,
+                'specialorder' => null,
+                'remarks' => null,
+                'elemsy' => null,
+                'secondsy' => null,
+                'thirdsy' => null,
+                'graduationdate' => null,
+                'admissiondatestr' => null,
+                'collegeof' => null,
+                'entrancedata' => null,
+                'intermediategrades' => null,
+                'intermediatecourse' => null,
+                'intermediatesy' => null,
+                'secondarygrades' => null,
+                'dob' => null,
+                'gender' => null,
+                'mothername' => null,
+                'fathername' => null,
+                'pob' => null,
+                'acrno' => null,
+                'citizenship' => null,
+                'civilstatus' => null,
+                'parentaddress' => null,
+                'guardianaddress' => null,
+                'gsschoolname' => $studinfomore->gsschoolname ?? null,
+                'jhsschoolname' => $studinfomore->jhsschoolname ?? null,
+                'shsschoolname' => $studinfomore->shsschoolname ?? null,
+                'gssy' => $studinfomore->gssy ?? null,
+                'jhssy' => $studinfomore->jhssy ?? null,
+                'shssy' => $studinfomore->shssy ?? null
             );
-        } 
+        }
         $signatories = DB::table('signatory')
             ->where('createdby', auth()->user()->id)
-            ->where('deleted','0')
-            ->where('form','tor')
-            ->get();;
+            ->where('deleted', '0')
+            ->where('form', 'tor')
+            ->get();
+        ;
         $getphoto = DB::table('studdisplayphoto')
-                ->where('studid', $studentid)
-                ->where('deleted','0')
-                ->first();
+            ->where('studid', $studentid)
+            ->where('deleted', '0')
+            ->first();
 
-        if(count($records)>0)
-        {
-            foreach($records as $record)
-            {
-                $record->sort = $record->sydesc.' '.$record->semid;
+        if (count($records) > 0) {
+            foreach ($records as $record) {
+                $record->sort = $record->sydesc . ' ' . $record->semid;
             }
         }
         $records = collect($records)->sortBy('sort')->values();
         $torrecords = 'torrecords';
-        if(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'ccsa')
-        {
+        if (strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'ccsa') {
             $torrecords = 'tordetails.torrecords_ccsa';
-        }elseif(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'pcc')
-        {
+        } elseif (strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'pcc') {
             $torrecords = 'tordetails.torrecords_pcc';
         }
-        // return 'registrar.forms.tor.'.$torrecords;
-        // return $records;
-        return view('registrar.forms.tor.'.$torrecords)
+
+        // dd($studentinfo->picurl, $getphoto);
+
+        return view('registrar.forms.tor.' . $torrecords)
             ->with('signatories', $signatories)
             ->with('getphoto', $getphoto)
             ->with('coursename', $coursename)
@@ -256,18 +281,33 @@ class TORController extends Controller
             ->with('schoolyears', $schoolyears)
             ->with('courses', $courses);
     }
+    public function getinfo(Request $request){
+        $studentid = $request->get('studid');
+        
+        $student = DB::table('studinfo')
+                    ->join('gradelevel', 'studinfo.levelid', 'gradelevel.id')
+                    ->join('college_courses', 'studinfo.courseid', 'college_courses.id')
+                    ->where('studinfo.id', $studentid)
+                    ->select('studinfo.sid', 'gradelevel.levelname', 'college_courses.courseDesc' )
+                    ->first();
+                    
+        return response()->json($student);
+    }
     public function getrecord(Request $request)
     {
         $schoolyears = Db::table('sy')
-            ->select('id as syid','sydesc'
-            ,'isactive'
+            ->select(
+                'id as syid',
+                'sydesc'
+                ,
+                'isactive'
             )
             ->orderByDesc('sydesc')
             ->get();
-            
+
         $courses = Db::table('college_courses')
-            ->where('deleted','0')
-            ->orderBy('courseDesc','asc')
+            ->where('deleted', '0')
+            ->orderBy('courseDesc', 'asc')
             ->get();
         $recordinfo = DB::table('college_tor')
             ->select(
@@ -281,8 +321,8 @@ class TORController extends Controller
                 'schoolname',
                 'schooladdress'
             )
-            ->where('id',$request->get('torid'))
-            ->where('deleted','0')
+            ->where('id', $request->get('torid'))
+            ->where('deleted', '0')
             ->first();
         // return collect($recordinfo);
         return view('registrar.forms.tor.record_edit')
@@ -294,242 +334,270 @@ class TORController extends Controller
     {
         // return $request->all();
 
-        try{
-            if($request->get('syid') == 0)
-            {
+        try {
+            if ($request->get('syid') == 0) {
                 $syid = 0;
                 $sydesc = $request->get('customsy');
-            }else{
+            } else {
                 $syid = $request->get('syid');
                 $sydesc = DB::table('sy')->where('id', $syid)->first()->sydesc;
             }
-            if($request->get('courseid') == 0)
-            {
+            if ($request->get('courseid') == 0) {
                 $courseid = 0;
                 $coursedesc = $request->get('customcourse');
-            }else{
+            } else {
                 $courseid = $request->get('courseid');
                 $coursedesc = DB::table('college_courses')->where('id', $courseid)->first()->courseDesc;
             }
             DB::table('college_tor')
-            ->where('id',$request->get('torid'))
-            ->update([
-                'syid'             => $syid,
-                'sydesc'           => $sydesc,
-                'semid'            => $request->get('semid'),
-                'courseid'         => $courseid,
-                'coursename'       => $coursedesc,
-                'schoolid'         => $request->get('schoolid'),
-                'schoolname'       => $request->get('schoolname'),
-                'schooladdress'    => $request->get('schooladdress')
-            ]);
+                ->where('id', $request->get('torid'))
+                ->update([
+                    'syid' => $syid,
+                    'sydesc' => $sydesc,
+                    'semid' => $request->get('semid'),
+                    'courseid' => $courseid,
+                    'coursename' => $coursedesc,
+                    'schoolid' => $request->get('schoolid'),
+                    'schoolname' => $request->get('schoolname'),
+                    'schooladdress' => $request->get('schooladdress')
+                ]);
             return 1;
-        }catch(\Exception $error)
-        {
+        } catch (\Exception $error) {
 
         }
     }
     public function savedetail(Request $request)
     {
         date_default_timezone_set('Asia/Manila');
-        $studentid          = $request->get('studid');
-        $pob          = $request->get('pob');
-        $mailingaddress          = $request->get('mailingaddress');
-        $parentguardian     = $request->get('parentguardian');
-        $address            = $request->get('address');
-        $cityaddress            = $request->get('cityaddress');
-        $elemcourse         = $request->get('elemcourse');
-        $elemdatecomp       = $request->get('elemdatecomp');
-        $secondcourse       = $request->get('secondcourse');
-        $seconddatecomp     = $request->get('seconddatecomp');
-        $admissiondate      = $request->get('admissiondate');
-        $degree             = $request->get('degree');
-        $basisofadmission   = $request->get('basisofadmission');
-        $major              = $request->get('major');
-        $minor              = $request->get('minor');
-        $specialorder       = $request->get('specialorder');
-        $graduationdate     = $request->get('graduationdate');
-        $elemschoolyear     = $request->get('elemschoolyear');
-        $secondschoolyear   = $request->get('secondschoolyear');
-        $thirdschoolyear    = $request->get('thirdschoolyear');
-        $remarks            = $request->get('remarks');
-        
-        $dateadmitted       = $request->get('dateadmitted');
-        $collegeof          = $request->get('collegeof');
-        $entrancedata       = $request->get('entrancedata');
+        $studentid = $request->get('studid');
+        $pob = $request->get('pob');
+        $mailingaddress = $request->get('mailingaddress');
+        $parentguardian = $request->get('parentguardian');
+        $address = $request->get('address');
+        $cityaddress = $request->get('cityaddress');
+        $elemcourse = $request->get('elemcourse');
+        $elemdatecomp = $request->get('elemdatecomp');
+        $secondcourse = $request->get('secondcourse');
+        $seconddatecomp = $request->get('seconddatecomp');
+        $admissiondate = $request->get('admissiondate');
+        $degree = $request->get('degree');
+        $basisofadmission = $request->get('basisofadmission');
+        $major = $request->get('major');
+        $minor = $request->get('minor');
+        $specialorder = $request->get('specialorder');
+        $graduationdate = $request->get('graduationdate');
+        $elemschoolyear = $request->get('elemschoolyear');
+        $secondschoolyear = $request->get('secondschoolyear');
+        $thirdschoolyear = $request->get('thirdschoolyear');
+        $remarks = $request->get('remarks');
+
+        $dateadmitted = $request->get('dateadmitted');
+        $collegeof = $request->get('collegeof');
+        $entrancedata = $request->get('entrancedata');
         $intermediategrades = $request->get('intermediategrades');
-        $secondarygrades    = $request->get('secondarygrades');
-        
-        $placeofbirth       = $request->get('placeofbirth');
-        $acrno              = $request->get('acrno');
-        $citizenship        = $request->get('citizenship');
-        $civilstatus        = $request->get('civilstatus');
-        $parentaddress      = $request->get('parentaddress');
-        $guardianaddress    = $request->get('guardianaddress');
+        $secondarygrades = $request->get('secondarygrades');
 
-        
-        $entrancedate           = $request->get('entrancedate');
-        $schoolnameprimary      = $request->get('schoolnameprimary');
-        $schooladdressprimary   = $request->get('schooladdressprimary');
-        $schoolyearprimary      = $request->get('schoolyearprimary');
-        $schoolnameintermediate      = $request->get('schoolnameintermediate');
-        $schooladdressintermediate   = $request->get('schooladdressintermediate');
-        $schoolnamejunior       = $request->get('schoolnamejunior');
-        $schooladdressjunior    = $request->get('schooladdressjunior');
-        $schoolyearjunior       = $request->get('schoolyearjunior');
-        $schoolnamesenior       = $request->get('schoolnamesenior');
-        $schooladdresssenior    = $request->get('schooladdresssenior');
-        $schoolyearsenior       = $request->get('schoolyearsenior');
-
-        $nstpserialno       = $request->get('nstpserialno');
-
-        $admissionsem       = $request->get('admissionsem');
-        $admissionsy       = $request->get('admissionsy');
-        $intermediatecourse       = $request->get('intermediatecourse');
-        $intermediatesy       = $request->get('intermediateschoolyear');
-
-        $graduationdegree       = $request->get('graduationdegree');
-        $graduationmajor       = $request->get('graduationmajor');
-        $graduationhonors       = $request->get('graduationhonors');
-
-        $otherrecords       = $request->get('otherrecords');
+        $placeofbirth = $request->get('placeofbirth');
+        $acrno = $request->get('acrno');
+        $citizenship = $request->get('citizenship');
+        $civilstatus = $request->get('civilstatus');
+        $parentaddress = $request->get('parentaddress');
+        $guardianaddress = $request->get('guardianaddress');
 
 
+        $entrancedate = $request->get('entrancedate');
+        $schoolnameprimary = $request->get('schoolnameprimary');
+        $schooladdressprimary = $request->get('schooladdressprimary');
+        $schoolyearprimary = $request->get('schoolyearprimary');
+        $schoolnameintermediate = $request->get('schoolnameintermediate');
+        $schooladdressintermediate = $request->get('schooladdressintermediate');
+        $schoolnamejunior = $request->get('schoolnamejunior');
+        $schooladdressjunior = $request->get('schooladdressjunior');
+        $schoolyearjunior = $request->get('schoolyearjunior');
+        $schoolnamesenior = $request->get('schoolnamesenior');
+        $schooladdresssenior = $request->get('schooladdresssenior');
+        $schoolyearsenior = $request->get('schoolyearsenior');
 
-        if(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'hccsi')
-        {
-            
+        $nstpserialno = $request->get('nstpserialno');
+
+        $admissionsem = $request->get('admissionsem');
+        $admissionsy = $request->get('admissionsy');
+        $intermediatecourse = $request->get('intermediatecourse');
+        $intermediatesy = $request->get('intermediateschoolyear');
+
+        $graduationdegree = $request->get('graduationdegree');
+        $graduationmajor = $request->get('graduationmajor');
+        $graduationhonors = $request->get('graduationhonors');
+
+        $otherrecords = $request->get('otherrecords');
+
+
+
+        if (strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'hccsi') {
+
             DB::table('studinfo')
-                ->where('id',$studentid)
+                ->where('id', $studentid)
                 ->update([
-                    'pob'               => $placeofbirth,
-                    'acrno'             => $acrno,
-                    'citizenship'       => $citizenship,
-                    'civilstatus'       => $civilstatus,
-                    'parentaddress'     => $parentaddress,
-                    'guardianaddress'   => $guardianaddress
+                    'pob' => $placeofbirth,
+                    'acrno' => $acrno,
+                    'citizenship' => $citizenship,
+                    'civilstatus' => $civilstatus,
+                    'parentaddress' => $parentaddress,
+                    'guardianaddress' => $guardianaddress
                 ]);
         }
-        
+
+
+        DB::table('studinfo')
+            ->where('id', $studentid)
+            ->update([
+                'pob' => $placeofbirth,
+                'acrno' => $acrno,
+                'citizenship' => $citizenship,
+                'civilstatus' => $civilstatus,
+                'parentaddress' => $parentaddress,
+                'guardianaddress' => $guardianaddress
+            ]);
+
+
+        // DB::table('studinfo_more')
+        //     ->where('id', $studentid)
+        //     ->update([
+        //         'gsschoolname' => $placeofbirth,
+        //         'gssy' => $acrno,
+        //         'jhsschoolname' => $citizenship,
+        //         'jhssy' => $civilstatus,
+        //         'shsschoolname' => $parentaddress,
+        //         'shssy' => $guardianaddress
+        //     ]);
+
+
+
+
+
+
+
+
         $checkifexists = DB::table('college_tordetail')
             ->where('studid', $studentid)
-            ->where('deleted','0')
+            ->where('deleted', '0')
             ->get();
 
-        if(count($checkifexists) == 0)
-        {
+        if (count($checkifexists) == 0) {
             DB::table('college_tordetail')
                 ->insert([
-                    'studid'            => $studentid,
-                    'acrno'             => $acrno,
-                    'parentguardian'    => $parentguardian,
-                    'address'           => $address,
-                    'cityaddress'       => $cityaddress,
-                    'elemcourse'        => $elemcourse,
-                    'elemdatecomp'      => $elemdatecomp,
-                    'secondcourse'      => $secondcourse,
-                    'seconddatecomp'    => $seconddatecomp,
-                    'admissiondate'     => $admissiondate,
-                    'degree'            => $degree,
-                    'citizenship'       => $citizenship,
-                    'civilstatus'       => $civilstatus,
-                    'basisofadmission'  => $basisofadmission,
-                    'major'             => $major,
-                    'minor'             => $minor,
-                    'pob'               => $pob,
-                    'mailingaddress'    => $mailingaddress,
-                    'specialorder'      => $specialorder,
-                    'elemsy'            => $elemschoolyear,
-                    'secondsy'          => $secondschoolyear,
-                    'thirdsy'           => $thirdschoolyear,
-                    'remarks'           => $remarks,
-                    'graduationdate'    => $graduationdate,
-                    'admissiondatestr'  => $dateadmitted,
-                    'collegeof'         => $collegeof,
-                    'entrancedata'      => $entrancedata,
-                    'entrancedate'      => $entrancedate,
-                    'intermediategrades'=> $intermediategrades,
-                    'secondarygrades'   => $secondarygrades,
-                    'createdby'         => auth()->user()->id,
-                    'createddatetime'   => date('Y-m-d H:i:s'),
-                    'primaryschoolname'   => $schoolnameprimary,
-                    'primaryschooladdress'   => $schooladdressprimary,
-                    'primaryschoolyear'   => $schoolyearprimary,
-                    'intermediateschoolname'   => $schoolnameintermediate,
-                    'intermediateschooladdress'   => $schooladdressintermediate,
-                    'juniorschoolname'   => $schoolnamejunior,
-                    'juniorschooladdress'   => $schooladdressjunior,
-                    'juniorschoolyear'   => $schoolyearjunior,
-                    'seniorschoolname'   => $schoolnamesenior,
-                    'seniorschooladdress'   => $schooladdresssenior,
-                    'seniorschoolyear'   => $schoolyearsenior,
-                    'nstpserialno'   => $nstpserialno,
-                    'admissionsem'   => $admissionsem,
-                    'admissionsy'   => $admissionsy,
-                    'intermediatecourse'   => $intermediatecourse,
-                    'intermediatesy'   => $intermediatesy,
-                    'graduationdegree'   => $graduationdegree,
-                    'graduationmajor'   => $graduationmajor,
-                    'graduationhonors'   => $graduationhonors,
-                    'otherrecords'   => $otherrecords
+                    'studid' => $studentid,
+                    'acrno' => $acrno,
+                    'parentguardian' => $parentguardian,
+                    'address' => $address,
+                    'cityaddress' => $cityaddress,
+                    'elemcourse' => $elemcourse,
+                    'elemdatecomp' => $elemdatecomp,
+                    'secondcourse' => $secondcourse,
+                    'seconddatecomp' => $seconddatecomp,
+                    'admissiondate' => $admissiondate,
+                    'degree' => $degree,
+                    'citizenship' => $citizenship,
+                    'civilstatus' => $civilstatus,
+                    'basisofadmission' => $basisofadmission,
+                    'major' => $major,
+                    'minor' => $minor,
+                    'pob' => $pob,
+                    'mailingaddress' => $mailingaddress,
+                    'specialorder' => $specialorder,
+                    'elemsy' => $elemschoolyear,
+                    'secondsy' => $secondschoolyear,
+                    'thirdsy' => $thirdschoolyear,
+                    'remarks' => $remarks,
+                    'graduationdate' => $graduationdate,
+                    'admissiondatestr' => $dateadmitted,
+                    'collegeof' => $collegeof,
+                    'entrancedata' => $entrancedata,
+                    'entrancedate' => $entrancedate,
+                    'intermediategrades' => $intermediategrades,
+                    'secondarygrades' => $secondarygrades,
+                    'createdby' => auth()->user()->id,
+                    'createddatetime' => date('Y-m-d H:i:s'),
+                    'primaryschoolname' => $schoolnameprimary,
+                    'primaryschooladdress' => $schooladdressprimary,
+                    'primaryschoolyear' => $schoolyearprimary,
+                    'intermediateschoolname' => $schoolnameintermediate,
+                    'intermediateschooladdress' => $schooladdressintermediate,
+                    'juniorschoolname' => $schoolnamejunior,
+                    'juniorschooladdress' => $schooladdressjunior,
+                    'juniorschoolyear' => $schoolyearjunior,
+                    'seniorschoolname' => $schoolnamesenior,
+                    'seniorschooladdress' => $schooladdresssenior,
+                    'seniorschoolyear' => $schoolyearsenior,
+                    'nstpserialno' => $nstpserialno,
+                    'admissionsem' => $admissionsem,
+                    'admissionsy' => $admissionsy,
+                    'intermediatecourse' => $intermediatecourse,
+                    'intermediatesy' => $intermediatesy,
+                    'graduationdegree' => $graduationdegree,
+                    'graduationmajor' => $graduationmajor,
+                    'graduationhonors' => $graduationhonors,
+                    'otherrecords' => $otherrecords
                 ]);
-        }else{
+        } else {
             DB::table('college_tordetail')
-                ->where('studid',$studentid)
-                ->where('deleted',0)
+                ->where('studid', $studentid)
+                ->where('deleted', 0)
                 ->update([
-                    'acrno'            => $acrno,
-                    'parentguardian'    => $parentguardian,
-                    'address'           => $address,
-                    'cityaddress'       => $cityaddress,
-                    'elemcourse'        => $elemcourse,
-                    'elemdatecomp'      => $elemdatecomp,
-                    'secondcourse'      => $secondcourse,
-                    'seconddatecomp'    => $seconddatecomp,
-                    'admissiondate'     => $admissiondate,
-                    'degree'            => $degree,
-                    'citizenship'       => $citizenship,
-                    'civilstatus'       => $civilstatus,
-                    'basisofadmission'  => $basisofadmission,
-                    'major'             => $major,
-                    'minor'             => $minor,
-                    'specialorder'      => $specialorder,
-                    'graduationdate'    => $graduationdate,
-                    'elemsy'            => $elemschoolyear,
-                    'secondsy'          => $secondschoolyear,
-                    'thirdsy'           => $thirdschoolyear,
-                    'remarks'           => $remarks,
-                    'admissiondatestr'  => $dateadmitted,
-                    'collegeof'         => $collegeof,
-                    'entrancedata'      => $entrancedata,
-                    'entrancedate'      => $entrancedate,
-                    'pob'             => $pob,
-                    'mailingaddress'             => $mailingaddress,
-                    'intermediategrades'=> $intermediategrades,
-                    'secondarygrades'   => $secondarygrades,
-                    'updatedby'         => auth()->user()->id,
-                    'updateddatetime'   => date('Y-m-d H:i:s'),
-                    'primaryschoolname'   => $schoolnameprimary,
-                    'primaryschooladdress'   => $schooladdressprimary,
-                    'primaryschoolyear'   => $schoolyearprimary,
-                    'intermediateschoolname'   => $schoolnameintermediate,
-                    'intermediateschooladdress'   => $schooladdressintermediate,
-                    'juniorschoolname'   => $schoolnamejunior,
-                    'juniorschooladdress'   => $schooladdressjunior,
-                    'juniorschoolyear'   => $schoolyearjunior,
-                    'seniorschoolname'   => $schoolnamesenior,
-                    'seniorschooladdress'   => $schooladdresssenior,
-                    'seniorschoolyear'   => $schoolyearsenior,
-                    'nstpserialno'   => $nstpserialno,
-                    'admissionsem'   => $admissionsem,
-                    'admissionsy'   => $admissionsy,
-                    'intermediatecourse'   => $intermediatecourse,
-                    'intermediatesy'   => $intermediatesy,
-                    'graduationdegree'   => $graduationdegree,
-                    'graduationmajor'   => $graduationmajor,
-                    'graduationhonors'   => $graduationhonors,
-                    'otherrecords'   => $otherrecords
+                    'acrno' => $acrno,
+                    'parentguardian' => $parentguardian,
+                    'address' => $address,
+                    'cityaddress' => $cityaddress,
+                    'elemcourse' => $elemcourse,
+                    'elemdatecomp' => $elemdatecomp,
+                    'secondcourse' => $secondcourse,
+                    'seconddatecomp' => $seconddatecomp,
+                    'admissiondate' => $admissiondate,
+                    'degree' => $degree,
+                    'citizenship' => $citizenship,
+                    'civilstatus' => $civilstatus,
+                    'basisofadmission' => $basisofadmission,
+                    'major' => $major,
+                    'minor' => $minor,
+                    'specialorder' => $specialorder,
+                    'graduationdate' => $graduationdate,
+                    'elemsy' => $elemschoolyear,
+                    'secondsy' => $secondschoolyear,
+                    'thirdsy' => $thirdschoolyear,
+                    'remarks' => $remarks,
+                    'admissiondatestr' => $dateadmitted,
+                    'collegeof' => $collegeof,
+                    'entrancedata' => $entrancedata,
+                    'entrancedate' => $entrancedate,
+                    'pob' => $pob,
+                    'mailingaddress' => $mailingaddress,
+                    'intermediategrades' => $intermediategrades,
+                    'secondarygrades' => $secondarygrades,
+                    'updatedby' => auth()->user()->id,
+                    'updateddatetime' => date('Y-m-d H:i:s'),
+                    'primaryschoolname' => $schoolnameprimary,
+                    'primaryschooladdress' => $schooladdressprimary,
+                    'primaryschoolyear' => $schoolyearprimary,
+                    'intermediateschoolname' => $schoolnameintermediate,
+                    'intermediateschooladdress' => $schooladdressintermediate,
+                    'juniorschoolname' => $schoolnamejunior,
+                    'juniorschooladdress' => $schooladdressjunior,
+                    'juniorschoolyear' => $schoolyearjunior,
+                    'seniorschoolname' => $schoolnamesenior,
+                    'seniorschooladdress' => $schooladdresssenior,
+                    'seniorschoolyear' => $schoolyearsenior,
+                    'nstpserialno' => $nstpserialno,
+                    'admissionsem' => $admissionsem,
+                    'admissionsy' => $admissionsy,
+                    'intermediatecourse' => $intermediatecourse,
+                    'intermediatesy' => $intermediatesy,
+                    'graduationdegree' => $graduationdegree,
+                    'graduationmajor' => $graduationmajor,
+                    'graduationhonors' => $graduationhonors,
+                    'otherrecords' => $otherrecords
                 ]);
+
+
         }
         return 1;
 
@@ -542,27 +610,26 @@ class TORController extends Controller
         $sydesc = $request->get('sydesc');
         $studid = $request->get('studid');
         $thistext = $request->get('thistext');
-        if($id == 0)
-        {
+        if ($id == 0) {
             DB::table('college_tortexts')
                 ->insert([
-                    'studid'           =>  $studid,
-                    'semid'            =>  $semid,
-                    'sydesc'           =>  $sydesc,
-                    'description'         =>  $thistext,
-                    'createdby'        => auth()->user()->id,
-                    'createddatetime'  => date('Y-m-d H:i:s')
+                    'studid' => $studid,
+                    'semid' => $semid,
+                    'sydesc' => $sydesc,
+                    'description' => $thistext,
+                    'createdby' => auth()->user()->id,
+                    'createddatetime' => date('Y-m-d H:i:s')
                 ]);
-            
-        }else{
+
+        } else {
             DB::table('college_tortexts')
                 ->where('id', $id)
                 ->update([
-                    'description'         =>  $thistext,
-                    'updatedby'        => auth()->user()->id,
-                    'updateddatetime'  => date('Y-m-d H:i:s')
+                    'description' => $thistext,
+                    'updatedby' => auth()->user()->id,
+                    'updateddatetime' => date('Y-m-d H:i:s')
                 ]);
-            
+
         }
         return 1;
     }
@@ -570,48 +637,43 @@ class TORController extends Controller
     {
         // return $request->all();
         $signatories = json_decode($request->get('signatories'));
-        if(count($signatories)>0)
-        {
-            foreach($signatories as $signatory)
-            {
+        if (count($signatories) > 0) {
+            foreach ($signatories as $signatory) {
                 $checkifsignatoriesexist = DB::table('signatory')
                     ->where('createdby', auth()->user()->id)
-                    ->where('deleted','0')
-                    ->where('title',$signatory->title)
-                    ->where('form','tor')
+                    ->where('deleted', '0')
+                    ->where('title', $signatory->title)
+                    ->where('form', 'tor')
                     ->first();
 
-                if($checkifsignatoriesexist)
-                {
-                    if($signatory->name == null)
-                    {
+                if ($checkifsignatoriesexist) {
+                    if ($signatory->name == null) {
                         DB::table('signatory')
                             ->update([
-                                'deleted'  => 1,
-                                'deleteddatetime'  => date('Y-m-d H:i:s'),
-                                'deletedby'  => auth()->user()->id
+                                'deleted' => 1,
+                                'deleteddatetime' => date('Y-m-d H:i:s'),
+                                'deletedby' => auth()->user()->id
                             ]);
-                    }else{
-                        if($signatory->name != $checkifsignatoriesexist->name)
-                        {
+                    } else {
+                        if ($signatory->name != $checkifsignatoriesexist->name) {
                             DB::table('signatory')
                                 ->update([
-                                    'title'  => $signatory->title,
-                                    'form'  => 'tor',
-                                    'name'  => $signatory->name,
-                                    'updateddatetime'  => date('Y-m-d H:i:s'),
-                                    'updatedby'  => auth()->user()->id
+                                    'title' => $signatory->title,
+                                    'form' => 'tor',
+                                    'name' => $signatory->name,
+                                    'updateddatetime' => date('Y-m-d H:i:s'),
+                                    'updatedby' => auth()->user()->id
                                 ]);
                         }
                     }
-                }else{
+                } else {
                     DB::table('signatory')
                         ->insert([
-                            'title'  => $signatory->title,
-                            'form'  => 'tor',
-                            'name'  => $signatory->name,
-                            'createddatetime'  => date('Y-m-d H:i:s'),
-                            'createdby'  => auth()->user()->id
+                            'title' => $signatory->title,
+                            'form' => 'tor',
+                            'name' => $signatory->name,
+                            'createddatetime' => date('Y-m-d H:i:s'),
+                            'createdby' => auth()->user()->id
                         ]);
                 }
             }
@@ -621,15 +683,15 @@ class TORController extends Controller
     public function deletetext(Request $request)
     {
         date_default_timezone_set('Asia/Manila');
-        
+
         $id = $request->get('id');
         DB::table('college_tortexts')
-        ->where('id', $id)
-        ->update([
-            'deleted'         =>  1,
-            'deletedby'        => auth()->user()->id,
-            'deleteddatetime'  => date('Y-m-d H:i:s')
-        ]);
+            ->where('id', $id)
+            ->update([
+                'deleted' => 1,
+                'deletedby' => auth()->user()->id,
+                'deleteddatetime' => date('Y-m-d H:i:s')
+            ]);
         return 1;
     }
 
@@ -637,130 +699,121 @@ class TORController extends Controller
     {
         date_default_timezone_set('Asia/Manila');
         // return $request->all();
-        $studentid          = $request->get('studid');
-        $schoolid           = $request->get('schoolid');
-        $schoolname         = $request->get('schoolname');
-        $schooladdress      = $request->get('schooladdress');
-        $syid               = $request->get('syid');
-        $customsy           = $request->get('customsy');
-        $semid              = $request->get('semid');
-        $courseid           = $request->get('courseid');
-        $customcourse       = $request->get('customcourse');
+        $studentid = $request->get('studid');
+        $schoolid = $request->get('schoolid');
+        $schoolname = $request->get('schoolname');
+        $schooladdress = $request->get('schooladdress');
+        $syid = $request->get('syid');
+        $customsy = $request->get('customsy');
+        $semid = $request->get('semid');
+        $courseid = $request->get('courseid');
+        $customcourse = $request->get('customcourse');
 
-        if($syid != 0)
-        {
-            $customsy       = DB::table('sy')
-                                ->where('id', $syid)
-                                ->first()->sydesc;
+        if ($syid != 0) {
+            $customsy = DB::table('sy')
+                ->where('id', $syid)
+                ->first()->sydesc;
         }
-        if($courseid != 0)
-        {
-            $customcourse       = DB::table('college_courses')
-                                ->where('id', $courseid)
-                                ->first()->courseDesc;
+        if ($courseid != 0) {
+            $customcourse = DB::table('college_courses')
+                ->where('id', $courseid)
+                ->first()->courseDesc;
         }
-        $checkifexists      = DB::table('college_tor')
-                                ->where('studid', $studentid)
-                                ->where('syid', $syid)
-                                ->where('sydesc','like','%'.$customsy.'%')
-                                ->where('semid', $semid)
-                                ->where('courseid', $courseid)
-                                ->where('coursename','like','%'.$customcourse.'%')
-                                ->where('deleted','0')
-                                ->count();
+        $checkifexists = DB::table('college_tor')
+            ->where('studid', $studentid)
+            ->where('syid', $syid)
+            ->where('sydesc', 'like', '%' . $customsy . '%')
+            ->where('semid', $semid)
+            ->where('courseid', $courseid)
+            ->where('coursename', 'like', '%' . $customcourse . '%')
+            ->where('deleted', '0')
+            ->count();
 
-        if($checkifexists == 0)
-        {
+        if ($checkifexists == 0) {
             DB::table('college_tor')
                 ->insert([
-                    'studid'            => $studentid,
-                    'syid'              => $syid,
-                    'sydesc'            => $customsy,
-                    'semid'             => $semid,
-                    'courseid'          => $courseid,
-                    'coursename'        => $customcourse,
-                    'schoolid'          => $schoolid,
-                    'schoolname'        => $schoolname,
-                    'schooladdress'     => $schooladdress,
-                    'createdby'         => auth()->user()->id,
-                    'createddatetime'   => date('Y-m-d H:i:s')
+                    'studid' => $studentid,
+                    'syid' => $syid,
+                    'sydesc' => $customsy,
+                    'semid' => $semid,
+                    'courseid' => $courseid,
+                    'coursename' => $customcourse,
+                    'schoolid' => $schoolid,
+                    'schoolname' => $schoolname,
+                    'schooladdress' => $schooladdress,
+                    'createdby' => auth()->user()->id,
+                    'createddatetime' => date('Y-m-d H:i:s')
                 ]);
 
             return 1;
-        }else{
+        } else {
             return 0;
         }
     }
     public function addnewdata(Request $request)
     {
         // return $request->all();
-        $studentid     = $request->get('studid');
-        $torid         = $request->get('torid');
-        $subjid         = $request->get('subjid');
-        $subjcode      = $request->get('subjcode');
-        $subjunit      = $request->get('subjunit');
-        $subjdesc      = $request->get('subjdesc');
-        $subjgrade     = $request->get('subjgrade');
-        $subjreex     = $request->get('subjreex');
-        $subjcredit    = $request->get('subjcredit');
+        $studentid = $request->get('studid');
+        $torid = $request->get('torid');
+        $subjid = $request->get('subjid');
+        $subjcode = $request->get('subjcode');
+        $subjunit = $request->get('subjunit');
+        $subjdesc = $request->get('subjdesc');
+        $subjgrade = $request->get('subjgrade');
+        $subjreex = $request->get('subjreex');
+        $subjcredit = $request->get('subjcredit');
 
         $checkifexists = DB::table('college_torgrades')
-                        ->where('torid', $torid)
-                        ->where('subjdesc','like','%'.$subjdesc.'%')
-                        ->where('deleted','0')
-                        ->count();
+            ->where('torid', $torid)
+            ->where('subjdesc', 'like', '%' . $subjdesc . '%')
+            ->where('deleted', '0')
+            ->count();
 
-    
-        if($checkifexists == 0)
-        {
-            $subjdata = Db::table('college_torgrades')
+
+        if ($checkifexists == 0) {
+            $subjdataid = Db::table('college_torgrades')
                 ->insertGetId([
-                    'torid'             => $torid,
-                    'subjid'          => $subjid,
-                    'subjcode'          => $subjcode,
-                    'subjdesc'          => $subjdesc,
-                    'subjgrade'         => $subjgrade,
-                    'subjreex'         => $subjreex,
-                    'subjunit'          => $subjunit,
-                    'subjcredit'        => $subjcredit,
-                    'createdby'         => auth()->user()->id,
-                    'createddatetime'   => date('Y-m-d H:i:s')
-                ],'id');
-            $subjdataitem = DB::table('college_torgrades')
-                ->where('id',$subjdata)
-                ->first();
-            return response()->json($subjdataitem);
-        }else{
+                    'torid' => $torid,
+                    'subjid' => $subjid,
+                    'subjcode' => $subjcode,
+                    'subjdesc' => $subjdesc,
+                    'subjgrade' => $subjgrade,
+                    'subjreex' => $subjreex,
+                    'subjunit' => $subjunit,
+                    'subjcredit' => $subjcredit,
+                    'createdby' => auth()->user()->id,
+                    'createddatetime' => date('Y-m-d H:i:s')
+                ]);
+            return $subjdataid;
+        } else {
             return '0';
         }
 
     }
     public function getsubjects(Request $request)
     {
-        if($request->has('action'))
-        {
+        if ($request->has('action')) {
             $info = DB::table('college_prospectus')
-                ->select('college_prospectus.id','semesterID as semid','yearID as levelid','lecunits','labunits','subjDesc as subjdesc','subjCode as subjcode','psubjsort')
+                ->select('college_prospectus.id', 'semesterID as semid', 'yearID as levelid', 'lecunits', 'labunits', 'subjDesc as subjdesc', 'subjCode as subjcode', 'psubjsort')
                 ->where('id', $request->get('subjectid'))
                 // ->where('courseID',  $request->get('courseid'))
-                ->where('college_prospectus.deleted','0')
+                ->where('college_prospectus.deleted', '0')
                 ->first();
 
             return collect($info);
-        }else{
+        } else {
             $curriculum = DB::table('college_studentcurriculum')
                 ->where('studid', $request->get('studentid'))
-                ->where('deleted','0')
+                ->where('deleted', '0')
                 ->first();
             // return collect($curriculum);
             $subjects = array();
-            if($curriculum)
-            {
+            if ($curriculum) {
                 $subjects = DB::table('college_prospectus')
-                    ->select('college_prospectus.id','semesterID as semid','yearID as levelid','lecunits','labunits','subjDesc as subjdesc','subjCode as subjcode','psubjsort')
+                    ->select('college_prospectus.id', 'semesterID as semid', 'yearID as levelid', 'lecunits', 'labunits', 'subjDesc as subjdesc', 'subjCode as subjcode', 'psubjsort')
                     ->where('curriculumID', $curriculum->id)
                     // ->where('courseID',  $request->get('courseid'))
-                    ->where('college_prospectus.deleted','0')
+                    ->where('college_prospectus.deleted', '0')
                     ->get();
             }
             return collect($subjects);
@@ -768,69 +821,66 @@ class TORController extends Controller
     }
     public function editsubjgrade(Request $request)
     {
-        $studentid     = $request->get('studid');
-        $torid         = $request->get('torid');
-        $subjgradeid   = $request->get('subjgradeid');
-        $subjcode      = $request->get('subjcode');
-        $subjunit      = $request->get('subjunit');
-        $subjdesc      = $request->get('subjdesc');
-        $subjgrade     = $request->get('subjgrade');
-        $subjreex     = $request->get('subjreex');
-        $subjcredit    = $request->get('subjcredit');
+        $studentid = $request->get('studid');
+        $torid = $request->get('torid');
+        $subjgradeid = $request->get('subjgradeid');
+        $subjcode = $request->get('subjcode');
+        $subjunit = $request->get('subjunit');
+        $subjdesc = $request->get('subjdesc');
+        $subjgrade = $request->get('subjgrade');
+        $subjreex = $request->get('subjreex');
+        $subjcredit = $request->get('subjcredit');
 
-        try{
+        try {
             Db::table('college_torgrades')
-                ->where('id',$subjgradeid)
+                ->where('id', $subjgradeid)
                 ->update([
                     // 'torid'             => $torid,
-                    'subjcode'          => $subjcode,
-                    'subjdesc'          => $subjdesc,
-                    'subjgrade'         => $subjgrade,
-                    'subjreex'         => $subjreex,
-                    'subjunit'          => $subjunit,
-                    'subjcredit'        => $subjcredit,
-                    'updatedby'         => auth()->user()->id,
-                    'updateddatetime'   => date('Y-m-d H:i:s')
+                    'subjcode' => $subjcode,
+                    'subjdesc' => $subjdesc,
+                    'subjgrade' => $subjgrade,
+                    'subjreex' => $subjreex,
+                    'subjunit' => $subjunit,
+                    'subjcredit' => $subjcredit,
+                    'updatedby' => auth()->user()->id,
+                    'updateddatetime' => date('Y-m-d H:i:s')
                 ]);
             return '1';
-        }catch(\Exception $error)
-        {
+        } catch (\Exception $error) {
             return '0';
         }
     }
     public function deletesubjgrade(Request $request)
     {
-        $subjgradeid   = $request->get('subjgradeid');
+        $subjgradeid = $request->get('subjgradeid');
 
-        try{
+        try {
             Db::table('college_torgrades')
-                ->where('id',$subjgradeid)
+                ->where('id', $subjgradeid)
                 ->update([
-                    'deleted'           => 1,
-                    'deletedby'         => auth()->user()->id,
-                    'deleteddatetime'   => date('Y-m-d H:i:s')
+                    'deleted' => 1,
+                    'deletedby' => auth()->user()->id,
+                    'deleteddatetime' => date('Y-m-d H:i:s')
                 ]);
             return '1';
-        }catch(\Exception $error)
-        {
+        } catch (\Exception $error) {
             return '0';
         }
     }
     public function deleterecord(Request $request)
     {
-        $torid   = $request->get('torid');
+        $torid = $request->get('torid');
 
-        try{
+        try {
             Db::table('college_tor')
-                ->where('id',$torid)
+                ->where('id', $torid)
                 ->update([
-                    'deleted'           => 1,
-                    'deletedby'         => auth()->user()->id,
-                    'deleteddatetime'   => date('Y-m-d H:i:s')
+                    'deleted' => 1,
+                    'deletedby' => auth()->user()->id,
+                    'deleteddatetime' => date('Y-m-d H:i:s')
                 ]);
             return '1';
-        }catch(\Exception $error)
-        {
+        } catch (\Exception $error) {
             return '0';
         }
     }
@@ -839,98 +889,95 @@ class TORController extends Controller
         date_default_timezone_set('Asia/Manila');
         $studentid = $request->get('studid');
         $studentinfo = DB::table('studinfo')
-            ->select('studinfo.*','nationality.nationality','religion.religionname')
-            ->leftJoin('nationality', 'studinfo.nationality','=','nationality.id')
-            ->leftJoin('religion', 'studinfo.religionid','=','religion.id')
+            ->select('studinfo.*', 'nationality.nationality', 'religion.religionname')
+            ->leftJoin('nationality', 'studinfo.nationality', '=', 'nationality.id')
+            ->leftJoin('religion', 'studinfo.religionid', '=', 'religion.id')
             ->where('studinfo.id', $studentid)->first();
 
-        $clearedby      = $request->get('clearedby');
-        $preparedby      = $request->get('preparedby');
-        $checkedby   = $request->get('checkedby');
-        $registrar      = $request->get('registrar');
-        $assistantreg   = $request->get('assistantreg');
-		
-        $or             = $request->get('or');
-        $dateissued     = $request->get('dateissued');
+        $clearedby = $request->get('clearedby');
+        $preparedby = $request->get('preparedby');
+        $checkedby = $request->get('checkedby');
+        $registrar = $request->get('registrar');
+        $assistantreg = $request->get('assistantreg');
+
+        $or = $request->get('or');
+        $dateissued = $request->get('dateissued');
 
         $checkifsignatoriesexist = DB::table('signatory')
             ->where('createdby', auth()->user()->id)
-            ->where('deleted','0')
-            ->where('form','tor')
+            ->where('deleted', '0')
+            ->where('form', 'tor')
             ->get();
 
-        if(collect($checkifsignatoriesexist)->where('title','Registrar')->count() > 0)
-        {
+        if (collect($checkifsignatoriesexist)->where('title', 'Registrar')->count() > 0) {
             DB::table('signatory')
-                ->where('id', collect($checkifsignatoriesexist)->where('title','Registrar')->first()->id)
+                ->where('id', collect($checkifsignatoriesexist)->where('title', 'Registrar')->first()->id)
                 ->update([
-                    'name'  => $registrar
+                    'name' => $registrar
                 ]);
-        }else{
+        } else {
             DB::table('signatory')
                 ->insert([
-                    'form'  => 'tor',
-                    'name'  => $registrar,
-                    'title'  => 'Registrar',
-                    'createddatetime'  => date('Y-m-d H:i:s'),
-                    'createdby'  => auth()->user()->id
+                    'form' => 'tor',
+                    'name' => $registrar,
+                    'title' => 'Registrar',
+                    'createddatetime' => date('Y-m-d H:i:s'),
+                    'createdby' => auth()->user()->id
                 ]);
         }
-        if(collect($checkifsignatoriesexist)->where('description','Prepared by')->count() > 0)
-        {
+        if (collect($checkifsignatoriesexist)->where('description', 'Prepared by')->count() > 0) {
             DB::table('signatory')
-                ->where('id', collect($checkifsignatoriesexist)->where('description','Prepared by')->first()->id)
+                ->where('id', collect($checkifsignatoriesexist)->where('description', 'Prepared by')->first()->id)
                 ->update([
-                    'name'  => $preparedby
+                    'name' => $preparedby
                 ]);
-        }else{
+        } else {
             DB::table('signatory')
                 ->insert([
-                    'form'  => 'tor',
-                    'name'  => $preparedby,
-                    'description'  => 'Prepared by',
-                    'createddatetime'  => date('Y-m-d H:i:s'),
-                    'createdby'  => auth()->user()->id
+                    'form' => 'tor',
+                    'name' => $preparedby,
+                    'description' => 'Prepared by',
+                    'createddatetime' => date('Y-m-d H:i:s'),
+                    'createdby' => auth()->user()->id
                 ]);
         }
-        if(collect($checkifsignatoriesexist)->where('description','Checked by')->count() > 0)
-        {
+        if (collect($checkifsignatoriesexist)->where('description', 'Checked by')->count() > 0) {
             DB::table('signatory')
-                ->where('id', collect($checkifsignatoriesexist)->where('description','Checked by')->first()->id)
+                ->where('id', collect($checkifsignatoriesexist)->where('description', 'Checked by')->first()->id)
                 ->update([
-                    'name'  => $checkedby
+                    'name' => $checkedby
                 ]);
-        }else{
+        } else {
             DB::table('signatory')
                 ->insert([
-                    'form'  => 'tor',
-                    'name'  => $checkedby,
-                    'description'  => 'Checked by',
-                    'createddatetime'  => date('Y-m-d H:i:s'),
-                    'createdby'  => auth()->user()->id
+                    'form' => 'tor',
+                    'name' => $checkedby,
+                    'description' => 'Checked by',
+                    'createddatetime' => date('Y-m-d H:i:s'),
+                    'createdby' => auth()->user()->id
                 ]);
         }
-		
-		//return $checkifsignatoriesexist;
+
+        //return $checkifsignatoriesexist;
 
         $schoolyears = Db::table('sy')
-            ->select('id as syid','sydesc'
-            ,'isactive'
+            ->select(
+                'id as syid',
+                'sydesc'
+                ,
+                'isactive'
             )
             ->orderByDesc('sydesc')
             ->get();
-            
-        $records = \App\Models\College\TOR::getrecords($studentid, $schoolyears); 
+
+        $records = \App\Models\College\TOR::getrecords($studentid, $schoolyears);
         // return collect($records);
         $numberofrows = 0;
-        if(count($records)>0)
-        {
-            foreach($records as $record)
-            {
+        if (count($records) > 0) {
+            foreach ($records as $record) {
                 $numberofrows += (count($record->subjdata) + 2);
-                $record->sort = $record->sydesc.' '.$record->semid;
-                if(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'hccsi')
-                {
+                $record->sort = $record->sydesc . ' ' . $record->semid;
+                if (strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'hccsi') {
                     $record->subjdata = collect($record->subjdata)->sortBy('subjcode_lower')->values();
                 }
             }
@@ -938,129 +985,117 @@ class TORController extends Controller
         $coursename = null;
         $major = null;
         $courses = Db::table('college_courses')
-            ->where('deleted','0')
-            ->orderBy('courseDesc','asc')
+            ->where('deleted', '0')
+            ->orderBy('courseDesc', 'asc')
             ->get();
         $records = collect($records)->sortBy('sort')->values();
         // return $records;
         $lastcourseid = collect($records)->last()->courseid ?? 0;
         $collegedeanname = '';
-        if(collect($records)->where('id','0')->count() > 0)
-        {
+        if (collect($records)->where('id', '0')->count() > 0) {
             $deaninfo = DB::table('college_courses')
                 ->select('teacher.*')
-                ->where('college_courses.id', collect($records)->where('id','0')->last()->courseid)
-                ->join('college_colleges','college_courses.collegeid','=','college_colleges.id')
-                ->join('teacher','college_colleges.dean','=','teacher.id')
+                ->where('college_courses.id', collect($records)->where('id', '0')->last()->courseid)
+                ->join('college_colleges', 'college_courses.collegeid', '=', 'college_colleges.id')
+                ->join('teacher', 'college_colleges.dean', '=', 'teacher.id')
                 ->first();
 
-            if($deaninfo)
-            {
-                $collegedeanname .= ($deaninfo->title != null ? $deaninfo->title.' ' : '');
-                $collegedeanname .= $deaninfo->firstname.' ';
-                $collegedeanname .= ($deaninfo->middlename != null ? $deaninfo->middlename[0].'. ' : ' ');
-                $collegedeanname .= $deaninfo->lastname.' ';
+            if ($deaninfo) {
+                $collegedeanname .= ($deaninfo->title != null ? $deaninfo->title . ' ' : '');
+                $collegedeanname .= $deaninfo->firstname . ' ';
+                $collegedeanname .= ($deaninfo->middlename != null ? $deaninfo->middlename[0] . '. ' : ' ');
+                $collegedeanname .= $deaninfo->lastname . ' ';
                 $collegedeanname .= ($deaninfo->suffix != null ? $deaninfo->suffix : '');
             }
         }
-        
-        if(collect($records)->last())
-        {
-            
-                $coursename = DB::table('college_courses')
+
+        if (collect($records)->last()) {
+
+            $coursename = DB::table('college_courses')
                 ->where('id', collect($records)->last()->courseid)
-                ->where('deleted','0')
+                ->where('deleted', '0')
                 ->first()->courseDesc;
-        }   
-        
-        if (str_contains(strtolower($coursename), 'major in')) { 
-            $major =  strtoupper(str_replace('major in ', '', strtolower(substr($coursename, strpos(strtolower($coursename), 'major in ')))));
-            $coursename = strtoupper(explode(' major',strtolower($coursename))[0]);
         }
-        
-        if(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'ndsc')
-        {
-            if(count($records)>0)
-            {
-                foreach($records as $record)
-                {
+
+        if (str_contains(strtolower($coursename), 'major in')) {
+            $major = strtoupper(str_replace('major in ', '', strtolower(substr($coursename, strpos(strtolower($coursename), 'major in ')))));
+            $coursename = strtoupper(explode(' major', strtolower($coursename))[0]);
+        }
+
+        if (strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'ndsc') {
+            if (count($records) > 0) {
+                foreach ($records as $record) {
                     // return collect($record);
                     $texts = DB::table('college_tortexts')
-                        ->where('studid',$studentid)
-                        ->where('sydesc',$record->sydesc)
-                        ->where('semid',$record->semid)
-                        ->where('deleted','0')
+                        ->where('studid', $studentid)
+                        ->where('sydesc', $record->sydesc)
+                        ->where('semid', $record->semid)
+                        ->where('deleted', '0')
                         ->get();
                     $record->texts = $texts;
-                    
+
                 }
             }
         }
         // return $records;
         $details = DB::table('college_tordetail')
-        ->select('college_tordetail.*','dob','gender','mothername','fathername','college_tordetail.acrno','parentaddress','guardianaddress')
-        ->where('studid', $studentid)
-        ->join('studinfo','college_tordetail.studid','studinfo.id')
-        ->where('college_tordetail.deleted','0')
-        ->first();
+            ->select('college_tordetail.*', 'dob', 'gender', 'mothername', 'fathername', 'college_tordetail.acrno', 'parentaddress', 'guardianaddress')
+            ->where('studid', $studentid)
+            ->join('studinfo', 'college_tordetail.studid', 'studinfo.id')
+            ->where('college_tordetail.deleted', '0')
+            ->first();
 
-        if(!$details)
-        {
-            $details = (object)array(
-                'studid'            => null,
-                'parentguardian'    => null,
-                'address'           => null,
-                'elemcourse'        => null,
-                'elemdatecomp'      => null,
-                'secondcourse'      => null,
-                'seconddatecomp'    => null,
-                'admissiondate'     => null,
-                'degree'            => null,
-                'basisofadmission'  => null,
-                'major'             => null,
-                'specialorder'      => null,
-                'elemsy'           => null,
-                'secondsy'           => null,
-                'thirdsy'           => null,
-                'remarks'           => null,
-                'graduationdate'    => null,
-                'admissiondatestr'    => null,
-                'collegeof'    => null,
-                'entrancedata'    => null,
-                'intermediategrades'    => null,
-                'secondarygrades'    => null,
-                'secondarygrades'   => null,
-                'dob'               => null,
-                'gender'               => null,
-                'mothername'               => null,
-                'fathername'               => null,
-                'pob'               => null,
-                'acrno'             => null,
-                'citizenship'       => null,
-                'civilstatus'       => null,
-                'parentaddress'     => null,
-                'guardianaddress'   => null
+        if (!$details) {
+            $details = (object) array(
+                'studid' => null,
+                'parentguardian' => null,
+                'address' => null,
+                'elemcourse' => null,
+                'elemdatecomp' => null,
+                'secondcourse' => null,
+                'seconddatecomp' => null,
+                'admissiondate' => null,
+                'degree' => null,
+                'basisofadmission' => null,
+                'major' => null,
+                'specialorder' => null,
+                'elemsy' => null,
+                'secondsy' => null,
+                'thirdsy' => null,
+                'remarks' => null,
+                'graduationdate' => null,
+                'admissiondatestr' => null,
+                'collegeof' => null,
+                'entrancedata' => null,
+                'intermediategrades' => null,
+                'secondarygrades' => null,
+                'secondarygrades' => null,
+                'dob' => null,
+                'gender' => null,
+                'mothername' => null,
+                'fathername' => null,
+                'pob' => null,
+                'acrno' => null,
+                'citizenship' => null,
+                'civilstatus' => null,
+                'parentaddress' => null,
+                'guardianaddress' => null
             );
         }
-        if($studentinfo->dob != null)
-        {
+        if ($studentinfo->dob != null) {
             $studentinfo->dob = date('m/d/Y', strtotime($studentinfo->dob));
         }
-        if($details->elemdatecomp != null)
-        {
+        if ($details->elemdatecomp != null) {
             $details->elemdatecomp = date('m/d/Y', strtotime($details->elemdatecomp));
         }
-        if($details->seconddatecomp != null)
-        {
+        if ($details->seconddatecomp != null) {
             $details->seconddatecomp = date('m/d/Y', strtotime($details->seconddatecomp));
         }
-        if($details->admissiondate != null)
-        {
+        if ($details->admissiondate != null) {
             $details->admissiondatestr = date('F d, Y', strtotime($details->admissiondate));
             $details->admissiondate = date('m/d/Y', strtotime($details->admissiondate));
         }
-        if($details->graduationdate != null)
-        {
+        if ($details->graduationdate != null) {
             $details->graduationdate = date('m/d/Y', strtotime($details->graduationdate));
         }
         $schoolinfo = Db::table('schoolinfo')
@@ -1074,81 +1109,67 @@ class TORController extends Controller
                 'schoolinfo.address',
                 'refregion.regDesc as region'
             )
-            ->leftJoin('refregion','schoolinfo.region','=','refregion.regCode')
-            ->leftJoin('refcitymun','schoolinfo.division','=','refcitymun.citymunCode')
+            ->leftJoin('refregion', 'schoolinfo.region', '=', 'refregion.regCode')
+            ->leftJoin('refcitymun', 'schoolinfo.division', '=', 'refcitymun.citymunCode')
             ->first();
-            
+
         $maxsubjcount = 0;
 
-        if(count($records) == 0)
-        {
+        if (count($records) == 0) {
             $maxsubjcount = 11;
-        }else{
+        } else {
             $maxsubjcount = collect($records)->pluck('subjcount')->max();
         }
         $getphoto = DB::table('studdisplayphoto')
-              ->where('studid', $studentid)
-              ->where('deleted','0')
-              ->first();
+            ->where('studid', $studentid)
+            ->where('deleted', '0')
+            ->first();
         // return $request->all();
         // return collect($records)->groupBy('schoolname');
-        if(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'sbc')
-        {
-            $signatories = DB::table('signatory')
-            ->where('createdby', auth()->user()->id)
-            ->where('deleted','0')
-            ->where('form','tor')
-            ->get();;
-            // return $records;
-            $pdf = PDF::loadview('registrar/forms/tor/pdf/pdf_tor_sbc_dompdf',compact('getphoto','schoolinfo','studentinfo','records','maxsubjcount','details','registrar','assistantreg','or','dateissued','lastcourseid','signatories','preparedby','checkedby','major','coursename'))->setPaper('legal','portrait'); 
-            return $pdf->stream('TOR.pdf');
-        }
-        elseif(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'gbbc')
-        {
-            $pdf = PDF::loadview('registrar/forms/tor/pdf/pdf_tor_gbbc_dompdf',compact('schoolinfo','studentinfo','records','maxsubjcount','details','registrar','assistantreg','or','dateissued'))->setPaper('legal','portrait'); 
-            return $pdf->stream('TOR.pdf');
-        }
-        elseif(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'ndsc')
-        {
-            
-            $pdf = PDF::loadview('registrar/forms/tor/pdf/pdf_tor_ndsc_dompdf',compact('schoolinfo','studentinfo','records','maxsubjcount','details','registrar','assistantreg','or','dateissued'))->setPaper('legal','portrait'); 
-            $pdf->getDomPDF()->set_option("enable_php", true);
-            return $pdf->stream('TOR.pdf');
-        }
-        elseif(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'hccsi')
-        {
-            
-            $getphoto = DB::table('studdisplayphoto')
-                  ->where('studid', $studentid)
-                  ->where('deleted','0')
-                  ->first();
-            $pdf = PDF::loadview('registrar/forms/tor/pdf/pdf_tor_hccsi',compact('schoolinfo','studentinfo','records','maxsubjcount','details','registrar','assistantreg','or','dateissued','getphoto')); 
-            $pdf->getDomPDF()->set_option("enable_php", true);
-            return $pdf->stream('TOR.pdf');
-        }
-        elseif(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'sait')
-        {
-            // return collect($getphoto);
-            $pdf = PDF::loadview('registrar/forms/tor/pdf/pdf_tor_sait',compact('schoolinfo','studentinfo','records','maxsubjcount','details','registrar','assistantreg','or','dateissued','getphoto'))->setPaper('legal','portrait'); 
-            $pdf->getDomPDF()->set_option("enable_php", true);
-            return $pdf->stream('TOR.pdf');
-            
-        }
-        elseif(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'mci')
-        {
-                //   return $records;
-                // return collect(collect($records)->where('sydesc','2021-2022')->where('semid','1')->first()->subjdata)->count();
-            $pdf = PDF::loadview('registrar/forms/tor/pdf/pdf_tor_mci',compact('schoolinfo','studentinfo','records','maxsubjcount','details','registrar','assistantreg','or','dateissued','getphoto')); 
-            $pdf->getDomPDF()->set_option("enable_php", true);
-            return $pdf->stream('TOR.pdf');
-        }
-        elseif(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'ccsa')
-        {
+        if (strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'sbc') {
             $signatories = DB::table('signatory')
                 ->where('createdby', auth()->user()->id)
-                ->where('deleted','0')
-                ->where('form','tor')
-                ->whereIn('title',['School Treasurer','OIC - Registrar'])
+                ->where('deleted', '0')
+                ->where('form', 'tor')
+                ->get();
+            ;
+            $pdf = PDF::loadview('registrar/forms/tor/pdf/pdf_tor_sbc_dompdf', compact('getphoto', 'schoolinfo', 'studentinfo', 'records', 'maxsubjcount', 'details', 'registrar', 'assistantreg', 'or', 'dateissued', 'lastcourseid', 'signatories', 'preparedby', 'checkedby', 'major', 'coursename'))->setPaper('legal', 'portrait');
+            return $pdf->stream('TOR.pdf');
+        } elseif (strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'gbbc') {
+            $pdf = PDF::loadview('registrar/forms/tor/pdf/pdf_tor_gbbc_dompdf', compact('schoolinfo', 'studentinfo', 'records', 'maxsubjcount', 'details', 'registrar', 'assistantreg', 'or', 'dateissued'))->setPaper('legal', 'portrait');
+            return $pdf->stream('TOR.pdf');
+        } elseif (strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'ndsc') {
+
+            $pdf = PDF::loadview('registrar/forms/tor/pdf/pdf_tor_ndsc_dompdf', compact('schoolinfo', 'studentinfo', 'records', 'maxsubjcount', 'details', 'registrar', 'assistantreg', 'or', 'dateissued'))->setPaper('legal', 'portrait');
+            $pdf->getDomPDF()->set_option("enable_php", true);
+            return $pdf->stream('TOR.pdf');
+        } elseif (strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'hccsi') {
+
+            $getphoto = DB::table('studdisplayphoto')
+                ->where('studid', $studentid)
+                ->where('deleted', '0')
+                ->first();
+            $pdf = PDF::loadview('registrar/forms/tor/pdf/pdf_tor_hccsi', compact('schoolinfo', 'studentinfo', 'records', 'maxsubjcount', 'details', 'registrar', 'assistantreg', 'or', 'dateissued', 'getphoto'));
+            $pdf->getDomPDF()->set_option("enable_php", true);
+            return $pdf->stream('TOR.pdf');
+        } elseif (strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'sait') {
+            // return collect($getphoto);
+            $pdf = PDF::loadview('registrar/forms/tor/pdf/pdf_tor_sait', compact('schoolinfo', 'studentinfo', 'records', 'maxsubjcount', 'details', 'registrar', 'assistantreg', 'or', 'dateissued', 'getphoto'))->setPaper('legal', 'portrait');
+            $pdf->getDomPDF()->set_option("enable_php", true);
+            return $pdf->stream('TOR.pdf');
+
+        } elseif (strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'mci') {
+            //   return $records;
+            // return collect(collect($records)->where('sydesc','2021-2022')->where('semid','1')->first()->subjdata)->count();
+            $pdf = PDF::loadview('registrar/forms/tor/pdf/pdf_tor_mci', compact('schoolinfo', 'studentinfo', 'records', 'maxsubjcount', 'details', 'registrar', 'assistantreg', 'or', 'dateissued', 'getphoto'));
+            $pdf->getDomPDF()->set_option("enable_php", true);
+            return $pdf->stream('TOR.pdf');
+        } elseif (strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'ccsa') {
+            $signatories = DB::table('signatory')
+                ->where('createdby', auth()->user()->id)
+                ->where('deleted', '0')
+                ->where('form', 'tor')
+                ->whereIn('title', ['School Treasurer', 'OIC - Registrar'])
                 ->get();
             // return $request->all();
             $format = $request->get('format');
@@ -1156,44 +1177,41 @@ class TORController extends Controller
             $preparedncheckedby = $request->get('preparedncheckedby');
             $verifiednreleasedby = $request->get('verifiednreleasedby');
             $clearedby = $request->get('clearedby');
-                //   return $records;
-            $pdf = PDF::loadview('registrar/forms/tor/pdf/pdf_tor_ccsa',compact('schoolinfo','studentinfo','records','maxsubjcount','details','registrar','assistantreg','or','dateissued','getphoto','format','remarks','preparedncheckedby','verifiednreleasedby','clearedby','collegedeanname','signatories','numberofrows')); 
+            //   return $records;
+            $pdf = PDF::loadview('registrar/forms/tor/pdf/pdf_tor_ccsa', compact('schoolinfo', 'studentinfo', 'records', 'maxsubjcount', 'details', 'registrar', 'assistantreg', 'or', 'dateissued', 'getphoto', 'format', 'remarks', 'preparedncheckedby', 'verifiednreleasedby', 'clearedby', 'collegedeanname', 'signatories', 'numberofrows'));
             $pdf->getDomPDF()->set_option("enable_php", true);
             // ->set_option("DOMPDF_ENABLE_CSS_FLOAT", true);
             return $pdf->stream('TOR.pdf');
-        }
-        elseif(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'dcc')
-        {
+        } elseif (strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'dcc') {
             $signatories = DB::table('signatory')
                 ->where('createdby', auth()->user()->id)
-                ->where('deleted','0')
-                ->where('form','tor')
-                ->whereIn('title',['School Treasurer','OIC - Registrar'])
+                ->where('deleted', '0')
+                ->where('form', 'tor')
+                ->whereIn('title', ['School Treasurer', 'OIC - Registrar'])
                 ->get();
-                
+
             $format = $request->get('format');
             $remarks = $request->get('remarks');
             $preparedncheckedby = $request->get('preparedncheckedby');
             $verifiednreleasedby = $request->get('verifiednreleasedby');
             $clearedby = $request->get('clearedby');
-                //   return count($records);
-                // return $records;
-                // return collect($studentinfo);
+            //   return count($records);
+            // return $records;
+            // return collect($studentinfo);
             $template = $request->get('template');
-            $pdf = PDF::loadview('registrar/forms/tor/pdf/pdf_tor_dcc_temp'.$template,compact('schoolinfo','studentinfo','records','maxsubjcount','details','registrar','assistantreg','or','dateissued','getphoto','format','remarks','preparedncheckedby','verifiednreleasedby','clearedby','collegedeanname','signatories','numberofrows')); 
+            $pdf = PDF::loadview('registrar/forms/tor/pdf/pdf_tor_dcc_temp' . $template, compact('schoolinfo', 'studentinfo', 'records', 'maxsubjcount', 'details', 'registrar', 'assistantreg', 'or', 'dateissued', 'getphoto', 'format', 'remarks', 'preparedncheckedby', 'verifiednreleasedby', 'clearedby', 'collegedeanname', 'signatories', 'numberofrows'));
             header('Content-Type: application/pdf; charset=utf-8');
-            $pdf->getDomPDF()->set_option("enable_php", true)->set_option("enable_javascript", true)->set_option("DOMPDF_ENABLE_CSS_FLOAT", true)->set_option('defaultFont', 'gothic');;;
+            $pdf->getDomPDF()->set_option("enable_php", true)->set_option("enable_javascript", true)->set_option("DOMPDF_ENABLE_CSS_FLOAT", true)->set_option('defaultFont', 'gothic');
+            ;
+            ;
             // ->set_option("DOMPDF_ENABLE_CSS_FLOAT", true);
             return $pdf->stream('TOR.pdf');
-        }
-        elseif(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'pcc')
-        {
+        } elseif (strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'pcc') {
             $format = $request->get('format');
             $remarks = $request->get('remarks');
-                //   return $records;
-            if($format == 'pdf')
-            {
-                $pdf = PDF::loadview('registrar/forms/tor/pdf/pdf_tor_pcc',compact('schoolinfo','studentinfo','records','maxsubjcount','details','registrar','assistantreg','or','dateissued','getphoto','format','remarks','preparedncheckedby','verifiednreleasedby','clearedby','collegedeanname','signatories','numberofrows','major')); 
+            //   return $records;
+            if ($format == 'pdf') {
+                $pdf = PDF::loadview('registrar/forms/tor/pdf/pdf_tor_pcc', compact('schoolinfo', 'studentinfo', 'records', 'maxsubjcount', 'details', 'registrar', 'assistantreg', 'or', 'dateissued', 'getphoto', 'format', 'remarks', 'preparedncheckedby', 'verifiednreleasedby', 'clearedby', 'collegedeanname', 'signatories', 'numberofrows', 'major'));
                 $pdf->getDomPDF()->set_option("enable_php", true);
                 $canvas = $pdf->getDomPDF()->getCanvas();
                 $canvas->page_script('
@@ -1206,7 +1224,7 @@ class TORController extends Controller
                 ');
                 // ->set_option("DOMPDF_ENABLE_CSS_FLOAT", true);
                 return $pdf->stream('TOR.pdf');
-            }else{
+            } else {
                 function capitalize($word)
                 {
                     return \App\Http\Controllers\SchoolFormsController::capitalize_word($word);
@@ -1216,38 +1234,33 @@ class TORController extends Controller
                     return \App\Http\Controllers\SchoolFormsController::lowercase_word($word);
                 }
                 $address = '';
-                if($studentinfo->street != null)
-                {
-                    $address.=$studentinfo->street.', ';
+                if ($studentinfo->street != null) {
+                    $address .= $studentinfo->street . ', ';
                 }
-                if($studentinfo->barangay != null)
-                {
-                    $address.=$studentinfo->barangay.', ';
+                if ($studentinfo->barangay != null) {
+                    $address .= $studentinfo->barangay . ', ';
                 }
-                if($studentinfo->city != null)
-                {
-                    $address.=$studentinfo->city.', ';
+                if ($studentinfo->city != null) {
+                    $address .= $studentinfo->city . ', ';
                 }
-                if($studentinfo->province != null)
-                {
-                    $address.=$studentinfo->province;
+                if ($studentinfo->province != null) {
+                    $address .= $studentinfo->province;
                 }
 
-                if($major != null)
-                {
+                if ($major != null) {
                     $details->major = $major;
                 }
                 $inputFileType = 'Xlsx';
-                $inputFileName = base_path().'/public/excelformats/pcc/tor.xlsx';
+                $inputFileName = base_path() . '/public/excelformats/pcc/tor.xlsx';
                 // $sheetname = 'Front';
-    
+
                 /**  Create a new Reader of the type defined in $inputFileType  **/
                 $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader($inputFileType);
                 /**  Advise the Reader of which WorkSheets we want to load  **/
                 $reader->setLoadAllSheets();
                 /**  Load $inputFileName to a Spreadsheet Object  **/
                 $spreadsheet = $reader->load($inputFileName);
-                
+
                 $sheet = $spreadsheet->getSheet(0);
 
                 // $schoollogo = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
@@ -1264,28 +1277,22 @@ class TORController extends Controller
                 // $schoollogo->setCoordinates('A4');
                 // $schoollogo->setOffsetX(0);
                 // $schoollogo->setOffsetY(0);
-                
+
                 $basepath_picurl = null;
-                if($getphoto)
-                {
-                    if($studentinfo->picurl != null || $getphoto->picurl != null)
-                    {
-                        if (file_exists(base_path().'/public/'.$getphoto->picurl))
-                        {
-                            $basepath_picurl = URL::asset($getphoto->picurl.'?random="'.\Carbon\Carbon::now('Asia/Manila')->isoFormat('MMDDYYHHmmss'));
-                        }else{
-                            if(file_exists(base_path().'/public/'.$studentinfo->picurl))
-                            {
-                                $basepath_picurl = base_path().'/public/'.$studentinfo->picurl;
+                if ($getphoto) {
+                    if ($studentinfo->picurl != null || $getphoto->picurl != null) {
+                        if (file_exists(base_path() . '/public/' . $getphoto->picurl)) {
+                            $basepath_picurl = URL::asset($getphoto->picurl . '?random="' . \Carbon\Carbon::now('Asia/Manila')->isoFormat('MMDDYYHHmmss'));
+                        } else {
+                            if (file_exists(base_path() . '/public/' . $studentinfo->picurl)) {
+                                $basepath_picurl = base_path() . '/public/' . $studentinfo->picurl;
                             }
                         }
                     }
-                }else{   
-                    if($studentinfo->picurl != null )
-                    {                        
-                        if(file_exists(base_path().'/public/'.$studentinfo->picurl))
-                        {
-                            $basepath_picurl = base_path().'/public/'.$studentinfo->picurl;
+                } else {
+                    if ($studentinfo->picurl != null) {
+                        if (file_exists(base_path() . '/public/' . $studentinfo->picurl)) {
+                            $basepath_picurl = base_path() . '/public/' . $studentinfo->picurl;
                         }
                     }
                 }
@@ -1300,9 +1307,9 @@ class TORController extends Controller
                 //     $studentphoto->setOffsetX(20);
                 //     $studentphoto->setOffsetY(20);
                 // }catch(\Exception $error){}
-                
+
                 $sheet->setCellValue('B6', $studentinfo->lastname);
-                $sheet->setCellValue('O6', $studentinfo->firstname.' '.$studentinfo->suffix);
+                $sheet->setCellValue('O6', $studentinfo->firstname . ' ' . $studentinfo->suffix);
                 $sheet->setCellValue('Q6', $studentinfo->middlename != null ? $studentinfo->middlename[0] : ' ');
                 $sheet->setCellValue('V6', $details->admissiondatestr);
 
@@ -1324,131 +1331,148 @@ class TORController extends Controller
                 $sheet->setCellValue('P11', $studentinfo->fathername);
                 $sheet->setCellValue('T11', $details->major != null ? $details->major : '-');
                 $sheet->setCellValue('AA11', $details->graduationdate);
-                
+
                 $sheet->setCellValue('C15', $details->primaryschoolname ?? '');
                 $sheet->setCellValue('S15', $details->primaryschooladdress ?? '');
                 $sheet->setCellValue('AA15', $details->primaryschoolyear ?? '');
-                
+
                 $sheet->setCellValue('C16', $details->intermediateschoolname ?? '');
                 $sheet->setCellValue('S16', $details->intermediateschooladdress ?? '');
                 $sheet->setCellValue('AA16', $details->intermediatesy ?? '');
-                
+
                 $sheet->setCellValue('C17', $details->juniorschoolname ?? '');
                 $sheet->setCellValue('S17', $details->juniorschooladdress ?? '');
                 $sheet->setCellValue('AA17', $details->juniorschoolyear ?? '');
                 $startrowno = 21;
                 $endrowno = 51;
-                if(count($records)>0)
-                {
-                    foreach($records as $record)
-                    {
-                        $subjects = $record->subjdata;                        
-                        $sheet->setCellValue('G'.$startrowno, $record->schoolname);
-                        $sheet->getStyle('G'.$startrowno)->getFont()->setBold(true);
-                        $sheet->getStyle('G'.$startrowno)->getAlignment()->setHorizontal('center');
-                        $startrowno+=1;
-                        $sheet->setCellValue('G'.$startrowno, ($record->semid == 1 ? 'First' : ($record->semid == 2 ? 'Second' : 'Summer')).' Semester SY: '.$record->sydesc.', '.(strtolower($schoolinfo->schoolname) == strtolower($record->schoolname) ? 'Cagayan de Oro City' : $record->schooladdress));
-                        $sheet->getStyle('G'.$startrowno)->getFont()->setBold(true);
-                        $sheet->getStyle('G'.$startrowno)->getAlignment()->setHorizontal('center');
-                        $startrowno+=1;
-                        if(count($subjects)>0)
-                        {
-                            foreach($subjects as $eachsubject)
-                            {
-                                $sheet->setCellValue('A'.$startrowno, $eachsubject->subjcode);
-                                $sheet->setCellValue('G'.$startrowno, lowercase_word($eachsubject->subjdesc));
-                                $sheet->setCellValue('W'.$startrowno, $eachsubject->subjgrade);
-                                $sheet->setCellValue('Z'.$startrowno, $eachsubject->subjcredit > 0 ? $eachsubject->subjcredit : '');
+                if (count($records) > 0) {
+                    foreach ($records as $record) {
+                        $subjects = $record->subjdata;
+                        $sheet->setCellValue('G' . $startrowno, $record->schoolname);
+                        $sheet->getStyle('G' . $startrowno)->getFont()->setBold(true);
+                        $sheet->getStyle('G' . $startrowno)->getAlignment()->setHorizontal('center');
+                        $startrowno += 1;
+                        $sheet->setCellValue('G' . $startrowno, ($record->semid == 1 ? 'First' : ($record->semid == 2 ? 'Second' : 'Summer')) . ' Semester SY: ' . $record->sydesc . ', ' . (strtolower($schoolinfo->schoolname) == strtolower($record->schoolname) ? 'Cagayan de Oro City' : $record->schooladdress));
+                        $sheet->getStyle('G' . $startrowno)->getFont()->setBold(true);
+                        $sheet->getStyle('G' . $startrowno)->getAlignment()->setHorizontal('center');
+                        $startrowno += 1;
+                        if (count($subjects) > 0) {
+                            foreach ($subjects as $eachsubject) {
+                                $sheet->setCellValue('A' . $startrowno, $eachsubject->subjcode);
+                                $sheet->setCellValue('G' . $startrowno, lowercase_word($eachsubject->subjdesc));
+                                $sheet->setCellValue('W' . $startrowno, $eachsubject->subjgrade);
+                                $sheet->setCellValue('Z' . $startrowno, $eachsubject->subjcredit > 0 ? $eachsubject->subjcredit : '');
                                 $eachsubject->display = 1;
-                                if($startrowno < $endrowno)
-                                {
-                                    $startrowno+=1;
-                                }else{
+                                if ($startrowno < $endrowno) {
+                                    $startrowno += 1;
+                                } else {
                                     break;
                                 }
                             }
-                            if(count($subjects) == collect($subjects)->where('display','1')->count())
-                            {
+                            if (count($subjects) == collect($subjects)->where('display', '1')->count()) {
                                 $record->display = 1;
                             }
                         }
                     }
                 }
-                $sheet->setCellValue('C61', (count($records) == collect($records)->where('display','1')->count() ? $details->remarks : 'Please refer to page 2 for more entries…'));
-                $sheet->setCellValue('Q65', $studentinfo->lastname.', '.$studentinfo->firstname.' '.$studentinfo->suffix.' '.($studentinfo->middlename != null ? $studentinfo->middlename[0].'.' : ' '));
+                $sheet->setCellValue('C61', (count($records) == collect($records)->where('display', '1')->count() ? $details->remarks : 'Please refer to page 2 for more entries…'));
+                $sheet->setCellValue('Q65', $studentinfo->lastname . ', ' . $studentinfo->firstname . ' ' . $studentinfo->suffix . ' ' . ($studentinfo->middlename != null ? $studentinfo->middlename[0] . '.' : ' '));
                 $sheet->setCellValue('F71', $assistantreg);
                 $sheet->setCellValue('U71', $registrar);
-                $recordsleft = collect($records)->where('display','0')->values();
+                $recordsleft = collect($records)->where('display', '0')->values();
                 $sheetno = 1;
                 while (count($recordsleft) > 0) {
                     $sheet = $spreadsheet->getSheet($sheetno);
                     $sheet->setCellValue('B7', $studentinfo->lastname);
-                    $sheet->setCellValue('Q7', $studentinfo->firstname.' '.$studentinfo->suffix);
+                    $sheet->setCellValue('Q7', $studentinfo->firstname . ' ' . $studentinfo->suffix);
                     $sheet->setCellValue('X7', $studentinfo->middlename != null ? $studentinfo->middlename[0] : ' ');
                     $startrowno = 14;
                     $endrowno = 51;
-                    foreach($recordsleft as $record)
-                    {
-                        $subjects = $record->subjdata;                        
-                        $sheet->setCellValue('G'.$startrowno, $record->schoolname);
-                        $sheet->getStyle('G'.$startrowno)->getFont()->setBold(true);
-                        $sheet->getStyle('G'.$startrowno)->getAlignment()->setHorizontal('center');
-                        $startrowno+=1;
-                        $sheet->setCellValue('G'.$startrowno, ($record->semid == 1 ? 'First' : ($record->semid == 2 ? 'Second' : 'Summer')).' Semester SY: '.$record->sydesc.', '.(strtolower($schoolinfo->schoolname) == strtolower($record->schoolname) ? 'Cagayan de Oro City' : $record->schooladdress));
-                        $sheet->getStyle('G'.$startrowno)->getFont()->setBold(true);
-                        $sheet->getStyle('G'.$startrowno)->getAlignment()->setHorizontal('center');
-                        $startrowno+=1;
-                        if(count($subjects)>0)
-                        {
-                            foreach($subjects as $eachsubject)
-                            {
-                                $sheet->setCellValue('A'.$startrowno, $eachsubject->subjcode);
-                                $sheet->setCellValue('G'.$startrowno, lowercase_word($eachsubject->subjdesc));
-                                $sheet->setCellValue('W'.$startrowno, $eachsubject->subjgrade);
-                                $sheet->setCellValue('Z'.$startrowno, $eachsubject->subjcredit > 0 ? $eachsubject->subjcredit : '');
+                    foreach ($recordsleft as $record) {
+                        $subjects = $record->subjdata;
+                        $sheet->setCellValue('G' . $startrowno, $record->schoolname);
+                        $sheet->getStyle('G' . $startrowno)->getFont()->setBold(true);
+                        $sheet->getStyle('G' . $startrowno)->getAlignment()->setHorizontal('center');
+                        $startrowno += 1;
+                        $sheet->setCellValue('G' . $startrowno, ($record->semid == 1 ? 'First' : ($record->semid == 2 ? 'Second' : 'Summer')) . ' Semester SY: ' . $record->sydesc . ', ' . (strtolower($schoolinfo->schoolname) == strtolower($record->schoolname) ? 'Cagayan de Oro City' : $record->schooladdress));
+                        $sheet->getStyle('G' . $startrowno)->getFont()->setBold(true);
+                        $sheet->getStyle('G' . $startrowno)->getAlignment()->setHorizontal('center');
+                        $startrowno += 1;
+                        if (count($subjects) > 0) {
+                            foreach ($subjects as $eachsubject) {
+                                $sheet->setCellValue('A' . $startrowno, $eachsubject->subjcode);
+                                $sheet->setCellValue('G' . $startrowno, lowercase_word($eachsubject->subjdesc));
+                                $sheet->setCellValue('W' . $startrowno, $eachsubject->subjgrade);
+                                $sheet->setCellValue('Z' . $startrowno, $eachsubject->subjcredit > 0 ? $eachsubject->subjcredit : '');
                                 $eachsubject->display = 1;
-                                if($startrowno < $endrowno)
-                                {
-                                    $startrowno+=1;
-                                }else{
+                                if ($startrowno < $endrowno) {
+                                    $startrowno += 1;
+                                } else {
                                     break;
                                 }
                             }
-                            if(count($subjects) == collect($subjects)->where('display','1')->count())
-                            {
+                            if (count($subjects) == collect($subjects)->where('display', '1')->count()) {
                                 $record->display = 1;
                             }
                         }
                     }
-                    $sheetno+=1;
-                    $recordsleft = collect($records)->where('display','0')->values();
-                    $sheet->setCellValue('C61', (count($recordsleft) == 0 ? $details->remarks : 'Please refer to page '.($sheetno).' for more entries…'));
-                    $sheet->setCellValue('Q65', $studentinfo->lastname.', '.$studentinfo->firstname.' '.$studentinfo->suffix.' '.($studentinfo->middlename != null ? $studentinfo->middlename[0].'.' : ' '));
+                    $sheetno += 1;
+                    $recordsleft = collect($records)->where('display', '0')->values();
+                    $sheet->setCellValue('C61', (count($recordsleft) == 0 ? $details->remarks : 'Please refer to page ' . ($sheetno) . ' for more entries…'));
+                    $sheet->setCellValue('Q65', $studentinfo->lastname . ', ' . $studentinfo->firstname . ' ' . $studentinfo->suffix . ' ' . ($studentinfo->middlename != null ? $studentinfo->middlename[0] . '.' : ' '));
                     $sheet->setCellValue('F71', $assistantreg);
                     $sheet->setCellValue('U71', $registrar);
 
                 }
-                $sheet->setCellValue('G'.$startrowno, 'pccpccpccpccpccpccpccpccpccpccpccpccpccpcc/ closed /pccpccpccpccpccpccpccpccpccpccpccpccpccpccpccpccpccpccpccpccpccpcc');
-                
+                $sheet->setCellValue('G' . $startrowno, 'pccpccpccpccpccpccpccpccpccpccpccpccpccpcc/ closed /pccpccpccpccpccpccpccpccpccpccpccpccpccpccpccpccpccpccpccpccpccpcc');
+
                 $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
                 header('Content-Type: application/vnd.ms-excel');
-                header('Content-Disposition: attachment; filename="Transcript of Records - '.$studentinfo->lastname.' - '.$studentinfo->firstname.'.xlsx"');
+                header('Content-Disposition: attachment; filename="Transcript of Records - ' . $studentinfo->lastname . ' - ' . $studentinfo->firstname . '.xlsx"');
                 $writer->save("php://output");
                 exit;
             }
-        }
-        else
-        {
-			
-			//return $assistantreg;
+        } else {
+            // return collect($studentinfo);
+            // return $request->all();
+            //return $assistantreg;
             // sait
-            $pdf = PDF::loadview('registrar/forms/tor/pdf/pdf_tor_sait',compact('schoolinfo','studentinfo','records','maxsubjcount','details','registrar','assistantreg','or','dateissued','getphoto'))->setPaper('legal','portrait'); 
+            // return  $studentinfo->picurl;
+            // dd($details);
+
+            $infomore = DB::table('studinfo_more')->where('studid', $studentinfo->id)->first();
+            // dd($infomore);
+            $acadprog = 0;
+            if ($infomore && $infomore->glits != null) {
+                $acadprog = DB::table('gradelevel')->where('deleted', '0')->where('id', $infomore->glits)->first();
+            }
+
+            if ($acadprog) {
+                $acadprog = $acadprog->acadprogid;
+            }
+
+            $enrollment_his = DB::table('enrollment_history')->whereIn('studstatus', [1, 2, 4])->where('studid', 21)->orderBy('created_at', 'asc')->first();
+            // return $enrollment_his;
+            $iscollege_grad = false;
+            $admitted = '';
+            $lastterm = '';
+            if ($acadprog == 4 || $acadprog == 5) {
+                $lastterm = $infomore->shssy;
+                $lastterm = $infomore->shssy;
+            } else if ($acadprog == 6) {
+                $lastterm = $infomore->collegesy;
+                if ($studentinfo->studtype == 'new') {
+                    $iscollege_grad = true;
+                }
+            }
+
+            $pdf = PDF::loadview('registrar/forms/tor/pdf/pdf_tor_sait', compact('schoolinfo', 'studentinfo', 'records', 'maxsubjcount', 'details', 'registrar', 'assistantreg', 'or', 'dateissued', 'getphoto', 'lastterm', 'acadprog', 'enrollment_his', 'iscollege_grad'))->setPaper('legal', 'portrait');
             $pdf->getDomPDF()->set_option("enable_php", true);
             return $pdf->stream('TOR.pdf');
             // $pdf = PDF::loadview('registrar/pdf/pdf_tor_gbbc_dompdf',compact('schoolinfo','studentinfo','records','maxsubjcount','details','registrar','assistantreg','or','dateissued'))->setPaper('legal','portrait'); 
             // return $pdf->stream('TOR.pdf');
         }
-        
+
         // $pdf = PDF::loadview('registrar/pdf/pdf_tor_gbbc',compact('schoolinfo','studentinfo','records','maxsubjcount'))->setPaper('legal','portrait'); 
         // return $pdf->stream('TOR.pdf');
 
@@ -1458,34 +1482,34 @@ class TORController extends Controller
         // $pdf->SetAuthor('CK Children\'s Publishing');
         // $pdf->SetTitle($schoolinfo->schoolname.' - Summary');
         // $pdf->SetSubject('Summary');
-        
+
         // // $pdf->setPrintHeader(false);
         // // set header and footer fonts
         // $pdf->setHeaderFont(Array(PDF_FONT_NAME_MAIN, '', PDF_FONT_SIZE_MAIN));
         // $pdf->setFooterFont(Array(PDF_FONT_NAME_DATA, '', PDF_FONT_SIZE_DATA));
-        
+
         // // set default monospaced font
         // $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
-        
+
         // // set margins
         // $pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
         // $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
         // $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
-        
+
         // // set auto page breaks
         // // $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
-        
+
         // // set image scale factor
         // $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
-        
+
         // // set some language-dependent strings (optional)
         // if (@file_exists(dirname(__FILE__).'/lang/eng.php')) {
         //     require_once(dirname(__FILE__).'/lang/eng.php');
         //     $pdf->setLanguageArray($l);
         // }
-        
+
         // // ---------------------------------------------------------
-        
+
         // // set font
         // $pdf->SetFont('dejavusans', '', 10);
         // $pdf->SetMargins(5, 30, 5, true);
@@ -1509,22 +1533,25 @@ class TORController extends Controller
     }
 }
 // results_torrecords.blade.php
-class TOR_TCPDF_GBBC extends TCPDF {
+class TOR_TCPDF_GBBC extends TCPDF
+{
 
     //Page header
-    public function Header() {
+    public function Header()
+    {
         $schoollogo = DB::table('schoolinfo')->first();
-        $image_file = public_path().'/'.$schoollogo->picurl; 
+        $image_file = public_path() . '/' . $schoollogo->picurl;
         $extension = explode('.', $schoollogo->picurl);
-        $this->Image('@'.file_get_contents($image_file),25,5,22,22);
-        
-        $image_fileheader = base_path().'/public/assets/images/gbbc/tor-header.png'; 
-        $this->Image('@'.file_get_contents($image_fileheader),50,5,140,22);
-        
+        $this->Image('@' . file_get_contents($image_file), 25, 5, 22, 22);
+
+        $image_fileheader = base_path() . '/public/assets/images/gbbc/tor-header.png';
+        $this->Image('@' . file_get_contents($image_fileheader), 50, 5, 140, 22);
+
     }
 
     // Page footer
-    public function Footer() {
+    public function Footer()
+    {
         // Position at 15 mm from bottom
         $this->SetY(-85);
         // // Page number
@@ -1533,20 +1560,16 @@ class TOR_TCPDF_GBBC extends TCPDF {
         $registrar = DB::table('teacher')
             ->where('userid', auth()->user()->id)
             ->first();
-            
-        if($registrar)
-        {
-            if($registrar->firstname != null)
-            {
-                $registrarname.=$registrar->firstname.' ';
+
+        if ($registrar) {
+            if ($registrar->firstname != null) {
+                $registrarname .= $registrar->firstname . ' ';
             }
-            if($registrar->middlename != null)
-            {
-                $registrarname.=$registrar->middlename[0].'. ';
+            if ($registrar->middlename != null) {
+                $registrarname .= $registrar->middlename[0] . '. ';
             }
-            if($registrar->lastname != null)
-            {
-                $registrarname.=$registrar->lastname;
+            if ($registrar->lastname != null) {
+                $registrarname .= $registrar->lastname;
             }
         }
 
@@ -1651,7 +1674,7 @@ class TOR_TCPDF_GBBC extends TCPDF {
                             <tr>
                                 <td style="width: 30%; font-size: 11px;"><em>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;School Seal</em></td>
                                 <td style="width: 40%; font-size: 11px; text-align: center;">Assistant Registrar</td>
-                                <td style="width: 30%; text-align: center;">'.$registrarname.'</td>
+                                <td style="width: 30%; text-align: center;">' . $registrarname . '</td>
                             </tr>
                             <tr>
                                 <td style="width: 30%; font-size: 11px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;O.R #:</td>
@@ -1665,10 +1688,10 @@ class TOR_TCPDF_GBBC extends TCPDF {
                             </tr>
                         </table>
                         ';
-        $this->writeHTML($footertable, false, true, false, true);   
+        $this->writeHTML($footertable, false, true, false, true);
     }
     public function signatories(Request $request)
     {
-        
+
     }
 }

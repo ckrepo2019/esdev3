@@ -128,7 +128,7 @@ $refid = DB::table('usertype')
                 </div>
                 <div class="modal-footer justify-content-between">
                     <button type="button" class="btn btn-default btn-close-modal" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="submitleave">Submit</button>
+                    <button type="button" class="btn btn-primary" hidden>Submit</button>
                 </div>
             </div>
           <!-- /.modal-content -->
@@ -247,6 +247,7 @@ $refid = DB::table('usertype')
                 $('#container-visibility').show();
                 $('#btn-applyleave-submit').show();
             } else {
+                $('#leavetypeid').val('')
                 $('#container-visibility').hide();
                 $('#btn-applyleave-submit').hide();
             }
@@ -332,6 +333,16 @@ $refid = DB::table('usertype')
             });
 
             var leaveid = $('#leavetypeid').val();
+            console.log('LEAVEID', leaveid);
+            if(!leaveid){
+                valid_data = false;
+                Toast.fire({
+                    type: 'error',
+                    title: 'No Leavetype selected!'
+                })
+                return false
+            }
+            
             var countday = $('#countdays'+leaveid).text()
             var parts = countday.split('/');
             var totalcountstart = parseFloat(parts[0])
@@ -345,7 +356,20 @@ $refid = DB::table('usertype')
             }
 
 
-            var remarks = $('#textarea-remarks').val();
+            var remarks = $('#textarea-remarks').val().trim();
+
+            if (!remarks) {
+                $('#textarea-remarks').addClass('is-invalid');
+                valid_data = false;
+                Toast.fire({
+                    type: 'error', // Use 'icon' instead of 'type' as 'type' is deprecated in SweetAlert2
+                    title: 'Reason is required'
+                });
+            } else {
+                $('#textarea-remarks').removeClass('is-invalid');
+            }
+
+
             var employeeid = $('#employeeids').val();
             var teacherid = $('#employeeids').val();
             var yos = $('#input-yos').val();
@@ -355,6 +379,7 @@ $refid = DB::table('usertype')
 
             var dateRange = $('#reservation').val();
             var dateRangeParts = dateRange.split(' - ');
+            
         
 
             // Construct Date objects with the correct format (MM/DD/YYYY)
@@ -425,6 +450,7 @@ $refid = DB::table('usertype')
                         if (xhr.status === 200) {
                             // Successful response
                             if (data == 1) {
+                                $('#leavetypeid').val('')
                                 $('#thumb-output').empty();
                                 $('#textarea-remarks').val('');
                                 $('#file-input').val('');
@@ -781,6 +807,7 @@ $refid = DB::table('usertype')
                     teacherid : teacherid
                 },
                 success: function (data) {
+                    console.log('MYLEAVE', data);
                     employeeappliedleaves = data;
                     load_employeeleavesdatatable()
                 }
@@ -808,7 +835,7 @@ $refid = DB::table('usertype')
                         'targets': 0,
                         'orderable': false, 
                         'createdCell':  function (td, cellData, rowData, row, col) {
-                            var text = '<a class="mb-0" style="text-transform: uppercase;">'+rowData.leave_type+'</a>';
+                            var text = '<a class="mb-0" style="text-transform: uppercase;">'+rowData.leave_type+'</a> <br> <span class="text-muted m-0" style="font-size:12px;">' + rowData.createddate+ '</span> ';
                             $(td)[0].innerHTML =  text
                             $(td).addClass('align-middle  text-left')
                         }

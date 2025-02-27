@@ -12,8 +12,36 @@
 */
 
 use Illuminate\Support\Facades\Route;
-use JoisarJignesh\Bigbluebutton\Facades\Bigbluebutton;
 use BigBlueButton\Parameters\CreateMeetingParameters;
+use JoisarJignesh\Bigbluebutton\Facades\Bigbluebutton;
+use App\Http\Controllers\ClgCollegeAttendanceController;
+// use App\Http\Controllers\DiscordWebhookController\DiscordWebhookController;
+use App\Http\Controllers\NotificationController\NotificationController;
+use App\Http\Controllers\Auth\CheckCreds;
+
+// Route::get('websocket/serve', function () {
+
+//     \Illuminate\Support\Facades\Artisan::call('websockets:serve');
+
+// });
+
+
+// Route::get('websocket/status', function () {
+//     $host = '127.0.0.1';
+//     $port = 6001;
+
+//     $connection = @fsockopen($host, $port, $errno, $errstr, 1);
+
+//     if (is_resource($connection)) {
+//         fclose($connection);
+//         return response()->json(['status' => 'running']);
+//     } else {
+//         return response()->json(['status' => 'not_running']);
+//     }
+// });
+
+Route::post('/send-notification', [NotificationController::class, 'sendNotification']);
+
 
 Route::get('/cklmsmeet', 'ExternalApiController@cklmsmeet');
 
@@ -29,7 +57,7 @@ Route::get('/forcelogout', function () {
     return redirect('/login');
 });
 
-
+Route::post('/checkcredentials', [CheckCreds::class, 'checkcredentials'] )->name('checkcredentials');
 
 
 
@@ -134,6 +162,8 @@ Route::middleware(['auth', 'isStudent'])->group(function () {
     Route::get('/student/preenrollment', 'StudentControllers\StudentController@student_preenrollment');
     Route::get('/student/preenrollment/list', 'StudentControllers\StudentController@student_preenrollment_list');
     Route::post('/student/preenrollment/submit', 'StudentControllers\StudentController@student_preenrollment_submit');
+
+
     //student preregistration
 
     //enrollment record basic ed
@@ -286,6 +316,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('principal/setup/schedule/gshs/add', 'PrincipalControllers\ScheduleController@gshs_insert_sched');
     Route::get('principal/setup/schedule/sh/add', 'PrincipalControllers\ScheduleController@sh_insert_sched');
     Route::get('principal/setup/section/print', 'PrincipalControllers\ScheduleController@print_sched');
+    Route::get('principal/setup/section/print/format1', 'PrincipalControllers\ScheduleController@print_sched_format1');
     Route::get('principal/setup/schedule/get/sched', 'PrincipalControllers\ScheduleController@get_schedule_2');
     Route::get('principal/setup/schedule/removesched', 'PrincipalControllers\ScheduleController@removesched');
     Route::get('principal/setup/schedule/getsubjects', 'PrincipalControllers\ScheduleController@getsubjects');
@@ -818,7 +849,10 @@ Route::middleware(['auth', 'isRegistrar', 'isDefaultPass'])->group(function () {
 
     Route::get('/printable/cor', 'RegistrarControllers\ReportsController@printablecor');
     Route::get('/printable/gwaranking', 'RegistrarControllers\ReportsController@printablegwaranking');
+
     Route::get('/printable/coranking', 'RegistrarControllers\ReportsController@printablecoranking');
+    Route::get('/printable/student_coranking', 'RegistrarControllers\ReportsController@students_coranking');
+
     Route::get('/printable/studentacademicrecord', 'RegistrarControllers\ReportsController@printablestudentacademicrecord');
     Route::get('/printable/clearance', 'RegistrarControllers\ReportsController@printableclearance');
 
@@ -1002,7 +1036,6 @@ Route::middleware(['auth', 'isRegistrar', 'isDefaultPass'])->group(function () {
     Route::get('/registrar/summaries/alphaloading/filter', 'RegistrarControllers\SummaryController@alphaloadingfilter');
 
     Route::get('/registrar/studentlist', 'RegistrarControllers\SummaryController@studentlist')->name('studentlist');
-    Route::get('/registrar/studentlist/pdf', 'RegistrarControllers\SummaryController@studentlistpdf')->name('studentlistpdf');
 
     //college schedule
     Route::get('/registrar/college/student/loading', 'RegistrarControllers\RegistrarFunctionController@student_loading');
@@ -1785,6 +1818,7 @@ Route::middleware(['auth', 'isFinanceAdmin'])->group(function () {
 
 Route::middleware(['auth', 'isHumanResource', 'isDefaultPass'])->group(function () {
 
+    
     Route::resource('/home', 'HRControllers\HRDashboardController');
     Route::get('/hr/employees/index', 'HRControllers\HREmployeesController@index');
     Route::get('/hr/employees/inactiveemployees', 'HRControllers\HREmployeesController@inactiveemployees');
@@ -1800,6 +1834,7 @@ Route::middleware(['auth', 'isHumanResource', 'isDefaultPass'])->group(function 
     Route::get('/hr/employees/profile/updaterfid', 'HRControllers\HREmployeeProfileController@updaterfid');
     Route::get('/hr/employees/profile/deactivateuser', 'HRControllers\HREmployeeProfileController@deactivateuser');
     Route::get('/hr/employees/profile/activateuser', 'HRControllers\HREmployeeProfileController@activateuser');
+    Route::get('/hr/employees/change_hired_status', 'HRControllers\HREmployeeProfileController@change_hired_status');
 
     Route::get('/hr/employees/profile/tabprofile/index', 'HRControllers\HREmployeeProfileController@tabprofileindex');
     Route::get('/hr/employees/profile/tabprofile/updatepersonalinfo', 'HRControllers\HREmployeeProfileController@tabprofileupdatepersonalinfo');
@@ -1892,6 +1927,9 @@ Route::middleware(['auth', 'isHumanResource', 'isDefaultPass'])->group(function 
     Route::get('/hr/tardinesscomp/index', 'HRControllers\TardinessComputationController@index');
     Route::get('/hr/tardinesscomp/getbrackets', 'HRControllers\TardinessComputationController@getbrackets');
     Route::get('/hr/tardinesscomp/addbrackets', 'HRControllers\TardinessComputationController@addbrackets');
+    Route::get('/hr/tardinesscomp/baseonattendance', 'HRControllers\TardinessComputationController@baseonattendance');
+    Route::get('/hr/tardinesscomp/loadtardinessbos', 'HRControllers\TardinessComputationController@loadtardinessbos');
+    Route::get('/hr/tardinesscomp/baseonsalary', 'HRControllers\TardinessComputationController@baseonsalary');
     Route::get('/hr/tardinesscomp/updatebracket', 'HRControllers\TardinessComputationController@updatebracket');
     Route::get('/hr/tardinesscomp/deletebracket', 'HRControllers\TardinessComputationController@deletebracket');
     Route::get('/hr/tardinesscomp/activation', 'HRControllers\TardinessComputationController@activation');
@@ -2078,8 +2116,15 @@ Route::middleware(['auth', 'isHumanResource', 'isDefaultPass'])->group(function 
     Route::get('/payrollclerk/setup/update_shift', 'HRControllers\HREmployeeShiftingController@update_shift');
     Route::get('/payrollclerk/setup/delete_shift', 'HRControllers\HREmployeeShiftingController@delete_shift');
 
-    // Payrol Clerk Profile Gian
+    // Gian Addition Shifting
+    Route::get('/hr/setup/workday', 'HRControllers\HREmployeeWorkDayController@workday');
+    Route::get('/hr/setup/load_all_workday', 'HRControllers\HREmployeeWorkDayController@load_all_workday');
+    Route::get('/hr/setup/store_workday', 'HRControllers\HREmployeeWorkDayController@store_workday');
+    Route::get('/hr/setup/edit_workday', 'HRControllers\HREmployeeWorkDayController@edit_workday');
+    Route::get('/hr/setup/update_workday', 'HRControllers\HREmployeeWorkDayController@update_workday');
+    Route::get('/hr/setup/delete_workday', 'HRControllers\HREmployeeWorkDayController@delete_workday');
 
+    // Payrol Clerk Profile Gian
     Route::get('/payrollclerk/employees/profile/select_designations', 'HRControllers\HREmployeeProfileController@select_designations');
     Route::get('/payrollclerk/employees/profile/select_departments', 'HRControllers\HREmployeeProfileController@select_departments');
     Route::get('/payrollclerk/employees/profile/getdatainfo', 'HRControllers\HREmployeeProfileController@getdatainfo');
@@ -2235,13 +2280,79 @@ Route::middleware(['auth', 'isHumanResource', 'isDefaultPass'])->group(function 
     Route::get('/payrollclerk/setup/printdeduction', 'HRControllers\HREmployeePrintablesController@printdeduction');
     Route::get('/payrollclerk/setup/printallowance', 'HRControllers\HREmployeePrintablesController@printallowance');
 
-    // Notification Setup HR
-    Route::get('/hr/settings/notification/index', 'HRControllers\HREmployeeNotificationsController@index');
-    Route::post('/hr/settings/notification/sendnotification', 'HRControllers\HREmployeeNotificationsController@sendnotification');
-    Route::get('/hr/settings/notification/load_notifications', 'HRControllers\HREmployeeNotificationsController@load_notifications');
-    Route::get('/hr/settings/notification/delete_notification', 'HRControllers\HREmployeeNotificationsController@delete_notification');
+    // Earning and Deduction Revise
+    Route::get('/hr/payrollv3/addparticular', 'HRControllers\HREmployeeEarningDeductionController@addparticular');
+    // // Notification Setup HR
+    // Route::get('/hr/settings/notification/index', 'HRControllers\HREmployeeNotificationsController@index');
+    // Route::post('/hr/settings/notification/sendnotification', 'HRControllers\HREmployeeNotificationsController@sendnotification');
+    // Route::get('/hr/settings/notification/load_notifications', 'HRControllers\HREmployeeNotificationsController@load_notifications');
+    // Route::get('/hr/settings/notification/delete_notification', 'HRControllers\HREmployeeNotificationsController@delete_notification');
+
+    // Attendance Upload
+    Route::post('/attendance/upload', 'HRControllers\HRAttendanceuploadController@upload_attendance');
+    Route::get('/attendance/getemployeeattendance', 'HRControllers\HRAttendanceController@getemployeeattendance');
 
 
+    //V4
+    Route::post('/newempoloyee/basicinformation/create', 'HRControllers\HREmployeesControllerV4@addnewemployeesave');
+    Route::get('/hr/employees/V4fetch', 'HRControllers\HREmployeesControllerV4@index');
+    Route::view('/hr/employees/indexV4', 'hr.employees.indexV4');
+    Route::view('/hr/employees/newemployee_employmentDetails', 'hr.employees.addnewemployee_employmentDetails');
+    Route::get('/newempoloyee/select_offices', 'HRControllers\HREmployeesControllerV4@select_offices');
+    Route::get('/newempoloyee/select_jobstatus', 'HRControllers\HREmployeesControllerV4@select_jobstatus');
+
+    Route::get('/newempoloyee/select_generalworkdays', 'HRControllers\HREmployeesControllerV4@select_general_workdays');
+
+    Route::post('/newempoloyee/employmentdetails/create', 'HRControllers\HREmployeesControllerV4@create_employmentdetails');
+
+    Route::get('/hr/setup/foremployee_store_workday', 'HRControllers\HREmployeeWorkDayController@foremployee_store_workday');
+
+    Route::get('/edit/selcted_employee/fetch', 'HRControllers\HREmployeesControllerV4@edit_selected_employee');
+
+
+    Route::post('/empoloyee/basicinformation/update', 'HRControllers\HREmployeesControllerV4@employeeupdate');
+    Route::get('/empoloyee/education/delete', 'HRControllers\HREmployeesControllerV4@delete_selected_employee_education');
+    Route::get('/empoloyee/work_experience/delete', 'HRControllers\HREmployeesControllerV4@delete_selected_employee_work_experience');
+
+    Route::post('/empoloyee/employmenttdetails/update', 'HRControllers\HREmployeesControllerV4@employee_employmentdetails_update');
+
+    Route::view('/hr/leave_setup', 'hr.employees.general_SetupV4');
+
+    Route::get('/hr/leave_frequency/create', 'HRControllers\HREmployeesControllerV4@create_leavefrequency');
+    Route::get('/hr/leave_frequency/fetch', 'HRControllers\HREmployeesControllerV4@fetch_leavefrequency');
+
+    Route::get('/hr/leave/create', 'HRControllers\HREmployeesControllerV4@create_leave');
+    Route::get('/hr/leave/fetch', 'HRControllers\HREmployeesControllerV4@fetch_leave');
+    Route::get('/hr/leave/selected_leave/fetch', 'HRControllers\HREmployeesControllerV4@fetch_selected_leave');
+    Route::post('/hr/leave_frequency/update', 'HRControllers\HREmployeesControllerV4@update_leave');
+    Route::get('/hr/leave_frequency/delete', 'HRControllers\HREmployeesControllerV4@delete_leave');
+
+    // Route::get('/hr/attendance/indexv2', 'HRControllers\HRAttendanceController@indexv2');
+    //attendance
+    Route::view('hr/attendance/indexv4', 'hr.attendance.attendanceIndexV4');
+    Route::get('/hr/employees/attendance/V4fetch', 'HRControllers\HREmployeesControllerV4@all_empoyees_for_attendance');
+    Route::get('/hr/employees/attendance/V4fetch_allattendance', 'HRControllers\HREmployeesControllerV4@all_employees_for_multiple_attendance');
+
+    Route::post('/empoloyee/attendance/create', 'HRControllers\HRAttendanceController@create_selected_employee_manual_attendance');
+    Route::get('/employee/manual_attendance/fetch', 'HRControllers\HRAttendanceController@selected_employee_manual_attendance');
+
+    
+
+
+
+});
+
+Route::group(['middleware' => ['auth', 'web']], function () {
+    Route::get('/hr/settings/notification/index', 'HRControllers\HREmployeeNotificationsV2Controller@index');
+    Route::get('/hr/settings/notification/valid_employees', 'HRControllers\HREmployeeNotificationsV2Controller@valid_employees');
+    Route::post('/hr/settings/notification/sendnotification', 'HRControllers\HREmployeeNotificationsV2Controller@sendnotification');
+    Route::post('/hr/settings/notification/sendnotificationv2', 'HRControllers\HREmployeeNotificationsV2Controller@sendnotificationv2');
+    Route::get('/hr/settings/notification/getMessages', 'HRControllers\HREmployeeNotificationsV2Controller@getMessages');
+    Route::get('/hr/settings/notification/getAllMessages', 'HRControllers\HREmployeeNotificationsV2Controller@getAllMessages');
+    Route::post('/hr/settings/notification/sendReply', 'HRControllers\HREmployeeNotificationsV2Controller@sendReply');
+    Route::get('/hr/settings/notification/getReply', 'HRControllers\HREmployeeNotificationsV2Controller@getReply');
+    Route::get('/hr/settings/notification/mark-as-read', 'HRControllers\HREmployeeNotificationsV2Controller@markAsRead');
+    Route::get('/hr/settings/notification/mark-as-displayed', 'HRControllers\HREmployeeNotificationsV2Controller@markAsDisplayed')->name('messages.markAsDisplayed');
 });
 
 Route::group(['middleware' => ['auth', 'web']], function () {
@@ -2283,6 +2394,13 @@ Route::group(['middleware' => ['auth', 'web']], function () {
     Route::get('/schoolfolderv2/viewfolder', 'SchoolFilesController@viewfolder');
     Route::post('/schoolfolderv2/upload', 'SchoolFilesController@uploadfile');
 
+    //izakahr Added here
+    Route::get('/schoolfolderv2/getUsertypes', 'SchoolFilesControllerv2@getUsertypes');
+    Route::post('/schoolfolderv2/setasCreator', 'SchoolFilesControllerv2@setasCreator');
+
+
+    Route::view('/schoolfolderv2/blade', 'schoolfolder.adminIT.setup.setup');
+
     // MY DOCUMENTS
     Route::get('/mydocs/index', 'MyDocumentsController@index')->name('mydocsindex');
     Route::get('/mydocs/createfolder', 'MyDocumentsController@createfolder');
@@ -2322,10 +2440,36 @@ Route::group(['middleware' => ['auth', 'web']], function () {
     Route::get('/leaves/setdaysyears/delete', 'HRControllers\HREmployeeLeaveController@delete');
     Route::get('/leaves/setdaysyears/edityear', 'HRControllers\HREmployeeLeaveController@edityear');
     Route::get('/leaves/setdaysyears/editdays', 'HRControllers\HREmployeeLeaveController@editdays');
+    Route::get('/leaves/apply/loademployeeappliedleaves', 'HRControllers\HREmployeeLeaveController@loademployeeappliedleaves');
+
+    // added by clyde
+    Route::get('/hr/requirements/index', 'HRControllers\HRLeavesController@requirements');
+    Route::get('/hr/viewrequirement', 'HRControllers\HRLeavesController@viewrequirement')->name('hr.requirement.index');
+    Route::post('/hr/requirementsave', 'HRControllers\HRLeavesController@create_folder_requirement')->name('requirement.save');
+    Route::delete('/hr/requirements/{id}', 'HRControllers\HRLeavesController@destroyrequirement')->name('requirement.destroy');
+    Route::get('/hr/editrequirement', 'HRControllers\HRLeavesController@editrequirement');
+    Route::put('/hr/updaterequirement', 'HRControllers\HRLeavesController@updaterequirement');
+
+    Route::get('/get-student-image/{id}', 'SuperAdminController\StudentPregistration@getStudentImage');
+
+
+    // In routes/web.php
+    Route::post('/hr/upload-requirement', 'HRControllers\HRLeavesController@uploadRequirement');
+    Route::post('/hr/submit-requirement', 'HRControllers\HRLeavesController@teacherRequirementsDashboard');
+    Route::post('/hr/requirement/approve', 'HRControllers\HRLeavesController@requirementApprove')->name('hr.requirements.approve');
+    Route::get('/notificationv2/index', 'HRControllers\HRLeavesController@notificationv2')->name('notificationv2.index');
+    Route::get('/get-all-notifications', 'HRControllers\HRLeavesController@getAllNotificationsv2')->name('getallnotificationsv2');
+    Route::post('/notifmarkasread', 'HRControllers\HRLeavesController@notifmarkasread')->name('notification.markAsRead');
+    Route::get('/notifmarkasdisplayed', 'HRControllers\HRLeavesController@notifmarkasdisplayed')->name('notification.markAsDisplayed');
+    Route::get('/hr/getTeacherLogs', 'HRControllers\HRLeavesController@getTeacherLogs');
+    Route::get('/hr/requirements/employee', 'HRControllers\HRLeavesController@teacherRequirementsDashboard');
+    Route::delete('/hr/upload-requirement/{fileId}', 'HRControllers\HRLeavesController@cancelUpload');
 
     // Filed Leaves
     Route::get('/hr/leaves/index', 'HRControllers\HRLeavesController@index');
+    Route::get('/hr/leaves/filedleaves', 'HRControllers\HRLeavesController@filedleaves');
     Route::get('/hr/leaves/filter', 'HRControllers\HRLeavesController@filter');
+    Route::get('/hr/employees/profile/getleaves', 'HRControllers\HRLeavesController@getleaves');
     Route::get('/hr/leaves/fileleave', 'HRControllers\HRLeavesController@fileleave');
     Route::get('/hr/leaves/delete', 'HRControllers\HRLeavesController@delete');
     Route::get('/hr/leaves/changestatus', 'HRControllers\HRLeavesController@changestatus');
@@ -2333,6 +2477,7 @@ Route::group(['middleware' => ['auth', 'web']], function () {
     Route::get('/hr/leaves/approve', 'HRControllers\HRLeavesController@approve');
     Route::get('/hr/leaves/disapprove', 'HRControllers\HRLeavesController@disapprove');
     Route::get('/hr/leaves/updatestatus', 'HRControllers\HRLeavesController@updatestatus');
+
     // Apply Overtime
     Route::get('/overtime/apply/index', 'EmployeeOvertimeController@applyindex');
     Route::get('/overtime/apply/submit', 'EmployeeOvertimeController@applysubmit');
@@ -2453,6 +2598,7 @@ Route::group(['middleware' => ['auth', 'web']], function () {
     Route::get('/schoolform/tor/deleterecord', 'RegistrarControllers\TORController@deleterecord')->name('tordeleterecord');
     Route::get('/schoolform/tor/exporttopdf', 'RegistrarControllers\TORController@exporttopdf');
 
+    Route::get('/schoolform/tor/getinfo', 'RegistrarControllers\TORController@getinfo');
     //------------------------------------------------------------
 
     // ---------------------- RECORD OF CANDIDATE FOR GRADUATION --------------------------------
@@ -2532,18 +2678,56 @@ Route::middleware(['isDefaultPass'])->group(function () {
 
 
 
-Route::middleware(['auth', 'isDean'])->group(function () {
+Route::middleware(['auth'])->group(function () {
 
     Route::get('dean/courses/', 'DeanControllers\DeanController@viewcourses')->name('dean.courses');
     Route::get('dean/prospectus/{course}', 'DeanControllers\DeanController@viewprospectus')->name('dean.prospectus');
     Route::get('dean/faculties', 'DeanControllers\DeanController@viewfaculties')->name('dean.faculties');
     Route::get('dean/store/prospectus', 'DeanControllers\DeanController@storeprospectus')->name('dean.store.prospectus');
     Route::get('dean/remove/prospectussubject/{subject}', 'DeanControllers\DeanController@removeprospectussubject')->name('dean.remove.prospectussubject');
-
     Route::get('dean/view/submitted/grades', 'DeanControllers\DeanController@deanviewsubmittedgrades');
-
     Route::get('dean/view/grades', 'DeanControllers\DeanController@viewgrades');
     Route::get('dean/view/all/grades', 'DeanControllers\DeanController@viewallgrades');
+
+    Route::get('/student/loading/students', 'DeanControllers\CollegeStudentLoadingController@students');
+    Route::get('/student/loading/Student-Information', 'DeanControllers\CollegeStudentLoadingController@getStudentInformation');
+    Route::get('/student/loading/Student-Loading/{sectionId}', 'DeanControllers\CollegeStudentLoadingController@getStudentLoading');
+    Route::get('/student/loading/New-Student-Loading/{sectionId}', 'DeanControllers\CollegeStudentLoadingController@collegeLoadSubject');
+
+    Route::get('/student/loading/get-section-schedule', 'DeanControllers\CollegeStudentLoadingController@getSectionSchedule');
+    Route::post('/student/loading/save-loaded-subjects', 'DeanControllers\CollegeStudentLoadingController@saveLoadedSubjects');
+    Route::get('/student/loading/get-added-student-loading/{studentId}/{sectionId}/{syid}/{semid}/{subjectID}', 'DeanControllers\CollegeStudentLoadingController@getAddedStudentLoading');
+    Route::get('/student/loading/print/student-loading/{studentId}/{syid}/{semid}', 'DeanControllers\CollegeStudentLoadingController@printStudentLoading');
+    Route::get('/student/loading/student-details', 'DeanControllers\CollegeStudentLoadingController@enrollmentDetails');
+
+    Route::delete('/student/loading/delete-loaded-subject/{subjectId}', 'DeanControllers\CollegeStudentLoadingController@deleteLoadedSubject');
+    Route::get('/student/loading/delete-loaded-subject/{subjectId}', 'DeanControllers\CollegeStudentLoadingController@deleteLoadedSubject');
+
+    Route::get('/getStudents', 'DeanControllers\CollegeStudentLoadingController@students');
+    // Route::delete('/student/loading/delete-loaded-subject/{subjectId}', 'DeanControllers\CollegeStudentLoadingController@dropsubject')->name('drop.subject');
+    Route::post('/student/updateCourse', 'DeanControllers\CollegeStudentLoadingController@updateCourseStudent');
+    Route::get('/check-schedule-conflicts', 'DeanControllers\CollegeStudentLoadingController@checkScheduleConflicts');
+    Route::post('/student/loading/update-section', 'DeanControllers\CollegeStudentLoadingController@updateStudentSection');
+    Route::get('/student/getSectionSelect', 'DeanControllers\CollegeStudentLoadingController@getStudentSections');
+    Route::get('/student/getSubjectSectionSelect', 'DeanControllers\CollegeStudentLoadingController@getStudentSubjects');
+    Route::get('/student/studentStatus', 'DeanControllers\CollegeStudentLoadingController@getStudentStatusSelect2');
+    Route::get('/student/getFilteredStudents', 'DeanControllers\CollegeStudentLoadingController@getFilteredStudents');
+    Route::get('/student/getSections', 'DeanControllers\CollegeStudentLoadingController@getSections');
+
+    Route::get('/print/all_student_information', 'DeanControllers\CollegeStudentLoadingController@print_all_student_information');
+
+    // Route::get('/student/getPreReq', 'DeanControllers\CollegeStudentLoadingController@getPreqSubjects');
+
+    // Route::get('/student/loading/save-loaded-subjects', 'DeanControllers\CollegeStudentLoadingController@saveLoadedSubjects');
+    // Route::post('/student/loading/load-all-subjects', 'DeanControllers\CollegeStudentLoadingController@loadAllSubjects');
+    // Route::get('/student/loading/get-student-loading', 'DeanControllers\CollegeStudentLoadingController@getStudentLoading');
+    // Route::get('/student/loading/available-sections', 'DeanControllers\CollegeStudentLoadingController@getSectionSchedule');
+    Route::get('/student/loading/get-added-student-loading-all', 'RegistrarControllers\RegistrarSetupController@getAddedStudentLoadingAllSections');
+    Route::get('/getStudentsGradeSummary', 'DeanControllers\DeanGradeSummaryController@college_studentListGradeSummary');
+    Route::get('college/teacher/student-list-for-all-grade-summary/{syid}/{semid}/{course}/{academic}/{section}', 'DeanControllers\DeanGradeSummaryController@college_studentListGradeSummary');
+
+    Route::get('/college/section/gradesummary/get', 'DeanControllers\DeanGradeSummaryController@get_sections');
+
 
 });
 
@@ -2817,6 +3001,75 @@ Route::middleware(['cors'])->group(function () {
     Route::get('/api/student_insert', 'enrollment\EnrollmentController@studentinsert')->name('api_student_insert');
 });
 //-----------API STUDENT INFO----------------//
+
+//-----------API MOBILE----------------//
+
+
+Route::get('/notification', 'NotificationController@notification')->name('notification');
+
+Route::middleware(['cors'])->group(function () {
+
+    Route::post('/api/mobile/api_save_fcmtoken', 'NotificationController@api_save_fcmtoken')->name('api_save_fcmtoken');
+    Route::post('/api/mobile/deleteFcmToken', 'NotificationController@deleteFcmToken')->name('deleteFcmToken');
+
+    Route::get('/api/mobile/api_login', 'APIMobileController@api_login')->name('api_login');
+    Route::get('/api/mobile/api_enrollmentinfo', 'APIMobileController@api_enrollmentinfo')->name('api_enrollmentinfo');
+    Route::get('/api/mobile/api_enrollmentdata', 'APIMobileController@api_enrollmentdata')->name('api_enrollmentdata');
+    Route::get('/api/mobile/api_billinginfo', 'APIMobileController@api_billinginfo')->name('api_billinginfo');
+    Route::get('/api/mobile/api_studledger', 'APIMobileController@api_studledger')->name('api_studledger');
+    Route::get('/api/mobile/api_monthsetup', 'APIMobileController@api_monthsetup')->name('api_monthsetup');
+    Route::get('/api/mobile/api_picurl', 'APIMobileController@api_picurl')->name('api_picurl');
+    Route::get('/api/mobile/api_sf9attendance', 'APIMobileController@api_sf9attendance')->name('api_sf9attendance');
+
+    Route::get('/api/mobile/api_getgrade', 'APIMobileController@api_get_grades')->name('api_get_grades');
+    Route::get('/api/mobile/api_getschedule', 'APIMobileController@get_sched')->name('api_get_schedule');
+    Route::get('/api/mobile/api_get_events', 'APIMobileController@api_get_events')->name('api_get_events');
+    Route::get('/api/mobile/api_get_taphistory', 'APIMobileController@api_get_taphistory')->name('api_get_taphistory');
+    Route::post('/api/mobile/api_update_pushstatus', 'APIMobileController@api_update_pushstatus')->name('api_update_pushstatus');
+    Route::get('/api/mobile/api_get_transactions', 'APIMobileController@api_get_transactions')->name('api_get_transactions');
+
+    Route::get('/api/mobile/api_get_smsbunker', 'APIMobileController@api_get_smsbunker')->name('api_get_smsbunker');
+    Route::post('/api/mobile/api_update_sms', 'APIMobileController@api_update_sms')->name('api_update_sms');
+
+    Route::get('/api/mobile/api_get_onlinepaymentoptions', 'APIMobileController@api_get_onlinepaymentoptions')->name('api_get_onlinepaymentoptions');
+    Route::post('/api/mobile/api_send_payment', 'APIMobileController@api_send_payment')->name('api_send_payment');
+    Route::get('/api/mobile/api_get_onlinepayments', 'APIMobileController@api_get_onlinepayments')->name('api_get_onlinepayments');
+
+    Route::get('/api/mobile/student_observedvalues', 'APIMobileController@student_observedvalues')->name('student_observedvalues');
+    Route::get('/api/mobile/student_attendance', 'APIMobileController@student_attendance')->name('student_attendance');
+    Route::get('/api/mobile/schoolinfo', 'APIMobileController@api_schoolinfo')->name('api_schoolinfo');
+    Route::post('/api/mobile/api_uploadprofile', 'MobileAppControllers\MobileAppController@updateProfile');
+
+    Route::get('/api/mobile/api_enrollment_reportcard', 'APIMobileController@api_enrollment_reportcard')->name('api_enrollment_reportcard');
+    Route::get('/api/mobile/api_attendance', 'APIMobileController@api_attendance')->name('api_attendance');
+    Route::get('/api/mobile/api_observedvalues', 'APIMobileController@api_observedvalues')->name('api_observedvalues');
+    Route::get('/api/mobile/api_sysem', 'APIMobileController@api_sysem')->name('api_sysem');
+    Route::get('/api/mobile/api_enrolledstud', 'APIMobileController@api_enrolledstud')->name('api_enrolledstud');
+
+
+    // Route::get('/api/mobile/api_remedial_class', 'APIMobileController@api_remedial_class')->name('api_remedial_class');
+    // Route::get('/api/mobile/api_clearancedata', 'APIMobileController@api_clearancedata')->name('api_clearancedata');
+
+    Route::get('/api/mobile/api_getscholarshipsetup', 'APIMobileController@api_getscholarshipsetup')->name('api_getscholarshipsetup');
+    Route::get('/api/mobile/api_getscholarship', 'APIMobileController@api_getscholarship')->name('api_getscholarship');
+    Route::get('/api/mobile/api_getrequirement', 'APIMobileController@api_getrequirement')->name('api_getrequirement');
+    Route::post('/api/mobile/api_savescholarship', 'APIMobileController@api_savescholarship')->name('api_savescholarship');
+    Route::post('/api/mobile/api_uploadrequirement', 'APIMobileController@api_uploadrequirement')->name('api_uploadrequirement');
+    Route::post('/api/mobile/api_delscholarship', 'APIMobileController@api_delscholarship')->name('api_delscholarship');
+
+
+
+
+    // Route::get('/api/mobile/clearance', 'ClearanceController@getclearancedata');
+    // Route::get('/api/mobile/scholarship', 'StudentControllers\ScholarshipController@getScholarship');
+    // Route::get('/api/mobile/teachereval', 'StudentControllers\EnrollmentInformation@class_schedule');
+
+
+});
+Route::get('/download/app', 'MobileAppControllers\MobileAppController@download');
+
+
+//-----------API MOBILE----------------//
 
 //school monitoring
 Route::middleware(['cors'])->group(function () {
@@ -3615,15 +3868,21 @@ Route::middleware(['auth', 'isFinance'])->group(function () {
     Route::get('/finance/expenses_print', 'FinanceControllers\ExpensesController@expenses_print')->name('expenses_print');
     Route::get('/finance/expenses_gencredit', 'FinanceControllers\ExpensesController@expenses_gencredit')->name('expenses_gencredit');
 
-    Route::get('/finance/disbursement', 'FinanceControllers\DisbursementController@disbursement')->name('disbursement');
+    Route::get('/finance/expenses_getvoucherno', 'FinanceControllers\ExpensesController@expenses_getvoucherno')->name('expenses_getvoucherno');
+
+    Route::get('/finance/disbursement', 'FinanceControllers\DisbursementV2Controller@index')->name('disbursement');
     Route::get('/finance/disbursement_loadsupplier', 'FinanceControllers\DisbursementController@disbursement_loadsupplier')->name('disbursement_loadsupplier');
     Route::get('/finance/disbursement_loadrr', 'FinanceControllers\DisbursementController@disbursement_loadrr')->name('disbursement_loadrr');
-    Route::get('/finance/disbursement_save', 'FinanceControllers\DisbursementController@disbursement_save')->name('disbursement_save');
-    Route::get('/finance/disbursement_load', 'FinanceControllers\DisbursementController@disbursement_load')->name('disbursement_load');
-    Route::get('/finance/disbursement_read', 'FinanceControllers\DisbursementController@disbursement_read')->name('disbursement_read');
-    Route::get('/finance/disbursement_loadje', 'FinanceControllers\DisbursementController@disbursement_loadje')->name('disbursement_loadje');
-    Route::get('/finance/disbursement_post', 'FinanceControllers\DisbursementController@disbursement_post')->name('disbursement_post');
-    Route::get('/finance/disbursement_removeje', 'FinanceControllers\DisbursementController@disbursement_removeje')->name('disbursement_removeje');
+    Route::get('/finance/disbursement_save', 'FinanceControllers\DisbursementV2Controller@disbursement_save_v2')->name('disbursement_save');
+    Route::get('/finance/disbursement_load', 'FinanceControllers\DisbursementV2Controller@disbursement_load')->name('disbursement_load');
+    Route::get('/finance/disbursement_read', 'FinanceControllers\DisbursementV2Controller@disbursement_read')->name('disbursement_read');
+    Route::get('/finance/disbursement_loadje', 'FinanceControllers\DisbursementV2Controller@disbursement_loadje')->name('disbursement_loadje');
+    Route::get('/finance/disbursement_loaditem', 'FinanceControllers\DisbursementV2Controller@disbursement_loaditem')->name('disbursement_loaditem');
+    Route::get('/finance/disbursement_post', 'FinanceControllers\DisbursementV2Controller@disbursement_post')->name('disbursement_post');
+    Route::get('/finance/disbursement_removeje', 'FinanceControllers\DisbursementV2Controller@disbursement_removeje')->name('disbursement_removeje');
+
+    Route::get('/finance/disbursement_getponumber', 'FinanceControllers\DisbursementV2Controller@disbursement_getponumber')->name('disbursement_getponumber');
+    Route::get('/finance/disbursement_getpoinfo', 'FinanceControllers\DisbursementV2Controller@disbursement_getpoinfo')->name('disbursement_getpoinfo');
 
     Route::get('/finance/onlinepay', 'FinanceControllers\FinanceController@onlinepay')->name('onlinepay');
     Route::get('/finance/onlinepaymentlist', 'FinanceControllers\FinanceController@onlinepaymentlist')->name('onlinepaymentlist');
@@ -3792,6 +4051,7 @@ Route::middleware(['auth', 'isFinance'])->group(function () {
     Route::get('/statementofacctselectmonthrange', 'FinanceControllers\StatementofAccountController@statementofacctselectmonthrange')->name('statementofacctselectmonthrange');
     Route::get('/statementofacctselectedmonthrange', 'FinanceControllers\StatementofAccountController@statementofacctselectedmonthrange')->name('statementofacctselectedmonthrange');
     Route::get('/statementofacctremovemonthrange', 'FinanceControllers\StatementofAccountController@statementofacctremovemonthrange')->name('statementofacctremovemonthrange');
+
 });
 
 
@@ -4579,20 +4839,27 @@ Route::get('gettime', function () {
     return \Carbon\Carbon::now('Asia/Manila');
 
 });
+use App\Http\Controllers\TesdaController\TesdaStudentInformationController;
+
+Route::get('/generate-hash', [TesdaStudentInformationController::class, 'generateHash']);
 
 
-
+use Illuminate\Http\Request;
 Route::middleware(['checkModule:preregistration', 'guest'])->group(function () {
 
-    Route::get('preregv2', function () {
+    Route::get('preregv2', function (Request $request) {
 
         if (config('app.type') == 'Online' || config('app.type') != 'Offline') {
 
             // return "Pre enrollment is not yet available";
-
+            $type = $request->type ?? 'old';
             $gradelevel = DB::table('gradelevel')->where('deleted', '0')->orderBy('sortid')->get();
 
-            return view('preregistrationV2.preregistrationv3')->with('gradelevel', $gradelevel);
+            if ($type == 'old') {
+                return view('preregistrationV2.pregistration_oldstud', compact('gradelevel', 'type'));
+            }
+
+            return view('preregistrationV2.preregistrationv3', compact('gradelevel', 'type'));
 
         } else {
 
@@ -4750,7 +5017,10 @@ Route::middleware(['cors'])->group(function () {
 
 
 
-
+// Added by clyde
+Route::middleware(['cors'])->group(function () {
+    Route::post('/student/notify_individual_student', 'StudentControllers\StudentController@notify_individual_student')->name('notify_individual_student');
+});
 
 
 
@@ -4762,6 +5032,21 @@ Route::get('/superadmin/student/grade/evaluation/students', 'SuperAdminControlle
 Route::get('/superadmin/student/grade/evaluation/sf9', 'SuperAdminController\StudentGradeEvaluation@sf9');
 Route::get('/superadmin/student/grade/evaluation/sf9/grades', 'SuperAdminController\StudentGradeEvaluation@sf9_grades_request');
 Route::get('/superadmin/student/grade/evaluation/subjsetup', 'SuperAdminController\StudentGradeEvaluation@subjsetup');
+Route::get('/superadmin/student/grade/evaluation/get', 'SuperAdminController\StudentGradeEvaluation@college_grades_eval');
+Route::get('/superadmin/student/grade/evaluation/get/prospectus', 'SuperAdminController\StudentGradeEvaluation@college_grades_eval_2');
+Route::get('/superadmin/student/grade/evaluation/add/credit', 'SuperAdminController\StudentGradeEvaluation@add_credited_subj');
+Route::get('/superadmin/student/grade/evaluation/get/credit', 'SuperAdminController\StudentGradeEvaluation@get_credited_subj');
+Route::get('/superadmin/student/grade/evaluation/get/specific_credit', 'SuperAdminController\StudentGradeEvaluation@get_specific_credited_subj');
+Route::get('/superadmin/student/grade/evaluation/add/additional_credit', 'SuperAdminController\StudentGradeEvaluation@additional_credit');
+Route::get('/superadmin/student/grade/evaluation/delete/additional_credit', 'SuperAdminController\StudentGradeEvaluation@delete_additional_credit');
+Route::get('/superadmin/student/grade/evaluation/update/additional_credit', 'SuperAdminController\StudentGradeEvaluation@update_additional_credit');
+Route::get('/superadmin/student/grade/evaluation/update/school_credit', 'SuperAdminController\StudentGradeEvaluation@update_school_credit');
+Route::get('/superadmin/student/grade/evaluation/update/credit', 'SuperAdminController\StudentGradeEvaluation@update_credit');
+Route::get('/superadmin/student/grade/evaluation/delete/school_credit', 'SuperAdminController\StudentGradeEvaluation@delete_school_credit');
+Route::get('/superadmin/student/grade/evaluation/get/prospectus/print', 'SuperAdminController\StudentGradeEvaluation@college_grades_eval_2_print');
+
+
+
 //evluation
 
 
@@ -4814,8 +5099,52 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/setup/college/delete', 'RegistrarControllers\RegistrarSetupController@delete_college');
 });
 
+Route::middleware(['auth'])->group(function () {
+    Route::view('/setup/gradingsetup', 'deanportal.pages.grades.gradingsetup');
+    Route::view('/setup/gradepointequivalancy', 'deanportal.pages.grades.gradePointEquivalency');
+    Route::view('/setup/gradepoinSummary', 'deanportal.pages.grades.gradeSummary');
+
+    Route::get('/setup/gradepointequivalency/create', 'DeanControllers\GradingpointEquivalencyController@create_gradepointEquivalency');
+    Route::post('/setup/gradepointequivalency/update', 'DeanControllers\GradingpointEquivalencyController@update_gradepointEquivalency');
+
+    Route::get('/setup/gradepointequivalency/fetch', 'DeanControllers\GradingpointEquivalencyController@fetch_grade_point_equivalence');
+
+    Route::get('/setup/gradepointScale/fetch', 'DeanControllers\GradingpointEquivalencyController@fetch_grade_point_scale');
+    
+    Route::get('/setup/selectedgradepointequivalency/fetch', 'DeanControllers\GradingpointEquivalencyController@fetch_selected_grade_point_equivalence');
 
 
+
+
+});
+
+//character grade
+Route::middleware(['auth'])->group(function () {
+    Route::view('/setup/character/grade', 'principalsportal.pages.conduct.charactergrade');
+    Route::view('/setup/character/grade/homeroom', 'principalsportal.pages.conduct.homeroomconduct');
+    Route::get('/setup/character/grade/conduct/create', 'PrincipalControllers\HomeroomConductController@create_conduct');
+    Route::get('/setup/character/grade/conduct/get', 'PrincipalControllers\HomeroomConductController@get_conducts');
+    Route::get('/setup/character/grade/conduct/select', 'PrincipalControllers\HomeroomConductController@get_conduct');
+    Route::get('/setup/character/grade/conduct/edit', 'PrincipalControllers\HomeroomConductController@edit_conduct');
+    Route::get('/setup/character/grade/conduct/delete', 'PrincipalControllers\HomeroomConductController@delete_conduct');
+    Route::get('/setup/character/grade/conduct/grade/create', 'PrincipalControllers\HomeroomConductController@create_conduct_grade');
+    Route::get('/setup/character/grade/conduct/grade/get', 'PrincipalControllers\HomeroomConductController@get_conduct_grades');
+    Route::get('/setup/character/grade/conduct/grade/select', 'PrincipalControllers\HomeroomConductController@get_conduct_grade');
+    Route::get('/setup/character/grade/conduct/grade/edit', 'PrincipalControllers\HomeroomConductController@edit_conduct_grade');
+    Route::get('/setup/character/grade/conduct/grade/delete', 'PrincipalControllers\HomeroomConductController@delete_conduct_grade');
+    Route::get('/setup/character/grade/traits/create', 'PrincipalControllers\HomeroomConductController@create_traits');
+    Route::get('/setup/character/grade/traits/get', 'PrincipalControllers\HomeroomConductController@get_traits');
+    Route::get('/setup/character/grade/traits/select', 'PrincipalControllers\HomeroomConductController@get_trait');
+    Route::get('/setup/character/grade/traits/edit', 'PrincipalControllers\HomeroomConductController@edit_trait');
+    Route::get('/setup/character/grade/traits/delete', 'PrincipalControllers\HomeroomConductController@delete_trait');
+    Route::get('/setup/character/grade/traits/grade/create', 'PrincipalControllers\HomeroomConductController@create_trait_grade');
+    Route::get('/setup/character/grade/traits/grade/get', 'PrincipalControllers\HomeroomConductController@get_trait_grades');
+    Route::get('/setup/character/grade/traits/grade/select', 'PrincipalControllers\HomeroomConductController@get_trait_grade');
+    Route::get('/setup/character/grade/traits/grade/edit', 'PrincipalControllers\HomeroomConductController@edit_trait_grade');
+    Route::get('/setup/character/grade/traits/grade/delete', 'PrincipalControllers\HomeroomConductController@delete_trait_grade');
+
+
+});
 
 //observed values
 Route::middleware(['auth'])->group(function () {
@@ -4943,12 +5272,26 @@ Route::middleware(['auth'])->group(function () {
 //prospectus setup
 Route::middleware(['auth'])->group(function () {
     Route::view('/setup/prospectus', 'superadmin.pages.setup.prospectus');
+
     Route::get('/setup/prospectus/courses', 'SuperAdminController\College\ProspectusSetupController@courses');
+    Route::get('/setup/prospectus/courses2', 'CollegeControllers\ProspectusSetupController@courses');
+
     Route::get('/setup/prospectus/subjets/all', 'SuperAdminController\College\ProspectusSetupController@available_subject');
+    // Route::get('/setup/prospectus/subjects', 'CollegeControllers\ProspectusSetupController@subjects');
+    Route::get('/setup/prospectus/subjects', 'SuperAdminController\College\ProspectusSetupController@subjects');
+
+    Route::get('/setup/prospectus/subject/{id}', 'SuperAdminController\College\ProspectusSetupController@getSubjectById');
+
+    Route::post('/setup/prospectus/subject/update', 'SuperAdminController\College\ProspectusSetupController@updateSubject');
+
     Route::get('/setup/prospectus/subjets/remove', 'SuperAdminController\College\ProspectusSetupController@subjectremove');
     Route::get('/setup/prospectus/subjets/new', 'SuperAdminController\College\ProspectusSetupController@add_new_subject');
     Route::get('/setup/prospectus/subjets/update', 'SuperAdminController\College\ProspectusSetupController@update_subject');
+
     Route::get('/setup/prospectus/courses/curriculum', 'SuperAdminController\College\ProspectusSetupController@course_curriculum');
+    Route::get('/setup/prospectus/courses/curriculum2', 'SuperAdminController\College\ProspectusSetupController@course_curriculum2');
+
+    // Route::get('/setup/prospectus/courses/curriculum2', 'CollegeControllers\ProspectusSetupController@course_curriculum2');
     Route::get('/setup/prospectus/subjects/select', 'SuperAdminController\College\ProspectusSetupController@collegesubject_select');
 
     Route::get('/setup/prospectus/update/subjgroup', 'SuperAdminController\College\ProspectusSetupController@update_subjectgroup');
@@ -4959,10 +5302,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/setup/prospectus/add', 'SuperAdminController\College\ProspectusSetupController@add_subject_to_prospectus');
 
 
-    Route::get('/setup/prospectus/courses/curriculum/create', 'SuperAdminController\College\ProspectusSetupController@create_curriculum');
-    Route::get('/setup/prospectus/courses/curriculum/update', 'SuperAdminController\College\ProspectusSetupController@update_curriculum');
-    Route::get('/setup/prospectus/courses/curriculum/delete', 'SuperAdminController\College\ProspectusSetupController@delete_curriculum');
-    Route::get('/setup/prospectus/courses/curriculum/subjects', 'SuperAdminController\College\ProspectusSetupController@curriculum_subjects');
+    Route::get('/setup/prospectus/courses/curriculum/create', 'CollegeControllers\CollegeProspectusSetupController@create_curriculum');
+    Route::get('/setup/prospectus/courses/curriculum/update', 'CollegeControllers\CollegeProspectusSetupController@update_curriculum');
+    Route::get('/setup/prospectus/courses/curriculum/delete', 'CollegeControllers\CollegeProspectusSetupController@delete_curriculum');
+    Route::get('/setup/prospectus/courses/curriculum/subjects', 'CollegeControllers\CollegeProspectusSetupController@curriculum_subjects');
 });
 //prospectus setup
 
@@ -4970,6 +5313,8 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/setup/prospectus/subjgroup', 'SuperAdminController\Setup\SubjGroup@subjgroup');
     Route::get('/setup/prospectus/subjgroup/datatable', 'SuperAdminController\Setup\SubjGroup@subjgroup_datatable');
+    Route::get('/setup/prospectus/subjgroup/subjectsDatatable', 'SuperAdminController\Setup\SubjGroup@displaySubjperSubjgroup_datatable');
+
     Route::get('/setup/prospectus/subjgroup/create', 'SuperAdminController\Setup\SubjGroup@subjgroup_create');
     Route::get('/setup/prospectus/subjgroup/update', 'SuperAdminController\Setup\SubjGroup@subjgroup_update');
     Route::get('/setup/prospectus/subjgroup/delete', 'SuperAdminController\Setup\SubjGroup@subjgroup_delete');
@@ -5191,17 +5536,40 @@ Route::middleware(['auth'])->group(function () {
 
 //college student loading
 Route::middleware(['auth'])->group(function () {
-    Route::view('/college/section', 'superadmin.pages.college.collegesection');
+    Route::view('/college/section', 'deanportal.pages.sections.sectionsetup');
+    Route::get('/college/section/create', 'DeanControllers\DeanSectionController@add_section');
+    Route::get('/college/get/yearlevel', 'DeanControllers\DeanSectionController@get_yearlevel');
+    Route::get('/college/get/acadprogid', 'DeanControllers\DeanSectionController@get_acadprogid');
+    Route::get('/college/section/create/sched', 'DeanControllers\DeanSectionController@add_sched');
+    Route::get('/college/section/get/curriculum', 'DeanControllers\DeanSectionController@get_curr');
+    Route::get('/college/section/load/prospectus', 'DeanControllers\DeanSectionController@load_prospectus_subject');
+    Route::get('/college/section/get/sched', 'DeanControllers\DeanSectionController@display_sched');
+    Route::get('/college/section/get/specificsched', 'DeanControllers\DeanSectionController@display_sched_edit');
+    Route::get('/college/section/delete/sched', 'DeanControllers\DeanSectionController@delete_sched');
+    Route::get('/college/section/get', 'DeanControllers\DeanSectionController@get_sections');
+    Route::get('/college/section/gets', 'RegistrarControllers\RegistrarSetupController@get_sections_registrar'); // for registrar fetching sections
+    Route::get('/college/section/get/list', 'DeanControllers\DeanSectionController@get_section_list');
+    Route::get('/college/section/copy/list', 'DeanControllers\DeanSectionController@copy_section');
+    Route::get('/college/section/checksched/conflict', 'DeanControllers\DeanSectionController@sched_conflict');
+    Route::get('/college/section/get/section', 'DeanControllers\DeanSectionController@get_section');
+    Route::get('/college/section/get/subjects/units', 'DeanControllers\DeanSectionController@get_subject_units');
+    Route::get('/college/section/get/subjects/', 'DeanControllers\DeanSectionController@get_subjects');
+    Route::get('/college/section/get/specific/subject', 'DeanControllers\DeanSectionController@get_specific_subject');
+    Route::get('/college/section/delete', 'DeanControllers\DeanSectionController@delete_section');
+    Route::get('/college/section/curriculum/option', 'DeanControllers\DeanSectionController@get_curriculum_option');
     Route::view('/student/loading', 'superadmin.pages.student.studentloading');
+    Route::get('/college/section/add/building', 'DeanControllers\DeanSectionController@add_building');
+    Route::get('/college/section/add/room', 'DeanControllers\DeanSectionController@add_room');
+    Route::get('/college/section/get/rooms', 'DeanControllers\DeanSectionController@get_rooms');
+    Route::get('/college/schedule/conflicting', 'DeanControllers\DeanSectionController@get_conflict_all');
+
     Route::get('/student/loading/subjects', 'SuperAdminController\StudentLoading@prospectus_subjects');
     Route::get('/student/loading/subjects/all', 'SuperAdminController\StudentLoading@all_subjects');
-    Route::get('/student/loading/students', 'SuperAdminController\StudentLoading@students');
     Route::get('/student/loading/student/enrollment', 'SuperAdminController\StudentLoading@enrollment_info');
     Route::get('/student/loading/courses', 'SuperAdminController\StudentLoading@courses');
     Route::get('/student/loading/availablesched', 'SuperAdminController\StudentLoading@availablesched_plot_ajax');
     Route::get('/student/loading/allsched', 'SuperAdminController\StudentLoading@all_sched');
     Route::get('/student/loading/allsched/printable', 'SuperAdminController\StudentLoading@printable');
-    Route::get('/student/loading/student/schedule', 'SuperAdminController\StudentLoading@collegestudentsched_plot_ajax');
     Route::get('/student/loading/student/schedule/remove', 'SuperAdminController\StudentLoading@remove_shedule_ajax');
     Route::get('/student/loading/student/schedule/add/all', 'SuperAdminController\StudentLoading@add_all');
     Route::get('/student/loading/student/schedule/add', 'SuperAdminController\StudentLoading@add_shedule_ajax');
@@ -5236,12 +5604,29 @@ Route::middleware(['auth'])->group(function () {
 
     // Route::get('/college/grades/sections','SuperAdminController\College\CollegeGradingController@section_ajax');
     Route::get('/college/grades/student', 'SuperAdminController\College\CollegeGradingController@enrolled_students');
+    Route::get('/college/grades/gradestatus', 'SuperAdminController\College\CollegeGradingController@grade_status_subject');
+    Route::get('/college/grades/gradestatus/showgrades', 'SuperAdminController\College\CollegeGradingController@show_grade_status_subject');
+    Route::get('/college/grades/gradestatus/showgradesinfo', 'SuperAdminController\College\CollegeGradingController@show_grades_grade_status_subject');
     Route::get('/college/grades/gradesched/info', 'SuperAdminController\College\CollegeGradingController@college_studsched');
     Route::get('/college/grades/sections', 'SuperAdminController\College\CollegeGradingController@college_sections');
     Route::get('/college/grades/teachers', 'SuperAdminController\College\CollegeGradingController@college_teachers');
     Route::get('/college/grades/subjects', 'SuperAdminController\College\CollegeGradingController@college_subjects');
     Route::get('/college/grades/get', 'SuperAdminController\College\CollegeGradingController@student_grades');
-
+    Route::get('college/teacher/student/systemgrading/{schedid}/{syid}/{semid}', 'SuperAdminController\College\CollegeGradingController@view_system_grading');
+    Route::get('college/teacher/student/systemgrades/getsched', 'SuperAdminController\College\CollegeGradingController@display_scheddetail');
+    Route::get('college/teacher/student/systemgrades/getecr', 'SuperAdminController\College\CollegeGradingController@display_ecr_template');
+    Route::post('college/teacher/student/systemgrades/savegrades', 'SuperAdminController\College\CollegeGradingController@save_system_grades');
+    Route::get('college/teacher/student/systemgrades/get_grades', 'SuperAdminController\College\CollegeGradingController@display_term_grades');
+    Route::post('college/teacher/student/systemgrades/submit_grades', 'SuperAdminController\College\CollegeGradingController@submit_grades');
+    Route::post('college/teacher/student/systemgrades/update_status', 'SuperAdminController\College\CollegeGradingController@update_grade_status');
+    Route::get('college/gradepointequivalency', 'SuperAdminController\College\CollegeGradingController@get_active_equivalency');
+    Route::get('college/teacher/student/systemgrades/get_submitted_grades', 'SuperAdminController\College\CollegeGradingController@display_submitted_grades');
+    Route::get('college/grades/get_sections', 'SuperAdminController\College\CollegeGradingController@get_status_sections');
+    Route::get('college/grades/get_students', 'SuperAdminController\College\CollegeGradingController@get_status_students');
+    Route::get('college/grades/get_student_grades', 'SuperAdminController\College\CollegeGradingController@get_status_students_grades');
+    Route::get('college/grades/change_student_grade_status', 'SuperAdminController\College\CollegeGradingController@change_status_students_grades');
+    Route::get('college/teacher/student/systemgrades/getterms', 'SuperAdminController\College\CollegeGradingController@get_terms');
+    
     Route::post('/college/grades/approve/ph', 'SuperAdminController\College\CollegeGradingController@approve_grades_ph');
     Route::post('/college/grades/approve/dean', 'SuperAdminController\College\CollegeGradingController@approve_grades_dean');
     Route::post('/college/grades/post', 'SuperAdminController\College\CollegeGradingController@post_grades_dean');
@@ -5251,14 +5636,38 @@ Route::middleware(['auth'])->group(function () {
     Route::view('/college/grade', 'superadmin.pages.college.collegrading');
 
     Route::view('/college/grade/monitoring/teacher', 'superadmin.pages.college.ctgrademonitoring');
+    // Route::view('/college/grade/evaluation', 'superadmin.pages.student.studentloading');
     Route::get('/college/grades/monitoring/teacher/subjects', 'SuperAdminController\College\CollegeTeacherGradeMonitoringController@grade_subjects_ajax');
     Route::get('/college/grades/monitoring/teachers', 'SuperAdminController\College\CollegeTeacherGradeMonitoringController@teachers');
     Route::get('/college/grades/monitoring/teacher/subject/grade', 'SuperAdminController\College\CollegeTeacherGradeMonitoringController@view_grades');
+    Route::get('/college/teacher/schedule/conflict', 'CollegeSchedConflicts\SchedConflict@schedconflict_college_instructor');
+    // Route::view('/college/grade/monitoring/teacher', 'superadmin.pages.college.ctgrademonitoring');
+    // Route::get('/college/grades/monitoring/teacher/subjects', 'SuperAdminController\College\CollegeTeacherGradeMonitoringController@grade_subjects_ajax');
+    // Route::get('/college/grades/monitoring/teachers', 'SuperAdminController\College\CollegeTeacherGradeMonitoringController@teachers');
+    // Route::get('/college/grades/monitoring/teacher/subject/grade', 'SuperAdminController\College\CollegeTeacherGradeMonitoringController@view_grades');
 
-    Route::view('/college/grade/monitoring/teacher', 'superadmin.pages.college.ctgrademonitoring');
-    Route::get('/college/grades/monitoring/teacher/subjects', 'SuperAdminController\College\CollegeTeacherGradeMonitoringController@grade_subjects_ajax');
-    Route::get('/college/grades/monitoring/teachers', 'SuperAdminController\College\CollegeTeacherGradeMonitoringController@teachers');
-    Route::get('/college/grades/monitoring/teacher/subject/grade', 'SuperAdminController\College\CollegeTeacherGradeMonitoringController@view_grades');
+    Route::get('/college/grade/evaluation', function(){
+        return view('superadmin.pages.student.studentloading',['page' => 'Grade Evaluation']);
+    });
+
+    Route::get('/college/student/information', function(){
+        return view('superadmin.pages.student.studentloading',['page' => 'Student Information']);
+    });
+
+    Route::view('/college/grade/academicrecognition', 'superadmin.pages.student.academicrecognition');
+
+    Route::get('college/teacher/academicrecognition/student-list-for-all-grade-summary/{syid}/{semid}/{college}/{course}/{academic}', 'DeanControllers\DeanAcademicRecognitionController@college_studentListAcademicRecognition');
+    
+    Route::get('/setup/academicrecognition/create', 'DeanControllers\DeanAcademicRecognitionController@create_recognitionType');
+
+    Route::get('/setup/academicrecognition/fetch', 'DeanControllers\DeanAcademicRecognitionController@fetch_academicrecognition');
+    Route::get('/setup/selectacademicrecognition/fetch', 'DeanControllers\DeanAcademicRecognitionController@fetch_select_academicrecognition');
+
+    Route::get('/setup/academicrecognition/update', 'DeanControllers\DeanAcademicRecognitionController@update_recognitionType');
+
+    Route::get('/setup/academicrecognition/delete', 'DeanControllers\DeanAcademicRecognitionController@delete_recognitionType');
+
+
 });
 
 
@@ -5336,21 +5745,56 @@ Route::middleware(['auth', 'isDefaultPass'])->group(function () {
 
 
 Route::middleware(['auth', 'isDefaultPass'])->group(function () {
-    Route::view('college/teacher/student/grades', 'ctportal.pages.grading');
+
+    Route::view('college/teacher/student/gradesv2', 'ctportal.pages.gradingv2');
+
+     Route::view('college/teacher/student/grades', 'ctportal.pages.grading');
+
     Route::view('college/teacher/student/information', 'ctportal.pages.studentinformation');
-    Route::get('college/teacher/student/information/pdf', 'CTController\CTController@student_list_pdf');
-    Route::get('college/teacher/student/information/excell', 'CTController\CTController@student_list_excell');
+    Route::get('college/teacher/student-list/print/{syid}/{semid}/{schedid}', 'CollegeControllers\CollegeStudentListController@student_list_pdf');
+    Route::get('college/teacher/student-list/permit/print/{syid}/{semid}/{schedid}', 'CollegeControllers\CollegeStudentListController@print_permit');
     Route::view('college/teacher/profile', 'ctportal.pages.profile');
     Route::get('college/teacher/student/grades/subject', 'CTController\CTController@grade_subjects_ajax');
-    Route::post('college/teacher/student/grades/save', 'CTController\CTController@save_grades');
+    Route::post('college/teacher/student/grades/save', 'CollegeControllers\CollegeGradingController@save_grades');
+    Route::post('college/teacher/student/grades/savev2', 'CollegeControllers\CollegeGradingController@save_gradesv2');
     Route::get('college/teacher/student/grades/get', 'CTController\CTController@get_grades');
     Route::get('college/teacher/student/grades/print', 'CTController\CTController@print_grading_sheet');
     Route::get('college/teacher/profile/get', 'CTController\CTController@my_profile');
-    Route::get('college/teacher/schedule/get', 'CTController\CTController@get_schedule_ajax');
+    Route::get('college/teacher/schedule/get', 'CollegeControllers\CollegeScheduleController@new_get_sched_ajax');
+    Route::get('college/teacher/schedule/add', 'CollegeControllers\CollegeScheduleController@add_to_sched');
+    Route::get('college/teacher/schedule/delete', 'CollegeControllers\CollegeScheduleController@delete_from_sched');
+    Route::get('college/teacher/schedule/student_list', 'CTController\CTController@student_list');
+    Route::get('college/teacher/schedule/all', 'CTController\CTController@all_schedule');
     Route::get('college/teacher/student/exampermit', 'CTController\CTController@get_exam_permit_ajax');
     Route::post('college/teacher/student/grades/submit', 'CTController\CTController@submit_grades');
     Route::get('college/teacher/student/grades/status/get', 'CTController\CTController@get_grade_status');
-});
+    Route::get('college/teacher/student-list-for-all/{syid}/{semid}/{schedid}', 'CollegeControllers\CollegeStudentListController@studentListForAll');
+    Route::get('/college/teacher/sections', 'CollegeControllers\CollegeStudentListController@sections');
+
+
+    Route::get('/setup/prospectus/courses/curriculum/subjects__/{curriculumid}/{courseid}', 'SuperAdminController\College\ProspectusSetupController@curriculum_subjects_201');
+    Route::get('college/teacher/schedule/print/{syid}/{semid}', 'CollegeControllers\CollegeScheduleController@new_get_sched_ajax_print');
+
+    Route::post('college/teacher/student/new/grades/submit', 'CollegeControllers\CollegeGradingController@submit_grades');
+
+    Route::get('college/teacher/student/new/grades/getexisting', 'CollegeControllers\CollegeGradingController@getExistingGrades');
+
+    Route::get('college/teacher/student/new/grades/get', 'CollegeControllers\CollegeGradingController@get_grades');
+    Route::get('college/teacher/student/new/gradesv3/get', 'CollegeControllers\CollegeGradingController@get_gradesv3');
+
+    Route::view('college/teacher/student/excelupload', 'ctportal.pages.excelupload');
+    Route::view('college/teacher/student/collegesystemgrading', 'ctportal.pages.collegesysgrading');
+
+    Route::view('college/teacher/student/view/systemgrading', 'ctportal.pages.grade_view');
+    Route::get('/getcalculation/formativeHighestScore', 'CollegeControllers\CollegeGradingController@formativeHighestScore');
+
+    //v4
+
+    Route::get('/semester-setup/getactive-setup/v4', 'CollegeControllers\CollegeGradingController@get_terms');
+
+
+
+});                       
 
 //cor printing
 Route::middleware(['auth'])->group(function () {
@@ -5512,6 +5956,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/student/preregistration/student/collegesubjectload', 'SuperAdminController\StudentPregistration@collegesubjectload');
     Route::get('/student/preregistration/vacinfo', 'SuperAdminController\StudentPregistration@vac_info');
     Route::get('/student/preregistration/enrollmentinfo', 'SuperAdminController\StudentPregistration@enrollment_summary');
+    Route::get('/student/preregistration/markGraduateStatus', 'SuperAdminController\StudentPregistration@markGraduateStatus');
     Route::get('/student/preregistration/removelearner', 'SuperAdminController\StudentPregistration@remove_student');
     Route::get('/student/preregistration/markActiveStatus', 'SuperAdminController\StudentPregistration@markActiveStatus');
     Route::get('/student/preregistration/getgradelevel', 'SuperAdminController\StudentPregistration@get_gradelevel');
@@ -5520,6 +5965,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/student/preregistration/print/enrollmentbyreligiousaffiliation', 'SuperAdminController\Printables\EnrollmentPrintables@enrollment_by_religious_affiliation');
     Route::get('/student/preregistration/print/enrollmentbyethnicgroup', 'SuperAdminController\Printables\EnrollmentPrintables@enrollmentbyethnicgroup');
     Route::get('/student/preregistration/print/enrollmentunenrolled', 'SuperAdminController\Printables\EnrollmentPrintables@enrollmentunenrolled');
+
+    Route::get('/student/preregistration/student/enroll_updateledger', 'SuperAdminController\StudentPregistration@enroll_updateledger');
 });
 //student preregistration
 
@@ -5849,6 +6296,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/semester-setup/delete', 'CollegeControllers\SemesterSetupController@destroy')->name('semester-setup.destroy');
 
     Route::get('/semester-setup/getactive-setup', 'CollegeControllers\SemesterSetupController@getActiveSetup')->name('getactive.setup');
+    Route::get('/semester-setup/getactive-setup-dean', 'CollegeControllers\SemesterSetupController@getActiveSetupDean')->name('getactive.setup.dean');
 });
 
 //student special subject
@@ -5991,6 +6439,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/clinic/medicalhistory/getcomplaint2', 'ClinicControllers\MedicalHistoryController@getuserComplaints');
     Route::get('/clinic/medicalhistory/update', 'ClinicControllers\MedicalHistoryController@update');
     Route::get('/clinic/medicalhistory/get', 'ClinicControllers\MedicalHistoryController@get');
+    Route::get('/clinic/medicalhistory/experiences/get', 'ClinicControllers\MedicalHistoryController@get_experiences');
+    Route::get('/clinic/medicalhistory/experiences/delete', 'ClinicControllers\MedicalHistoryController@delete_experiences');
+    Route::get('/clinic/medicalhistory/experiences/update', 'ClinicControllers\MedicalHistoryController@update_experiences');
 });
 
 Route::view('/clinic/records/index', 'clinic.records.index');
@@ -6475,3 +6926,133 @@ Route::middleware(['auth'])->group(function () {
 
 });
 
+
+
+Route::get('/collegeattendancestore', 'CollegeControllers\ClgCollegeAttendanceController@collegeattendancestore');
+Route::get('/collegeattendancefetch', 'CollegeControllers\ClgCollegeAttendanceController@collegeattendancefetch');
+Route::get('/print-attendance', 'CTController\CTController@printAttendance');
+Route::get('/print_enrolledpdf', 'CTController\CTController@print_enrolled');
+Route::get('/absentremarkstore', 'CollegeControllers\ClgCollegeAttendanceController@absentremarkstore');
+Route::get('/absentremarkfetch', 'CollegeControllers\ClgCollegeAttendanceController@absentremarkfetch');
+
+
+// Grading setup
+// School List
+Route::middleware(['auth'])->group(function () {
+    Route::view('/grading_type/setup', 'superadmin.pages.setup.grading_type.grading_type');
+    Route::get('/grading_type/setup/list', 'SuperAdminController\Setup\GradeTypeSetupController@gradetype_list');
+    Route::get('/grading_type/setup/activation', 'SuperAdminController\Setup\GradeTypeSetupController@gradetype_activate');
+});
+
+Route::middleware(['auth'])->group(function () {
+
+    Route::get('dean/courses/', 'DeanControllers\DeanController@viewcourses')->name('dean.courses');
+    Route::get('dean/prospectus/{course}', 'DeanControllers\DeanController@viewprospectus')->name('dean.prospectus');
+    Route::get('dean/faculties', 'DeanControllers\DeanController@viewfaculties')->name('dean.faculties');
+    Route::get('dean/store/prospectus', 'DeanControllers\DeanController@storeprospectus')->name('dean.store.prospectus');
+    Route::get('dean/remove/prospectussubject/{subject}', 'DeanControllers\DeanController@removeprospectussubject')->name('dean.remove.prospectussubject');
+
+    Route::get('dean/view/submitted/grades', 'DeanControllers\DeanController@deanviewsubmittedgrades');
+
+    Route::get('dean/view/grades', 'DeanControllers\DeanController@viewgrades');
+    Route::get('dean/view/all/grades', 'DeanControllers\DeanController@viewallgrades');
+
+    Route::get('/student/loading/students', 'DeanControllers\CollegeStudentLoadingController@students');
+    Route::get('/student/loading/Student-Information', 'DeanControllers\CollegeStudentLoadingController@getStudentInformation');
+    Route::get('/student/loading/Student-Loading/{sectionId}', 'DeanControllers\CollegeStudentLoadingController@getStudentLoading');
+    Route::get('/student/loading/New-Student-Loading/{sectionId}', 'DeanControllers\CollegeStudentLoadingController@collegeLoadSubject');
+    Route::get('/student/loading/Student-Information/curriculum', 'DeanControllers\CollegeStudentLoadingController@getStudentCurriculum');
+    Route::get('/student/curriculum/add', 'DeanControllers\CollegeStudentLoadingController@addStudentCurriculum');
+    Route::get('/student/curriculum/update', 'DeanControllers\CollegeStudentLoadingController@updateStudentCurriculum');
+    Route::get('/student/curriculum', 'DeanControllers\CollegeStudentLoadingController@student_curriculum');
+
+
+    Route::get('/student/loading/get-section-schedule', 'DeanControllers\CollegeStudentLoadingController@getSectionSchedule');
+    Route::post('/student/loading/save-loaded-subjects', 'DeanControllers\CollegeStudentLoadingController@saveLoadedSubjects');
+    Route::get('/student/loading/get-added-student-loading/{studentId}/{sectionId}/{syid}/{semid}/{subjectID}', 'DeanControllers\CollegeStudentLoadingController@getAddedStudentLoading');
+    Route::get('/student/loading/print/student-loading/{studentId}/{syid}/{semid}', 'DeanControllers\CollegeStudentLoadingController@printStudentLoading');
+
+    Route::delete('/student/loading/delete-loaded-subject/{subjectId}', 'DeanControllers\CollegeStudentLoadingController@deleteLoadedSubject');
+    Route::get('/getStudents', 'DeanControllers\CollegeStudentLoadingController@students');
+    Route::get('/check-enrollment-status', 'DeanControllers\CollegeStudentLoadingController@checkStudentStatus');
+
+    // Route::delete('/student/loading/delete-loaded-subject/{subjectId}', 'DeanControllers\CollegeStudentLoadingController@dropsubject')->name('drop.subject');
+
+    Route::post('/student/updateCourse', 'DeanControllers\CollegeStudentLoadingController@updateCourseStudent');
+
+    Route::post('/student/loading/update-section', 'DeanControllers\CollegeStudentLoadingController@updateStudentSection');
+    Route::get('/student/getSectionSelect', 'DeanControllers\CollegeStudentLoadingController@getStudentSections');
+
+    Route::get('/student/getSubjectSectionSelect', 'DeanControllers\CollegeStudentLoadingController@getStudentSubjects');
+    Route::get('/student/studentStatus', 'DeanControllers\CollegeStudentLoadingController@getStudentStatusSelect2');
+    Route::get('/student/getFilteredStudents', 'DeanControllers\CollegeStudentLoadingController@getFilteredStudents');
+
+    Route::get('/student/getSections', 'DeanControllers\CollegeStudentLoadingController@getSections');
+    // Route::get('/student/subject/dean/conflict', 'DeanControllers\CollegeStudentLoadingController@conflictDetection');
+
+
+    // Route::get('/student/getPreReq', 'DeanControllers\CollegeStudentLoadingController@getPreqSubjects');
+
+    // Route::get('/student/loading/save-loaded-subjects', 'DeanControllers\CollegeStudentLoadingController@saveLoadedSubjects');
+    // Route::post('/student/loading/load-all-subjects', 'DeanControllers\CollegeStudentLoadingController@loadAllSubjects');
+    // Route::get('/student/loading/get-student-loading', 'DeanControllers\CollegeStudentLoadingController@getStudentLoading');
+    // Route::get('/student/loading/available-sections', 'DeanControllers\CollegeStudentLoadingController@getSectionSchedule');
+    Route::get('/student/loading/get-added-student-loading-all', 'RegistrarControllers\RegistrarSetupController@getAddedStudentLoadingAllSections');
+
+});
+
+//--------------Grading Setup-----------------//
+
+Route::middleware(['auth'])->group(function () {
+    //term crud
+    Route::get('/terms', 'DeanControllers\GradingsetupController@termIndex');
+    Route::post('/add/terms', 'DeanControllers\GradingsetupController@addTerm');
+    Route::get('/edit/terms/{id}', 'DeanControllers\GradingsetupController@termShow');
+    Route::put('/update/terms/{id}', 'DeanControllers\GradingsetupController@updateTerm');
+    Route::delete('/delete/terms/{id}', 'DeanControllers\GradingsetupController@deleteTerm');
+    Route::get('/termIndex', 'DeanControllers\GradingsetupController@termIndex');
+
+
+    Route::post('/ECR-grading/adding', 'DeanControllers\GradingsetupController@addECRGrading');
+    Route::get('/print/ECRprint/{id}', 'DeanControllers\GradingsetupController@displayEcr');
+
+    Route::get('/display/ECR', 'DeanControllers\GradingsetupController@gradingSetupDisplay');
+    Route::delete('/display/ECR/delete/{id}', 'DeanControllers\GradingsetupController@gradingDisplayDelete');
+    Route::get('/display/ECR/edit/{id}', 'DeanControllers\GradingsetupController@editECR');
+    Route::PUT('/display/ECR/Component/update/{id}', 'DeanControllers\GradingsetupController@updateECRComponent');
+    
+    Route::POST('/display/ECR/Component/Add', 'DeanControllers\GradingsetupController@addSubgradingComponent');
+    Route::PUT('/display/ECR/update/{id}', 'DeanControllers\GradingsetupController@updateECR');
+
+    Route::delete('/display/ECR/Component/delete/{id}', 'DeanControllers\GradingsetupController@deleteSubgradingComponents');
+    Route::delete('/display/ECR/Component/remove/{id}', 'DeanControllers\GradingsetupController@removeSubgradingFromComponents');
+    Route::get('/display/ECR/update/Component/{id}', 'DeanControllers\GradingsetupController@displayEditGradingComponent');
+    Route::get('/updateComponent/{id}', 'DeanControllers\GradingsetupController@displayEditGradingComponent');
+
+    Route::get('/display/ECR/{id}', 'DeanControllers\GradingsetupController@displayEcr');
+    Route::get('/filter_semester/Ecr', 'DeanControllers\GradingsetupController@gradingSetupDisplay');
+    Route::get('/filter_sy/Ecr', 'DeanControllers\GradingsetupController@gradingSetupDisplay');
+
+
+});
+
+//--------------Dean Homepage-----------------//
+
+
+//-----------API MOBILE EMPLOYEES----------------//
+Route::middleware(['auth'])->group(function () {
+    Route::get('/getCourse', 'DeanControllers\DeanHomepage@getDeanCourses');
+    Route::get('/getGradeStatus', 'DeanControllers\DeanHomepage@getGradeStatus');
+    Route::get('/getTotalEnrollees', 'DeanControllers\DeanHomepage@getEnrolledStudentsByCourse');
+    Route::get('/getEnrolledSummary/getEnrolledSummary', 'DeanControllers\DeanHomepage@getEnrolledSummary');
+
+});
+
+Route::middleware(['cors', 'api'])->group(function () {
+    Route::get('/api/mobile/employees/api_login', 'APIMobileEmployeesController@api_login')->name('api_login');
+  	Route::post('/api/mobile/employees/add/attendance', 'APIMobileEmployeesController@api_add_attendance')->name('api_add_attendance');
+  	Route::get('/api/mobile/employees/get/attendance', 'APIMobileEmployeesController@api_employee_attendance')->name('api_employee_attendance');
+});
+
+
+//-----------API MOBILE EMPLOYEES----------------//

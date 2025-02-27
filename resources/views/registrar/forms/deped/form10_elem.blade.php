@@ -90,8 +90,8 @@
 </table>
 <table style="width: 100%; font-size: 11px;" id="table3">
     <tr>
-        <td style="width: 20%;">Learner Reference Number (LRN):</td>
-        <td style="width: 15%; border-bottom: 1px solid black;">{{$studinfo->lrn}}</td>
+        <td style="width: 25%;">Learner Reference Number (LRN):</td>
+        <td style="width: 20%; border-bottom: 1px solid black;">{{$studinfo->lrn}}</td>
         <td style="width: 20%; text-align: right;">Birthdate (mm/dd/yyyy):</td>
         <td style="width: 15%; border-bottom: 1px solid black;">{{date('m/d/Y',strtotime($studinfo->dob))}}</td>
         <td style="width: 10%; text-align: right;">Sex:</td>
@@ -173,17 +173,17 @@
             $columngrades11 = $columngrades;
         @endphp        
               
-              @if($key == 2)
-              <table style="width: 100%; page-break-before: always;" id="table1">
-                  <tr>
-                      <td width="15%" ><sup style="font-size: 9px;">SF10-ES</sup></td>
-                      <td width="10%"></td>
-                      <td></td>
-                      <td width="25%" style="font-size: 9px; text-align: right; padding-bottom: 10px;">page 2 of 2 pages&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
-                  </tr>
-              </table>
-              @endif
-              <table style="width: 100%; table-layout: fixed; font-size: 9.5px;">
+            @if($key == 2)
+                <table style="width: 100%; page-break-before: always;" id="table1">
+                    <tr>
+                        <td width="15%" ><sup style="font-size: 9px;">SF10-ES</sup></td>
+                        <td width="10%"></td>
+                        <td></td>
+                        <td width="25%" style="font-size: 9px; text-align: right; padding-bottom: 10px;">page 2 of 2 pages&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                    </tr>
+                </table>
+                @endif
+                <table style="width: 100%; table-layout: fixed; font-size: 9.5px;">
                   <tr>
                       <td colspan="7" style="padding: 0px; vertical-align: top;">
                           <div style="width: 100%; border: 1px solid black; margin: 0px;">
@@ -291,491 +291,651 @@
                       <th style="width: 8%; border: 1px solid black;">3</th>
                       <th style="width: 8%; border: 1px solid black;">4</th>
                   </tr>             
-                  @for($x=0; $x<15; $x++)
-                      <tr>
-                          @if(count($record[0]->grades)>0)
-                              @if(isset($record[0]->grades[$x]))
-                                  @if(strtolower($record[0]->grades[$x]->subjtitle) != 'general average')
-                                      <td style="border: 1px solid black;">@if($record[0]->grades[$x]->inMAPEH == 1 || $record[0]->grades[$x]->inTLE) &nbsp;&nbsp;&nbsp;@endif&nbsp;&nbsp;{{$record[0]->grades[$x]->subjtitle}}</td>
-                                      <td style="border: 1px solid black; text-align: center;">{{$record[0]->grades[$x]->quarter1}}</td>
-                                      <td style="border: 1px solid black; text-align: center;">{{$record[0]->grades[$x]->quarter2}}</td>
-                                      <td style="border: 1px solid black; text-align: center;">{{$record[0]->grades[$x]->quarter3}}</td>
-                                      <td style="border: 1px solid black; text-align: center;">{{$record[0]->grades[$x]->quarter4}}</td>
-                                      <td style="border: 1px solid black; text-align: center;">{{$record[0]->grades[$x]->finalrating > 0 ? $record[0]->grades[$x]->finalrating : ''}}</td>
-                                      <td style="border: 1px solid black; text-align: center;">@if($record[0]->grades[$x]->finalrating > 0){{$record[0]->grades[$x]->finalrating >= 75? 'PASSED':'FAILED'}}@endif</td>
-                                    @else
-                                    <td style="border: 1px solid black;">&nbsp;</td>
-                                    <td style="border: 1px solid black;">&nbsp;</td>
-                                    <td style="border: 1px solid black;">&nbsp;</td>
-                                    <td style="border: 1px solid black;">&nbsp;</td>
-                                    <td style="border: 1px solid black;">&nbsp;</td>
-                                    <td style="border: 1px solid black;">&nbsp;</td>
-                                    <td style="border: 1px solid black;">&nbsp;</td>
-                                  @endif
-                              @else
-                                  <td style="border: 1px solid black;">&nbsp;</td>
-                                  <td style="border: 1px solid black;">&nbsp;</td>
-                                  <td style="border: 1px solid black;">&nbsp;</td>
-                                  <td style="border: 1px solid black;">&nbsp;</td>
-                                  <td style="border: 1px solid black;">&nbsp;</td>
-                                  <td style="border: 1px solid black;">&nbsp;</td>
-                                  <td style="border: 1px solid black;">&nbsp;</td>
-                              @endif
-                          @else
-                          @if(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'mci')
-                              @if(collect($gradelevels)->where('levelid',$record[1]->levelid)->count()>0)
-                              
-                                  @if($x == 0)
-                                  <td style="border: 1px solid black; font-weight: bold;">Christian Living Education			
-                                  </td>
-                                  @elseif($x == 1)
-                                  <td style="border: 1px solid black; font-weight: bold;">English			
-                                  </td>
-                                  @elseif($x == 2)
-                                  <td style="border: 1px solid black; font-weight: bold;">Mathematics			
-                                  </td>
-                                  @elseif($x == 3)
-                                  <td style="border: 1px solid black; font-weight: bold;">Science</td>
-                                  @elseif($x == 4)
-                                  <td style="border: 1px solid black; font-weight: bold;">Livelihood Education</td>
-                                  @elseif($x == 5)
-                                  <td style="border: 1px solid black; font-weight: bold;">Filipino</td>
-                                  @elseif($x == 6)
-                                  <td style="border: 1px solid black; font-weight: bold;">Araling Panlipunan</td>
-                                  @elseif($x == 7)
-                                  <td style="border: 1px solid black; font-weight: bold;">MAPEH</td>
-                                  @elseif($x == 8)
-                                  <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Music</em></td>
-                                  @elseif($x == 9)
-                                  <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Arts</em></td>
-                                  @elseif($x == 10)
-                                  <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Physical Education /Health</em></td>
-                                  @elseif($x == 11)
-                                  <td style="border: 1px solid black; font-weight: bold;">Computer</td>
-                                  @else
-                                  <td style="border: 1px solid black;">&nbsp;</td>
-                                  @endif
-                              @else
-                                  @if($x == 0)
-                                  <td style="border: 1px solid black; font-weight: bold;">Christian Living Education			
-                                  </td>
-                                  @elseif($x == 1)
-                                  <td style="border: 1px solid black; font-weight: bold;">English			
-                                  </td>
-                                  @elseif($x == 2)
-                                  <td style="border: 1px solid black; font-weight: bold;">Mathematics			
-                                  </td>
-                                  @elseif($x == 3)
-                                  <td style="border: 1px solid black; font-weight: bold;">Science</td>
-                                  @elseif($x == 4)
-                                  <td style="border: 1px solid black; font-weight: bold;">Livelihood Education</td>
-                                  @elseif($x == 5)
-                                  <td style="border: 1px solid black; font-weight: bold;">Filipino</td>
-                                  @elseif($x == 6)
-                                  <td style="border: 1px solid black; font-weight: bold;">Araling Panlipunan</td>
-                                  @elseif($x == 7)
-                                  <td style="border: 1px solid black; font-weight: bold;">MAPEH</td>
-                                  @elseif($x == 8)
-                                  <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Music</em></td>
-                                  @elseif($x == 9)
-                                  <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Arts</em></td>
-                                  @elseif($x == 10)
-                                  <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Physical Education /Health</em></td>
-                                  @elseif($x == 11)
-                                  <td style="border: 1px solid black; font-weight: bold;">Computer</td>
-                                  @else
-                                  <td style="border: 1px solid black;">&nbsp;</td>
-                                  @endif
-                              @endif
-                          @else
-                              @if(collect($gradelevels)->where('levelid',$record[1]->levelid)->count()>0)
-                              
-                                  @if($x == 0)
-                                  <td style="border: 1px solid black; font-weight: bold;">Mother Tongue				
-                                  </td>
-                                  @elseif($x == 1)
-                                  <td style="border: 1px solid black; font-weight: bold;">Filipino			
-                                  </td>
-                                  @elseif($x == 2)
-                                  <td style="border: 1px solid black; font-weight: bold;">English			
-                                  </td>
-                                  @elseif($x == 3)
-                                  <td style="border: 1px solid black; font-weight: bold;">Mathematics</td>
-                                  @elseif($x == 4)
-                                  <td style="border: 1px solid black; font-weight: bold;">Science</td>
-                                  @elseif($x == 5)
-                                  <td style="border: 1px solid black; font-weight: bold;">Araling Panlipunan</td>
-                                  @elseif($x == 6)
-                                  <td style="border: 1px solid black; font-weight: bold;">EPP / TLE</td>
-                                  @elseif($x == 7)
-                                  <td style="border: 1px solid black; font-weight: bold;">MAPEH</td>
-                                  @elseif($x == 8)
-                                  <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Music</em></td>
-                                  @elseif($x == 9)
-                                  <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Arts</em></td>
-                                  @elseif($x == 10)
-                                  <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Physical Education</em></td>
-                                  @elseif($x == 11)
-                                  <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Health</em></td>
-                                  @elseif($x == 12)
-                                  <td style="border: 1px solid black; font-weight: bold;">Eduk. sa Pagpapakatao</td>
-                                  @elseif($x == 13)
-                                  <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;*Arabic Language</td>
-                                  @elseif($x == 14)
-                                  <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;*Islamic Values Education</td>
-                                  @else
-                                  <td style="border: 1px solid black;">&nbsp;</td>
-                                  @endif
-                              @else
-                                  @if($x == 0)
-                                  <td style="border: 1px solid black; font-weight: bold;">Mother Tongue				
-                                  </td>
-                                  @elseif($x == 1)
-                                  <td style="border: 1px solid black; font-weight: bold;">Filipino			
-                                  </td>
-                                  @elseif($x == 2)
-                                  <td style="border: 1px solid black; font-weight: bold;">English			
-                                  </td>
-                                  @elseif($x == 3)
-                                  <td style="border: 1px solid black; font-weight: bold;">Mathematics</td>
-                                  @elseif($x == 4)
-                                  <td style="border: 1px solid black; font-weight: bold;">Science</td>
-                                  @elseif($x == 5)
-                                  <td style="border: 1px solid black; font-weight: bold;">Araling Panlipunan</td>
-                                  @elseif($x == 6)
-                                  <td style="border: 1px solid black; font-weight: bold;">EPP / TLE</td>
-                                  @elseif($x == 7)
-                                  <td style="border: 1px solid black; font-weight: bold;">MAPEH</td>
-                                  @elseif($x == 8)
-                                  <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Music</em></td>
-                                  @elseif($x == 9)
-                                  <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Arts</em></td>
-                                  @elseif($x == 10)
-                                  <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Physical Education</em></td>
-                                  @elseif($x == 11)
-                                  <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Health</em></td>
-                                  @elseif($x == 12)
-                                  <td style="border: 1px solid black; font-weight: bold;">Eduk. sa Pagpapakatao</td>
-                                  @elseif($x == 13)
-                                  <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;*Arabic Language</td>
-                                  @elseif($x == 14)
-                                  <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;*Islamic Values Education</td>
-                                  @else
-                                  <td style="border: 1px solid black;">&nbsp;</td>
-                                  @endif
-                              @endif
-                          @endif
-                          <td style="border: 1px solid black;">&nbsp;</td>
-                          <td style="border: 1px solid black;">&nbsp;</td>
-                          <td style="border: 1px solid black;">&nbsp;</td>
-                          <td style="border: 1px solid black;">&nbsp;</td>
-                          <td style="border: 1px solid black;">&nbsp;</td>
-                          <td style="border: 1px solid black;">&nbsp;</td>
-                          @endif
-                          <td></td>
-                          @if(count($record[1]->grades)>0)
-                              @if(isset($record[1]->grades[$x]))
-                                  @if(strtolower($record[1]->grades[$x]->subjtitle) != 'general average')
-                                      <td style="border: 1px solid black;">@if($record[1]->grades[$x]->inMAPEH == 1 || $record[1]->grades[$x]->inTLE) &nbsp;&nbsp;&nbsp;@endif&nbsp;&nbsp;{{$record[1]->grades[$x]->subjtitle}}</td>
-                                      <td style="border: 1px solid black; text-align: center;">{{$record[1]->grades[$x]->quarter1}}</td>
-                                      <td style="border: 1px solid black; text-align: center;">{{$record[1]->grades[$x]->quarter2}}</td>
-                                      <td style="border: 1px solid black; text-align: center;">{{$record[1]->grades[$x]->quarter3}}</td>
-                                      <td style="border: 1px solid black; text-align: center;">{{$record[1]->grades[$x]->quarter4}}</td>
-                                      <td style="border: 1px solid black; text-align: center;">{{$record[1]->grades[$x]->finalrating > 0 ? $record[1]->grades[$x]->finalrating : ''}}</td>
-                                      <td style="border: 1px solid black; text-align: center;">@if($record[1]->grades[$x]->finalrating > 0){{$record[1]->grades[$x]->finalrating >= 75? 'PASSED':'FAILED'}}@endif</td>
-                                  @else
-                                    <td style="border: 1px solid black;">&nbsp;</td>
-                                    <td style="border: 1px solid black;">&nbsp;</td>
-                                    <td style="border: 1px solid black;">&nbsp;</td>
-                                    <td style="border: 1px solid black;">&nbsp;</td>
-                                    <td style="border: 1px solid black;">&nbsp;</td>
-                                    <td style="border: 1px solid black;">&nbsp;</td>
-                                    <td style="border: 1px solid black;">&nbsp;</td>
-                                  @endif
-                              @else
-                                  <td style="border: 1px solid black;">&nbsp;</td>
-                                  <td style="border: 1px solid black;">&nbsp;</td>
-                                  <td style="border: 1px solid black;">&nbsp;</td>
-                                  <td style="border: 1px solid black;">&nbsp;</td>
-                                  <td style="border: 1px solid black;">&nbsp;</td>
-                                  <td style="border: 1px solid black;">&nbsp;</td>
-                                  <td style="border: 1px solid black;">&nbsp;</td>
-                              @endif
-                          @else
-                                @if(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'mci')
-                                    @if(collect($gradelevels)->where('levelid',$record[1]->levelid)->count()>0)
-                                    
-                                        @if($x == 0)
-                                        <td style="border: 1px solid black; font-weight: bold;">Christian Living Education			
-                                        </td>
-                                        @elseif($x == 1)
-                                        <td style="border: 1px solid black; font-weight: bold;">English			
-                                        </td>
-                                        @elseif($x == 2)
-                                        <td style="border: 1px solid black; font-weight: bold;">Mathematics			
-                                        </td>
-                                        @elseif($x == 3)
-                                        <td style="border: 1px solid black; font-weight: bold;">Science</td>
-                                        @elseif($x == 4)
-                                        <td style="border: 1px solid black; font-weight: bold;">Livelihood Education</td>
-                                        @elseif($x == 5)
-                                        <td style="border: 1px solid black; font-weight: bold;">Filipino</td>
-                                        @elseif($x == 6)
-                                        <td style="border: 1px solid black; font-weight: bold;">Araling Panlipunan</td>
-                                        @elseif($x == 7)
-                                        <td style="border: 1px solid black; font-weight: bold;">MAPEH</td>
-                                        @elseif($x == 8)
-                                        <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Music</em></td>
-                                        @elseif($x == 9)
-                                        <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Arts</em></td>
-                                        @elseif($x == 10)
-                                        <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Physical Education /Health</em></td>
-                                        @elseif($x == 11)
-                                        <td style="border: 1px solid black; font-weight: bold;">Computer</td>
+                    @for($x=0; $x<15; $x++)
+                        <tr>
+                            @if(count($record[0]->grades)>0)
+                                @if(isset($record[0]->grades[$x]))
+                                    @if(strtolower($record[0]->grades[$x]->subjtitle) != 'general average')
+                                        <td style="border: 1px solid black;">@if($record[0]->grades[$x]->inMAPEH == 1 || $record[0]->grades[$x]->inTLE) &nbsp;&nbsp;&nbsp;@endif&nbsp;&nbsp;{{$record[0]->grades[$x]->subjtitle}}</td>
+                                        <td style="border: 1px solid black; text-align: center;">{{$record[0]->grades[$x]->quarter1}}</td>
+                                        <td style="border: 1px solid black; text-align: center;">{{$record[0]->grades[$x]->quarter2}}</td>
+                                        <td style="border: 1px solid black; text-align: center;">{{$record[0]->grades[$x]->quarter3}}</td>
+                                        <td style="border: 1px solid black; text-align: center;">{{$record[0]->grades[$x]->quarter4}}</td>
+                                        <td style="border: 1px solid black; text-align: center;">{{$record[0]->grades[$x]->finalrating > 0 ? $record[0]->grades[$x]->finalrating : ''}}</td>
+                                        <td style="border: 1px solid black; text-align: center;">@if($record[0]->grades[$x]->finalrating > 0){{$record[0]->grades[$x]->finalrating >= 75? 'PASSED':'FAILED'}}@endif</td>
                                         @else
                                         <td style="border: 1px solid black;">&nbsp;</td>
-                                        @endif
-                                    @else
-                                        @if($x == 0)
-                                        <td style="border: 1px solid black; font-weight: bold;">Christian Living Education			
-                                        </td>
-                                        @elseif($x == 1)
-                                        <td style="border: 1px solid black; font-weight: bold;">English			
-                                        </td>
-                                        @elseif($x == 2)
-                                        <td style="border: 1px solid black; font-weight: bold;">Mathematics			
-                                        </td>
-                                        @elseif($x == 3)
-                                        <td style="border: 1px solid black; font-weight: bold;">Science</td>
-                                        @elseif($x == 4)
-                                        <td style="border: 1px solid black; font-weight: bold;">Livelihood Education</td>
-                                        @elseif($x == 5)
-                                        <td style="border: 1px solid black; font-weight: bold;">Filipino</td>
-                                        @elseif($x == 6)
-                                        <td style="border: 1px solid black; font-weight: bold;">Araling Panlipunan</td>
-                                        @elseif($x == 7)
-                                        <td style="border: 1px solid black; font-weight: bold;">MAPEH</td>
-                                        @elseif($x == 8)
-                                        <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Music</em></td>
-                                        @elseif($x == 9)
-                                        <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Arts</em></td>
-                                        @elseif($x == 10)
-                                        <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Physical Education /Health</em></td>
-                                        @elseif($x == 11)
-                                        <td style="border: 1px solid black; font-weight: bold;">Computer</td>
-                                        @else
                                         <td style="border: 1px solid black;">&nbsp;</td>
-                                        @endif
+                                        <td style="border: 1px solid black;">&nbsp;</td>
+                                        <td style="border: 1px solid black;">&nbsp;</td>
+                                        <td style="border: 1px solid black;">&nbsp;</td>
+                                        <td style="border: 1px solid black;">&nbsp;</td>
+                                        <td style="border: 1px solid black;">&nbsp;</td>
                                     @endif
                                 @else
-                                    @if(collect($gradelevels)->where('levelid',$record[1]->levelid)->count()>0)
-                                    
-                                        @if($x == 0)
-                                        <td style="border: 1px solid black; font-weight: bold;">Mother Tongue				
-                                        </td>
-                                        @elseif($x == 1)
-                                        <td style="border: 1px solid black; font-weight: bold;">Filipino			
-                                        </td>
-                                        @elseif($x == 2)
-                                        <td style="border: 1px solid black; font-weight: bold;">English			
-                                        </td>
-                                        @elseif($x == 3)
-                                        <td style="border: 1px solid black; font-weight: bold;">Mathematics</td>
-                                        @elseif($x == 4)
-                                        <td style="border: 1px solid black; font-weight: bold;">Science</td>
-                                        @elseif($x == 5)
-                                        <td style="border: 1px solid black; font-weight: bold;">Araling Panlipunan</td>
-                                        @elseif($x == 6)
-                                        <td style="border: 1px solid black; font-weight: bold;">EPP / TLE</td>
-                                        @elseif($x == 7)
-                                        <td style="border: 1px solid black; font-weight: bold;">MAPEH</td>
-                                        @elseif($x == 8)
-                                        <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Music</em></td>
-                                        @elseif($x == 9)
-                                        <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Arts</em></td>
-                                        @elseif($x == 10)
-                                        <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Physical Education</em></td>
-                                        @elseif($x == 11)
-                                        <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Health</em></td>
-                                        @elseif($x == 12)
-                                        <td style="border: 1px solid black; font-weight: bold;">Eduk. sa Pagpapakatao</td>
-                                        @elseif($x == 13)
-                                        <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;*Arabic Language</td>
-                                        @elseif($x == 14)
-                                        <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;*Islamic Values Education</td>
-                                        @else
-                                        <td style="border: 1px solid black;">&nbsp;</td>
-                                        @endif
+                                    <td style="border: 1px solid black;">&nbsp;</td>
+                                    <td style="border: 1px solid black;">&nbsp;</td>
+                                    <td style="border: 1px solid black;">&nbsp;</td>
+                                    <td style="border: 1px solid black;">&nbsp;</td>
+                                    <td style="border: 1px solid black;">&nbsp;</td>
+                                    <td style="border: 1px solid black;">&nbsp;</td>
+                                    <td style="border: 1px solid black;">&nbsp;</td>
+                                @endif
+                            @else
+                            @if(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'mci')
+                                @if(collect($gradelevels)->where('levelid',$record[1]->levelid)->count()>0)
+                                
+                                    @if($x == 0)
+                                    <td style="border: 1px solid black; font-weight: bold;">Christian Living Education			
+                                    </td>
+                                    @elseif($x == 1)
+                                    <td style="border: 1px solid black; font-weight: bold;">English			
+                                    </td>
+                                    @elseif($x == 2)
+                                    <td style="border: 1px solid black; font-weight: bold;">Mathematics			
+                                    </td>
+                                    @elseif($x == 3)
+                                    <td style="border: 1px solid black; font-weight: bold;">Science</td>
+                                    @elseif($x == 4)
+                                    <td style="border: 1px solid black; font-weight: bold;">Livelihood Education</td>
+                                    @elseif($x == 5)
+                                    <td style="border: 1px solid black; font-weight: bold;">Filipino</td>
+                                    @elseif($x == 6)
+                                    <td style="border: 1px solid black; font-weight: bold;">Araling Panlipunan</td>
+                                    @elseif($x == 7)
+                                    <td style="border: 1px solid black; font-weight: bold;">MAPEH</td>
+                                    @elseif($x == 8)
+                                    <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Music</em></td>
+                                    @elseif($x == 9)
+                                    <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Arts</em></td>
+                                    @elseif($x == 10)
+                                    <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Physical Education /Health</em></td>
+                                    @elseif($x == 11)
+                                    <td style="border: 1px solid black; font-weight: bold;">Computer</td>
                                     @else
-                                        @if($x == 0)
-                                        <td style="border: 1px solid black; font-weight: bold;">Mother Tongue				
-                                        </td>
-                                        @elseif($x == 1)
-                                        <td style="border: 1px solid black; font-weight: bold;">Filipino			
-                                        </td>
-                                        @elseif($x == 2)
-                                        <td style="border: 1px solid black; font-weight: bold;">English			
-                                        </td>
-                                        @elseif($x == 3)
-                                        <td style="border: 1px solid black; font-weight: bold;">Mathematics</td>
-                                        @elseif($x == 4)
-                                        <td style="border: 1px solid black; font-weight: bold;">Science</td>
-                                        @elseif($x == 5)
-                                        <td style="border: 1px solid black; font-weight: bold;">Araling Panlipunan</td>
-                                        @elseif($x == 6)
-                                        <td style="border: 1px solid black; font-weight: bold;">EPP / TLE</td>
-                                        @elseif($x == 7)
-                                        <td style="border: 1px solid black; font-weight: bold;">MAPEH</td>
-                                        @elseif($x == 8)
-                                        <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Music</em></td>
-                                        @elseif($x == 9)
-                                        <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Arts</em></td>
-                                        @elseif($x == 10)
-                                        <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Physical Education</em></td>
-                                        @elseif($x == 11)
-                                        <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Health</em></td>
-                                        @elseif($x == 12)
-                                        <td style="border: 1px solid black; font-weight: bold;">Eduk. sa Pagpapakatao</td>
-                                        @elseif($x == 13)
-                                        <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;*Arabic Language</td>
-                                        @elseif($x == 14)
-                                        <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;*Islamic Values Education</td>
-                                        @else
-                                        <td style="border: 1px solid black;">&nbsp;</td>
-                                        @endif
+                                    <td style="border: 1px solid black;">&nbsp;</td>
+                                    @endif
+                                @else
+                                    @if($x == 0)
+                                    <td style="border: 1px solid black; font-weight: bold;">Christian Living Education			
+                                    </td>
+                                    @elseif($x == 1)
+                                    <td style="border: 1px solid black; font-weight: bold;">English			
+                                    </td>
+                                    @elseif($x == 2)
+                                    <td style="border: 1px solid black; font-weight: bold;">Mathematics			
+                                    </td>
+                                    @elseif($x == 3)
+                                    <td style="border: 1px solid black; font-weight: bold;">Science</td>
+                                    @elseif($x == 4)
+                                    <td style="border: 1px solid black; font-weight: bold;">Livelihood Education</td>
+                                    @elseif($x == 5)
+                                    <td style="border: 1px solid black; font-weight: bold;">Filipino</td>
+                                    @elseif($x == 6)
+                                    <td style="border: 1px solid black; font-weight: bold;">Araling Panlipunan</td>
+                                    @elseif($x == 7)
+                                    <td style="border: 1px solid black; font-weight: bold;">MAPEH</td>
+                                    @elseif($x == 8)
+                                    <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Music</em></td>
+                                    @elseif($x == 9)
+                                    <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Arts</em></td>
+                                    @elseif($x == 10)
+                                    <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Physical Education /Health</em></td>
+                                    @elseif($x == 11)
+                                    <td style="border: 1px solid black; font-weight: bold;">Computer</td>
+                                    @else
+                                    <td style="border: 1px solid black;">&nbsp;</td>
                                     @endif
                                 @endif
-                                <td style="border: 1px solid black;">&nbsp;</td>
-                                <td style="border: 1px solid black;">&nbsp;</td>
-                                <td style="border: 1px solid black;">&nbsp;</td>
-                                <td style="border: 1px solid black;">&nbsp;</td>
-                                <td style="border: 1px solid black;">&nbsp;</td>
-                                <td style="border: 1px solid black;">&nbsp;</td>
-                          @endif
-                      </tr>
-                  @endfor
-                  <tr style="font-weight: bold;">
-                      <td style="border: 1px solid black;">General Average</td>
-                      <td style="border: 1px solid black;">&nbsp;</td>
-                      <td style="border: 1px solid black;">&nbsp;</td>
-                      <td style="border: 1px solid black;">&nbsp;</td>
-                      <td style="border: 1px solid black;">&nbsp;</td>
-                          <td style="border: 1px solid black; text-align: center;">@if(isset($record[0]->generalaverage)){{collect($record[0]->generalaverage)->first()->finalrating ?? ''}}@endif</td>
-                          <td style="border: 1px solid black; text-align: center;">@if(isset($record[0]->generalaverage))@if(collect($record[0]->generalaverage)->count()>0)@if(collect($record[0]->generalaverage)->first()->finalrating > 0){{collect($record[0]->generalaverage)->first()->finalrating >= 75 ? 'PASSED' : 'FAILED'}}@endif @endif @endif</td>
-               
-                      <td></td>
-                      <td style="border: 1px solid black;">General Average</td>
-                      <td style="border: 1px solid black;">&nbsp;</td>
-                      <td style="border: 1px solid black;">&nbsp;</td>
-                      <td style="border: 1px solid black;">&nbsp;</td>
-                      <td style="border: 1px solid black;">&nbsp;</td>
-                          <td style="border: 1px solid black; text-align: center;">@if(isset($record[1]->generalaverage)){{collect($record[1]->generalaverage)->first()->finalrating ?? ''}}@endif</td>
-                          <td style="border: 1px solid black; text-align: center;">@if(isset($record[1]->generalaverage))@if(collect($record[1]->generalaverage)->count()>0)@if(collect($record[1]->generalaverage)->first()->finalrating > 0){{collect($record[1]->generalaverage)->first()->finalrating >= 75 ? 'PASSED' : 'FAILED'}}@endif @endif @endif</td>
-                      
-                  </tr>
-                  <tr>
-                      <td colspan="15">&nbsp;</td>
-                  </tr>
-                  <tr>
-                      <td colspan="7" style="padding: 0px;">
-                          <table style="width: 100%; table-layout: fixed; border: 1px solid black; margin: 0px;" border="1">
-                                  @if(collect($record[0]->remedials)->contains('type','2'))
-                                      @foreach(collect($record[0]->remedials)->where('type','2')->values() as $remedial)
-                                          @if($remedial->type == 2)
-                                              <tr>
-                                                  <td style="width: 30%;">Remedial Classes</td>
-                                                  <td colspan="4">Conducted from:&nbsp;&nbsp;{{$remedial->datefrom != null ? date('m/d/Y', strtotime($remedial->datefrom)) : ''}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to:&nbsp;&nbsp;{{$remedial->dateto != null ? date('m/d/Y', strtotime($remedial->dateto)) : ''}}</td>
-                                              </tr>
-                                          @endif
-                                      @endforeach
-                                  @else
-                                      <tr>
-                                          <td style="width: 30%;">Remedial Classes</td>
-                                          <td colspan="4">Conducted from:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to </td>
-                                      </tr>
-                                  @endif
-                                  <tr>
-                                      <th>Learning Ares</th>
-                                      <th>Final Rating</th>
-                                      <th>Remedial Class Mark</th>
-                                      <th>Recomputed Final</th>
-                                      <th>Remarks</th>
-                                  </tr>
-                                  @if(collect($record[0]->remedials)->contains('type','1'))
-                                      @foreach(collect($record[0]->remedials)->where('type','1')->values() as $remedial)
-                                          @if($remedial->type == 1)
-                                              <tr>
-                                                  <td>{{$remedial->subjectname}}</td>
-                                                  <td class="text-center">{{$remedial->finalrating}}</td>
-                                                  <td class="text-center">{{$remedial->remclassmark}}</td>
-                                                  <td class="text-center">{{$remedial->recomputedfinal}}</td>
-                                                  <td class="text-center">{{$remedial->remarks}}</td>
-                                              </tr>
-                                          @endif
-                                      @endforeach
-                                  @endif  
-                                  @for($x = collect($record[0]->remedials)->where('type','1')->count(); $x<3; $x++)
-                                      <tr>
-                                          <td>&nbsp;</td>
-                                          <td>&nbsp;</td>
-                                          <td>&nbsp;</td>
-                                          <td>&nbsp;</td>
-                                          <td>&nbsp;</td>
-                                      </tr>
-                                  @endfor
-                          </table>
-                      </td>
-                      <td></td>
-                      <td colspan="7" style="padding: 0px; vertical-align:top;">
-                          <table style="width: 100%; table-layout: fixed; border: 1px solid black; margin: 0px;" border="1">
-                                @if(collect($record[1]->remedials)->contains('type','2'))
-                                    @foreach($record[1]->remedials as $remedial)
-                                        @if($remedial->type == 2)
-                                            <tr>
-                                                <td style="width: 30%;">Remedial Classes</td>
-                                                <td colspan="4">Conducted from:&nbsp;&nbsp;{{$remedial->datefrom != null ? date('m/d/Y', strtotime($remedial->datefrom)) : ''}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to:&nbsp;&nbsp;{{$remedial->dateto != null ? date('m/d/Y', strtotime($remedial->dateto)) : ''}}</td>
-                                            </tr>
-                                        @endif
-                                    @endforeach
+                            @else
+                                @if(collect($gradelevels)->where('levelid',$record[1]->levelid)->count()>0)
+                                
+                                    @if($x == 0)
+                                    <td style="border: 1px solid black; font-weight: bold;">Mother Tongue				
+                                    </td>
+                                    @elseif($x == 1)
+                                    <td style="border: 1px solid black; font-weight: bold;">Filipino			
+                                    </td>
+                                    @elseif($x == 2)
+                                    <td style="border: 1px solid black; font-weight: bold;">English			
+                                    </td>
+                                    @elseif($x == 3)
+                                    <td style="border: 1px solid black; font-weight: bold;">Mathematics</td>
+                                    @elseif($x == 4)
+                                    <td style="border: 1px solid black; font-weight: bold;">Science</td>
+                                    @elseif($x == 5)
+                                    <td style="border: 1px solid black; font-weight: bold;">Araling Panlipunan</td>
+                                    @elseif($x == 6)
+                                    <td style="border: 1px solid black; font-weight: bold;">EPP / TLE</td>
+                                    @elseif($x == 7)
+                                    <td style="border: 1px solid black; font-weight: bold;">MAPEH</td>
+                                    @elseif($x == 8)
+                                    <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Music</em></td>
+                                    @elseif($x == 9)
+                                    <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Arts</em></td>
+                                    @elseif($x == 10)
+                                    <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Physical Education</em></td>
+                                    @elseif($x == 11)
+                                    <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Health</em></td>
+                                    @elseif($x == 12)
+                                    <td style="border: 1px solid black; font-weight: bold;">Eduk. sa Pagpapakatao</td>
+                                    @elseif($x == 13)
+                                    <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;*Arabic Language</td>
+                                    @elseif($x == 14)
+                                    <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;*Islamic Values Education</td>
+                                    @else
+                                    <td style="border: 1px solid black;">&nbsp;</td>
+                                    @endif
                                 @else
-                                    <tr>
-                                        <td style="width: 30%;">Remedial Classes</td>
-                                        <td colspan="4">Conducted from:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to </td>
-                                    </tr>
+                                    @if($x == 0)
+                                    <td style="border: 1px solid black; font-weight: bold;">Mother Tongue				
+                                    </td>
+                                    @elseif($x == 1)
+                                    <td style="border: 1px solid black; font-weight: bold;">Filipino			
+                                    </td>
+                                    @elseif($x == 2)
+                                    <td style="border: 1px solid black; font-weight: bold;">English			
+                                    </td>
+                                    @elseif($x == 3)
+                                    <td style="border: 1px solid black; font-weight: bold;">Mathematics</td>
+                                    @elseif($x == 4)
+                                    <td style="border: 1px solid black; font-weight: bold;">Science</td>
+                                    @elseif($x == 5)
+                                    <td style="border: 1px solid black; font-weight: bold;">Araling Panlipunan</td>
+                                    @elseif($x == 6)
+                                    <td style="border: 1px solid black; font-weight: bold;">EPP / TLE</td>
+                                    @elseif($x == 7)
+                                    <td style="border: 1px solid black; font-weight: bold;">MAPEH</td>
+                                    @elseif($x == 8)
+                                    <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Music</em></td>
+                                    @elseif($x == 9)
+                                    <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Arts</em></td>
+                                    @elseif($x == 10)
+                                    <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Physical Education</em></td>
+                                    @elseif($x == 11)
+                                    <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Health</em></td>
+                                    @elseif($x == 12)
+                                    <td style="border: 1px solid black; font-weight: bold;">Eduk. sa Pagpapakatao</td>
+                                    @elseif($x == 13)
+                                    <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;*Arabic Language</td>
+                                    @elseif($x == 14)
+                                    <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;*Islamic Values Education</td>
+                                    @else
+                                    <td style="border: 1px solid black;">&nbsp;</td>
+                                    @endif
                                 @endif
-                                <tr>
-                                    <th>Learning Ares</th>
-                                    <th>Final Rating</th>
-                                    <th>Remedial Class Mark</th>
-                                    <th>Recomputed Final</th>
-                                    <th>Remarks</th>
-                                </tr>
-                                @if(collect($record[1]->remedials)->contains('type','1'))
-                                    @foreach($record[1]->remedials as $remedial)
-                                        @if($remedial->type == 1)
-                                            <tr>
-                                                <td>{{$remedial->subjectname}}</td>
-                                                <td class="text-center">{{$remedial->finalrating}}</td>
-                                                <td class="text-center">{{$remedial->remclassmark}}</td>
-                                                <td class="text-center">{{$remedial->recomputedfinal}}</td>
-                                                <td class="text-center">{{$remedial->remarks}}</td>
-                                            </tr>
+                            @endif
+                            <td style="border: 1px solid black;">&nbsp;</td>
+                            <td style="border: 1px solid black;">&nbsp;</td>
+                            <td style="border: 1px solid black;">&nbsp;</td>
+                            <td style="border: 1px solid black;">&nbsp;</td>
+                            <td style="border: 1px solid black;">&nbsp;</td>
+                            <td style="border: 1px solid black;">&nbsp;</td>
+                            @endif
+                            <td></td>
+                            @if(count($record[1]->grades)>0)
+                                @if(isset($record[1]->grades[$x]))
+                                    @if(strtolower($record[1]->grades[$x]->subjtitle) != 'general average')
+                                        <td style="border: 1px solid black;">@if($record[1]->grades[$x]->inMAPEH == 1 || $record[1]->grades[$x]->inTLE) &nbsp;&nbsp;&nbsp;@endif&nbsp;&nbsp;{{$record[1]->grades[$x]->subjtitle}}</td>
+                                        <td style="border: 1px solid black; text-align: center;">{{$record[1]->grades[$x]->quarter1}}</td>
+                                        <td style="border: 1px solid black; text-align: center;">{{$record[1]->grades[$x]->quarter2}}</td>
+                                        <td style="border: 1px solid black; text-align: center;">{{$record[1]->grades[$x]->quarter3}}</td>
+                                        <td style="border: 1px solid black; text-align: center;">{{$record[1]->grades[$x]->quarter4}}</td>
+                                        <td style="border: 1px solid black; text-align: center;">{{$record[1]->grades[$x]->finalrating > 0 ? $record[1]->grades[$x]->finalrating : ''}}</td>
+                                        <td style="border: 1px solid black; text-align: center;">@if($record[1]->grades[$x]->finalrating > 0){{$record[1]->grades[$x]->finalrating >= 75? 'PASSED':'FAILED'}}@endif</td>
+                                    @else
+                                        <td style="border: 1px solid black;">&nbsp;</td>
+                                        <td style="border: 1px solid black;">&nbsp;</td>
+                                        <td style="border: 1px solid black;">&nbsp;</td>
+                                        <td style="border: 1px solid black;">&nbsp;</td>
+                                        <td style="border: 1px solid black;">&nbsp;</td>
+                                        <td style="border: 1px solid black;">&nbsp;</td>
+                                        <td style="border: 1px solid black;">&nbsp;</td>
+                                    @endif
+                                @else
+                                    <td style="border: 1px solid black;">&nbsp;</td>
+                                    <td style="border: 1px solid black;">&nbsp;</td>
+                                    <td style="border: 1px solid black;">&nbsp;</td>
+                                    <td style="border: 1px solid black;">&nbsp;</td>
+                                    <td style="border: 1px solid black;">&nbsp;</td>
+                                    <td style="border: 1px solid black;">&nbsp;</td>
+                                    <td style="border: 1px solid black;">&nbsp;</td>
+                                @endif
+                            @else
+                                    @if(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'mci')
+                                        @if(collect($gradelevels)->where('levelid',$record[1]->levelid)->count()>0)
+                                        
+                                            @if($x == 0)
+                                            <td style="border: 1px solid black; font-weight: bold;">Christian Living Education			
+                                            </td>
+                                            @elseif($x == 1)
+                                            <td style="border: 1px solid black; font-weight: bold;">English			
+                                            </td>
+                                            @elseif($x == 2)
+                                            <td style="border: 1px solid black; font-weight: bold;">Mathematics			
+                                            </td>
+                                            @elseif($x == 3)
+                                            <td style="border: 1px solid black; font-weight: bold;">Science</td>
+                                            @elseif($x == 4)
+                                            <td style="border: 1px solid black; font-weight: bold;">Livelihood Education</td>
+                                            @elseif($x == 5)
+                                            <td style="border: 1px solid black; font-weight: bold;">Filipino</td>
+                                            @elseif($x == 6)
+                                            <td style="border: 1px solid black; font-weight: bold;">Araling Panlipunan</td>
+                                            @elseif($x == 7)
+                                            <td style="border: 1px solid black; font-weight: bold;">MAPEH</td>
+                                            @elseif($x == 8)
+                                            <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Music</em></td>
+                                            @elseif($x == 9)
+                                            <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Arts</em></td>
+                                            @elseif($x == 10)
+                                            <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Physical Education /Health</em></td>
+                                            @elseif($x == 11)
+                                            <td style="border: 1px solid black; font-weight: bold;">Computer</td>
+                                            @else
+                                            <td style="border: 1px solid black;">&nbsp;</td>
+                                            @endif
+                                        @else
+                                            @if($x == 0)
+                                            <td style="border: 1px solid black; font-weight: bold;">Christian Living Education			
+                                            </td>
+                                            @elseif($x == 1)
+                                            <td style="border: 1px solid black; font-weight: bold;">English			
+                                            </td>
+                                            @elseif($x == 2)
+                                            <td style="border: 1px solid black; font-weight: bold;">Mathematics			
+                                            </td>
+                                            @elseif($x == 3)
+                                            <td style="border: 1px solid black; font-weight: bold;">Science</td>
+                                            @elseif($x == 4)
+                                            <td style="border: 1px solid black; font-weight: bold;">Livelihood Education</td>
+                                            @elseif($x == 5)
+                                            <td style="border: 1px solid black; font-weight: bold;">Filipino</td>
+                                            @elseif($x == 6)
+                                            <td style="border: 1px solid black; font-weight: bold;">Araling Panlipunan</td>
+                                            @elseif($x == 7)
+                                            <td style="border: 1px solid black; font-weight: bold;">MAPEH</td>
+                                            @elseif($x == 8)
+                                            <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Music</em></td>
+                                            @elseif($x == 9)
+                                            <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Arts</em></td>
+                                            @elseif($x == 10)
+                                            <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Physical Education /Health</em></td>
+                                            @elseif($x == 11)
+                                            <td style="border: 1px solid black; font-weight: bold;">Computer</td>
+                                            @else
+                                            <td style="border: 1px solid black;">&nbsp;</td>
+                                            @endif
                                         @endif
-                                    @endforeach
-                                @endif
-                                @for($x = collect($record[1]->remedials)->where('type','1')->count(); $x<3; $x++)
+                                    @else
+                                        @if(collect($gradelevels)->where('levelid',$record[1]->levelid)->count()>0)
+                                        
+                                            @if($x == 0)
+                                            <td style="border: 1px solid black; font-weight: bold;">Mother Tongue				
+                                            </td>
+                                            @elseif($x == 1)
+                                            <td style="border: 1px solid black; font-weight: bold;">Filipino			
+                                            </td>
+                                            @elseif($x == 2)
+                                            <td style="border: 1px solid black; font-weight: bold;">English			
+                                            </td>
+                                            @elseif($x == 3)
+                                            <td style="border: 1px solid black; font-weight: bold;">Mathematics</td>
+                                            @elseif($x == 4)
+                                            <td style="border: 1px solid black; font-weight: bold;">Science</td>
+                                            @elseif($x == 5)
+                                            <td style="border: 1px solid black; font-weight: bold;">Araling Panlipunan</td>
+                                            @elseif($x == 6)
+                                            <td style="border: 1px solid black; font-weight: bold;">EPP / TLE</td>
+                                            @elseif($x == 7)
+                                            <td style="border: 1px solid black; font-weight: bold;">MAPEH</td>
+                                            @elseif($x == 8)
+                                            <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Music</em></td>
+                                            @elseif($x == 9)
+                                            <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Arts</em></td>
+                                            @elseif($x == 10)
+                                            <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Physical Education</em></td>
+                                            @elseif($x == 11)
+                                            <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Health</em></td>
+                                            @elseif($x == 12)
+                                            <td style="border: 1px solid black; font-weight: bold;">Eduk. sa Pagpapakatao</td>
+                                            @elseif($x == 13)
+                                            <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;*Arabic Language</td>
+                                            @elseif($x == 14)
+                                            <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;*Islamic Values Education</td>
+                                            @else
+                                            <td style="border: 1px solid black;">&nbsp;</td>
+                                            @endif
+                                        @else
+                                            @if($x == 0)
+                                            <td style="border: 1px solid black; font-weight: bold;">Mother Tongue				
+                                            </td>
+                                            @elseif($x == 1)
+                                            <td style="border: 1px solid black; font-weight: bold;">Filipino			
+                                            </td>
+                                            @elseif($x == 2)
+                                            <td style="border: 1px solid black; font-weight: bold;">English			
+                                            </td>
+                                            @elseif($x == 3)
+                                            <td style="border: 1px solid black; font-weight: bold;">Mathematics</td>
+                                            @elseif($x == 4)
+                                            <td style="border: 1px solid black; font-weight: bold;">Science</td>
+                                            @elseif($x == 5)
+                                            <td style="border: 1px solid black; font-weight: bold;">Araling Panlipunan</td>
+                                            @elseif($x == 6)
+                                            <td style="border: 1px solid black; font-weight: bold;">EPP / TLE</td>
+                                            @elseif($x == 7)
+                                            <td style="border: 1px solid black; font-weight: bold;">MAPEH</td>
+                                            @elseif($x == 8)
+                                            <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Music</em></td>
+                                            @elseif($x == 9)
+                                            <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Arts</em></td>
+                                            @elseif($x == 10)
+                                            <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Physical Education</em></td>
+                                            @elseif($x == 11)
+                                            <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;<em>Health</em></td>
+                                            @elseif($x == 12)
+                                            <td style="border: 1px solid black; font-weight: bold;">Eduk. sa Pagpapakatao</td>
+                                            @elseif($x == 13)
+                                            <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;*Arabic Language</td>
+                                            @elseif($x == 14)
+                                            <td style="border: 1px solid black;">&nbsp;&nbsp;&nbsp;*Islamic Values Education</td>
+                                            @else
+                                            <td style="border: 1px solid black;">&nbsp;</td>
+                                            @endif
+                                        @endif
+                                    @endif
+                                    <td style="border: 1px solid black;">&nbsp;</td>
+                                    <td style="border: 1px solid black;">&nbsp;</td>
+                                    <td style="border: 1px solid black;">&nbsp;</td>
+                                    <td style="border: 1px solid black;">&nbsp;</td>
+                                    <td style="border: 1px solid black;">&nbsp;</td>
+                                    <td style="border: 1px solid black;">&nbsp;</td>
+                            @endif
+                        </tr>
+                    @endfor
+                    <tr style="font-weight: bold;">
+                        <td style="border: 1px solid black;">General Average</td>
+                        <td style="border: 1px solid black;">&nbsp;</td>
+                        <td style="border: 1px solid black;">&nbsp;</td>
+                        <td style="border: 1px solid black;">&nbsp;</td>
+                        <td style="border: 1px solid black;">&nbsp;</td>
+                            <td style="border: 1px solid black; text-align: center;">@if(isset($record[0]->generalaverage)){{collect($record[0]->generalaverage)->first()->finalrating ?? ''}}@endif</td>
+                            <td style="border: 1px solid black; text-align: center;">@if(isset($record[0]->generalaverage))@if(collect($record[0]->generalaverage)->count()>0)@if(collect($record[0]->generalaverage)->first()->finalrating > 0){{collect($record[0]->generalaverage)->first()->finalrating >= 75 ? 'PASSED' : 'FAILED'}}@endif @endif @endif</td>
+                
+                        <td></td>
+                        <td style="border: 1px solid black;">General Average</td>
+                        <td style="border: 1px solid black;">&nbsp;</td>
+                        <td style="border: 1px solid black;">&nbsp;</td>
+                        <td style="border: 1px solid black;">&nbsp;</td>
+                        <td style="border: 1px solid black;">&nbsp;</td>
+                        <td style="border: 1px solid black; text-align: center;">@if(isset($record[1]->generalaverage)){{collect($record[1]->generalaverage)->first()->finalrating ?? ''}}@endif</td>
+                        <td style="border: 1px solid black; text-align: center;">@if(isset($record[1]->generalaverage))@if(collect($record[1]->generalaverage)->count()>0)@if(collect($record[1]->generalaverage)->first()->finalrating > 0){{collect($record[1]->generalaverage)->first()->finalrating >= 75 ? 'PASSED' : 'FAILED'}}@endif @endif @endif</td>
+                    </tr>
+
+                    
+                    <tr>
+                        <td colspan="7" class="p-0">
+                            @if(collect($eachgradesignatories)->where('levelid', $record[0]->levelid)->isNotEmpty())
+                                @foreach(collect($eachgradesignatories)->where('levelid', $record[0]->levelid)->values() as $eachsign)
+                                    <table style="width: 100%; table-layout: fixed; font-size: 10px; margin-bottom: 3px;">
+                                        <tr>
+                                            <td>REMARKS:</td>
+                                            <td style="border-bottom: 1px solid black;" colspan="4"> {{$eachsign->remarks}}</td>
+                                        </tr>
+                                    </table>
+                                    <table style="width: 100%; table-layout: fixed; font-size: 10px;">
+                                        <tr>
+                                            <td style="vertical-align: top">Prepared by:</td>
+                                            <td></td>
+                                            <td style="vertical-align: top">Certified True and Correct:</td>
+                                            <td></td>
+                                            <td style="vertical-align: top">Date Checked (MM/DD/YYYY)</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="5"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width: 30%; border-bottom: 1px solid black; text-align: center;">&nbsp;{{$eachsign->certncorrectname}}</td>
+                                            <td style="width: 5%;"></td>
+                                            <td style="width: 30%; border-bottom: 1px solid black; text-align: center;">&nbsp;{{$eachsign->certncorrectname}}</td>
+                                            <td style="width: 5%;"></td>
+                                            <td style="width: 30%; border-bottom: 1px solid black; text-align: center;">&nbsp;{{ $eachsign->datechecked ? date('m/d/Y', strtotime($eachsign->datechecked)) : '' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-center">Signature of Adviser over Printed Name</td>
+                                            <td></td>
+                                            <td class="text-center">&nbsp;{{$eachsign->certncorrectdesc}}</td>
+                                            <td></td>
+                                            <td class="text-center"></td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="5"></td>
+                                        </tr>
+                                    </table>
+                                @endforeach
+                            @else
+                                <!-- Display the blank format if there is no data -->
+                                <table style="width: 100%; table-layout: fixed; font-size: 10px; margin-bottom: 3px;">
                                     <tr>
-                                        <td>&nbsp;</td>
-                                        <td>&nbsp;</td>
-                                        <td>&nbsp;</td>
-                                        <td>&nbsp;</td>
-                                        <td>&nbsp;</td>
+                                        <td>REMARKS:</td>
+                                        <td style="border-bottom: 1px solid black;" colspan="4"></td>
                                     </tr>
-                                @endfor
-                          </table>
-                      </td>
-                  </tr>
-                  @if($key == 1)
+                                </table>
+                                <table style="width: 100%; table-layout: fixed; font-size: 10px;">
+                                    <tr>
+                                        <td style="vertical-align: top">Prepared by:</td>
+                                        <td></td>
+                                        <td style="vertical-align: top">Certified True and Correct:</td>
+                                        <td></td>
+                                        <td style="vertical-align: top">Date Checked (MM/DD/YYYY)</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="5"></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="width: 30%; border-bottom: 1px solid black; text-align: center;">&nbsp;</td>
+                                        <td style="width: 5%;"></td>
+                                        <td style="width: 30%; border-bottom: 1px solid black; text-align: center;">&nbsp;</td>
+                                        <td style="width: 5%;"></td>
+                                        <td style="width: 30%; border-bottom: 1px solid black; text-align: center;">&nbsp;</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-center">Signature of Adviser over Printed Name</td>
+                                        <td></td>
+                                        <td class="text-center">&nbsp;</td>
+                                        <td></td>
+                                        <td class="text-center"></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="5"></td>
+                                    </tr>
+                                </table>
+                            @endif
+                        </td>
+                        <td></td>
+                        <td colspan="7" class="p-0">
+                            @if(collect($eachgradesignatories)->where('levelid', $record[1]->levelid)->isNotEmpty())
+                                @foreach(collect($eachgradesignatories)->where('levelid', $record[0]->levelid)->values() as $eachsign)
+                                    <table style="width: 100%; table-layout: fixed; font-size: 10px; margin-bottom: 3px;">
+                                        <tr>
+                                            <td>REMARKS:</td>
+                                            <td style="border-bottom: 1px solid black;" colspan="4"></td>
+                                        </tr>
+                                    </table>
+                                    <table style="width: 100%; table-layout: fixed; font-size: 10px;">
+                                        <tr>
+                                            <td style="vertical-align: top">Prepared by:</td>
+                                            <td></td>
+                                            <td style="vertical-align: top">Certified True and Correct:</td>
+                                            <td></td>
+                                            <td style="vertical-align: top">Date Checked (MM/DD/YYYY)</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="5"></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width: 30%; border-bottom: 1px solid black; text-align: center;">&nbsp;{{$eachsign->certncorrectname}}</td>
+                                            <td style="width: 5%;"></td>
+                                            <td style="width: 30%; border-bottom: 1px solid black; text-align: center;">&nbsp;{{$eachsign->certncorrectname}}</td>
+                                            <td style="width: 5%;"></td>
+                                            <td style="width: 30%; border-bottom: 1px solid black; text-align: center;">&nbsp;{{ $eachsign->datechecked ? date('m/d/Y', strtotime($eachsign->datechecked)) : '' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-center">Signature of Adviser over Printed Name</td>
+                                            <td></td>
+                                            <td class="text-center">&nbsp;{{$eachsign->certncorrectdesc}}</td>
+                                            <td></td>
+                                            <td class="text-center"></td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="5"></td>
+                                        </tr>
+                                    </table>
+                                @endforeach
+                            @else
+                                <!-- Display the blank format if there is no data -->
+                                <table style="width: 100%; table-layout: fixed; font-size: 10px; margin-bottom: 3px;">
+                                    <tr>
+                                        <td>REMARKS:</td>
+                                        <td style="border-bottom: 1px solid black;" colspan="4"></td>
+                                    </tr>
+                                </table>
+                                <table style="width: 100%; table-layout: fixed; font-size: 10px;">
+                                    <tr>
+                                        <td style="vertical-align: top">Prepared by:</td>
+                                        <td></td>
+                                        <td style="vertical-align: top">Certified True and Correct:</td>
+                                        <td></td>
+                                        <td style="vertical-align: top">Date Checked (MM/DD/YYYY)</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="5"></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="width: 30%; border-bottom: 1px solid black; text-align: center;">&nbsp;</td>
+                                        <td style="width: 5%;"></td>
+                                        <td style="width: 30%; border-bottom: 1px solid black; text-align: center;">&nbsp;</td>
+                                        <td style="width: 5%;"></td>
+                                        <td style="width: 30%; border-bottom: 1px solid black; text-align: center;">&nbsp;</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-center">Signature of Adviser over Printed Name</td>
+                                        <td></td>
+                                        <td class="text-center">&nbsp;</td>
+                                        <td></td>
+                                        <td class="text-center"></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="5"></td>
+                                    </tr>
+                                </table>
+                            @endif
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="15">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td colspan="7" style="padding: 0px;">
+                            <table style="width: 100%; table-layout: fixed; border: 1px solid black; margin: 0px;" border="1">
+                                    @if(collect($record[0]->remedials)->contains('type','2'))
+                                        @foreach(collect($record[0]->remedials)->where('type','2')->values() as $remedial)
+                                            @if($remedial->type == 2)
+                                                <tr>
+                                                    <td style="width: 30%;">Remedial Classes</td>
+                                                    <td colspan="4">Conducted from:&nbsp;&nbsp;{{$remedial->datefrom != null ? date('m/d/Y', strtotime($remedial->datefrom)) : ''}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to:&nbsp;&nbsp;{{$remedial->dateto != null ? date('m/d/Y', strtotime($remedial->dateto)) : ''}}</td>
+                                                </tr>
+                                            @endif
+                                        @endforeach
+                                    @else
+                                        <tr>
+                                            <td style="width: 30%;">Remedial Classes</td>
+                                            <td colspan="4">Conducted from:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to </td>
+                                        </tr>
+                                    @endif
+                                    <tr>
+                                        <th>Learning Ares</th>
+                                        <th>Final Rating</th>
+                                        <th>Remedial Class Mark</th>
+                                        <th>Recomputed Final</th>
+                                        <th>Remarks</th>
+                                    </tr>
+                                    @if(collect($record[0]->remedials)->contains('type','1'))
+                                        @foreach(collect($record[0]->remedials)->where('type','1')->values() as $remedial)
+                                            @if($remedial->type == 1)
+                                                <tr>
+                                                    <td>{{$remedial->subjectname}}</td>
+                                                    <td class="text-center">{{$remedial->finalrating}}</td>
+                                                    <td class="text-center">{{$remedial->remclassmark}}</td>
+                                                    <td class="text-center">{{$remedial->recomputedfinal}}</td>
+                                                    <td class="text-center">{{$remedial->remarks}}</td>
+                                                </tr>
+                                            @endif
+                                        @endforeach
+                                    @endif  
+                                    @for($x = collect($record[0]->remedials)->where('type','1')->count(); $x<3; $x++)
+                                        <tr>
+                                            <td>&nbsp;</td>
+                                            <td>&nbsp;</td>
+                                            <td>&nbsp;</td>
+                                            <td>&nbsp;</td>
+                                            <td>&nbsp;</td>
+                                        </tr>
+                                    @endfor
+                            </table>
+                        </td>
+                        <td></td>
+                        <td colspan="7" style="padding: 0px; vertical-align:top;">
+                            <table style="width: 100%; table-layout: fixed; border: 1px solid black; margin: 0px;" border="1">
+                                    @if(collect($record[1]->remedials)->contains('type','2'))
+                                        @foreach($record[1]->remedials as $remedial)
+                                            @if($remedial->type == 2)
+                                                <tr>
+                                                    <td style="width: 30%;">Remedial Classes</td>
+                                                    <td colspan="4">Conducted from:&nbsp;&nbsp;{{$remedial->datefrom != null ? date('m/d/Y', strtotime($remedial->datefrom)) : ''}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to:&nbsp;&nbsp;{{$remedial->dateto != null ? date('m/d/Y', strtotime($remedial->dateto)) : ''}}</td>
+                                                </tr>
+                                            @endif
+                                        @endforeach
+                                    @else
+                                        <tr>
+                                            <td style="width: 30%;">Remedial Classes</td>
+                                            <td colspan="4">Conducted from:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to </td>
+                                        </tr>
+                                    @endif
+                                    <tr>
+                                        <th>Learning Ares</th>
+                                        <th>Final Rating</th>
+                                        <th>Remedial Class Mark</th>
+                                        <th>Recomputed Final</th>
+                                        <th>Remarks</th>
+                                    </tr>
+                                    @if(collect($record[1]->remedials)->contains('type','1'))
+                                        @foreach($record[1]->remedials as $remedial)
+                                            @if($remedial->type == 1)
+                                                <tr>
+                                                    <td>{{$remedial->subjectname}}</td>
+                                                    <td class="text-center">{{$remedial->finalrating}}</td>
+                                                    <td class="text-center">{{$remedial->remclassmark}}</td>
+                                                    <td class="text-center">{{$remedial->recomputedfinal}}</td>
+                                                    <td class="text-center">{{$remedial->remarks}}</td>
+                                                </tr>
+                                            @endif
+                                        @endforeach
+                                    @endif
+                                    @for($x = collect($record[1]->remedials)->where('type','1')->count(); $x<3; $x++)
+                                        <tr>
+                                            <td>&nbsp;</td>
+                                            <td>&nbsp;</td>
+                                            <td>&nbsp;</td>
+                                            <td>&nbsp;</td>
+                                            <td>&nbsp;</td>
+                                        </tr>
+                                    @endfor
+                            </table>
+                        </td>
+                    </tr>
+                    @if($key == 1)
                     <tr>
                         <td colspan="15" style="text-align: right;"><em>SFRT 2017</em>		
                         </td>
@@ -792,7 +952,7 @@
     <div style="width: 100%;page-break-inside: avoid;">
         <div style="width: 100%; font-size: 11px;">For Transfer Out /Elementary School Completer Only</div>
         @php
-            $y = 3;
+            $y = 1;
             // if(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'mci')
             // {
             // $y = 1;

@@ -1,11 +1,9 @@
 @php
-
     $refid = DB::table('usertype')
         ->where('id', auth()->user()->type)
         ->where('deleted', 0)
         ->select('refid')
         ->first();
-
     $teacherid = DB::table('teacher')
         ->where('userid', auth()->user()->id)
         ->select('id')
@@ -39,25 +37,6 @@
         $acadprogid = DB::table('academicprogram')->select('id as acadprogid')->get();
 
         $xtend = 'registrar.layouts.app';
-    } elseif (auth()->user()->type == 1) {
-        $acadprogid = DB::table('academicprogram')->select('id as acadprogid')->get();
-        $syid = DB::table('sy')->where('isactive', 1)->select('id')->first()->id;
-        $advisory_levelid = array();
-
-        if ($teacherid) {
-            $advisory = DB::table('sections')
-                ->where('sections.teacherid', $teacherid)
-                ->leftJoin('sectiondetail', function ($join) use ($syid) {
-                    $join->on('sections.id', '=', 'sectiondetail.sectionid');
-                    $join->where('sectiondetail.deleted', '0');
-                    $join->where('sectiondetail.syid', $syid);
-                })->get();
-
-
-            $advisory_levelid = collect($advisory)->pluck('levelid')->unique();
-        }
-
-        $xtend = 'teacher.layouts.app';
     } else {
         if ($refid->refid == 20) {
             $xtend = 'principalassistant.layouts.app2';
@@ -79,7 +58,7 @@
     $all_acad = [];
 
     foreach ($acadprogid as $item) {
-        if ($item->acadprogid != 6) {
+        if ($item->acadprogid != 6 && $item->acadprogid != 8) {
             array_push($all_acad, $item->acadprogid);
         }
     }
@@ -129,10 +108,24 @@
                         <span aria-hidden="true">×</span></button>
                 </div>
                 <div class="modal-body">
+
+                    <div class="row">
+                        <div class="col-md-12 form-group">
+                            <label for="">Select Level</label>
+                            <select name="" class="form-control select2" id="selectLevelSetupAward"
+                                style="width:100%;">
+                                <option value="">Select Level </option>
+                                @foreach (DB::table('gradelevel')->orderBy('sortid')->where('deleted', 0)->get() as $item)
+                                    <option value="{{ $item->id }}"> {{ $item->levelname }} </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
                     <div class="row">
                         <div class="col-md-12 form-group">
                             <label for="">Award</label>
-                            <input id="input_award" class="form-control form-control-sm">
+                            <input id="input_award" class="form-control form-control-sm" placeholder="Award Description">
                         </div>
                     </div>
                     <div class="row">
@@ -158,6 +151,141 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="basegrade_setup_form_modal" style="display: none;" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header pb-2 pt-2 border-0">
+                    <h4 class="modal-title">Minimum & Base Grade Setup Form</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12 form-group">
+                            <label for="">Select Level</label>
+                            <select name="" class="form-control select2" id="selectLevelSetupEdit"
+                                style="width:100%;">
+                                <option value="">Select Level </option>
+                                @foreach (DB::table('gradelevel')->orderBy('sortid')->where('deleted', 0)->get() as $item)
+                                    <option value="{{ $item->id }}"> {{ $item->levelname }} </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 form-group">
+                            <label for="">Minimum Grade</label>
+                            <input id="input_lowest_gradeedit" type="number" class="form-control form-control-sm"
+                                placeholder="Minimum Grade">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label for="">Base Grade</label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 form-group clearfix">
+                            <div class="icheck-primary d-inline">
+                                <input type="radio" id="base_rounded2" name="base_gradeedit" class="base_grade"
+                                    value="1">
+                                <label for="base_rounded2">
+                                    Rounded
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6 form-group clearfix">
+                            <div class="icheck-primary d-inline">
+                                <input type="radio" id="base_decimal2" name="base_gradeedit" class="base_grade"
+                                    value="2">
+                                <label for="base_decimal2">
+                                    Decimal
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    {{-- <div class="row">
+                        <div class="col-md-12">
+                            <button class="btn btn-primary btn-sm" id="update_button_1" hidden>Update</button>
+                        </div>
+                    </div> --}}
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button class="btn btn-sm btn-primary" id="basegrade_setup_form_button">Create</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="basegrade_edit_form_modal" style="display: none;" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header pb-2 pt-2 border-0">
+                    <h4 class="modal-title">Edit Minimum & Base Grade</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span></button>
+                </div>
+                <div class="modal-body">
+                    {{-- <div class="row">
+                        <div class="col-md-12 form-group">
+                            <label for="">Select Level</label>
+                            <select name="" class="form-control select2" id="selectLevelSetupEdit2"
+                                style="width:100%;">
+                                <option value="">Select Level</option>
+                                @foreach (DB::table('gradelevel')->orderBy('sortid')->where('deleted', 0)->get() as $item)
+                                    <option value="{{ $item->id }}"> {{ $item->levelname }} </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div> --}}
+                    <div class="row">
+                        <div class="col-md-12 form-group">
+                            <label for="">Minimum Grade</label>
+                            <input id="input_lowest_grade_edit" type="number" class="form-control form-control-sm"
+                                placeholder="Minimum Grade">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label for="">Base Grade</label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 form-group clearfix">
+                            <div class="icheck-primary d-inline">
+                                <input type="radio" id="base_rounded_edit" name="base_grade_edit" class="base_grade"
+                                    value="1">
+                                <label for="base_rounded_edit">
+                                    Rounded
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6 form-group clearfix">
+                            <div class="icheck-primary d-inline">
+                                <input type="radio" id="base_decimal_edit" name="base_grade_edit" class="base_grade"
+                                    value="2">
+                                <label for="base_decimal_edit">
+                                    Decimal
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button class="btn btn-sm btn-primary" id="basegrade_edit_form_button">Update</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <section class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
@@ -175,6 +303,8 @@
     </section>
     <section class="content">
         <div class="container-fluid">
+            {{-- {{ dd(session()->all()) }} --}}
+
             <div class="row ">
                 <div class="col-md-12">
                     <div class="card shadow">
@@ -184,28 +314,16 @@
                                     <div class="form-group">
                                         <label for="" class="mb-1">Grade Level</label>
 
-                                        <select class="form-control select2" id="gradelevel">
+                                        <select class="form-control select2" id="gradelevel" style="width:100%;">
                                             <option selected value="">Select Grade Level</option>
                                             @foreach ($all_acad as $item)
                                                 @php
-                                                    if (auth()->user()->type == 1) {
-                                                        if(count($advisory) > 0){
-                                                            $gradelevel = DB::table('gradelevel')
-                                                                ->where('acadprogid', $item)
-                                                                ->whereIn('id', $advisory_levelid)
-                                                                ->orderBy('sortid')
-                                                                ->where('deleted', 0)
-                                                                ->select('id', 'levelname')
-                                                                ->get();
-                                                        }
-                                                    } else {
-                                                        $gradelevel = DB::table('gradelevel')
-                                                            ->where('acadprogid', $item)
-                                                            ->orderBy('sortid')
-                                                            ->where('deleted', 0)
-                                                            ->select('id', 'levelname')
-                                                            ->get();
-                                                    }
+                                                    $gradelevel = DB::table('gradelevel')
+                                                        ->where('acadprogid', $item)
+                                                        ->orderBy('sortid')
+                                                        ->where('deleted', 0)
+                                                        ->select('id', 'levelname')
+                                                        ->get();
                                                 @endphp
                                                 @foreach ($gradelevel as $levelitem)
                                                     <option value="{{ $levelitem->id }}">{{ $levelitem->levelname }}
@@ -218,7 +336,8 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label class="mb-1">Section</label>
-                                        <select name="section" id="section" class="form-control select2">
+                                        <select name="section" id="section" class="form-control select2"
+                                            style="width:100%;">
                                             {{-- <option selected value="" >Select Section</option> --}}
                                         </select>
                                     </div>
@@ -226,7 +345,8 @@
                                 <div class="col-md-2">
                                     <div class="form-group strand_holder" hidden id="starnd_holder">
                                         <label class="mb-1">Strand</label>
-                                        <select name="strand" id="strand" class="form-control select2">
+                                        <select name="strand" id="strand" class="form-control select2"
+                                            style="width:100%;">
 
                                         </select>
                                     </div>
@@ -234,10 +354,12 @@
                                 <div class="col-md-1"></div>
                                 <div class="col-md-2">
                                     <label class="mb-1">School Year</label>
-                                    <select name="syid" id="syid" class="form-control select2">
+                                    <select name="syid" id="syid" class="form-control select2"
+                                        style="width:100%;">
                                         @foreach (DB::table('sy')->select('id', 'sydesc', 'isactive')->orderBy('sydesc')->get() as $item)
                                             @if ($item->isactive == 1)
-                                                <option value="{{ $item->id }}" selected="selected">{{ $item->sydesc }}
+                                                <option value="{{ $item->id }}" selected="selected">
+                                                    {{ $item->sydesc }}
                                                 </option>
                                             @else
                                                 <option value="{{ $item->id }}">{{ $item->sydesc }}</option>
@@ -247,7 +369,8 @@
                                 </div>
                                 <div class="col-md-2">
                                     <label class="mb-1">Semester</label>
-                                    <select name="semester" id="semester" class="form-control select2">
+                                    <select name="semester" id="semester" class="form-control select2"
+                                        style="width:100%;">
                                         @foreach (DB::table('semester')->select('id', 'semester', 'isactive')->get() as $item)
                                             @if ($item->isactive == 1)
                                                 <option value="{{ $item->id }}" selected="selected">
@@ -263,7 +386,8 @@
                                 <div class="col-md-2 form-group">
                                     <label class="mb-1">Quarter</label>
 
-                                    <select name="quarter" id="quarter" class="form-control select2">
+                                    <select name="quarter" id="quarter" class="form-control select2"
+                                        style="width:100%;">
                                         <option value="">Select Quarter</option>
                                     </select>
                                 </div>
@@ -276,26 +400,28 @@
                             </div>
                             <div class="row mt-3">
                                 <div class="col-md-12" style="font-size:.8rem">
-                                    <table class="table table-bordered table-sm display nowrap" id="student_list"
-                                        width="100%">
-                                        <thead>
-                                            <tr>
-                                                <th>Student Name</th>
-                                                <th class="text-center strand_holder_header">Section</th>
-                                                <th class="text-center">Gen. Ave (Rounded)</th>
-                                                <th class="text-center">Gen. Ave (Decimal)</th>
-                                                <th class="text-center">Award</th>
-                                                <th class="text-center">Lowest</th>
-                                                <th class="text-center">Rank</th>
-                                                <th class="text-center">&nbsp;</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td colspan="5" class="text-center">PLEASE SELECT FILTER</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-sm display nowrap" id="student_list"
+                                            width="100%">
+                                            <thead>
+                                                <tr>
+                                                    <th>Student Name</th>
+                                                    <th class="text-center strand_holder_header">Section</th>
+                                                    <th class="text-center">Gen. Ave (Rounded)</th>
+                                                    <th class="text-center">Gen. Ave (Decimal)</th>
+                                                    <th class="text-center">Award</th>
+                                                    <th class="text-center">Lowest</th>
+                                                    <th class="text-center">Rank</th>
+                                                    <th class="text-center">&nbsp;</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td colspan="5" class="text-center">PLEASE SELECT FILTER</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -305,13 +431,43 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="card shadow">
+                        <div class="card-header">
+                            <strong> Minimum Grade & Award Setup</strong>
+                        </div>
                         <div class="card-body">
+                            {{-- <div class="row">
+                                <div class="col-md-4 form-group">
+                                    <label for="">Select Level</label>
+                                    <select name="" class="form-control select2" id="selectLevelSetup"
+                                        style="width:100%;">
+                                        <option value="">Select Setup </option>
+                                        @foreach (DB::table('gradelevel')->orderBy('sortid')->where('deleted', 0)->get() as $item)
+                                            <option value="{{ $item->id }}"> {{ $item->levelname }} </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div> --}}
+
                             <div class="row">
                                 <div class="col-md-4 group-group">
                                     <div class="row">
+                                        <div class="col-md-6">
+                                            <button class="btn btn-sm btn-primary btn_add_mg_setup"
+                                                style="font-size: .8rem !important; white-space: nowrap;">
+                                                + Add MG & BG Setup
+                                            </button>
+                                        </div>
+                                        <div class="col-md-6 d-flex justify-content-end">
+                                            <a href="#">
+                                                <i class="fas fa-edit text-primary edit_mgsetup" hidden></i>
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
                                         <div class="col-md-12 form-group">
                                             <label for="">Minimum grade requirement by subject </label>
-                                            <input class="form-control form-control-sm" id="input_lowest_grade">
+                                            <input class="form-control form-control-sm" id="input_lowest_grade" disabled>
                                         </div>
                                     </div>
                                     <div class="row">
@@ -323,7 +479,7 @@
                                         <div class="col-md-6 form-group clearfix">
                                             <div class="icheck-primary d-inline">
                                                 <input type="radio" id="base_rounded" name="base_grade"
-                                                    class="base_grade" value="1">
+                                                    class="base_grade" value="1" disabled>
                                                 <label for="base_rounded">
                                                     Rounded
                                                 </label>
@@ -332,7 +488,7 @@
                                         <div class="col-md-6 form-group clearfix">
                                             <div class="icheck-primary d-inline">
                                                 <input type="radio" id="base_decimal" name="base_grade"
-                                                    class="base_grade" value="2">
+                                                    class="base_grade" value="2" disabled>
                                                 <label for="base_decimal">
                                                     Decimal
                                                 </label>
@@ -341,24 +497,27 @@
                                     </div>
                                     <div class="row">
                                         <div class="col-md-12">
-                                            <button class="btn btn-primary btn-sm" id="update_button_1">Update</button>
+                                            <button class="btn btn-primary btn-sm" id="update_button_1"
+                                                hidden>Update</button>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-md-8">
                                     <div class="row mt-2">
                                         <div class="col-md-12" style="font-size:.8rem">
-                                            <table class="table table-bordered table-sm" id="award_setup">
-                                                <thead>
-                                                    <tr>
-                                                        <th width="60%">Award</th>
-                                                        <th width="15%" class="text-center">From</th>
-                                                        <th width="15%" class="text-center">To</th>
-                                                        <th width="5%" class="text-center"></th>
-                                                        <th width="5%" class="text-center"></th>
-                                                    </tr>
-                                                </thead>
-                                            </table>
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered table-sm" id="award_setup">
+                                                    <thead>
+                                                        <tr>
+                                                            <th width="60%">Award</th>
+                                                            <th width="15%" class="text-center">From</th>
+                                                            <th width="15%" class="text-center">To</th>
+                                                            <th width="5%" class="text-center"></th>
+                                                            <th width="5%" class="text-center"></th>
+                                                        </tr>
+                                                    </thead>
+                                                </table>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -378,8 +537,140 @@
     <script src="{{ asset('plugins/datatables-fixedcolumns/js/dataTables.fixedColumns.js') }}"></script>
     @include('principalsportal.pages.awards.awardsjs')
 
+    @if (session('error'))
+        <script>
+            Swal.fire({
+                type: 'error',
+                title: 'Oops...',
+                text: '{{ session('error') }}',
+                confirmButtonText: 'OK',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                stopKeydownPropagation: false
+            });
+        </script>
+    @endif
+
     <script>
         $(document).ready(function() {
+
+            $('#basegrade_edit_form_button').on('click', function() {
+                // AJAX request to update the lowest grade
+                let basegrade = $('input[name="base_grade_edit"]:checked').val();
+                $.ajax({
+                    type: 'GET',
+                    url: '/awarsetup/update/lowest',
+                    data: {
+                        syid: $('#syid').val(),
+                        levelid: $('#gradelevel').val(),
+                        gto: $('#input_lowest_grade_edit').val(),
+                        basegrade: basegrade
+                    },
+                    success: function(data) {
+                        console.log(data);
+                        $('#input_lowest_grade').val(data[0].setup[0].gto)
+
+                        var gfrom = data[0].setup[1].gfrom
+                        var gto = data[0].setup[1].gto
+
+
+                        if (gfrom) {
+                            $('#base_rounded').prop('checked', true);
+                        } else {
+                            $('#base_decimal').prop('checked', true);
+                        }
+                        // Show a success or error toast based on the response
+                        showToast(data[0].status, data[0].message);
+                    },
+                    error: function() {
+                        showToast('error', 'Something went wrong.');
+                    }
+                });
+            })
+
+            $('.edit_mgsetup').on('click', function() {
+
+                var lowestgrade = $('#input_lowest_grade').val()
+                let basegrade = $('input[name="base_grade"]:checked').val();
+
+                $('#input_lowest_grade_edit').val(lowestgrade)
+                if (basegrade == 1) {
+                    $('#base_rounded_edit').prop('checked', true);
+                } else if (basegrade == 2) {
+                    $('#base_decimal_edit').prop('checked', true);
+                }
+
+
+                $('#basegrade_edit_form_modal').modal()
+
+
+            })
+
+            $('.btn_add_mg_setup').on('click', function() {
+                $('#basegrade_setup_form_modal').modal();
+            })
+
+            $('#basegrade_setup_form_button').on('click', function() {
+
+                // Validate the level setup selection
+                if (!$('#selectLevelSetupEdit').val()) {
+                    showToast('error', 'Level is required');
+                    $('#selectLevelSetupEdit').addClass('is-invalid');
+                    return;
+                } else {
+                    $('#selectLevelSetupEdit').removeClass('is-invalid');
+                }
+                // Validate the minimum grade input
+                if (!$('#input_lowest_gradeedit').val()) {
+                    showToast('error', 'Minimum grade is required');
+                    $('#input_lowest_gradeedit').addClass('is-invalid'); // Use Bootstrap's is-invalid class
+                    return;
+                } else {
+                    $('#input_lowest_gradeedit').removeClass(
+                        'is-invalid'); // Remove the invalid class if valid
+                }
+
+
+                // Get the selected base grade radio button (if any)
+                let basegrade = $('input[name="base_gradeedit"]:checked').val();
+                if (!basegrade) {
+                    showToast('error', 'Base grade is required');
+                    return;
+                }
+
+                // AJAX request to update the lowest grade
+                $.ajax({
+                    type: 'GET',
+                    url: '/awarsetup/update/lowest',
+                    data: {
+                        syid: $('#syid').val(),
+                        levelid: $('#selectLevelSetupEdit').val(),
+                        gto: $('#input_lowest_gradeedit').val(),
+                        basegrade: basegrade
+                    },
+                    success: function(data) {
+                        // Show a success or error toast based on the response
+                        showToast(data[0].status, data[0].message);
+                    },
+                    error: function() {
+                        showToast('error', 'Something went wrong.');
+                    }
+                });
+            });
+
+
+            // $('.base_grade').on('change', function() {
+            //     console.log('slkdjfksdjf...');
+
+            //     var base_grade = $('input[name=base_grade]:checked').val();
+            //     if (base_grade == 1) {
+            //         $('#input_gfrom').removeAttr('placeholder');
+            //         $('#input_gto').removeAttr('placeholder');
+            //     } else {
+            //         $('#input_gfrom').attr('placeholder', '0.00');
+            //         $('#input_gto').attr('placeholder', '0.00');
+            //     }
+            // });
 
             $(document).on('click', '#print_student_ranking', function() {
 
@@ -473,7 +764,12 @@
             })
 
             $(document).on('click', '#award_setup_form_button', function() {
-                (selected_id == null) ? create_award_setup(): update_award_setup();
+                check_decimal()
+
+            })
+
+            $('#gradelevel').on('change', function() {
+                get_list_award_setup();
             })
 
             function showToast(status, message) {
@@ -499,42 +795,106 @@
                 })
             }
 
+            function check_decimal() {
+                if ($('input[name="base_grade"]:checked').val()) {
+                    if ($('input[name="base_grade"]:checked').val() == 2) {
+                        if ($('#input_gfrom').val().indexOf('.') === -1 || $('#input_gto').val().indexOf('.') === -
+                            1) {
+                            $('#input_gfrom').css('border', '1px solid red')
+                            $('#input_gto').css('border', '1px solid red')
+                            Toast.fire({
+                                type: 'error',
+                                title: 'Please enter a decimal number!'
+                            })
+                        } else {
+                            (selected_id == null) ? create_award_setup(): update_award_setup();
+                            $('#input_gfrom').removeAttr('style')
+                            $('#input_gto').removeAttr('style')
+                        }
+                    } else {
+                        (selected_id == null) ? create_award_setup(): update_award_setup();
+                    }
+                } else {
+                    Swal.fire({
+                        type: 'info',
+                        text: 'Please add Base Grade first!',
+                        timer: 1500
+                    });
+                }
+            }
 
             function create_award_setup() {
-                $.ajax({
-                    type: 'GET',
-                    url: '/awarsetup/create',
-                    data: {
-                        syid: $('#syid').val(),
-                        award: $('#input_award').val(),
-                        gfrom: $('#input_gfrom').val(),
-                        gto: $('#input_gto').val(),
-                    },
-                    success: data => {
-                        (data[0].status == 1) && get_list_award_setup();
-                        showToast(data[0].status, data[0].message);
-                    },
-                    error: () => showToast(1, 'Something went wrong.')
-                })
+                if ($('#input_award').val() == "" || $('#input_gfrom').val() == "" || $('#input_gto').val() == "" ||
+                    $('#selectLevelSetupAward').val() == "") {
+                    $('#input_gfrom').css('border', '1px solid red')
+                    $('#input_gto').css('border', '1px solid red')
+                    $('#input_award').css('border', '1px solid red')
+                    $('#selectLevelSetupAward').css('border', '1px solid red')
+                    Toast.fire({
+                        type: 'error',
+                        title: 'Please fill in all required fields!'
+                    })
+                } else {
+                    $('#input_gfrom').removeAttr('style')
+                    $('#input_gto').removeAttr('style')
+                    $('#input_award').removeAttr('style')
+                    $('#selectLevelSetupAward').removeAttr('style')
+                    $.ajax({
+                        type: 'GET',
+                        url: '/awarsetup/create',
+                        data: {
+                            syid: $('#syid').val(),
+                            award: $('#input_award').val(),
+                            gfrom: $('#input_gfrom').val(),
+                            gto: $('#input_gto').val(),
+                            levelid: $('#selectLevelSetupAward').val(),
+                        },
+                        success: data => {
+                            if (data[0].status == 2) {
+                                showToast('error', data[0].message);
+                                return
+                            }
+                            (data[0].status == 1) && get_list_award_setup();
+                            showToast(data[0].status, data[0].message);
+                        },
+                        error: () => showToast(1, 'Something went wrong.')
+                    })
+                }
+
+
             }
 
             function update_award_setup() {
-                $.ajax({
-                    type: 'GET',
-                    url: '/awarsetup/update',
-                    data: {
-                        id: selected_id,
-                        syid: $('#syid').val(),
-                        award: $('#input_award').val(),
-                        gfrom: $('#input_gfrom').val(),
-                        gto: $('#input_gto').val(),
-                    },
-                    success: data => {
-                        (data[0].status == 1) && get_list_award_setup();
-                        showToast(data[0].status, data[0].message);
-                    },
-                    error: () => showToast(1, 'Something went wrong.')
-                })
+                if ($('#input_award').val() == "" || $('#input_gfrom').val() == "" || $('#input_gto').val() == "") {
+                    $('#input_gfrom').css('border', '1px solid red')
+                    $('#input_gto').css('border', '1px solid red')
+                    $('#input_award').css('border', '1px solid red')
+                    Toast.fire({
+                        type: 'error',
+                        title: 'Please fill in all required fields!'
+                    })
+                } else {
+                    $('#input_gfrom').removeAttr('style')
+                    $('#input_gto').removeAttr('style')
+                    $('#input_award').removeAttr('style')
+                    $.ajax({
+                        type: 'GET',
+                        url: '/awarsetup/update',
+                        data: {
+                            id: selected_id,
+                            syid: $('#syid').val(),
+                            award: $('#input_award').val(),
+                            gfrom: $('#input_gfrom').val(),
+                            gto: $('#input_gto').val(),
+                            levelid: $('#selectLevelSetupAward').val(),
+                        },
+                        success: data => {
+                            (data[0].status == 1) && get_list_award_setup();
+                            showToast(data[0].status, data[0].message);
+                        },
+                        error: () => showToast(1, 'Something went wrong.')
+                    })
+                }
             }
 
             function delete_award_setup() {
@@ -562,8 +922,18 @@
                     url: '/awarsetup/list',
                     data: {
                         syid: $('#syid').val(),
+                        levelid: $('#gradelevel').val()
                     },
                     success: function(data) {
+                        console.log('AWARD SETUP', data);
+
+                        if (data.length <= 0) {
+                            Toast.fire({
+                                type: 'warning',
+                                title: 'No Available Setup yet!'
+                            });
+                        }
+
                         all_setup = data.filter(x => x.award != 'lowest grade')
                         all_setup = all_setup.filter(x => x.award != 'base grade')
                         load_award_setup()
@@ -571,20 +941,36 @@
                         var lowest = data.filter(x => x.award == 'lowest grade')
                         if (lowest.length > 0) {
                             $('#input_lowest_grade').val(lowest[0].gto)
+                            $('.edit_mgsetup').prop('hidden', false)
+                        } else {
+                            $('#input_lowest_grade').val('')
                         }
 
                         var base_setup = data.filter(x => x.award == 'base grade')
                         if (base_setup.length > 0) {
-                            $('#base_decimal').prop('checked', base_setup[0].gto == 1);
-                            $('#base_rounded').prop('checked', base_setup[0].gto !== 1);
+                            // console.log('has rounded');
+                            $('.edit_mgsetup').prop('hidden', false)
+                            $('#base_decimal').prop('checked', base_setup[0].gto == 1).trigger(
+                                'change');
+                            $('#base_rounded').prop('checked', base_setup[0].gto !== 1).trigger(
+                                'change');
                         } else {
                             $('#base_decimal').prop('checked', false);
-                            $('#base_rounded').prop('checked', true);
+                            $('#base_rounded').prop('checked', false);
                         }
                     }
                 })
 
             }
+
+            $('#award_setup_form_modal').on('hidden.bs.modal', function() {
+                $('#input_award').val('')
+                $('#input_gfrom').val('')
+                $('#input_gto').val('')
+                $('#input_award').removeAttr('style')
+                $('#input_gfrom').removeAttr('style')
+                $('#input_gto').removeAttr('style')
+            })
 
             function load_award_setup() {
 
@@ -652,7 +1038,7 @@
 
                 var label_text = $($('#award_setup_wrapper')[0].children[0])[0].children[0]
                 $(label_text)[0].innerHTML =
-                    '<button style="font-size: .8rem !important" class="btn btn-sm btn-primary" id="to_award_setup_form_modal"><i class="fas fa-plus"></i> Add Setup</button>'
+                    '<button style="font-size: .8rem !important" class="btn btn-sm btn-primary" id="to_award_setup_form_modal"><i class="fas fa-plus"></i> Add Award Setup</button>'
 
             }
 

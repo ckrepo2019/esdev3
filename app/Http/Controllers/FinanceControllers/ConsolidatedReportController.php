@@ -25,11 +25,11 @@ class ConsolidatedReportController extends Controller
         $datefrom          = date('Y-m-d', strtotime($dates[0]));
         $dateto            = date('Y-m-d', strtotime($dates[1]));
 
-
+        
 
         $list = '';
 
-
+        
 
         $col = 0;
         $shs = 0;
@@ -242,7 +242,7 @@ class ConsolidatedReportController extends Controller
             // echo $trxarray;
 
             foreach($trxarray as $trx)
-            {
+            {      
                 $totalperincome = 0;
                 if($itemid == $trx->itemid || $itemid == 0)
                 {
@@ -338,7 +338,7 @@ class ConsolidatedReportController extends Controller
                     $totalperincome = $totalcol + $totalshs + $totalhs + $totalgs;
 
                 }
-
+                
                 $itemid = $trx->itemid;
 
             }
@@ -355,7 +355,7 @@ class ConsolidatedReportController extends Controller
                 </tr>
             ';
 
-
+            
 
             $list .='
                 <tr>
@@ -371,13 +371,13 @@ class ConsolidatedReportController extends Controller
             $totalperincome = 0;
         }
 
-
+        
         $gentotal = $gentotalcol + $gentotalshs + $gentotalhs + $gentotalgs;
-
+        
 
 
         // foreach($cashtransaction as $trx)
-        // {
+        // {            
         //     if($itemid == $trx->itemid || $itemid == 0)
         //     {
         //         if($trx->acadprogid == 2 || $trx->acadprogid == 3)
@@ -447,11 +447,11 @@ class ConsolidatedReportController extends Controller
         //         $trxdescription = $trx->description;
 
         //     }
-
+            
         //     $itemid = $trx->itemid;
         // }
 
-
+        
 
         // return $list;
 
@@ -465,38 +465,38 @@ class ConsolidatedReportController extends Controller
                 ->with('gentotalgs', $gentotalgs)
                 ->with('gentotal', $gentotal);
         }else{
-
+            
             $pdf = new ConsolidatedReport(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
 
             $pdf->SetCreator('CK');
             $pdf->SetAuthor('CK Children\'s Publishing');
             $pdf->SetTitle(DB::table('schoolinfo')->first()->schoolname.' - Consolidated Report');
             $pdf->SetSubject('Account Receivables');
-
+            
             $pdf->setHeaderFont(Array(PDF_FONT_NAME_MAIN, '', PDF_FONT_SIZE_MAIN));
             $pdf->setFooterFont(Array(PDF_FONT_NAME_DATA, '', PDF_FONT_SIZE_DATA));
-
+            
             $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
-
+            
             $pdf->SetMargins(7, 8,7);
             // $pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
             $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
             $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
-
+            
             $pdf->setPrintHeader(false);
 
             $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
-
+            
             $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
-
+            
             if (@file_exists(dirname(__FILE__).'/lang/eng.php')) {
                 require_once(dirname(__FILE__).'/lang/eng.php');
                 $pdf->setLanguageArray($l);
             }
-
+            
             $pdf->AddPage();
 
-
+            
             $view = \View::make('finance/reports/pdf/pdf_consolidatedreport',compact('datefrom','dateto'))
                 ->with('cashtransaction', $list)
                 ->with('gentotalcol', $gentotalcol)
@@ -521,9 +521,9 @@ class ConsolidatedReportController extends Controller
         $dateto = date_format(date_create($daterange[1]), 'Y-m-d 23:59');
 
         $trxarray = array();
-        // transitems
+        // transitems       
 
-        $balclassid = db::table('balforwardsetup')
+        $balclassid = db::table('balforwardsetup') 
             ->first()->classid;
 
         $transitems = db::table('chrngtrans')
@@ -586,7 +586,7 @@ class ConsolidatedReportController extends Controller
             array_push($trxarray, $bal);
         }
 
-        $noitems = db::table('chrngtrans')
+        $noitems = db::table('chrngtrans')    
             ->select(db::raw('chrngtrans.id, chrngtrans.ornum, chrngtransitems.amount AS amount, classid, progid'))
             ->join('chrngtransitems', 'chrngtrans.id', 'chrngtransitems.chrngtransid')
             ->whereBetween('transdate', [$datefrom, $dateto])
@@ -638,7 +638,7 @@ class ConsolidatedReportController extends Controller
 
                 // array_push($trxarray, $_noitemarray);
             }
-
+            
             $item = db::table('items')
                 ->where('classid', $noitem->classid)
                 ->where('classid', '!=', $booksetup->classid)
@@ -681,7 +681,7 @@ class ConsolidatedReportController extends Controller
 
         $totalamount = 0;
         $curor = '';
-
+        
         foreach($trxarray as $trx)
         {
             $acadcode = '';
@@ -710,14 +710,14 @@ class ConsolidatedReportController extends Controller
                         <td class="text-bold">'.$acadcode.'</td>
                         <td></td>
                         <td></td>
-
+                        
                     </tr>
                     <tr data-itemid="'.$trx->itemid.'" class="trxdetail">
                         <td></td>
                         <td>'.$trx->description.'</td>
                         <td class="text-right">'.number_format($trx->amount, 2).'</td>
                         <td>'.$trx->classcode.'</td>
-
+                        
                     </tr>
                 ';
 
@@ -763,7 +763,7 @@ class ConsolidatedReportController extends Controller
         $transid = $request->get('transid');
 
         $chrngtrans = db::table('chrngtrans')
-            ->where('id', $transid)
+            ->where('id', $transid) 
             ->first();
 
         return $chrngtrans->progid;
@@ -782,6 +782,726 @@ class ConsolidatedReportController extends Controller
 
         return 'done';
     }
+
+  //   public function generate_v2(Request $request)
+  //   {
+  //       $selecteddaterange = $request->get('selecteddaterange');
+  //       $selectedterminal  = $request->get('selectedterminal');
+
+  //       $dates             = explode(' - ', $selecteddaterange);
+  //       $datefrom          = date('Y-m-d', strtotime($dates[0]));
+  //       $dateto            = date('Y-m-d', strtotime($dates[1]));
+
+  //       $list = '';
+
+  //       $col = 0;
+  //       $shs = 0;
+  //       $hs = 0;
+  //       $gs = 0;
+  //       $gen = 0;
+
+  //       $gentotalcol = 0;
+  //       $gentotalshs = 0;
+  //       $gentotalhs = 0;
+  //       $gentotalgs = 0;
+  //       $gentotalgen = 0;
+  //       $gentotal = 0;
+
+  //       $itemtotal = 0;
+  //       $totalperincome = 0;
+
+  //       // $_chrngtrans = db::table('chrngtrans')
+  //       //     ->select('chrngtrans.studid', 'syid', 'semid')
+  //       //     ->whereBetween('transdate', [$datefrom . ' 00:00', $dateto . ' 23:59'])
+  //       //     ->where('cancelled', 0)
+  //       //     ->where('studid', '>', 0)
+  //       //     ->groupBy('studid')
+  //       //     ->get();
+
+  //       // foreach($_chrngtrans as $_trans)
+  //       // {
+  //       //     FinanceModel::ledgeritemizedreset($_trans->studid, $_trans->syid, $_trans->semid);
+  //       //     FinanceModel::transitemsreset($_trans->studid, $_trans->syid, $_trans->semid);
+  //       // }
+
+        
+        
+  //       $t = db::table('chrngtrans')
+  //           ->select('ornum')
+  //           ->whereBetween('transdate', [$datefrom . ' 00:00', $dateto . ' 23:59'])
+  //           ->where('cancelled', 0)
+  //           ->orderBy('ornum', 'ASC')
+  //           ->first();
+
+  //       $or1 = $t->ornum;
+
+  //       $t = db::table('chrngtrans')
+  //           ->select('ornum')
+  //           ->whereBetween('transdate', [$datefrom . ' 00:00', $dateto . ' 23:59'])
+  //           ->where('cancelled', 0)
+  //           ->orderBy('ornum', 'DESC')
+  //           ->first();
+
+  //       $or2 = $t->ornum;
+
+  //       $rangeOR = $or1 . ' - '. $or2;
+        
+		
+		// db::table('consolidated_oth')
+  //           ->where('userid', auth()->user()->id)
+  //           ->delete();
+  //       // return 'aaa';
+  //       $cashtransaction = db::table('chrngtrans')
+  //           ->select(db::raw('studname, ornum, chrngcashtrans.`particulars`, SUM(chrngcashtrans.`amount`) AS amount, itemclassification.`description`, kind'))
+  //           ->join('chrngcashtrans', 'chrngtrans.transno', '=', 'chrngcashtrans.transno')
+  //           ->join('itemclassification', 'chrngcashtrans.classid', '=', 'itemclassification.id')
+  //           ->whereBetween('transdate', [$datefrom . ' 00:00', $dateto . ' 23:59'])
+  //           ->where('cancelled', 0)
+  //           ->where('chrngcashtrans.deleted', 0)
+  //           ->where('classid', 3)
+  //           ->where('kind', 'oth')
+  //           ->groupBy('ornum')
+  //           ->orderBy('ornum')
+  //           ->get();
+
+  //       foreach($cashtransaction as $trans)
+  //       {
+  //           $this->ucon_maketransitems($trans->ornum, $trans->amount);
+  //           // FinanceUtilityModel::ucon_maketransitems($trans->ornum, $trans->amount);
+  //           // echo $trans->ornum . ' - ' . $trans->amount . '<br>';
+  //       }
+
+
+  //       $classcodes = db::table('items_classcode')
+  //           ->get();
+
+  //       foreach($classcodes as $class)
+  //       {
+  //           $list .='
+  //               <tr>
+  //                   <td colspan="7" class="text-bold">'.$class->description.'</td>
+  //               </tr>
+  //           ';
+
+  //           $trxarray = array();
+  //           $itemid = 0;
+  //           $col = 0;
+  //           $shs = 0;
+  //           $hs = 0;
+  //           $gs = 0;
+  //           $gen = 0;
+
+  //           $totalcol = 0;
+  //           $totalshs = 0;
+  //           $totalhs = 0;
+  //           $totalgs = 0;
+  //           $totalgen = 0;
+
+  //           $trxitemcode = '';
+  //           $trxdescription = '';
+
+  //           $itemtotal = 0;
+
+  //           //tuition
+  //           $transtui = db::table('chrngtrans')
+  //               ->select(db::raw('chrngtrans.ornum, items.id AS itemid, itemcode, items.description, SUM(chrngcashtrans.amount) AS amount, acadprogid, classcode, progid'))
+  //               ->join('chrngcashtrans', 'chrngtrans.transno', '=', 'chrngcashtrans.transno')
+  //               ->join('items', 'chrngcashtrans.classid', '=', 'items.classid')
+  //               ->Join('studinfo', 'chrngtrans.studid', '=', 'studinfo.id')
+  //               ->join('gradelevel', 'studinfo.levelid', '=', 'gradelevel.id')
+  //               ->join('academicprogram', 'gradelevel.acadprogid', '=', 'academicprogram.id')
+  //               ->whereBetween('transdate', [$datefrom . ' 00:00', $dateto . ' 23:59'])
+  //               ->where('cancelled', 0)
+  //               ->where('kind', 'tui')
+  //               ->where('chrngcashtrans.deleted', 0)
+  //               ->where('gradelevel.deleted', 0)
+  //               ->where('classcode', $class->id)
+  //               ->groupBy('acadprogid', 'items.id')
+  //               ->having('amount', '>', 0)
+  //               ->orderBy('classcode', 'ASC')
+  //               ->orderBy('items.id', 'ASC')
+  //               ->get();
+
+  //           foreach($transtui as $trx)
+  //           {
+  //               array_push($trxarray, $trx);
+  //           }
+
+  //           //tuition
+
+  //           // misc
+
+  //           $transmisc = db::table('chrngtrans')
+  //               ->select(db::raw('chrngtrans.ornum, items.id AS itemid, itemcode, items.description, SUM(chrngcashtrans.amount) AS amount, acadprogid, classcode, progid'))
+  //               ->join('chrngcashtrans', 'chrngtrans.transno', '=', 'chrngcashtrans.transno')
+  //               ->join('items', 'chrngcashtrans.itemid', '=', 'items.id')
+  //               ->Join('studinfo', 'chrngtrans.studid', '=', 'studinfo.id')
+  //               ->join('gradelevel', 'studinfo.levelid', '=', 'gradelevel.id')
+  //               ->join('academicprogram', 'gradelevel.acadprogid', '=', 'academicprogram.id')
+  //               ->whereBetween('transdate', [$datefrom . ' 00:00', $dateto . ' 23:59'])
+  //               ->where('cancelled', 0)
+  //               ->where('kind', 'misc')
+  //               ->where('chrngcashtrans.deleted', 0)
+  //               ->where('gradelevel.deleted', 0)
+  //               ->where('classcode', $class->id)
+  //               ->groupBy('acadprogid', 'items.id')
+  //               ->having('amount', '>', 0)
+  //               ->orderBy('classcode', 'ASC')
+  //               ->orderBy('items.id', 'ASC')
+  //               ->get();
+
+  //           foreach($transmisc as $trx)
+  //           {
+  //               // print_r($trx) . '<br>';
+  //               array_push($trxarray, $trx);
+  //           }
+
+  //           // misc
+
+  //           //dp
+
+  //           // $_transdp = db::table('chrngtrans')
+  //           //     ->select(db::raw('kind, ornum, SUM(chrngcashtrans.amount) AS amount'))
+  //           //     ->join('chrngcashtrans', 'chrngtrans.transno', '=', 'chrngcashtrans.transno')
+  //           //     ->whereBetween('transdate', [$datefrom . ' 00:00', $dateto . ' 23:59'])
+  //           //     ->where('cancelled', 0)
+  //           //     ->where('chrngcashtrans.deleted', 0)
+  //           //     ->where('kind', 'dp')
+  //           //     ->groupBy('ornum')
+  //           //     ->get();
+
+  //           // if(count($_transdp) > 0)
+  //           // {
+  //           //     foreach($_transdp as $dp)
+  //           //     {
+  //           //         $transdp = db::table('chrngtrans')
+  //           //             ->select(db::raw('chrngtrans.ornum, items.id AS itemid, itemcode, items.description, SUM(chrngtransitems.amount) AS amount, acadprogid, classcode, progid'))
+  //           //             ->join('chrngtransitems', 'chrngtrans.ornum', '=', 'chrngtransitems.ornum')
+  //           //             ->join('items', 'chrngtransitems.itemid', '=', 'items.id')
+  //           //             ->Join('studinfo', 'chrngtrans.studid', '=', 'studinfo.id')
+  //           //             ->join('gradelevel', 'studinfo.levelid', '=', 'gradelevel.id')
+  //           //             ->join('academicprogram', 'gradelevel.acadprogid', '=', 'academicprogram.id')
+  //           //             ->whereBetween('transdate', [$datefrom . ' 00:00', $dateto . ' 23:59'])
+  //           //             ->where('cancelled', 0)
+  //           //             ->where('chrngtransitems.deleted', 0)
+  //           //             ->where('chrngtransitems.ornum', $dp->ornum)
+  //           //             ->where('itemid', '!=', 16)
+  //           //             ->where('gradelevel.deleted', 0)
+  //           //             ->where('classcode', $class->id)
+  //           //             ->whereNotIn('chrngtransitems.classid', [3,9,34])
+  //           //             ->groupBy('acadprogid', 'items.id')
+  //           //             ->having('amount', '>', 0)
+  //           //             ->orderBy('classcode', 'ASC')
+  //           //             ->orderBy('items.id', 'ASC')
+  //           //             ->get();
+
+  //           //         foreach($transdp as $trx)
+  //           //         {
+  //           //             // print_r($trx) . '<br>';
+  //           //             array_push($trxarray, $trx);
+  //           //         }
+  //           //     }
+  //           // }
+
+  //           $transdp = db::table('chrngtrans')
+  //               ->select(db::raw('chrngtrans.ornum, items.id AS itemid, itemcode, items.description, SUM(chrngcashtrans.amount) AS amount, acadprogid, classcode, progid'))
+  //               ->join('chrngcashtrans', 'chrngtrans.transno', '=', 'chrngcashtrans.transno')
+  //               ->join('items', 'chrngcashtrans.particulars', '=', 'items.description')
+  //               ->Join('studinfo', 'chrngtrans.studid', '=', 'studinfo.id')
+  //               ->join('gradelevel', 'studinfo.levelid', '=', 'gradelevel.id')
+  //               ->join('academicprogram', 'gradelevel.acadprogid', '=', 'academicprogram.id')
+  //               ->whereBetween('transdate', [$datefrom . ' 00:00', $dateto . ' 23:59'])
+  //               ->where('cancelled', 0)
+  //               ->where('chrngcashtrans.deleted', 0)
+  //               ->where('items.deleted', 0)
+  //               ->where('kind', 'dp')
+  //               ->where('chrngcashtrans.classid', '!=', 3)
+  //               // ->whereNotIn('items.classid', [3,9,34,35])
+  //               ->where('gradelevel.deleted', 0)
+  //               ->where('classcode', $class->id)
+  //               ->groupBy('acadprogid', 'items.id')
+  //               ->having('amount', '>', 0)
+  //               ->orderBy('classcode', 'ASC')
+  //               ->orderBy('items.id', 'ASC')
+  //               ->get();
+
+  //           foreach($transdp as $trx)
+  //           {
+  //               // print_r($trx) . '<br>';
+  //               array_push($trxarray, $trx);
+  //           }
+
+
+  //           //dp
+
+  //           // item
+
+  //           $transitem = db::table('chrngtrans')
+  //               ->select(db::raw('chrngtrans.ornum, items.id AS itemid, itemcode, items.description, SUM(chrngcashtrans.amount) AS amount, acadprogid, classcode, progid'))
+  //               ->join('chrngcashtrans', 'chrngtrans.transno', '=', 'chrngcashtrans.transno')
+  //               ->join('items', 'chrngcashtrans.payscheddetailid', '=', 'items.id')
+  //               ->leftJoin('studinfo', 'chrngtrans.studid', '=', 'studinfo.id')
+  //               ->leftjoin('gradelevel', 'studinfo.levelid', '=', 'gradelevel.id')
+  //               ->leftjoin('academicprogram', 'gradelevel.acadprogid', '=', 'academicprogram.id')
+  //               ->whereBetween('transdate', [$datefrom . ' 00:00', $dateto . ' 23:59'])
+  //               ->where('cancelled', 0)
+  //               ->where('kind', 'item')
+  //               ->where('chrngcashtrans.deleted', 0)
+  //               ->where('classcode', $class->id)
+  //               ->groupBy('acadprogid', 'items.id')
+  //               ->having('amount', '>', 0)
+  //               ->orderBy('classcode', 'ASC')
+  //               ->orderBy('items.id', 'ASC')
+  //               ->get();
+
+  //           foreach($transitem as $trx)
+  //           {
+  //               // print_r($trx) . '<br>';
+  //               array_push($trxarray, $trx);
+  //           }
+
+  //           // item            
+
+  //           // oth1
+
+  //           // $transoth1 = db::table('chrngtrans')
+  //           //     ->select(db::raw('chrngtrans.ornum, items.id AS itemid, itemcode, items.description, SUM(chrngtransitems.amount) AS amount, acadprogid, classcode, progid, chrngtransitems.ornum'))
+  //           //     ->join('chrngtransitems', 'chrngtrans.id', '=', 'chrngtransitems.chrngtransid')
+  //           //     ->join('items', 'chrngtransitems.itemid', '=', 'items.id')
+  //           //     ->Join('studinfo', 'chrngtrans.studid', '=', 'studinfo.id')
+  //           //     ->join('gradelevel', 'studinfo.levelid', '=', 'gradelevel.id')
+  //           //     ->join('academicprogram', 'gradelevel.acadprogid', '=', 'academicprogram.id')
+  //           //     ->whereBetween('transdate', [$datefrom . ' 00:00', $dateto . ' 23:59'])
+  //           //     ->where('cancelled', 0)
+  //           //     ->where('chrngtransitems.classid', 3)
+  //           //     ->where('chrngtransitems.deleted', 0)
+  //           //     ->where('items.deleted', 0)
+  //           //     ->where('gradelevel.deleted', 0)
+  //           //     ->where('classcode', $class->id)
+  //           //     ->groupBy('acadprogid', 'items.id')
+  //           //     ->having('amount', '>', 0)
+  //           //     ->orderBy('classcode', 'ASC')
+  //           //     ->orderBy('chrngtransitems.itemid', 'ASC')
+  //           //     ->get();
+
+
+
+  //           // $transoth1 = db::table('chrngtrans')
+  //           //     ->select(db::raw('chrngtrans.ornum, items.id AS itemid, itemcode, items.description, SUM(consolidated_oth.amount) AS amount, acadprogid, classcode, progid'))
+  //           //     ->join('consolidated_oth', 'chrngtrans.ornum', '=', 'consolidated_oth.ornum')
+  //           //     ->join('items', 'consolidated_oth.itemid', '=', 'items.id')
+  //           //     ->Join('studinfo', 'chrngtrans.studid', '=', 'studinfo.id')
+  //           //     ->join('gradelevel', 'studinfo.levelid', '=', 'gradelevel.id')
+  //           //     ->join('academicprogram', 'gradelevel.acadprogid', '=', 'academicprogram.id')
+  //           //     ->whereBetween('chrngtrans.transdate', [$datefrom . ' 00:00', $dateto . ' 23:59'])
+  //           //     ->where('cancelled', 0)
+  //           //     ->where('items.deleted', 0)
+  //           //     ->where('gradelevel.deleted', 0)
+  //           //     ->where('classcode', $class->id)
+  //           //     ->where('consolidated_oth.userid', auth()->user()->id)
+  //           //     ->groupBy('acadprogid', 'items.id')
+  //           //     ->having('amount', '>', 0)
+  //           //     ->orderBy('classcode', 'ASC')
+  //           //     ->orderBy('items.id', 'ASC')
+  //           //     ->get();
+
+  //           $transoth1 = db::table('chrngtrans')
+  //               ->select(db::raw('chrngtrans.ornum, items.id AS itemid, itemcode, items.description, SUM(chrngcashtrans.amount) AS amount, acadprogid, classcode, progid'))
+  //               ->join('chrngcashtrans', 'chrngtrans.transno', '=', 'chrngcashtrans.transno')
+  //               ->join('items', 'chrngcashtrans.itemid', '=', 'items.id')
+  //               ->Join('studinfo', 'chrngtrans.studid', '=', 'studinfo.id')
+  //               ->join('gradelevel', 'studinfo.levelid', '=', 'gradelevel.id')
+  //               ->join('academicprogram', 'gradelevel.acadprogid', '=', 'academicprogram.id')
+  //               ->whereBetween('chrngtrans.transdate', [$datefrom . ' 00:00', $dateto . ' 23:59'])
+  //               ->where('cancelled', 0)
+  //               ->where('items.deleted', 0)
+  //               ->where('gradelevel.deleted', 0)
+  //               ->where('classcode', $class->id)
+  //               ->where('chrngcashtrans.classid', 3)
+  //               ->groupBy('acadprogid', 'items.id')
+  //               ->having('amount', '>', 0)
+  //               ->orderBy('classcode', 'ASC')
+  //               ->orderBy('items.id', 'ASC')
+  //               ->get();
+
+  //           foreach($transoth1 as $trx)
+  //           {
+  //               // print_r($trx) . '<br>';
+  //               array_push($trxarray, $trx);
+
+  //               // $_transoth1 = db::table('chrngtrans')
+  //               //     ->select('chrngtrans.ornum')
+  //               //     ->join('chrngcashtrans', 'chrngtrans.transno', '=', 'chrngcashtrans.transno')
+  //               //     ->whereBetween('transdate', [$datefrom . ' 00:00', $dateto . ' 23:59'])
+  //               //     ->where('cancelled', 0)
+  //               //     ->where('classid', 3)
+  //               //     ->where('chrngtrans.ornum', $trx->ornum)
+  //               //     ->where('kind', 'oth')
+  //               //     ->where('chrngcashtrans.deleted', 0)
+  //               //     ->first();
+
+  //               // if($_transoth1)
+  //               // {
+                    
+  //               // }
+  //           }
+
+  //           // oth1
+
+  //           // oth2
+
+  //           $chrngsetup  = db::table('chrngsetup')
+  //               ->where('deleted', 0)
+  //               ->where('groupname', 'OTH')
+  //               ->where('classid', '!=', 3)
+  //               ->get();
+
+  //           $_setup = array();
+
+  //           foreach($chrngsetup as $setup)
+  //           {
+  //               array_push($_setup, $setup->classid);
+  //           }
+
+
+  //           $transoth2 = db::table('chrngtrans')
+  //               ->select(db::raw('chrngtrans.ornum, items.id AS itemid, itemcode, items.description, SUM(chrngcashtrans.amount) AS amount, acadprogid, classcode, progid'))
+  //               ->join('chrngcashtrans', 'chrngtrans.transno', '=', 'chrngcashtrans.transno')
+  //               ->join('items', 'chrngcashtrans.classid', '=', 'items.classid')
+  //               ->Join('studinfo', 'chrngtrans.studid', '=', 'studinfo.id')
+  //               ->join('gradelevel', 'studinfo.levelid', '=', 'gradelevel.id')
+  //               ->join('academicprogram', 'gradelevel.acadprogid', '=', 'academicprogram.id')
+  //               ->whereBetween('transdate', [$datefrom . ' 00:00', $dateto . ' 23:59'])
+  //               ->where('cancelled', 0)
+  //               // ->where('kind', 'oth')
+  //               ->whereIn('kind', ['oth', 'dp'])
+  //               ->whereNotIn('chrngcashtrans.classid', [3])
+  //               ->whereIn('chrngcashtrans.classid', $_setup)
+  //               ->where('chrngcashtrans.deleted', 0)
+  //               ->where('items.deleted', 0)
+  //               ->where('gradelevel.deleted', 0)
+  //               ->where('classcode', $class->id)
+  //               ->groupBy('acadprogid', 'items.id')
+  //               ->having('amount', '>', 0)
+  //               ->orderBy('classcode', 'ASC')
+  //               ->orderBy('items.id', 'ASC')
+  //               ->get();
+
+  //           foreach($transoth2 as $trx)
+  //           {
+  //               // print_r($trx) . '<br>';
+  //               array_push($trxarray, $trx);
+  //           }
+
+  //           // oth2
+
+  //           // oth3
+
+  //           $transoth3 = db::table('chrngtrans')
+  //               ->select(db::raw('chrngtrans.ornum, items.id AS itemid, itemcode, items.description, SUM(chrngcashtrans.amount) AS amount, acadprogid, classcode, progid'))
+  //               ->join('chrngcashtrans', 'chrngtrans.transno', '=', 'chrngcashtrans.transno')
+  //               ->join('items', 'chrngcashtrans.particulars', '=', 'items.description')
+  //               ->Join('studinfo', 'chrngtrans.studid', '=', 'studinfo.id')
+  //               ->join('gradelevel', 'studinfo.levelid', '=', 'gradelevel.id')
+  //               ->join('academicprogram', 'gradelevel.acadprogid', '=', 'academicprogram.id')
+  //               ->whereBetween('transdate', [$datefrom . ' 00:00', $dateto . ' 23:59'])
+  //               ->where('cancelled', 0)
+  //               ->where('kind', 'oth')
+  //               ->whereIn('chrngcashtrans.classid', [35, 43])
+  //               ->where('chrngcashtrans.deleted', 0)
+  //               ->where('items.deleted', 0)
+  //               ->where('gradelevel.deleted', 0)
+  //               ->where('classcode', $class->id)
+  //               ->groupBy('acadprogid', 'items.id')
+  //               ->having('amount', '>', 0)
+  //               ->orderBy('classcode', 'ASC')
+  //               ->orderBy('items.id', 'ASC')
+  //               ->get();
+
+  //           foreach($transoth3 as $trx)
+  //           {
+  //               // print_r($trx) . '<br>';
+  //               array_push($trxarray, $trx);
+  //           }
+
+  //           // $transoth4 = db::table('chrngtrans')
+  //           //     ->select(db::raw('chrngtrans.ornum, items.id AS itemid, itemcode, items.description, SUM(chrngcashtrans.amount) AS amount, acadprogid, classcode, progid'))
+  //           //     ->join('chrngcashtrans', 'chrngtrans.transno', '=', 'chrngcashtrans.transno')
+  //           //     ->join('items', 'chrngcashtrans.particulars', '=', 'items.description')
+  //           //     ->Join('studinfo', 'chrngtrans.studid', '=', 'studinfo.id')
+  //           //     ->join('gradelevel', 'studinfo.levelid', '=', 'gradelevel.id')
+  //           //     ->join('academicprogram', 'gradelevel.acadprogid', '=', 'academicprogram.id')
+  //           //     ->whereBetween('transdate', [$datefrom . ' 00:00', $dateto . ' 23:59'])
+  //           //     ->where('cancelled', 0)
+  //           //     ->where('kind', 'oth')
+  //           //     ->where('chrngcashtrans.classid', 43)
+  //           //     ->where('chrngcashtrans.deleted', 0)
+  //           //     ->where('items.deleted', 0)
+  //           //     ->where('gradelevel.deleted', 0)
+  //           //     ->where('classcode', $class->id)
+  //           //     ->groupBy('acadprogid', 'items.id')
+  //           //     ->having('amount', '>', 0)
+  //           //     ->orderBy('classcode', 'ASC')
+  //           //     ->orderBy('items.id', 'ASC')
+  //           //     ->get();
+
+  //           // foreach($transoth4 as $trx)
+  //           // {
+  //           //     // print_r($trx) . '<br>';
+  //           //     array_push($trxarray, $trx);
+  //           // }
+
+  //           // oth3
+
+  //           // old
+
+  //           $transold = db::table('chrngtrans')
+  //               ->select(db::raw('chrngtrans.ornum, items.id AS itemid, itemcode, items.description, SUM(chrngcashtrans.amount) AS amount, acadprogid, classcode, progid'))
+  //               ->join('chrngcashtrans', 'chrngtrans.transno', '=', 'chrngcashtrans.transno')
+  //               ->join('items', 'chrngcashtrans.classid', '=', 'items.classid')
+  //               ->Join('studinfo', 'chrngtrans.studid', '=', 'studinfo.id')
+  //               ->join('gradelevel', 'studinfo.levelid', '=', 'gradelevel.id')
+  //               ->join('academicprogram', 'gradelevel.acadprogid', '=', 'academicprogram.id')
+  //               ->whereBetween('transdate', [$datefrom . ' 00:00', $dateto . ' 23:59'])
+  //               ->where('cancelled', 0)
+  //               ->where('kind', 'old')
+  //               ->where('chrngcashtrans.deleted', 0)
+  //               // ->where('items.id', 87)
+  //               ->where('gradelevel.deleted', 0)
+  //               ->where('classcode', $class->id)
+  //               ->groupBy('acadprogid', 'items.id')
+  //               ->having('amount', '>', 0)
+  //               ->orderBy('classcode', 'ASC')
+  //               ->orderBy('items.id', 'ASC')
+  //               ->get();
+
+  //           foreach($transold as $trx)
+  //           {
+  //               // print_r($trx) . '<br>';
+  //               array_push($trxarray, $trx);
+  //           }
+
+  //           // old
+
+  //           // return $trxarray;
+  //           // print_r($trxarray);
+  //           $trxarray = collect($trxarray);
+
+  //           $trxarray = $trxarray->sortBy('itemcode');
+
+  //           // echo $trxarray;
+
+  //           foreach($trxarray as $trx)
+  //           {      
+  //               $totalperincome = 0;
+  //               if($itemid == $trx->itemid || $itemid == 0)
+  //               {
+  //                   if($trx->acadprogid == 2 || $trx->acadprogid == 3 || $trx->progid == 2 || $trx->progid == 3)
+  //                   {
+  //                       $gs += $trx->amount;
+  //                       $totalgs += $trx->amount;
+  //                       $gentotalgs += $trx->amount;
+  //                   }
+  //                   elseif($trx->acadprogid == 4 || $trx->progid == 4)
+  //                   {
+  //                       // echo $trx->ornum . '<br>' ;
+  //                       $hs += $trx->amount;
+  //                       $totalhs += $trx->amount;
+  //                       $gentotalhs += $trx->amount;
+  //                   }
+  //                   elseif($trx->acadprogid == 5 || $trx->progid == 5)
+  //                   {
+  //                       $shs += $trx->amount;
+  //                       $totalshs += $trx->amount;
+  //                       $gentotalshs += $trx->amount;
+  //                   }
+  //                   elseif($trx->acadprogid == 6 || $trx->progid == 6)
+  //                   {
+  //                       $col += $trx->amount;
+  //                       $totalcol += $trx->amount;
+  //                       $gentotalcol += $trx->amount;
+  //                       // if($class->id == 2)
+  //                       // {
+  //                       //     echo 'ornum: ' .  $trx->itemid . '<br>';
+  //                       // }
+  //                   }
+  //                   else
+  //                   {
+  //                       $gen += $trx->amount;
+  //                       $totalgen  += $trx->amount;
+  //                       $gentotalgen += $trx->amount;
+  //                   }
+
+
+  //                   $itemtotal += $trx->amount;
+
+  //                   $trxitemcode = $trx->itemcode;
+  //                   $trxdescription = $trx->description;
+  //                   $totalperincome = $totalcol + $totalshs + $totalhs + $totalgs + $totalgen;
+  //               }
+  //               else
+  //               {
+  //                   $list .='
+  //                       <tr>
+  //                           <td class="td-code">'.$trxitemcode.'</td>
+  //                           <td class="td-desc">'.$trxdescription.'</td>
+  //                           <td class="text-right">'.number_format($col, 2).'</td>
+  //                           <td class="text-right">'.number_format($shs, 2).'</td>
+  //                           <td class="text-right">'.number_format($hs, 2).'</td>
+  //                           <td class="text-right">'.number_format($gs, 2).'</td>
+  //                           <td class="text-right">'.number_format($gen, 2).'</td>
+  //                           <td class="text-right">'.number_format($itemtotal, 2).'</td>
+  //                       </tr>
+  //                   ';
+
+  //                   $col = 0;
+  //                   $shs = 0;
+  //                   $hs = 0;
+  //                   $gs = 0;
+  //                   $gen = 0;
+
+  //                   $itemtotal = 0;
+  //                   $trxitemcode = '';
+  //                   $trxdescription = '';
+
+  //                   if($trx->acadprogid == 2 || $trx->acadprogid == 3 || $trx->progid == 2 || $trx->progid == 3)
+  //                   {
+  //                       $gs += $trx->amount;
+  //                       $totalgs += $trx->amount;
+  //                       $gentotalgs += $trx->amount;
+  //                   }
+  //                   elseif($trx->acadprogid == 4 || $trx->progid == 4)
+  //                   {
+  //                       $hs += $trx->amount;
+  //                       $totalhs += $trx->amount;
+  //                       $gentotalhs += $trx->amount;
+  //                   }
+  //                   elseif($trx->acadprogid == 5 || $trx->progid == 5)
+  //                   {
+  //                       $shs += $trx->amount;
+  //                       $totalshs += $trx->amount;
+  //                       $gentotalshs += $trx->amount;
+  //                   }
+  //                   elseif($trx->acadprogid == 6 || $trx->progid == 6)
+  //                   {
+  //                       $col += $trx->amount;
+  //                       $totalcol += $trx->amount;
+  //                       $gentotalcol += $trx->amount;
+  //                   }
+  //                   else
+  //                   {
+  //                       $gen += $trx->amount;
+  //                       $totalgen  += $trx->amount;
+  //                       $gentotalgen += $trx->amount;
+  //                   }
+
+  //                   $itemtotal += $trx->amount;
+
+  //                   $trxitemcode = $trx->itemcode;
+  //                   $trxdescription = $trx->description;
+  //                   $totalperincome = $totalcol + $totalshs + $totalhs + $totalgs + $totalgen;
+
+  //               }
+                
+  //               $itemid = $trx->itemid;
+
+  //           }
+
+  //           $list .='
+  //               <tr>
+  //                   <td>'.$trxitemcode.'</td>
+  //                   <td>'.$trxdescription.'</td>
+  //                   <td class="text-right">'.number_format($col, 2).'</td>
+  //                   <td class="text-right">'.number_format($shs, 2).'</td>
+  //                   <td class="text-right">'.number_format($hs, 2).'</td>
+  //                   <td class="text-right">'.number_format($gs, 2).'</td>
+  //                   <td class="text-right">'.number_format($gen, 2).'</td>
+  //                   <td class="text-right">'.number_format($itemtotal, 2).'</td>
+  //               </tr>
+  //           ';
+
+            
+
+  //           $list .='
+  //               <tr>
+  //                   <td colspan="2" class="text-bold text-right gentotal" style="margin-top:130px">TOTAL ' . strtoupper($class->description) . ':</td>
+  //                   <td class="text-bold text-right">' . number_format($totalcol, 2) . '</td>
+  //                   <td class="text-bold text-right">' . number_format($totalshs, 2) . '</td>
+  //                   <td class="text-bold text-right">' . number_format($totalhs, 2) . '</td>
+  //                   <td class="text-bold text-right">' . number_format($totalgs, 2) . '</td>
+  //                   <td class="text-bold text-right">' . number_format($totalgen, 2) . '</td>
+  //                   <td class="text-bold text-right">' . number_format($totalperincome, 2) . '</td>
+  //               </tr>
+  //           ';
+
+  //           $totalperincome = 0;
+  //       }
+
+        
+  //       $gentotal = $gentotalcol + $gentotalshs + $gentotalhs + $gentotalgs + $gentotalgen;
+
+  //       if(!$request->has('exporttype'))
+  //       {
+  //           return view('finance.reports.consolidatedreport.filtertable')
+  //               ->with('cashtransaction', $list)
+  //               ->with('gentotalcol', $gentotalcol)
+  //               ->with('gentotalshs', $gentotalshs)
+  //               ->with('gentotalhs', $gentotalhs)
+  //               ->with('gentotalgs', $gentotalgs)
+  //               ->with('gentotalgen', $gentotalgen)
+  //               ->with('gentotal', $gentotal)
+  //               ->with('rangeOR', $rangeOR);
+  //       }else{
+            
+  //           $pdf = new ConsolidatedReport(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+
+  //           $pdf->SetCreator('CK');
+  //           $pdf->SetAuthor('CK Children\'s Publishing');
+  //           $pdf->SetTitle(DB::table('schoolinfo')->first()->schoolname.' - Consolidated Report');
+  //           $pdf->SetSubject('Account Receivables');
+            
+  //           $pdf->setHeaderFont(Array(PDF_FONT_NAME_MAIN, '', PDF_FONT_SIZE_MAIN));
+  //           $pdf->setFooterFont(Array(PDF_FONT_NAME_DATA, '', PDF_FONT_SIZE_DATA));
+            
+  //           $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
+            
+  //           $pdf->SetMargins(7, 8,7);
+  //           // $pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
+  //           $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
+  //           $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
+            
+  //           $pdf->setPrintHeader(false);
+
+  //           $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
+            
+  //           $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
+            
+  //           if (@file_exists(dirname(__FILE__).'/lang/eng.php')) {
+  //               require_once(dirname(__FILE__).'/lang/eng.php');
+  //               $pdf->setLanguageArray($l);
+  //           }
+            
+  //           $pdf->AddPage();
+
+            
+  //           $view = \View::make('finance/reports/pdf/pdf_consolidatedreport',compact('datefrom','dateto'))
+  //               ->with('cashtransaction', $list)
+  //               ->with('gentotalcol', $gentotalcol)
+  //               ->with('gentotalshs', $gentotalshs)
+  //               ->with('gentotalhs', $gentotalhs)
+  //               ->with('gentotalgs', $gentotalgs)
+  //               ->with('gentotalgen', $gentotalgen)
+  //               ->with('gentotal', $gentotal)
+  //               ->with('rangeOR', $rangeOR);
+
+  //           $html = $view->render();
+  //           $pdf->writeHTML($html, true, false, true, false, '');
+  //           // ---------------------------------------------------------
+  //           //Close and output PDF document
+  //           $pdf->Output('Cash Receipt Summary.pdf', 'I');
+  //           // return view('finance.reports.pdf.pdf_consolidatedreport');
+  //       }
+  //   }
 
     public function generate_v2(Request $request)
     {
@@ -824,8 +1544,8 @@ class ConsolidatedReportController extends Controller
         //     FinanceModel::transitemsreset($_trans->studid, $_trans->syid, $_trans->semid);
         // }
 
-
-
+        
+        
         $t = db::table('chrngtrans')
             ->select('ornum')
             ->whereBetween('transdate', [$datefrom . ' 00:00', $dateto . ' 23:59'])
@@ -850,7 +1570,7 @@ class ConsolidatedReportController extends Controller
         $or2 = $t->ornum;
 
         $rangeOR = $or1 . ' - '. $or2;
-
+        
         $classcodes = db::table('items_classcode')
             ->get();
 
@@ -907,7 +1627,7 @@ class ConsolidatedReportController extends Controller
                 array_push($trxarray, $trx);
             }
 
-
+            
 
             //tuition
 
@@ -972,7 +1692,7 @@ class ConsolidatedReportController extends Controller
             // item
 
             $transitem = db::table('chrngtrans')
-                ->select(db::raw('chrngtrans.ornum, items.id AS itemid, itemcode, items.description, SUM(chrngcashtrans.amount) AS amount, classcode, progid as acadprogid'))
+                ->select(db::raw('chrngtrans.ornum, items.id AS itemid, itemcode, items.description, SUM(chrngcashtrans.amount) AS amount, acadprogid, classcode, progid'))
                 ->join('chrngcashtrans', 'chrngtrans.transno', '=', 'chrngcashtrans.transno')
                 ->join('items', 'chrngcashtrans.payscheddetailid', '=', 'items.id')
                 ->leftJoin('studinfo', 'chrngtrans.studid', '=', 'studinfo.id')
@@ -983,7 +1703,7 @@ class ConsolidatedReportController extends Controller
                 ->where('kind', 'item')
                 ->where('chrngcashtrans.deleted', 0)
                 ->where('classcode', $class->id)
-                ->groupBy('acadprogid', 'items.id', 'progid')
+                ->groupBy('acadprogid', 'items.id')
                 ->having('amount', '>', 0)
                 ->orderBy('classcode', 'ASC')
                 ->orderBy('items.id', 'ASC')
@@ -995,9 +1715,9 @@ class ConsolidatedReportController extends Controller
                 array_push($trxarray, $trx);
             }
 
-            // item
+            // item            
 
-
+            
 
             $chrngsetup  = db::table('chrngsetup')
                 ->where('deleted', 0)
@@ -1208,7 +1928,7 @@ class ConsolidatedReportController extends Controller
                 array_push($trxarray, $trx);
             }
 
-
+            
 
             // old
 
@@ -1218,11 +1938,11 @@ class ConsolidatedReportController extends Controller
 
             $trxarray = $trxarray->sortBy('itemid');
 
-            // dd($trxarray);
-
+            // echo $trxarray;
+            
 
             foreach($trxarray as $trx)
-            {
+            {      
                 $totalperincome = 0;
                 if($itemid == $trx->itemid || $itemid == 0)
                 {
@@ -1258,13 +1978,9 @@ class ConsolidatedReportController extends Controller
                     }
                     else
                     {
-                        // $gen += $trx->amount;
-                        // $totalgen  += $trx->amount;
-                        // $gentotalgen += $trx->amount;
-
-                        $col += $trx->amount;
-                        $totalcol += $trx->amount;
-                        $gentotalcol += $trx->amount;
+                        $gen += $trx->amount;
+                        $totalgen  += $trx->amount;
+                        $gentotalgen += $trx->amount;
                     }
 
 
@@ -1284,6 +2000,7 @@ class ConsolidatedReportController extends Controller
                             <td class="text-right">'.number_format($shs, 2).'</td>
                             <td class="text-right">'.number_format($hs, 2).'</td>
                             <td class="text-right">'.number_format($gs, 2).'</td>
+                            <td class="text-right">'.number_format($gen, 2).'</td>
                             <td class="text-right">'.number_format($itemtotal, 2).'</td>
                         </tr>
                     ';
@@ -1336,7 +2053,7 @@ class ConsolidatedReportController extends Controller
                     $totalperincome = $totalcol + $totalshs + $totalhs + $totalgs + $totalgen;
 
                 }
-
+                
                 $itemid = $trx->itemid;
 
             }
@@ -1349,12 +2066,12 @@ class ConsolidatedReportController extends Controller
                     <td class="text-right">'.number_format($shs, 2).'</td>
                     <td class="text-right">'.number_format($hs, 2).'</td>
                     <td class="text-right">'.number_format($gs, 2).'</td>
-
+                    <td class="text-right">'.number_format($gen, 2).'</td>
                     <td class="text-right">'.number_format($itemtotal, 2).'</td>
                 </tr>
             ';
 
-
+            
 
             $list .='
                 <tr>
@@ -1363,7 +2080,7 @@ class ConsolidatedReportController extends Controller
                     <td class="text-bold text-right">' . number_format($totalshs, 2) . '</td>
                     <td class="text-bold text-right">' . number_format($totalhs, 2) . '</td>
                     <td class="text-bold text-right">' . number_format($totalgs, 2) . '</td>
-
+                    <td class="text-bold text-right">' . number_format($totalgen, 2) . '</td>
                     <td class="text-bold text-right">' . number_format($totalperincome, 2) . '</td>
                 </tr>
             ';
@@ -1386,38 +2103,38 @@ class ConsolidatedReportController extends Controller
                 ->with('gentotal', $gentotal)
                 ->with('rangeOR', $rangeOR);
         }else{
-
+            
             $pdf = new ConsolidatedReport(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
 
             $pdf->SetCreator('CK');
             $pdf->SetAuthor('CK Children\'s Publishing');
             $pdf->SetTitle(DB::table('schoolinfo')->first()->schoolname.' - Consolidated Report');
             $pdf->SetSubject('Account Receivables');
-
+            
             $pdf->setHeaderFont(Array(PDF_FONT_NAME_MAIN, '', PDF_FONT_SIZE_MAIN));
             $pdf->setFooterFont(Array(PDF_FONT_NAME_DATA, '', PDF_FONT_SIZE_DATA));
-
+            
             $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
-
+            
             $pdf->SetMargins(7, 8,7);
             // $pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
             $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
             $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
-
+            
             $pdf->setPrintHeader(false);
 
             $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
-
+            
             $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
-
+            
             if (@file_exists(dirname(__FILE__).'/lang/eng.php')) {
                 require_once(dirname(__FILE__).'/lang/eng.php');
                 $pdf->setLanguageArray($l);
             }
-
+            
             $pdf->AddPage();
 
-
+            
             $view = \View::make('finance/reports/pdf/pdf_consolidatedreport',compact('datefrom','dateto'))
                 ->with('cashtransaction', $list)
                 ->with('gentotalcol', $gentotalcol)
@@ -1451,7 +2168,7 @@ class ConsolidatedReportController extends Controller
         {
             foreach($transitems as $item)
             {
-
+                
                 // $ucon = db::table('consolidated_oth')
                 //     ->where('ornum', $ornum)
                 //     ->where('itemid', $item->itemid)
@@ -1462,7 +2179,7 @@ class ConsolidatedReportController extends Controller
 
                 if($tamount > 0)
                 {
-                    if($item->amount > $tamount)
+                    if($item->amount > $tamount)    
                     {
                         db::table('consolidated_oth')
                             ->insert([
@@ -1624,9 +2341,9 @@ class ConsolidatedReport extends TCPDF {
     //     if(strtolower($schoollogo->abbreviation) == 'msmi')
     //     {
     //         $this->Cell(0, 15, 'Page '.$this->getAliasNumPage(), 0, false, 'R', 0, '', 0, false, 'T', 'M');
-    //         $this->Cell(0, 25, date('m/d/Y'), 0, false, 'R', 0, '', 0, false, 'T', 'M');
+    //         $this->Cell(0, 25, date('m/d/Y'), 0, false, 'R', 0, '', 0, false, 'T', 'M');   
     //     }
-
+        
     //     $schoolname = $this->writeHTMLCell(false, 50, 40, 10, '<span style="font-weight: bold">'.$schoollogo->schoolname.'</span>', false, false, false, $reseth=true, $align='L', $autopadding=true);
     //     $schooladdress = $this->writeHTMLCell(false, 50, 40, 15, '<span style="font-weight: bold; font-size: 10px;">'.$schoollogo->address.'</span>', false, false, false, $reseth=true, $align='L', $autopadding=true);
     //     $title = $this->writeHTMLCell(false, 50, 40, 20, 'Cash Receipt Summary', false, false, false, $reseth=true, $align='L', $autopadding=true);
@@ -1643,12 +2360,12 @@ class ConsolidatedReport extends TCPDF {
         // Page number
         // $this->Cell(0, 15, 'Page '.$this->getAliasNumPage().' of '.$this->getAliasNbPages(), 0, false, 'C', 0, '', 0, false, 'T', 'M');
         // $this->Cell(0, 5, date('m/d/Y'), 0, false, 'C', 0, '', 0, false, 'T', 'M');
-
+        
         if(strtolower($schoollogo->abbreviation) != 'msmi')
         {
             $this->Cell(0, 10, date('l, F d, Y'), 0, false, 'L', 0, '', 0, false, 'T', 'M');
             $this->Cell(0, 10, 'Page '.$this->getAliasNumPage().' of '.$this->getAliasNbPages(), 0, false, 'C', 0, '', 0, false, 'T', 'M');
-            // $this->Cell(0, 15, date('m/d/Y'), 0, false, 'R', 0, '', 0, false, 'T', 'M');
+            // $this->Cell(0, 15, date('m/d/Y'), 0, false, 'R', 0, '', 0, false, 'T', 'M');   
         }
     }
 }

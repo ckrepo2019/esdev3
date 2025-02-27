@@ -123,6 +123,11 @@
         </div>
         <div class="row">
             <div class="col-md-12">
+                <div class="card shadow" id="card_nopayment" hidden>
+                    <div class="card-header bg-danger">
+                        <em> <i class="fas fa-exclamation-circle mr-1"></i> No Payment Assigned Yet!</em>
+                    </div>
+                </div>
                 <div class="card shadow">
                     <div class="card-body">
                         <div class="row">
@@ -147,7 +152,7 @@
                                                                 </span>
                                                         </div>
                                                         <div class="form-group col-md-12">
-                                                                <h6 for="">RECEIPT IMAGE</h6>
+                                                                <h6 for="">RECEIPT IMAGE (<em>Only accepts image file types, such as JPG, JPEG, or PNG.</em> ).</h6>
                                                                 <input type="file" class="form-control" name="recieptImage" id="recieptImage" accept=".png, .jpg, .jpeg">
                                                                 <span class="invalid-feedback" role="alert" style="display:hidden">
                                                                     <strong>Reciept Image is empty</strong>
@@ -451,8 +456,10 @@
                             data:data,
                             placeholder:'Select Enrollment'    
                         })
-						
-						$('#filter_sy').val(active_sy.id).change()
+						console.log(data);
+                        if (active_sy) {
+                            $('#filter_sy').val(active_sy.id).change()
+                        }
 						all_enrollment = data
                         get_ledger()
                     }
@@ -473,6 +480,10 @@
                 if($('#filter_sy').val() != null && $('#filter_sy').val() != ''){
                     var val_info = $('#filter_sy').val().split('-');
                 }else{
+                    $('#card_nopayment').attr('hidden', false)
+                    $('#paymentInfo').find('input, button, select').attr('disabled', true)
+                    $('#paymentInfo').attr('hidden',true)
+                    $('#balance')[0].innerHTML = '&#8369; ' + '0.00';
                     return false;
                 }
                 
@@ -484,6 +495,10 @@
 				var templevelid = all_enrollment.filter(x=>x.syid == temp_sy && x.semid == temp_sem)
 				
 				if(templevelid.length == 0){
+                    $('#card_nopayment').attr('hidden', false)
+                    $('#paymentInfo').find('input, button, select').attr('disabled', true)
+                    $('#paymentInfo').attr('hidden',true)
+                    $('#balance')[0].innerHTML = '&#8369; ' + '0.00';
 					return false;
 				}
 				
@@ -497,6 +512,7 @@
 						levelid:templevelid[0].levelid
                     },
                     success:function(data) {
+                        console.log('laksjdlkjsdf',data);
 
                         if(data.length  > 0 ){
 
@@ -546,8 +562,14 @@
 
                             if(data.length != 0 || runbal != 0){
                                 runbal = parseFloat(runbal).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,")
+                                $('#card_nopayment').attr('hidden', true)
+                                $('#paymentInfo').find('input, button, select').attr('disabled', false)
+                                $('#paymentInfo').attr('hidden',false)
                             }else{
                                 runbal = parseFloat(0).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,")
+                                $('#card_nopayment').attr('hidden', false)
+                                $('#paymentInfo').find('input, button, select').attr('disabled', true)
+                                $('#paymentInfo').attr('hidden',true)
                             }
 							
 							
@@ -585,7 +607,31 @@
         }
         
         $("#recieptImage").change(function(){
-              readURL(this);
+                readURL(this);
+                var files = this.files;
+                console.log(files);
+                
+                var input = $(this);
+                for (var i = 0; i < files.length; i++) {
+                    console.log(files[i]);
+                    
+                    if (!files[i].type.startsWith('image/')) {
+                            Swal.fire({
+                                type: 'warning',
+                                title: 'Invalid file',
+                                text: `Only image files are allowed!`,
+                                showCancelButton: false,
+                                confirmButtonColor: '#3085d6',
+                                confirmButtonText: 'Ok'
+                            })
+                            this.value = ''; // Clear the input
+                            input.addClass('is-invalid')
+                            break;
+                    }else{
+                            input.addClass('is-valid')
+                            input.removeClass('is-invalid')
+                    }
+                }
         });
 
 

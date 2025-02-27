@@ -49,62 +49,100 @@
                               }
 
                         }
+                        $processedSubjects = [];
                   @endphp
       
-            @if(count($sched->schedule) > 0)
-                  @php
-                        $first = true;
-                        $first_id = null;
-                  @endphp
-                  <tr style="font-size:.8rem !important" {{$con_hidden}}>
-                        <td class="p-2 align-middle" rowspan="{{count($sched->schedule)}}">
-                              <p class="mb-0">{{$sched->subjdesc}} <i class="text-danger">{{$comp}}</i></p>
-                              <p class="text-muted mb-0" style="font-size:.8rem">{{$sched->subjcode}} <i class="text-danger">{{$units}}</i> <i class="text-danger">{{$type}}</i></p>
-                        </td>
-                        @foreach ($sched->schedule as $item)
-                              @if($first)
+            @if($sched->datatype == 'college')
+                  @if(!isset($processedSubjects[$sched->subjectID]))
+                        <?php $processedSubjects[$sched->subjectID] = 1; ?>
+                        <tr>
+                              <td data-subjectid="{{$sched->subjectID}}" rowspan="1">
+                              <span class="font-weight-bold">{{$sched->subjdesc}}</span><br>
+                              <span class="text-muted" style="font-size:.8rem">
+                                    {{$sched->subjcode}} <i class="text-danger">{{$units}}</i> <i class="text-danger">{{$type}}</i>
+                              </span>
+                              </td>
+                              <td class="text-center align-middle">
+                              <span class="text-primary text-bold">{{$sched->classification}}</span><br>
+                              <span style="font-size:.8rem">{{$sched->dayname}}</span>
+                              </td>
+                              <td class="text-center align-middle">{{$sched->start}}<br>{{$sched->end}}</td>
+                              <td class="text-center align-middle">{{$sched->roomname}}</td>
+                              <td class="text-center align-middle">{{$sched->teacher}}</td>
+                        </tr>
+                  @else
+                        <?php $processedSubjects[$sched->subjectID]++; ?>
+                        <tr>
+                              <td class="text-center align-middle">
+                              <span class="text-primary text-bold">{{$sched->classification}}</span><br>
+                              <span style="font-size:.8rem">{{$sched->dayname}}</span>
+                              </td>
+                              <td class="text-center align-middle">{{$sched->start}}<br>{{$sched->end}}</td>
+                        </tr>
+                        <script>
+                              const subjectCell = document.querySelector(`td[data-subjectid="{{$sched->subjectID}}"]`);
+                              if (subjectCell) {
+                              subjectCell.setAttribute('rowspan', {{$processedSubjects[$sched->subjectID]}});
+                              }
+                        </script>
+                  @endif
+            @else
+                  @if(count($sched->schedule) > 0)
+                        @php
+                              $first = true;
+                              $first_id = null;
+                        @endphp
+                        <tr style="font-size:.8rem !important" {{$con_hidden}}>
+                              <td class="p-2 align-middle" rowspan="{{count($sched->schedule)}}">
+                                    <p class="mb-0">{{$sched->subjdesc}} <i class="text-danger">{{$comp}}</i></p>
+                                    <p class="text-muted mb-0" style="font-size:.8rem">{{$sched->subjcode}} <i class="text-danger">{{$units}}</i> <i class="text-danger">{{$type}}</i></p>
+                              </td>
+                              @foreach ($sched->schedule as $item)
+                                    @if($first)
+                                          <td class="p-2 text-center align-middle" style="font-size:.7rem">
+                                                <span class="text-primary text-bold">{{$item->classification}}</span>
+                                                <br>{{$item->day}}
+                                          </td>
+                                          <td class="p-2 text-center align-middle">{{$item->start}}<br>{{$item->end}}</td>
+                                          <td class="p-2 text-center align-middle">{{$item->roomname}}</td>
+                                          <td class="p-2 text-center align-middle" rowspan="{{count($sched->schedule)}}">
+                                                <p class="mb-0">{{$item->teacher}}</p>
+                                          </td>
+                                          @php
+                                                $first_id = $item->sched_count;
+                                                $first = false;
+                                          @endphp
+                                    
+                                    @endif
+                              @endforeach
+                        </tr>
+                        @foreach (collect($sched->schedule)->where('sched_count','!=',$first_id)->values() as $item)
+                              <tr style="font-size:.8rem !important" {{$con_hidden}}>
                                     <td class="p-2 text-center align-middle" style="font-size:.7rem">
                                           <span class="text-primary text-bold">{{$item->classification}}</span>
                                           <br>{{$item->day}}
                                     </td>
-                                    <td class="p-2 text-center align-middle">{{$item->start}}<br>{{$item->end}}</td>
+                                    <td class="p-2 text-center align-middle"> {{$item->start}}<br>{{$item->end}}</td>
                                     <td class="p-2 text-center align-middle">{{$item->roomname}}</td>
-                                    <td class="p-2 text-center align-middle" rowspan="{{count($sched->schedule)}}">
-                                          <p class="mb-0">{{$item->teacher}}</p>
-                                    </td>
-                                    @php
-                                          $first_id = $item->sched_count;
-                                          $first = false;
-                                    @endphp
-                              
-                              @endif
+                              </tr>
                         @endforeach
-                  </tr>
-                  @foreach (collect($sched->schedule)->where('sched_count','!=',$first_id)->values() as $item)
-                        <tr style="font-size:.8rem !important" {{$con_hidden}}>
-                              <td class="p-2 text-center align-middle" style="font-size:.7rem">
-                                    <span class="text-primary text-bold">{{$item->classification}}</span>
-                                    <br>{{$item->day}}
+                  @else
+                        <tr {{$con_hidden}}>
+                              <td  class="p-2 align-middle">
+                                    <p class="mb-0">{{$sched->subjdesc}} <i class="text-danger">{{$comp}}</i></p>
+                                    <p class="text-muted mb-0" style="font-size:.8rem">{{$sched->subjcode}} <i class="text-danger">{{$units}}</i> <i class="text-danger">{{$type}}</i></p>
                               </td>
-                              <td class="p-2 text-center align-middle"> {{$item->start}}<br>{{$item->end}}</td>
-                              <td class="p-2 text-center align-middle">{{$item->roomname}}</td>
-                        </tr>
-                  @endforeach
-            @else
-                  <tr {{$con_hidden}}>
-                        <td  class="p-2 align-middle">
-                              <p class="mb-0">{{$sched->subjdesc}} <i class="text-danger">{{$comp}}</i></p>
-                              <p class="text-muted mb-0" style="font-size:.8rem">{{$sched->subjcode}} <i class="text-danger">{{$units}}</i> <i class="text-danger">{{$type}}</i></p>
-                        </td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                  
-                  <td>
+                              <td></td>
+                              <td></td>
+                              <td></td>
+                        
+                        <td>
 
+                  @endif
             @endif
       @endforeach
 
+      
       <script>
             $(document).ready(function(){
                   var totalunits = @json($totalunits);

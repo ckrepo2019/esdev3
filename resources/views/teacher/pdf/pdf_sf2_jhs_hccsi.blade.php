@@ -806,8 +806,9 @@ function capitalize($word)
             <td>
                 {{collect($currentdays)->sum('tardymale')}}
             </td>
-            <td style="border-right: none!important;">
-            </td>
+            <td>
+              
+                </td>
         </tr>
         @php
             $countFemale = 0;
@@ -992,7 +993,8 @@ function capitalize($word)
             <td>
                 {{collect($currentdays)->sum('tardyfemale')}}
             </td>
-            <td  style="border-right: none!important; border-bottom: none!important;"></td>
+            <td>
+                </td>
         </tr>
         <tr>
             <th colspan="2">
@@ -1014,7 +1016,7 @@ function capitalize($word)
             <td>
                 {{collect($currentdays)->sum('tardy')}}
             </td>
-            <td style="border-right: none!important; border-bottom: none!important; border-top: none!important;"></td>
+            <td></td>
           
         </tr>
     </tbody>
@@ -1400,18 +1402,13 @@ function capitalize($word)
                         <?php } ?>
                     </td>
                     <td>
-                        <?php try{ ?> 
-                            {{number_format( ($pam_female + $pam_male ) /2,2)}}  
-                        <?php }catch(\Exception $e){ ?>
-                            @if($averagemale == 0 && $averagefemale > 0)
-                                {{$averagefemale}}
-                            @elseif($averagemale > 0 && $averagefemale == 0)
-                                {{$averagemale}}
-                            @else
-                                {{number_format(($averagemale + $averagefemale)/2,2) }}
-                            @endif
-                           
-                        <?php } ?>
+                        @php
+                        $avedailytotal = number_format($avedailyatt_male,2) + number_format($avedailyatt_female,2);
+                        $averagetotal = number_format($avedailytotal * count($currentdays),2);
+                        $enrollmentschooldays = $enrollmentasof_total * count($currentdays);
+                        $averagetotals = number_format(($averagetotal/$enrollmentschooldays)*100,2);
+                        @endphp
+                        {{$averagetotals}}
                     </td>
                 </tr>
                 <tr>

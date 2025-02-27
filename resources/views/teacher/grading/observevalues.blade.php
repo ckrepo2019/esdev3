@@ -92,7 +92,7 @@
                               <div class="card-body">
                                     <div class="row ">
                                           <div class="col-md-12">
-                                                <table class="table table-striped table-sm table-bordered table-head-fixed nowrap display p-0" width="100%">
+                                                <table class="table table-striped table-sm table-bordered table-head-fixed table-responsive nowrap display p-0" width="100%">
                                                       <thead>
                                                             <tr>
                                                                   <th width="68%" class="align-middle"></th>
@@ -516,7 +516,10 @@
                     option += '<option value="'+b.id+'">'+b.value+'</option>'
                 })
                 $.each(observedvalues,function(a,b){
-                    $('#data').append('<tr><td>'+b.description+'</td><td class="q1"><select id="'+b.id+'" class="form-control form-control-sm grade_option" quarter="1">'+option+'</select></td><td class="q2"><select id="'+b.id+'" class="form-control form-control-sm grade_option" quarter="2">'+option+'</select></td><td class="q3"><select id="'+b.id+'" class="form-control form-control-sm grade_option" quarter="3">'+option+'</select></td><td class="q4"><select id="'+b.id+'" class="form-control form-control-sm grade_option" quarter="4">'+option+'</select></td></tr>')
+                    $('#data').append('<tr><td >'+b.description+'</td><td class="q1"><select id="'+b.id+'" class="form-control form-control-sm grade_option" quarter="1">'+option+'</select></td><td class="q2"><select id="'+b.id+'" class="form-control form-control-sm grade_option" quarter="2">'+option+'</select></td><td class="q3"><select id="'+b.id+'" class="form-control form-control-sm grade_option" quarter="3">'+option+'</select></td><td class="q4"><select id="'+b.id+'" class="form-control form-control-sm grade_option" quarter="4">'+option+'</select></td></tr>')
+                    if($(window).width() < 770){
+                        $('select.grade_option').attr('style','width: 100px')
+                    }
                 })
                 $('.grade_option').attr('disabled','disabled')
                 display_students()

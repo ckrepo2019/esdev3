@@ -1,5 +1,4 @@
 <script>
-    var school = "HCCC";
     var all_schedgroup = []
     var seleted_id = null
 
@@ -158,6 +157,7 @@
 
     $(document).on('change', '#schedgroup_input_college', function() {
         var collegeId = $(this).val()
+        console.log(collegeId);
 
         $.ajax({
             type: 'GET',
@@ -169,14 +169,13 @@
 
             },
             success: function(data) {
-                console.log(data, 'd');
                 data = JSON.parse(data);
                 console.log('fetching...', data.results);
                 $('#schedgroup_input_course').empty()
                 $('#schedgroup_input_course').append('<option value="">All</option>')
                 $('#schedgroup_input_course').select2({
                     data: data['results'].filter(function(item) {
-                        return item
+                        return item.collegeid == collegeId
                     }),
                     allowClear: true,
                     placeholder: "Select Course",
@@ -438,7 +437,7 @@
         $('#schedgroup_update_button').attr('hidden', 'hidden')
         $('#schedgroup_form_modal').modal()
 
-        schdgrpLoadResources()
+        //   schdgrpLoadResources()
     })
 
 
@@ -448,7 +447,8 @@
         var temp_info = all_schedgroup.filter(x => x.id == seleted_id)
         $('#schedgroup_input_description').val(temp_info[0].schedgroupdesc)
         $('#schedgroup_input_gradelevel').val(temp_info[0].levelid).change()
-        
+
+
         if (temp_info[0].courseid != null) {
             $('#schedgroup_input_course').empty()
             $('#schedgroup_input_course').append('<option value="' + temp_info[0].courseid + '">' + temp_info[0]

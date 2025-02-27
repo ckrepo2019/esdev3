@@ -235,8 +235,9 @@
 
     <div class="modal fade show" id="modal-items_detail" aria-modal="true" style="padding-right: 17px; display: none;">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content text-sm" style="height: 38em; margin-top: 4em;">
-                <div id="modalhead" class="modal-header bg-info">
+          {{-- <div class="modal-content text-sm" style="height: 38em; margin-top: 4em;"> --}}
+          <div class="modal-content text-sm">
+              <div id="modalhead" class="modal-header bg-info">
                     <h4 class="modal-title">Items <span id="item_action"></span></h4>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">×</span>
@@ -248,8 +249,8 @@
                         <div class="col-sm-5">
                           <input type="text" class="form-control validation" id="item_code" placeholder="Item Code" onkeyup="this.value = this.value.toUpperCase();">
                         </div>
-                        <div class="col-sm-5">
-                          <select id="item_classcode" class="select2" style="width:100%">
+                        <div class="col-sm-5 mt-2 mt-sm-0">
+                          <select id="item_classcode" class="select2 " style="width:100%">
                             <option value="0">Payment Group</option>
                             @foreach(db::table('items_classcode')->get() as $itemclass)
                               <option value="{{$itemclass->id}}">{{$itemclass->description}}</option>
@@ -283,7 +284,7 @@
 
                     <div class="form-group row">
                         <label for="" class="col-sm-2 col-form-label"></label>
-                        <div class="col-sm-3">
+                        <div class="col-sm-3 mt-sm-0 mt-1">
                             <div class="icheck-primary d-inline">
                                 <input type="checkbox" id="item_cash">
                                 <label for="item_cash">
@@ -291,7 +292,7 @@
                                 </label>
                             </div>
                         </div>
-                        <div class="col-sm-3">
+                        <div class="col-sm-3 mt-sm-0 mt-1">
                             <div class="icheck-primary d-inline">
                                 <input type="checkbox" id="item_receivable" >
                                 <label for="item_receivable">
@@ -299,7 +300,7 @@
                                 </label>
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-3 mt-sm-0 mt-1">
                             <div class="icheck-primary d-inline">
                                 <input type="checkbox" id="item_expense" >
                                 <label for="item_expense">

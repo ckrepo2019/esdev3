@@ -113,20 +113,64 @@
                                                 $eachsectavemale = $eachsection->registeredmale > 0 ? ((($eachsection->presentmale/$eachsection->countdates)/$eachsection->registeredmale)*100) : 0;
                                                 $eachsectavefemale = $eachsection->registeredfemale > 0 ? ((($eachsection->presentfemale/$eachsection->countdates)/$eachsection->registeredfemale)*100) : 0;
                                             @endphp
+
+                                            <td style="text-align: center;">
+                                                @php
+                                                    $da_m = number_format($eachsection->presentmale/$eachsection->countdates,2);
+                                                @endphp
+                                                {{$da_m}}
+                                            </td>
+                                            <td style="text-align: center;">
+                                                @php
+                                                    $da_f = number_format($eachsection->presentfemale/$eachsection->countdates,2);
+                                                @endphp
+                                                {{$da_f}}
+                                            </td>
+                                            <td style="text-align: center;">
+                                                {{ $da_m + $da_f }} 
+                                            </td>
+
+                                            {{--                                             
                                             <td>{{number_format($eachsection->presentmale/$eachsection->countdates,2)}}</td>
                                             <td>{{number_format($eachsection->presentfemale/$eachsection->countdates,2)}}</td>
-                                            <td>{{number_format(((($eachsection->presentmale/$eachsection->countdates)+($eachsection->presentfemale/$eachsection->countdates))/2),2)}}</td>
-                                            <td>{{number_format($eachsectavemale,2)}}</td>
-                                            <td>{{number_format($eachsectavefemale,2)}}</td>
-                                            <td>{{number_format((($eachsectavemale+$eachsectavefemale)/2),2)}}</td>
-                                            @php
-                                                $eachsection->da_m = number_format($eachsection->presentmale/$eachsection->countdates,2);
-                                                $eachsection->da_f = number_format($eachsection->presentfemale/$eachsection->countdates,2);
-                                                $eachsection->da_t = number_format(((($eachsection->presentmale/$eachsection->countdates)+($eachsection->presentfemale/$eachsection->countdates))/2),2);
+                                            <td>{{number_format(((($eachsection->presentmale/$eachsection->countdates)+($eachsection->presentfemale/$eachsection->countdates))/2),2)}}</td> --}}
 
-                                                $eachsection->pfm_m = number_format($eachsectavemale,2);
-                                                $eachsection->pfm_f = number_format($eachsectavefemale,2);
-                                                $eachsection->pfm_t = number_format((($eachsectavemale+$eachsectavefemale)/2),2);                                                      
+                                            {{-- <td>{{number_format($eachsectavemale,2)}}</td>
+                                            <td>{{number_format($eachsectavefemale,2)}}</td>
+                                            <td>{{number_format((($eachsectavemale+$eachsectavefemale)/2),2)}}</td> --}}
+                                            
+                                            <td style="text-align: center;">
+                                                @php
+                                                    $pftm_m = number_format(($da_m/$eachsection->registeredmale)*100,2);
+
+                                                    $eachsection->pfm_m = $pftm_m;
+                                                @endphp
+                                                {{$pftm_m}}
+                                            </td>
+                                            <td style="text-align: center;">
+                                                @php
+                                                    $pftm_f = number_format(($da_f/$eachsection->registeredfemale)*100,2);
+                                                @endphp
+                                                {{$pftm_f}}
+                                            </td>
+
+                                            <td style="text-align: center;">
+                                                @php
+                                                    $pftm_t = number_format( ( $pftm_m + $pftm_f ) / 2,2);
+                                                @endphp
+                                                {{$pftm_t}}
+
+                                            
+                                            </td>
+
+                                            @php
+                                                $eachsection->da_m = $da_m;
+                                                $eachsection->da_f = $da_f;
+                                                $eachsection->da_t =  $da_m + $da_f ;
+        
+                                                $eachsection->pfm_m = $pftm_m;
+                                                $eachsection->pfm_f = $pftm_f;
+                                                $eachsection->pfm_t = $pftm_t;                                            
                                             @endphp
                                             @endif
                                             <td>{{$eachsection->nlpa_a_m}}</td>

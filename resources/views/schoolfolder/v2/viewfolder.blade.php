@@ -67,7 +67,7 @@ $foldercreatedby = DB::table('teacher')
                         <div class="col-md-8">
                             <h4 class="m-0">
                                 {{-- <i class="fa fa-edit text-muted" style="font-size: 15px; cursor: pointer;" id="icon-edit-foldername"></i>&nbsp;<span id="span-forldername" hidden>{{$folderinfo->foldername}}</span> --}}
-                                @if($folderinfo->createdby == auth()->user()->id)
+                                @if($folderinfo->createdby == auth()->user()->id || $viewtype == 'editor')
                                 <input type="text" id="input-foldername" style="border: none; borde-bottom: 1px solid" value="{{$folderinfo->foldername}}"/>
                                 <button type="button" class="btn btn-sm btn-outline-success" id="btn-update-foldername">
                                     <i class="fa fa-share" style="" id="icon-edit-foldername"></i>&nbsp; Save Changes
@@ -76,7 +76,7 @@ $foldercreatedby = DB::table('teacher')
                                 <input type="text" id="input-foldername" style="border: none; borde-bottom: 1px solid" value="{{$folderinfo->foldername}}" disabled/>
                                 @endif
                             </h4>
-                            <small class="text-muted">Created by: {{$foldercreatedby->lastname}}, {{$foldercreatedby->firstname}}</small><br/>
+                            <small class="text-muted">Created by:  {{$foldercreatedby->lastname}}, {{$foldercreatedby->firstname}}</small><br/>
                             <small class="text-muted">Date created: {{date('M d, Y h:i A', strtotime($folderinfo->createddatetime))}}</small><br/>
                             @if($folderinfo->createdby == auth()->user()->id)
                             <small class="text-muted" style="cursor: pointer;"><i class="fa fa-eye"></i> <u data-toggle="modal" data-target="#modal-update-visibility">{{$folderinfo->vtype == 0 ? 'Only Me' : ($folderinfo->vtype == 1 ? 'All' : ($folderinfo->vtype == 2 ? 'Selected portals' : ($folderinfo->vtype == 3 ? 'Selected users' : '')))}}</u></small>
@@ -88,7 +88,6 @@ $foldercreatedby = DB::table('teacher')
                                         {{$portals[$x]->utype ?? ''}}  @if(($x+1) <  count($portals)) | @endif  
                                     @endfor
                                 </small> 
-                                   
                                 @endif
                             @elseif($folderinfo->vtype == 3)
                                 @if(count($users)>0)
@@ -177,12 +176,14 @@ $foldercreatedby = DB::table('teacher')
     </div>
     <div class="row">
         <div class="col-md-12">
-            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#modal-upload-files" id="addattachment"><i class="fa fa-upload"></i>&nbsp;&nbsp;Upload File</button>   
-            <form action="/schoolfolderv2/upload" method="post" enctype="multipart/form-data" name="submitfiles">
-                @csrf
-                <input name="folderid" value="{{$folderinfo->id}}" hidden/>
-                <input type="file" id="fileid" name="files[]" multiple accept="application/msword, application/vnd.ms-excel, application/vnd.ms-powerpoint,application/pdf, image/*,video/*" hidden/>
-            </form>
+            @if($viewtype == 'editor' || $folderinfo->createdby == auth()->user()->id)
+                <button type="button" class="btn btn-info" data-toggle="modal" data-target="#modal-upload-files" id="addattachment"><i class="fa fa-upload"></i>&nbsp;&nbsp;Upload File</button>   
+                <form action="/schoolfolderv2/upload" method="post" enctype="multipart/form-data" name="submitfiles">
+                    @csrf
+                    <input name="folderid" value="{{$folderinfo->id}}" hidden/>
+                    <input type="file" id="fileid" name="files[]" multiple accept="application/msword, application/vnd.ms-excel, application/vnd.ms-powerpoint,application/pdf, image/*" hidden/>
+                </form>
+            @endif
         </div>
     </div>
            
@@ -275,9 +276,11 @@ $foldercreatedby = DB::table('teacher')
                                             <sup class="badge badge-danger float-right" style="right: 10px;">{{$eachfile->unseen}}</sup>
                                         @endif
                                     @else
+                                        @if($viewtype == 'comment')
                                         <button  type="button" class="btn btn-sm bg-warning btn-view-comments" data-id="{{$eachfile->id}}" data-name="{{$eachfile->filename}}">
                                             <i class="fas fa-comments"></i>
                                         </button>
+                                        @endif
                                     @endif
                                 </div>
                             </div>
@@ -702,13 +705,15 @@ $foldercreatedby = DB::table('teacher')
                             if(data.length > 0)
                             {
                                 $.each(data, function(key, value){
+                                    let middlename = value.middlename ? value.middlename : '';
                                     if(value.display == 1)
                                     {
-                                    displayhtml+='<option value="'+value.userid+'" selected>'+value.lastname+', '+value.firstname+' '+value.middlename+'</option>'
+                                        displayhtml += '<option value="'+value.userid+'" selected>'+value.lastname+', '+value.firstname+' '+middlename+'</option>';
                                     }else{
-                                    displayhtml+='<option value="'+value.userid+'">'+value.lastname+', '+value.firstname+' '+value.middlename+'</option>'
+                                        displayhtml += '<option value="'+value.userid+'">'+value.lastname+', '+value.firstname+' '+middlename+'</option>';
                                     }
-                                })
+                                });
+
                             }
                         displayhtml += '<</select>'
                         $('#container-visibility').append(displayhtml);
@@ -776,7 +781,14 @@ $foldercreatedby = DB::table('teacher')
                                         })
 
                                     window.location.replace('/schoolfolderv2/index');
-                                }                                       
+                                }else if(data == 2){
+                                    Swal.fire({
+                                        type: 'error',
+                                        title: 'Cannot delete folder',
+                                        text: 'It contains files!'
+                                    })
+                                    
+                                }                                      
 
                             }
                         })

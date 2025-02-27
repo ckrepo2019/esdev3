@@ -48,7 +48,7 @@
                     <form id="criteriaForm">
                         @csrf
                         <div class="row">
-                            <div class="form-group col-md-12">
+                            <div class="form-group col-md-8">
                                 <label for="criteriaName">Criteria Name</label>
                                 <input type="text" class="form-control" id="criteriaName" name="name"
                                     placeholder="Enter criteria name" required>
@@ -56,12 +56,12 @@
                                     <strong>Criteria Name is required!</strong>
                                 </span>
                             </div>
-                            <div class="form-group col-md-12">
-                                <label for="criteriaPercentage">Percentage (%)</label>
+                            <div class="form-group col-md-4">
+                                <label for="criteriaPercentage">Percentage</label>
                                 <input type="number" class="form-control" id="criteriaPercentage" name="percentage"
-                                    placeholder="Enter percentage" min="0" max="100" required>
+                                    placeholder="%" min="0" max="100" required>
                                 <span class="invalid-feedback" role="alert">
-                                    <strong>Criteria Percentage is required!</strong>
+                                    <strong>Percentage is required!</strong>
                                 </span>
                             </div>
                             <div class="col-md-12">
@@ -75,9 +75,9 @@
                                 </div>
                             </div>
 
-                            <strong class="text-danger "><em>Note: Click on "Primary" if it's for the School Entrance
+                           <em class="ml-2">Note: Click on "Primary" if it's for the School Entrance
                                     Exam
-                                    Result total Ratio.</em></strong>
+                                    Result total Ratio.</em>
 
                             <div class="col-md-12 mt-1">
                                 <table style="width: 100%;" class="table table-sm table-bordered table-valign-middel"
@@ -910,7 +910,7 @@
 
             });
 
-            $('.btn_delete_passing_rate').on('click', function() {
+            $(document).on('click', '.btn_delete_passing_rate', function() {
                 var itemToDelete = $(this).data('id');
                 console.log(itemToDelete);
                 Swal.fire({
@@ -1225,21 +1225,42 @@
                 saveSubCriteria()
             })
 
-            $('.btn_start_exam').click(function() {
+            $(document).on('click', '.btn_start_exam', function() {
                 var id = $(this).data('id');
-                // $.ajax({        
-                //     type: "POST",
-                //     url: '',
-                //     data: {
-                //         id: id
-                //     },
-                //     success: function(response) {
-                //         console.log(response)
-                //         if (response.status == 'success') {
-                //             window.location.href = response.url;
-                //         }
-                //     }
-                // });
+                $.ajax({
+                    type: "GET",
+                    url: '{{ route('start.exam') }}',
+                    data: {
+                        id: id
+                    },
+                    success: function(response) {
+                        console.log(response)
+                        notify(response.status, response.message);
+                        if (response.status == 'success') {
+                            getAllAdmissionSetup()
+                        }
+                    }
+                })
+            })
+
+
+            $(document).on('click', '.btn_end_exam', function() {
+                var id = $(this).data('id');
+                console.log(id);
+                $.ajax({
+                    type: "GET",
+                    url: '{{ route('end.exam') }}',
+                    data: {
+                        id: id
+                    },
+                    success: function(response) {
+                        console.log(response)
+                        notify(response.status, response.message);
+                        if (response.status == 'success') {
+                            getAllAdmissionSetup()
+                        }
+                    }
+                })
             })
 
         });
@@ -1494,8 +1515,8 @@
                     orderable: false,
                     className: "text-center",
                     render: (data, type, row) => !row.status ?
-                        '<button class="btn btn-xs btn-danger btn_end_exam">END</button>' :
-                        '<button class="btn btn-xs btn-success btn_start_exam">START</button>'
+                        '<button class="btn btn-xs btn-danger btn_end_exam" data-id="' + row.id + '">END</button>' :
+                        '<button class="btn btn-xs btn-success btn_start_exam" data-id="' + row.id + '">START</button>'
                 },
                 {
                     data: "description",
@@ -1525,7 +1546,9 @@
                 {
                     data: null,
                     className: "text-center",
-                    render: (data, type, row) => `<span class="badge badge-success">Active</span>`
+                    render: (data, type, row) => row.status == 1 ?
+                        `<span class="badge badge-warning">Ended</span>` :
+                        `<span class="badge badge-success">Active</span>`
                 },
 
                 {

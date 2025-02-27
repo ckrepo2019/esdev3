@@ -27,7 +27,7 @@
             <div class="col-sm-6">
                 <h1>Online Payments Report</h1>
                 <!-- <h4 class="text-warning" style="text-shadow: 1px 1px 1px #000000">
-                    <i class="fa fa-file-invoice nav-icon"></i> 
+                    <i class="fa fa-file-invoice nav-icon"></i>
                     <b>STUDENT LEDGER</b></h4> -->
             </div>
             <div class="col-sm-6">
@@ -80,8 +80,8 @@
                 <table id="example1" class="table table-bordered">
                     <thead>
                         <tr>
-                            <th>Name of Students</th> 
-                            <th></th> 
+                            <th>Name of Students</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody class="studentscontainer text-uppercase">
@@ -94,11 +94,11 @@
                                         {{$studentonlinepayment->studinfo->lastname}}, {{$studentonlinepayment->studinfo->firstname}} {{$studentonlinepayment->studinfo->middlename}} {{$studentonlinepayment->studinfo->suffix}}
                                     </td>
                                     <td class="p-0">
-                                        <table class="table table-bordered">    
+                                        <table class="table table-bordered">
                                             <thead>
                                                 <tr>
                                                     <th>AMOUNT</th>
-                                                    <th>BANKNAME</th>
+                                                    <th>PAYMENT TYPE</th>
                                                     <th>TRANSACTION DATE</th>
                                                     <th>PAYMENT DATE</th>
                                                     <th>REMARKS</th>
@@ -108,7 +108,7 @@
                                                 @foreach($studentonlinepayment->paymentinfo as $paymentinfo)
                                                     <tr>
                                                         <td>{{$paymentinfo->amount}}</td>
-                                                        <td>{{$paymentinfo->bankName}}</td>
+                                                        <td>{{$paymentinfo->TransDate}}</td>
                                                         <td>{{$paymentinfo->TransDate}}</td>
                                                         <td>{{$paymentinfo->paymentDate}}</td>
                                                         <td>{{$paymentinfo->remarks}}</td>

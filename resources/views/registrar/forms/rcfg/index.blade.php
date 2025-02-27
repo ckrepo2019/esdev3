@@ -1,45 +1,67 @@
-
 @extends('registrar.layouts.app')
 @section('content')
     <style>
-        
         .select2-container .select2-selection--single {
             height: 40px !important;
         }
-        
-        #modal-adddata .modal-dialog{
+
+        #modal-adddata .modal-dialog {
             max-width: 800px
         }
-        td, th {
+
+        td,
+        th {
             padding: 1px !important;
         }
+
+        .dataTables_filter {
+            float: right !important;
+        }
+
+        /* .dataTables_filter {
+                                                                                                                                                                    float: right !important;
+                                                                                                                                                                    display: flex;
+                                                                                                                                                                    align-items: center;
+                                                                                                                                                                } */
+
+        /* .dataTables_filter input {
+                                                                                                                                                        margin-left: 5px;
+                                                                                                                                                        padding: 5px;
+                                                                                                                                                    } */
     </style>
     <div class="row mb-2">
         <div class="col-12">
             <div class="card card-default color-palette-box">
                 <div class="card-header">
-                    @if(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'mci')
-                    <h3><strong>Application for Graduation from Collegiate Course</strong></h3>
+                    @if (strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'mci')
+                        <h3><strong>Application for Graduation from Collegiate Course</strong></h3>
                     @else
-                    <h3><strong>Record of Candidate For Graduation</strong></h3>
+                        <h3><strong>Record of Candidate For Graduation</strong></h3>
                     @endif
-                    <strong>Students ({{count($students)}})</strong>
+                    {{-- <strong>Students ({{ count($students) }})</strong> --}}
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-8">
-                            <select class="form-control select2" id="select-student">
-                                <option value="0">Select student</option>
-                                @foreach($students as $student)
-                                    <option value="{{$student->id}}">{{$student->lastname}}, {{$student->firstname}} {{$student->middlename}}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        {{-- <div class="col-md-3 text-right"> --}}
-                            {{-- <button type="button" class="btn btn-outline-info btn-block" data-toggle="modal" data-target="#modal-addsubjectgroup"><i class="fa fa-plus"></i> Subject Groupings</button> --}}
-                        {{-- </div> --}}
-                        <div class="col-md-4 text-right">
-                            <button type="button" class="btn btn-primary" disabled id="btn-generate"><i class="fa fa-sync"></i> Generate</button>
+                        <div class="col-md-12">
+                            <div class="table-responsive">
+
+                                <table id="studentList"
+                                    class="table table-sm table-bordered table-valign-middle table-hover w-100">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            {{-- <th></th> --}}
+                                            <th>Student ID</th>
+                                            <th>Student Name</th>
+                                            <th>Grade Level</th>
+                                            {{-- <th class="text-center">Status</th> --}}
+                                            <th class="text-center">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="studentListBody">
+                                    </tbody>
+                                </table>
+
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -90,120 +112,123 @@
       </div>
       <!-- /.modal-dialog -->
     </div> --}}
-    @endsection
-    @section('footerscripts')
+@endsection
+@section('footerscripts')
     <script>
-        
-        $(function () {
+        $(function() {
             $('#example2').DataTable({
-              "paging": false,
-              "lengthChange": true,
-              "searching": true,
-              "ordering": false,
-              "info": true,
-              "autoWidth": false,
-              "responsive": true,
+                "paging": false,
+                "lengthChange": true,
+                "searching": true,
+                "ordering": false,
+                "info": true,
+                "autoWidth": false,
+                "responsive": true,
             });
         });
-        $(document).ready(function(){
+        $(document).ready(function() {
             $('.select2').select2({
                 theme: 'bootstrap4'
             })
-            
-            $('#select-student').on('change', function(){
-                if($(this).val() == 0)
-                {
+
+            $('#select-student').on('change', function() {
+                if ($(this).val() == 0) {
                     $('#btn-generate').prop('disabled', true)
-                }else{
+                } else {
                     $('#btn-generate').prop('disabled', false)
                 }
                 $('#div-results').empty()
             })
-            $('#btn-generate').on('click', function(){
-                
-                Swal.fire({
-                        title: 'Generating...',
-                        allowOutsideClick: false,
-                        closeOnClickOutside: false,
-                        onBeforeOpen: () => {
-                            Swal.showLoading()
-                        }
-                })
-                $.ajax({
-                        url: '{{route('rcfggetrecords')}}',
-                        type: 'GET',
-                        data: {
-                            studid:$('#select-student').val()
-                        },
-                        success:function(data)
-                        {
-                            $('#div-results').empty()
-                            $('#div-results').append(data)
-                            $(".swal2-container").remove();
-                            $('body').removeClass('swal2-shown')
-                            $('body').removeClass('swal2-height-auto')
-                            $('#small-selectsy').hide();
-                            $('#small-inputsy').hide();
-                            $('#small-selectcourse').hide();
-                            $('#small-inputcoursename').hide();
-                            $('.auto-disabled').find('input').attr('disabled')
-                            $('.auto-disabled').find('button').hide()
-                        }
-                }); 
+            // $('#btn-generate').on('click', function() {
 
-            })
-            $(document).on('click','.btn-updateunitplot', function(){
-                var syid        = $(this).attr('data-syid');
-                var semid       = $(this).attr('data-semid');
-                var subjectid   = $(this).attr('data-subjectid');
-                var studid      = $('#select-student').val();
+            //     Swal.fire({
+            //         title: 'Generating...',
+            //         allowOutsideClick: false,
+            //         closeOnClickOutside: false,
+            //         onBeforeOpen: () => {
+            //             Swal.showLoading()
+            //         }
+            //     })
+            //     $.ajax({
+            //         url: '{{ route('rcfggetrecords') }}',
+            //         type: 'GET',
+            //         data: {
+            //             studid: $('#select-student').val()
+            //         },
+            //         success: function(data) {
+            //             $('#div-results').empty()
+            //             $('#div-results').append(data)
+            //             $(".swal2-container").remove();
+            //             $('body').removeClass('swal2-shown')
+            //             $('body').removeClass('swal2-height-auto')
+            //             $('#small-selectsy').hide();
+            //             $('#small-inputsy').hide();
+            //             $('#small-selectcourse').hide();
+            //             $('#small-inputcoursename').hide();
+            //             $('.auto-disabled').find('input').attr('disabled')
+            //             $('.auto-disabled').find('button').hide()
+            //         }
+            //     });
+
+            // })
+            $(document).on('click', '.btn-updateunitplot', function() {
+                var syid = $(this).attr('data-syid');
+                var semid = $(this).attr('data-semid');
+                var subjectid = $(this).attr('data-subjectid');
+                // var studid = $('#select-student').val();
+                var studid = $('#pdf_studid').val();
 
                 var subjgroupid = 0;
                 var radioinputs = $(this).closest('tr').find('input');
-                radioinputs.each(function(){
-                    if($(this).is(':checked'))
-                    {
+                radioinputs.each(function() {
+                    if ($(this).is(':checked')) {
                         subjgroupid = $(this).val()
                     }
                 })
 
-                if(subjgroupid == 0)
-                {
+                if (subjgroupid == 0) {
                     toastr.warning('Please select a subject group!', 'Unit Plotting')
-                }else{
+                } else {
                     $.ajax({
-                        url: '{{route('rcfgsubjgroupunitplot')}}',
+                        url: '{{ route('rcfgsubjgroupunitplot') }}',
                         type: 'GET',
                         dataType: '',
                         data: {
-                            studid          :   studid,
-                            syid            :   syid,
-                            semid        :   semid,
-                            subjectid           :   subjectid,
-                            subjgroupid        :   subjgroupid
+                            studid: studid,
+                            syid: syid,
+                            semid: semid,
+                            subjectid: subjectid,
+                            subjgroupid: subjgroupid
                         },
-                        success:function(data)
-                        {
-                            if(data == 1)
-                            {
+                        success: function(data) {
+                            if (data == 1) {
                                 toastr.success('Updated successfully', 'Unit Plotting')
                             }
                         }
-                    }); 
+                    });
                 }
             })
-            $(document).on('click','#btn-exportpdf', function(){
-                var studid      = $('#select-student').val();
-                var degree = $('#input-degree').val(); 
-                var entrancedata = $('#input-entrancedata').val(); 
-                var checkedby   = $('#input-checkedby').val()
-                var collegereg  = $('#input-collegereg').val()
+            $(document).on('click', '#btn-exportpdf', function() {
+                // var studid = $('#select-student').val();
+                var studid = $('#pdf_studid').val();
+
+
+
+                console.log('selected student id:', studid)
+                var degree = $('#input-degree').val();
+                var entrancedata = $('#input-entrancedata').val();
+                var checkedby = $('#input-checkedby').val()
+                var collegereg = $('#input-collegereg').val()
                 var intermediatecourse = $('#input-intermediatecourse').val()
                 var intermediateyear = $('#input-intermediateyear').val()
                 var secondarycourse = $('#input-secondarycourse').val()
                 var secondaryyear = $('#input-secondaryyear').val()
 
-                window.open('/schoolform/rcfggetrecords/getrecords?action=exportpdf&studid='+studid+'&degree='+degree+'&entrancedata='+entrancedata+'&checkedby='+checkedby+'&collegereg='+collegereg+'&intermediatecourse='+intermediatecourse+'&intermediateyear='+intermediateyear+'&secondarycourse='+secondarycourse+'&secondaryyear='+secondaryyear,'_blank')
+                window.open('/schoolform/rcfggetrecords/getrecords?action=exportpdf&studid=' + studid +
+                    '&degree=' + degree + '&entrancedata=' + entrancedata + '&checkedby=' + checkedby +
+                    '&collegereg=' + collegereg + '&intermediatecourse=' + intermediatecourse +
+                    '&intermediateyear=' + intermediateyear + '&secondarycourse=' + secondarycourse +
+                    '&secondaryyear=' + secondaryyear, '_blank')
             })
             // $(document).on('click','#btn-details-save', function(){
             //     var parentguardian      = $('#input-parentguardian').val();
@@ -218,9 +243,9 @@
             //     var major               = $('#input-major').val();
             //     var specialorder        = $('#input-specialorder').val();
             //     var graduationdate      = $('#input-graduationdate').val();
-                
+
             //     $.ajax({
-            //         url: '{{route('torsavedetail')}}',
+            //         url: '{{ route('torsavedetail') }}',
             //         type: 'GET',
             //         data: {
             //             studid              :   $('#select-student').val(),
@@ -264,7 +289,7 @@
             //     }).then((result) => {
             //         if (result.value) {
             //             $.ajax({
-            //             url: '{{route('tordeleterecord')}}',
+            //             url: '{{ route('tordeleterecord') }}',
             //                 type:"GET",
             //                 data:{
             //                     torid :   torid
@@ -284,19 +309,17 @@
             //     })
 
             // })
-            $(document).on('change','#select-sy', function(){
-                if($(this).val() == 0)
-                {
+            $(document).on('change', '#select-sy', function() {
+                if ($(this).val() == 0) {
                     $('#div-customsy').show()
-                }else{
+                } else {
                     $('#div-customsy').hide()
                 }
             })
-            $(document).on('change','#select-course', function(){
-                if($(this).val() == 0)
-                {
+            $(document).on('change', '#select-course', function() {
+                if ($(this).val() == 0) {
                     $('#div-customcourse').show()
-                }else{
+                } else {
                     $('#div-customcourse').hide()
                 }
             })
@@ -340,7 +363,7 @@
             //     }else{
             //         $(this).prop('disabled',true)
             //         $.ajax({
-            //             url: '{{route('toraddnewrecord')}}',
+            //             url: '{{ route('toraddnewrecord') }}',
             //             type: 'GET',
             //             dataType: '',
             //             data: {
@@ -376,7 +399,7 @@
             // })
             // $('#btn-adddata-row').on('click', function(){
             //     $('#tbody-adddata').append(
-                    
+
             //         '<tr class="tr-adddata">'+
             //             '<td class="p-0"><input type="text" class="form-control input-subjnum"/></td>'+
             //             '<td class="p-0"><input type="text" class="form-control input-subjgroup" placeholder="Group"/></td>'+
@@ -397,16 +420,143 @@
             // $(document).on('click','#btn-exporttopdf', function(){
             //     var degree = $('#input-degree').val(); 
             //     var entrancedata = $('#input-entrancedata').val(); 
-                
+
 
             //     window.open('/schoolform/tor/exporttopdf?studid='+$('#select-student').val()+'&degree='+degree+'&entrancedata='+entrancedata,'_blank')
             // })
+            studentListTable()
+
+            function studentListTable() {
+
+                $("#studentList").DataTable({
+                    destroy: true,
+                    searching: true,
+                    // dom: '<"top"lfB>rt<"bottom"ip>',
+                    // dom: '<"top d-flex justify-content-between"lBf>rt<"bottom"ip>',
+                    initComplete: function() {
+                        var api = this.api();
+                        var searchBox = $(
+                                '<input type="search" class="form-control form-control-sm" placeholder="Type to search...">'
+                            )
+                            .on('input', function() {
+                                api.search(this.value).draw();
+                            });
+                        $('.dataTables_filter label').html('<span class="me-2"></span>').append(
+                            searchBox);
+                    },
+                    info: false,
+                    lengthChange: false,
+                    autoWidth: false,
+                    paging: false,
+                    ajax: {
+                        url: '/printable/student_coranking',
+                        type: 'GET',
+                        dataSrc: function(json) {
+                            console.log(json)
+                            return json.students;
+                        }
+                    },
+                    columns: [{
+                            "data": "sid"
+                        },
+                        {
+                            "data": "lastname"
+                        },
+                        {
+                            "data": "levelname"
+                        },
+                        {
+                            "data": "firstname"
+                        },
+                    ],
+                    order: [
+                        [1, 'asc']
+                    ], // Sort by the second column (lastname), ascending
+                    columnDefs: [
+
+                        {
+                            'targets': 0,
+                            'orderable': false,
+                            'createdCell': function(td, cellData, rowData, row, col) {
+                                $(td).html(rowData.sid).addClass('align-middle');
+                            }
+                        },
+                        {
+                            'targets': 1,
+                            'orderable': false,
+                            'createdCell': function(td, cellData, rowData, row, col) {
+                                $(td).html(rowData.lastname + ', ' + rowData.firstname).addClass(
+                                    'align-middle');
+                            }
+                        },
+
+                        {
+                            'targets': 2,
+                            'orderable': false,
+                            'createdCell': function(td, cellData, rowData, row, col) {
+                                $(td).html(rowData.levelname).addClass('align-middle');
+                            }
+                        },
+
+                        {
+                            'targets': 3,
+                            'orderable': false,
+                            'createdCell': function(td, cellData, rowData, row, col) {
+                                var buttons =
+                                    '<button type="button" class="btn btn-primary btn-sm btn-generate" id="btn-generate" data-id="' +
+                                    rowData.id +
+                                    '"><i class="fa fa-sync"></i> Generate</button>';
+                                $(td)[0].innerHTML = buttons;
+                                $(td).addClass('text-center align-middle');
+                            }
+                        }
+
+                    ],
+
+                });
+            }
+
+            $(document).on('click', '#btn-generate', function() {
+                var studid = $(this).data('id');
+
+
+
+                Swal.fire({
+                    title: 'Generating...',
+                    allowOutsideClick: false,
+                    closeOnClickOutside: false,
+                    onBeforeOpen: () => {
+                        Swal.showLoading()
+                    }
+                })
+                $.ajax({
+                    url: '{{ route('rcfggetrecords') }}',
+                    type: 'GET',
+                    data: {
+                        // studid: $('#select-student').val()
+                        studid: studid
+                    },
+                    success: function(data) {
+                        $('#div-results').empty()
+                        $('#div-results').append(data)
+                        $(".swal2-container").remove();
+                        $('body').removeClass('swal2-shown')
+                        $('body').removeClass('swal2-height-auto')
+                        $('#small-selectsy').hide();
+                        $('#small-inputsy').hide();
+                        $('#small-selectcourse').hide();
+                        $('#small-inputcoursename').hide();
+                        $('.auto-disabled').find('input').attr('disabled')
+                        $('.auto-disabled').find('button').hide()
+                        $('#modal-record').modal('show');
+                        $('#pdf_studid').val(studid)
+
+
+
+                    }
+                });
+
+            })
         })
-   
     </script>
 @endsection
-
-                                        
-
-                                        
-                                        

@@ -27,7 +27,7 @@ class DCPRController extends Controller
         $headerlist = '<tr>';
         $bodylist = '';
         $arraygtotal = array();
-        
+
         array_push($items, 'OR NUMBER');
         array_push($items, 'NAME');
         array_push($items, 'TOTAL AMOUNT');
@@ -54,7 +54,7 @@ class DCPRController extends Controller
                 ->where('deleted', 0)
                 ->groupBy('particulars')
                 ->orderBy('particulars')
-                ->get();   
+                ->get();
         }
 
         $genitem = '';
@@ -76,7 +76,7 @@ class DCPRController extends Controller
             if(!in_array($item, $items))
             {
                 array_push($items, $item);
-            }            
+            }
         }
 
         array_push($items, 'TOTAL');
@@ -114,7 +114,7 @@ class DCPRController extends Controller
         $array_bodylist = array();
         $grandtotal = 0;
 
-        
+
         if($type == 'date')
         {
             $chrngtransaction = db::table('chrngtrans')
@@ -149,7 +149,7 @@ class DCPRController extends Controller
                     <td style="width:60px">'.$_trans->ornum.'</td>
                     <td style="width:300">'.$_trans->studname.'</td>
                     <td style="width:70px" class="text-right">'.number_format($_trans->totalamount, 2).'</td>
-            ';  
+            ';
 
             $grandtotal += $_trans->totalamount;
 
@@ -180,7 +180,7 @@ class DCPRController extends Controller
                         //     }
                         //     else
                         //     {
-                        //         $q->where('chrngcashtrans.particulars', 'like', '%'.$_item.'%');   
+                        //         $q->where('chrngcashtrans.particulars', 'like', '%'.$_item.'%');
                         //     }
 
 
@@ -190,7 +190,7 @@ class DCPRController extends Controller
                         ->first();
 
                     if($trx->ornum != null)
-                    {   
+                    {
                         // echo 'ornum: ' . $trx->ornum . ' particulars: ' . $trx->particulars . ' amount: ' . $trx->amount . '<br>';
                         $arrayamount = 0;
 
@@ -219,12 +219,12 @@ class DCPRController extends Controller
             <tr>
                 <td colspan="2" class="text-right text-bold">TOTAL:</td>
                 <td class="text-right text-bold">'.number_format($grandtotal, 2).'</td>
-            
+
         ';
 
         $arraygtotal = collect($arraygtotal);
 
-        
+
 
         foreach($items as $_item)
         {
@@ -267,7 +267,7 @@ class DCPRController extends Controller
                             $q->where('chrngcashtrans.particulars', 'like', '%aaaaaaaa%');
                         }
                     })
-                    ->first();   
+                    ->first();
             }
 
             if($sum->amount > 0)
@@ -301,7 +301,7 @@ class DCPRController extends Controller
         echo json_encode($data);
 
     }
-	
+
     public function dcpr_export(Request $request)
     {
         $date = $request->get('dcpr_date');
@@ -340,10 +340,17 @@ class DCPRController extends Controller
                 ->where('deleted', 0)
                 ->groupBy('ornum')
                 ->orderBy('ornum')
-                ->first();   
+                ->first();
         }
 
-        $orfirst = $orlist->ornum;
+        if($orlist)
+        {
+            $orfirst = $orlist->ornum;
+        }
+        else{
+            return 'No data found. Regenerate to proceed.';
+        }
+
 
         if($type == 'date')
         {
@@ -444,7 +451,7 @@ class DCPRController extends Controller
             if(!in_array($item, $items))
             {
                 array_push($items, $item);
-            }     
+            }
         }
 
         array_push($items, 'TOTAL');
@@ -482,10 +489,12 @@ class DCPRController extends Controller
         $sheet->getStyle('C9')->getAlignment()->setTextRotation(60);
         $sheet->getStyle('D9')->getAlignment()->setTextRotation(60);
 
-        $sheet->getColumnDimension('A')->setWidth('3', 'pt');
-        $sheet->getColumnDimension('B')->setWidth('8', 'pt');
-        $sheet->getColumnDimension('C')->setWidth('40', 'pt');
-        $sheet->getColumnDimension('D')->setWidth('12', 'pt');
+
+
+        $sheet->getColumnDimension('A')->setWidth(3);
+        $sheet->getColumnDimension('B')->setWidth(9);
+        $sheet->getColumnDimension('C')->setWidth(40);
+        $sheet->getColumnDimension('D')->setWidth(12);
 
         $hcol = 'B';
         $sheet->getStyle('A9')->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
@@ -500,7 +509,7 @@ class DCPRController extends Controller
             $sheet->getStyle($hcol . '9')->getAlignment()->setTextRotation(60);
             $sheet->setCellValue($hcol . '9', $_item);
             $sheet->getStyle($hcol . '9')->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
-            
+
             $hcol ++;
 
             // if($_item == 'NAME')
@@ -542,14 +551,14 @@ class DCPRController extends Controller
                 ->where('cancelled', 0)
                 ->groupBy('ornum')
                 ->orderBy('ornum')
-                ->get();   
+                ->get();
         }
 
         $rcount = 1;
 
         foreach($chrngtransaction as $_trans)
         {
-            
+
             $sheet->setCellValue('A' .$row, $rcount);
             $sheet->setCellValue('B' .$row, $_trans->ornum);
             $sheet->setCellValue('C' .$row, $_trans->studname);
@@ -594,7 +603,7 @@ class DCPRController extends Controller
                         //     }
                         //     else
                         //     {
-                        //         $q->where('chrngcashtrans.particulars', 'like', '%'.$_item.'%');   
+                        //         $q->where('chrngcashtrans.particulars', 'like', '%'.$_item.'%');
                         //     }
 
 
@@ -602,11 +611,11 @@ class DCPRController extends Controller
                         ->where('chrngcashtrans.deleted', 0)
                         ->where('cancelled', 0)
                         ->first();
-                    
-                    $sheet->getColumnDimension($hcol)->setWidth('10', 'pt');
+
+                    $sheet->getColumnDimension($hcol)->setWidth(10);
 
                     if($trx->ornum != null)
-                    {   
+                    {
                         // echo 'ornum: ' . $trx->ornum . ' particulars: ' . $trx->particulars . ' amount: ' . $trx->amount . '<br>';
                         $arrayamount = 0;
 
@@ -619,7 +628,7 @@ class DCPRController extends Controller
                         // ';
 
                         $sheet->setCellValue($hcol .$row, $trx->amount);
-                        
+
                         $sheet->getStyle($hcol . $row)->getNumberFormat()->setFormatCode('#,##0.00');
                         // $sheet->getColumnDimension($hcol)->setWidth('15', 'pt');
                         $sheet->getStyle($hcol . $row)->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
@@ -630,14 +639,14 @@ class DCPRController extends Controller
                         $sheet->getStyle($hcol . $row)->getNumberFormat()->setFormatCode('#,##0.00');
                         // $sheet->getColumnDimension($hcol)->setWidth('15', 'pt');
                         $sheet->getStyle($hcol . $row)->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
-                    } 
+                    }
                     $hcol++;
                 }
             }
 
             $sheet->setCellValue($hcol .$row, $_trans->totalamount);
             $sheet->getStyle($hcol . $row)->getNumberFormat()->setFormatCode('#,##0.00');
-            $sheet->getColumnDimension($hcol)->setWidth('12', 'pt');
+            $sheet->getColumnDimension($hcol)->setWidth(12);
             $sheet->getStyle($hcol . $row)->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
 
             $row++;
@@ -652,7 +661,7 @@ class DCPRController extends Controller
         {
             // if($arraygtotal->sum($_item) > 0)
             // {
-            //     array_push($sumtotal, $arraygtotal->sum($_item));    
+            //     array_push($sumtotal, $arraygtotal->sum($_item));
             // }
 
             if($type == 'date')
@@ -774,10 +783,10 @@ class DCPRController extends Controller
         header('Content-Disposition: attachment; filename="'.$dcprloc.'"');
         $writer->save("php://output");
         exit();
-    }	
-	
-	
-	
+    }
+
+
+
 }
 class DCPR extends TCPDF {
 
@@ -793,9 +802,9 @@ class DCPR extends TCPDF {
     //     if(strtolower($schoollogo->abbreviation) == 'msmi')
     //     {
     //         $this->Cell(0, 15, 'Page '.$this->getAliasNumPage(), 0, false, 'R', 0, '', 0, false, 'T', 'M');
-    //         $this->Cell(0, 25, date('m/d/Y'), 0, false, 'R', 0, '', 0, false, 'T', 'M');   
+    //         $this->Cell(0, 25, date('m/d/Y'), 0, false, 'R', 0, '', 0, false, 'T', 'M');
     //     }
-        
+
     //     $schoolname = $this->writeHTMLCell(false, 50, 40, 10, '<span style="font-weight: bold">'.$schoollogo->schoolname.'</span>', false, false, false, $reseth=true, $align='L', $autopadding=true);
     //     $schooladdress = $this->writeHTMLCell(false, 50, 40, 15, '<span style="font-weight: bold; font-size: 10px;">'.$schoollogo->address.'</span>', false, false, false, $reseth=true, $align='L', $autopadding=true);
     //     $title = $this->writeHTMLCell(false, 50, 40, 20, 'Cash Receipt Summary', false, false, false, $reseth=true, $align='L', $autopadding=true);
@@ -812,12 +821,12 @@ class DCPR extends TCPDF {
         // Page number
         // $this->Cell(0, 15, 'Page '.$this->getAliasNumPage().' of '.$this->getAliasNbPages(), 0, false, 'C', 0, '', 0, false, 'T', 'M');
         // $this->Cell(0, 5, date('m/d/Y'), 0, false, 'C', 0, '', 0, false, 'T', 'M');
-        
+
         if(strtolower($schoollogo->abbreviation) != 'msmi')
         {
             $this->Cell(0, 10, date('l, F d, Y'), 0, false, 'L', 0, '', 0, false, 'T', 'M');
             $this->Cell(0, 10, 'Page '.$this->getAliasNumPage().' of '.$this->getAliasNbPages(), 0, false, 'C', 0, '', 0, false, 'T', 'M');
-            // $this->Cell(0, 15, date('m/d/Y'), 0, false, 'R', 0, '', 0, false, 'T', 'M');   
+            // $this->Cell(0, 15, date('m/d/Y'), 0, false, 'R', 0, '', 0, false, 'T', 'M');
         }
     }
 }

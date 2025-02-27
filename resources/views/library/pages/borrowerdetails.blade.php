@@ -1,7 +1,13 @@
 @php
-    $extends = '';
-    if (auth()->user()->type == 5) {
-        $extends = 'layouts.backend';
+    $extends = 'library.layouts.borrower';
+
+    $check_refid = DB::table('usertype')
+        ->where('id', Session::get('currentPortal'))
+        ->select('refid', 'resourcepath')
+        ->first();
+
+    if (isset($check_refid->refid) && $check_refid->refid == 34) {
+        $extends = 'library.layouts.backend';
     }
 @endphp
 
@@ -12,7 +18,7 @@
     <link rel="stylesheet" href="{{ asset('js/plugins/datatables/buttons-bs4/buttons.bootstrap4.min.css') }}">
     <link rel="stylesheet" href="{{ asset('js/plugins/select2/css/select2.min.css') }}">
     <style>
-         th {
+        th {
             white-space: nowrap;
         }
     </style>
@@ -67,9 +73,19 @@
 
                     <div class="block block-rounded d-flex flex-column mt-4">
                         @php
-                             $jsonData = \DB::table('library_circulation')
-                                ->leftJoin('library_books', 'library_circulation.circulation_book_id', '=', 'library_books.id')
-                                ->join('library_status', 'library_circulation.circulation_status', '=', 'library_status.id')
+                            $jsonData = \DB::table('library_circulation')
+                                ->leftJoin(
+                                    'library_books',
+                                    'library_circulation.circulation_book_id',
+                                    '=',
+                                    'library_books.id',
+                                )
+                                ->join(
+                                    'library_status',
+                                    'library_circulation.circulation_status',
+                                    '=',
+                                    'library_status.id',
+                                )
                                 ->join('libraries', 'library_books.library_branch', '=', 'libraries.id')
                                 ->where('library_circulation.circulation_deleted', 0)
                                 ->where('library_circulation.circulation_utype', $borrower->utype)
@@ -78,11 +94,12 @@
                                 ->whereNotNull('library_circulation.circulation_due_date') // Ensure there is a due date
                                 ->whereDate('library_circulation.circulation_due_date', '<', now()) // Filter overdue items
                                 ->select(
-                                    'library_circulation.*', 
-                                    'library_books.book_title', 
-                                    'library_books.book_author', 
-                                    'libraries.library_name', 
-                                    'library_status.status_name')
+                                    'library_circulation.*',
+                                    'library_books.book_title',
+                                    'library_books.book_author',
+                                    'libraries.library_name',
+                                    'library_status.status_name',
+                                )
                                 ->get();
 
                             foreach ($jsonData as $item) {
@@ -122,8 +139,8 @@
                         </div>
                         <div class="block-content pb-3">
                             <div class="table-responsive">
-                                <table class="table table-sm table-hover table-striped table-vcenter js-dataTable-full" id="tb_borrowed"
-                                    style="width: 100%;">
+                                <table class="table table-sm table-hover table-striped table-vcenter js-dataTable-full"
+                                    id="tb_borrowed" style="width: 100%;">
                                     <thead class="thead-dark">
                                         <tr>
                                             <th>Book Title</th>
@@ -260,8 +277,8 @@
                 columns: [{
                         data: 'book_title',
                         render: function(type, data, row) {
-                            var capitalizeFirstLetter = function (string) {
-                                return string.toLowerCase().replace(/\b\w/g, function (match) {
+                            var capitalizeFirstLetter = function(string) {
+                                return string.toLowerCase().replace(/\b\w/g, function(match) {
                                     return match.toUpperCase();
                                 });
                             };
@@ -323,8 +340,8 @@
                 columns: [{
                         data: 'book_title',
                         render: function(type, data, row) {
-                            var capitalizeFirstLetter = function (string) {
-                                return string.toLowerCase().replace(/\b\w/g, function (match) {
+                            var capitalizeFirstLetter = function(string) {
+                                return string.toLowerCase().replace(/\b\w/g, function(match) {
                                     return match.toUpperCase();
                                 });
                             };
@@ -386,8 +403,8 @@
                 columns: [{
                         data: 'book_title',
                         render: function(type, data, row) {
-                            var capitalizeFirstLetter = function (string) {
-                                return string.toLowerCase().replace(/\b\w/g, function (match) {
+                            var capitalizeFirstLetter = function(string) {
+                                return string.toLowerCase().replace(/\b\w/g, function(match) {
                                     return match.toUpperCase();
                                 });
                             };
@@ -449,8 +466,8 @@
                 columns: [{
                         data: 'book_title',
                         render: function(type, data, row) {
-                            var capitalizeFirstLetter = function (string) {
-                                return string.toLowerCase().replace(/\b\w/g, function (match) {
+                            var capitalizeFirstLetter = function(string) {
+                                return string.toLowerCase().replace(/\b\w/g, function(match) {
                                     return match.toUpperCase();
                                 });
                             };

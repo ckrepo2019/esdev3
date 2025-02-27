@@ -737,7 +737,15 @@
                         </li>
                     </ul>
                 </li>
-
+                <li class="nav-item">
+                    <a class="{{ Request::url() == url('/grading_type/setup') ? 'active' : '' }} nav-link"
+                        href="/grading_type/setup">
+                        <i class="nav-icon fas fa-layer-group"></i>
+                        <p>
+                            Grading Type Setup
+                        </p>
+                    </a>
+                </li>
                 {{-- <script>
                 $(document).ready(function(){
                     $('a[href="/'+uri+'"]').addClass('active')

@@ -26,6 +26,10 @@
         .select2-container--default .select2-selection--single .select2-selection__rendered {
             line-height: unset !important;
         }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            margin-top: -6px;
+        }
     </style>
 @endsection
 
@@ -33,20 +37,23 @@
     <div class="modal fade" id="modalViewResult">
         <div class="modal-dialog modal-lg">
             <div class="modal-content shadow">
-                <div class="modal-header">
-                    <h5 class="modal-title">Result Detail <span class="badge badge-danger ml-2 resultStatus">No Result</span>
+                <div class="ribbon-wrapper ribbon-lg">
+                    <div class="ribbon bg-danger text-md resultStatus">Passed</div>
+                </div>
+                {{-- <div class="modal-header">
+                    <h5 class="modal-title">Detail
                     </h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span>×</span>
                     </button>
-                </div>
+                </div> --}}
                 <div class="modal-body">
                     <div class="row accepted_container" hidden>
                         <div class="col-md-12 form-group">
                             <label class="ml-1" for="stud_final_course"><i class="fas fa-user-check mr-1"></i> <span
                                     class="badge badge-success p-1"> Accepted </span>
                             </label>
-                            <input type="text" class="form-control text-success" id="stud_final_course" disabled>
+                            <input type="text" class="form-control" id="stud_final_course" disabled>
                         </div>
                     </div>
                     <div class="row">
@@ -65,7 +72,7 @@
                         </div>
 
                         <div class="col-md-5">
-                            <button class="btn btn-primary btn-sm btn_answers">View Answers</button>
+                            <button class="btn btn-outline-primary btn-sm btn_answers">View Answers</button>
                         </div>
 
                     </div>
@@ -73,11 +80,11 @@
                     <div class="row">
                         <div class="col-md-12 ">
                             <div class="table-responsive">
-                                <table class="table table-striped table-bordered align-middle table-sm"
-                                    id="table_test_categories" style="width: 100%;">
-                                    <thead class="">
+                                <table class="table table-striped align-middle table-sm" id="table_test_categories"
+                                    style="width: 100%;">
+                                    <thead class="thead-light">
                                         <tr>
-                                            <th style="width: 10px;">#</th>
+                                            <th>#</th>
                                             <th>Subjects</th>
                                             <th>Score%</th>
                                             <th>Time</th>
@@ -106,8 +113,8 @@
                         </div>
                     </div>
                     <hr>
-                    <button class="btn btn-success btn-sm btn_accept_stud mb-2">Accept Student</button>
-                    <button class="btn btn-danger btn-sm btn_unassign mb-2">Unassigned</button>
+                    {{-- <button class="btn btn-success btn-sm btn_accept_stud mb-2">Accept Student</button> --}}
+                    <button class="btn btn-outline-danger btn-sm btn_unassign mb-2">Unassigned</button>
                     <div class="row">
                         <div class="col-md-8">
                             <label class="mb-1 col-md-12 recomWrapper"> Recommended Course </label>
@@ -116,14 +123,14 @@
                             </ul>
                         </div>
                         <div class="col-md-4 text-right">
-                            <button class="btn btn-danger btn-sm btn_criteria">Input Criteria</button>
+                            <button class="btn btn-warning btn-sm btn_criteria">Input Criteria</button>
                         </div>
                     </div>
 
 
                 </div>
                 <div class="modal-footer justify-content-between">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
                 </div>
 
             </div>
@@ -190,14 +197,14 @@
     <div class="modal fade" id="modalCriteria" style="font-size: 14px;">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content shadow">
-                <div class="modal-header">
+                {{-- <div class="modal-header">
                     <h4 class="modal-title">Admission Criteria</h4>
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
-                </div>
+                </div> --}}
 
                 <div class="modal-body">
                     <table class="table table-sm table-bordered table-striped table-valign-middle" style="width: 100%;">
-                        <thead>
+                        <thead class="thead-light">
                             <tr>
                                 <th>Criteria</th>
                                 <th>Ratio</th>
@@ -370,6 +377,7 @@
 @section('footerjavascript')
     <script src="{{ asset('plugins/select2/js/select2.full.min.js') }}"></script>
     <script>
+        $('body').addClass('sidebar-collapse');
         var currentUserId = 0;
         var TotalAverage = 0;
         var stud_acadprog = 0
@@ -546,9 +554,9 @@
                 showAnswerHistory(currentUserId)
             })
 
-            $('.btn_accept_stud').on('click', function() {
-                accept_student(currentUserId, null);
-            })
+            // $('.btn_accept_stud').on('click', function() {
+            //     accept_student(currentUserId, null);
+            // })
 
             $('.btn_unassign').on('click', function() {
                 unassign_student(currentUserId);
@@ -576,7 +584,7 @@
                             console.log(response)
                             notify(response.status, response.message)
                             if (response.status == 'success') {
-                                $('.btn_accept_stud').prop('hidden', false);
+                                // $('.btn_accept_stud').prop('hidden', false);
                                 $('.btn_unassign').prop('hidden', true);
                                 $('#btn_save_criteria').attr('data-status', 1);
                                 $('#btn_save_criteria').text('Accept Student');
@@ -797,12 +805,12 @@
                     stud_acadprog = result.acadprog_id
 
                     if (result.status == 2) {
-                        $('.btn_accept_stud').prop('hidden', true)
+                        // $('.btn_accept_stud').prop('hidden', true)
                         $('.btn_unassign').prop('hidden', false)
                         $('#btn_save_criteria').attr('data-status', result.status)
                         $('#btn_save_criteria').text('Unassign')
                     } else {
-                        $('.btn_accept_stud').prop('hidden', false)
+                        // $('.btn_accept_stud').prop('hidden', false)
                         $('.btn_unassign').prop('hidden', true)
                         $('#btn_save_criteria').attr('data-status', 1)
                         $('#btn_save_criteria').text('Accept Student')
@@ -976,11 +984,11 @@
                     let ResultStatus = result.passedOverall ? 'Passed' : 'Failed'
                     $('.resultStatus').text(ResultStatus)
                     if (!result.passedOverall) {
-                        $('.resultStatus').removeClass('badge-success')
-                        $('.resultStatus').addClass('badge-danger')
+                        $('.resultStatus').removeClass('bg-success')
+                        $('.resultStatus').addClass('bg-danger')
                     } else {
-                        $('.resultStatus').removeClass('badge-danger')
-                        $('.resultStatus').addClass('badge-success')
+                        $('.resultStatus').removeClass('bg-danger')
+                        $('.resultStatus').addClass('bg-success')
                     }
 
                     // if ((result.acadprog_id <= 4 && result.acadprog_id >= 2) && result.status == 2) {
@@ -1061,7 +1069,7 @@
                             console.log(response)
                             notify(response.status, response.message)
                             if (response.status == 'success') {
-                                $('.btn_accept_stud').prop('hidden', true);
+                                // $('.btn_accept_stud').prop('hidden', true);
                                 $('.btn_unassign').prop('hidden', false)
                                 $('#btn_save_criteria').data('status', 2);
                                 $('#btn_save_criteria').attr('data-status', 2);
@@ -1071,8 +1079,8 @@
 
                                 $('#modalCriteria').modal('hide');
                                 // $('#modalViewResult').modal('hide');
+                                admissionGetAllResults()
                             }
-                            admissionGetAllResults()
 
                         },
                         error: function(xhr, status, error) {
@@ -1135,42 +1143,42 @@
                             `<span class="${row.passedOverall ? "text-success" : "text-danger"}" style="font-weight: 600;">${row.totalScore}% (${row.passedOverall ? "Passed" : "Failed"})</span>`
                     },
                     {
-                        data: 'courseabrv',
+                        data: null,
                         render: (data, type, row) =>
                             row.acadprog_id == 7 ?
                             `<span class="text-muted"> <strong> Not Applicable </strong> </span>
-                            <br> <span class="badge badge-secondary"> Technical Vocational </span>` : row
+                             <span class="badge badge-secondary"> Technical Vocational </span>` : row
                             .acadprog_id == 6 ?
-                            `<span> <strong> ${row.courseabrv} </strong> - ${row.courseDesc} </span>
-                            <br> <span class="badge badge-primary"> College </span>` : row
+                            `<span> ${row.courseabrv}</span>
+                             <span class="badge badge-primary"> College </span>` : row
                             .acadprog_id == 5 ?
-                            `<span> <strong> ${row.strandcode} </strong> - ${row.strandname} </span> <br> 
+                            `<span> <strong> ${row.strandcode} </strong> - ${row.strandname} </span>  
                             <span class="badge badge-danger" > SHS Strand </span>` : row.acadprog_id == 4 ?
                             `<span class="text-muted"> <strong> Not Applicable </strong> </span>
-                            <br> <span class="badge badge-secondary"> High School </span>` : row.acadprog_id == 3 ?
+                             <span class="badge badge-secondary"> High School </span>` : row.acadprog_id == 3 ?
                             `<span class="text-muted"> <strong> Not Applicable </strong> </span>
-                            <br> <span class="badge badge-secondary"> Elementary </span>` : row.acadprog_id == 2 ?
+                             <span class="badge badge-secondary"> Elementary </span>` : row.acadprog_id == 2 ?
                             `<span class="text-muted"> <strong> Not Applicable </strong> </span>
-                            <br> <span class="badge badge-secondary"> Pre-School </span>` :
+                             <span class="badge badge-secondary"> Pre-School </span>` :
                             `<span class="text-muted"> <strong> Not Applicable </strong> </span>`
 
 
                     },
                     {
-                        data: 'fitted_course',
+                        data: null,
                         render: (data, type, row) =>
                             row.fitted_course_id ?
-                            `<span> <strong class="text-success"> ${row.fitted_courseAbrv} </strong> - ${row.fitted_courseDesc} </span>` :
+                            `<span>  ${row.fitted_courseAbrv} </span>` :
                             `<span class="text-muted"> Not Specified </span>`
                     },
                     {
                         data: 'final_courseabrv',
                         render: (data, type, row) =>
                             row.final_courseabrv && row.acadprog_id == 6 ?
-                            `<span class="text-success font-weight-bold"> ${row.final_courseabrv} </span>` : row
-                            .final_strandcode && row.acadprog_id == 5 ?
-                            `<span class="text-success font-weight-bold"> ${row.final_strandcode} </span>` :
-                            '<span class="text-muted">Not Specified</span>'
+                            `<button type="button" class="btn btn-outline-success btn-sm btn_view" data-id="${row.id}" title="${row.final_courseDesc}">${row.final_courseabrv}</button>` :
+                            row.final_strandcode && row.acadprog_id == 5 ?
+                            `<button type="button" class="btn btn-outline-success btn-sm btn_view" data-id="${row.id}" title="${row.final_strandname}">${row.final_strandcode}</button>` :
+                            '<button type="button" class="btn btn-outline-secondary btn-sm btn_view" data-id="${row.id}" title="Not Specified">Not Specified</button>'
                     },
                     {
                         data: 'status',
@@ -1199,7 +1207,7 @@
 
                             return `
                                 <div class="btn-group">
-                                    <div class="input-group-append">
+                                    <div class="input-group-append" hidden>
                                         <button type="button" class="btn btn-default dropdown-toggle btn_custom_group" data-toggle="dropdown" aria-expanded="false" data-toggle="tooltip" title="Accept">
                                             <i class="far fa-hand-pointer"></i>
                                         </button>

@@ -424,7 +424,7 @@ class SchoolFormsController extends Controller
                         {
                             array_push($array_data, array(
                                 $employee->firstname.' '.$employee->middlename.' '.$employee->lastname.' '.$employee->suffix.' - '.$employee->tid,
-                                collect($employee->accounts)->where('accountdescription','TIN')->first()->accountnum ?? '',
+                                collect($employee->accounts)->where('accountdescription','TIN')->first()->accountnum ?? $employee->tid,
                                 $employee->gender != null ? strtoupper($employee->gender[0]) : '',
                                 '',
                                 $employee->designation,
@@ -444,7 +444,7 @@ class SchoolFormsController extends Controller
                             {
                                 array_push($array_data, array(
                                     $employee->firstname.' '.$employee->middlename.' '.$employee->lastname.' '.$employee->suffix.' - '.$employee->tid,
-                                    collect($employee->accounts)->where('accountdescription','TIN')->first()->accountnum ?? '',
+                                    collect($employee->accounts)->where('accountdescription','TIN')->first()->accountnum ?? $employee->tid,
                                     $employee->gender != null ? strtoupper($employee->gender[0]) : '',
                                     '',
                                     $employee->designation,

@@ -104,13 +104,213 @@ class FinanceReportController extends Controller
                 ->first();
 
             $printeddatetime = date('F d, Y h:i:s A');
-            
+
             $pdf = PDF::loadview('finance/reports/pdf/pdf_studentsbalanceforwarding',compact('balforwardlist','schoolinfo','sy','printedby','printeddatetime'))->setPaper('a4');
 
             return $pdf->stream('Balance Forwarding Report - '.$sy[0]->sydesc.'.pdf');
         }
 
     }
+    // public function reportonlinepayments($id, Request $request){
+
+    //     date_default_timezone_set('Asia/Manila');
+
+    //     $studentonlinepayment = array();
+
+    //     $onlinepayments = Db::table('onlinepayments')
+    //         ->select(
+    //             'onlinepayments.refnum',
+    //             'studinfo.lastname',
+    //             'studinfo.firstname',
+    //             'studinfo.middlename',
+    //             'studinfo.suffix',
+    //             'paymentType.description as paytype'
+    //         )
+    //         ->join('studinfo','onlinepayments.queingcode','=','studinfo.sid')
+    //         ->leftJoin('paymentType', 'onlinepayments.paymentType', '=', 'paymentType.id')
+    //         ->where('syid', FinanceModel::getSYID())
+    //         ->distinct()
+    //         ->get();
+
+    //     if(count($onlinepayments) > 0){
+
+    //         foreach($onlinepayments as $onlinepayment){
+
+    //             if($id == 'view'){
+
+    //                 $status = 'all';
+
+    //                 $getpayments = Db::table('onlinepayments')
+    //                     ->select(
+    //                         'amount',
+    //                         'isapproved',
+    //                         'paymentDate',
+    //                         'bankName',
+    //                         'TransDate',
+    //                         'remarks'
+    //                     )
+    //                     ->where('refnum', $onlinepayment->refnum)
+    //                     ->get();
+
+    //                 // return $getpayments;
+
+    //             }
+    //             elseif($id == 'changestatus'){
+
+    //                 if($request->get('status') == 'all'){
+
+    //                     $status = 'all';
+
+    //                     $getpayments = Db::table('onlinepayments')
+    //                         ->select(
+    //                             'amount',
+    //                             'isapproved',
+    //                             'paymentDate',
+    //                             'bankName',
+    //                             'TransDate',
+    //                             'remarks'
+    //                         )
+    //                         ->where('refnum', $onlinepayment->refnum)
+    //                         ->get();
+
+    //                 }
+    //                 elseif($request->get('status') == '0'){
+
+    //                     $status = '0';
+
+    //                     $getpayments = Db::table('onlinepayments')
+    //                         ->select(
+    //                             'amount',
+    //                             'isapproved',
+    //                             'paymentDate',
+    //                             'bankName',
+    //                             'TransDate',
+    //                             'remarks'
+    //                         )
+    //                         ->where('refnum', $onlinepayment->refnum)
+    //                         ->where('isapproved', '0')
+    //                         ->get();
+
+    //                 }
+    //                 elseif($request->get('status') == '1'){
+
+    //                     $status = '1';
+
+    //                     $getpayments = Db::table('onlinepayments')
+    //                         ->select(
+    //                             'amount',
+    //                             'isapproved',
+    //                             'paymentDate',
+    //                             'bankName',
+    //                             'TransDate',
+    //                             'remarks'
+    //                         )
+    //                         ->where('refnum', $onlinepayment->refnum)
+    //                         ->where('isapproved', '1')
+    //                         ->get();
+
+    //                 }
+    //                 elseif($request->get('status') == '2'){
+
+    //                     $status = '2';
+
+    //                     $getpayments = Db::table('onlinepayments')
+    //                         ->select(
+    //                             'amount',
+    //                             'isapproved',
+    //                             'paymentDate',
+    //                             'bankName',
+    //                             'TransDate',
+    //                             'remarks'
+    //                         )
+    //                         ->where('refnum', $onlinepayment->refnum)
+    //                         ->where('isapproved', '2')
+    //                         ->get();
+
+    //                 }
+    //                 elseif($request->get('status') == '5'){
+
+    //                     $status = '5';
+
+    //                     $getpayments = Db::table('onlinepayments')
+    //                         ->select(
+    //                             'amount',
+    //                             'isapproved',
+    //                             'paymentDate',
+    //                             'bankName',
+    //                             'TransDate',
+    //                             'remarks'
+    //                         )
+    //                         ->where('refnum', $onlinepayment->refnum)
+    //                         ->where('isapproved', '5')
+    //                         ->get();
+
+    //                 }
+
+    //             }
+
+    //             if(count($getpayments) > 0){
+
+
+    //                 array_push($studentonlinepayment,(object)array(
+    //                     'studinfo'      => $onlinepayment,
+    //                     'paymentinfo'   => $getpayments,
+    //                 ));
+
+    //             }
+
+
+    //         }
+
+    //     }
+
+
+    //     if($id == 'view'){
+    //         // return $studentonlinepayment;
+    //         return view('finance.reports.studentsonlinepayment')
+    //             ->with('status', 'all')
+    //             ->with('studentonlinepayments', $studentonlinepayment);
+
+    //     }
+    //     elseif($id == 'changestatus'){
+
+    //         if($request->get('action') == '0'){
+
+    //             return view('finance.reports.studentsonlinepayment')
+    //                 ->with('status', $request->get('status'))
+    //                 ->with('studentonlinepayments', $studentonlinepayment);
+
+    //         }else{
+
+    //             $schoolinfo = Db::table('schoolinfo')
+    //                 ->get();
+
+    //             $sy = DB::table('sy')
+    //                 ->where('isactive', '1')
+    //                 ->get();
+
+    //             $printedby = DB::table('teacher')
+    //                 ->select(
+    //                     'teacher.lastname',
+    //                     'teacher.firstname',
+    //                     'teacher.middlename',
+    //                     'teacher.suffix'
+    //                 )
+    //                 ->where('userid', auth()->user()->id)
+    //                 ->first();
+
+    //             $printeddatetime = date('F d, Y h:i:s A');
+    //             $status = $request->get('status');
+    //             $pdf = PDF::loadview('finance/reports/pdf/pdf_studentsonlinepayments',compact('status','studentonlinepayment','schoolinfo','sy','printedby','printeddatetime'))->setPaper('a4');
+
+    //             return $pdf->stream('Online Payments Report - '.$sy[0]->sydesc.'.pdf');
+
+    //         }
+
+    //     }
+
+    // }
+
     public function reportonlinepayments($id, Request $request){
 
         date_default_timezone_set('Asia/Manila');
@@ -123,13 +323,15 @@ class FinanceReportController extends Controller
                 'studinfo.lastname',
                 'studinfo.firstname',
                 'studinfo.middlename',
-                'studinfo.suffix'
+                'studinfo.suffix',
+                'paymentType.description as paytype'
             )
             ->join('studinfo','onlinepayments.queingcode','=','studinfo.sid')
+            ->leftJoin('paymentType', 'onlinepayments.paymentType', '=', 'paymentType.id')
             ->where('syid', FinanceModel::getSYID())
             ->distinct()
             ->get();
-            
+
         if(count($onlinepayments) > 0){
 
             foreach($onlinepayments as $onlinepayment){
@@ -154,7 +356,7 @@ class FinanceReportController extends Controller
 
                 }
                 elseif($id == 'changestatus'){
-                    
+
                     if($request->get('status') == 'all'){
 
                         $status = 'all';
@@ -206,7 +408,7 @@ class FinanceReportController extends Controller
                             ->where('refnum', $onlinepayment->refnum)
                             ->where('isapproved', '1')
                             ->get();
-                        
+
                     }
                     elseif($request->get('status') == '2'){
 
@@ -224,7 +426,7 @@ class FinanceReportController extends Controller
                             ->where('refnum', $onlinepayment->refnum)
                             ->where('isapproved', '2')
                             ->get();
-                        
+
                     }
                     elseif($request->get('status') == '5'){
 
@@ -242,11 +444,11 @@ class FinanceReportController extends Controller
                             ->where('refnum', $onlinepayment->refnum)
                             ->where('isapproved', '5')
                             ->get();
-                        
+
                     }
 
                 }
-                
+
                 if(count($getpayments) > 0){
 
 
@@ -256,12 +458,12 @@ class FinanceReportController extends Controller
                     ));
 
                 }
-               
+
 
             }
 
         }
-        
+
 
         if($id == 'view'){
             // return $studentonlinepayment;
@@ -282,11 +484,11 @@ class FinanceReportController extends Controller
 
                 $schoolinfo = Db::table('schoolinfo')
                     ->get();
-    
+
                 $sy = DB::table('sy')
                     ->where('isactive', '1')
                     ->get();
-    
+
                 $printedby = DB::table('teacher')
                     ->select(
                         'teacher.lastname',
@@ -296,15 +498,15 @@ class FinanceReportController extends Controller
                     )
                     ->where('userid', auth()->user()->id)
                     ->first();
-    
+
                 $printeddatetime = date('F d, Y h:i:s A');
                 $status = $request->get('status');
                 $pdf = PDF::loadview('finance/reports/pdf/pdf_studentsonlinepayments',compact('status','studentonlinepayment','schoolinfo','sy','printedby','printeddatetime'))->setPaper('a4');
-    
+
                 return $pdf->stream('Online Payments Report - '.$sy[0]->sydesc.'.pdf');
 
             }
-            
+
         }
 
     }

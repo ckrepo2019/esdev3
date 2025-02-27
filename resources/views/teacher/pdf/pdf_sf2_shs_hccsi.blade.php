@@ -1154,10 +1154,10 @@ if(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'lhs')
                                 $avedailyatt_male = 0;
                             }else{
                                 $avedailyatt_male = (collect($currentdays)->sum('presentmale')/count($currentdays));
-                              $avedailyatt_male = bcdiv($avedailyatt_male,1,2);
+                              $avedailyatt_male = number_format($avedailyatt_male,2);
                             }
                         @endphp
-                        {{ bcdiv($avedailyatt_male,1,2)}}
+                        {{ number_format($avedailyatt_male,2)}}
                     </td>
                     <td id="ada_female">
                         @php
@@ -1176,10 +1176,10 @@ if(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'lhs')
                                 $avedailyatt_female = 0;
                             }else{
                                 $avedailyatt_female = (collect($currentdays)->sum('presentfemale')/count($currentdays));
-                            $avedailyatt_female = bcdiv($avedailyatt_female,1,2);
+                            $avedailyatt_female = number_format($avedailyatt_female,2);
                             }
                         @endphp
-                        {{ bcdiv($avedailyatt_female,1,2)}} 
+                        {{ number_format($avedailyatt_female,2)}} 
                     </td>
                     <td  id="ada_total">
                         @php
@@ -1192,7 +1192,7 @@ if(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'lhs')
                         $avedailyatt_total = round(($avedailyatt_male+$avedailyatt_female),2);
                             }
                         @endphp
-                        {{bcdiv($avedailyatt_total,1,2)}}
+                        {{number_format($avedailyatt_total,2)}}
                     </td>
                 </tr>
                 @php
@@ -1203,7 +1203,7 @@ if(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'lhs')
                     <td colspan="2"><em>Percentage of Attendance for the month</em></td>
                     <td>
                         <?php try{ ?> 
-                            {{bcdiv($pam_male,1,2)}}
+                            {{number_format($pam_male,2)}}
                 
                         <?php }catch(\Exception $e){ ?>
                             @php
@@ -1236,7 +1236,7 @@ if(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'lhs')
                     </td>
                     <td>
                         <?php try{ ?> 
-                            {{bcdiv($pam_female,1,2)}}
+                            {{number_format($pam_female,2)}}
                 
                         <?php }catch(\Exception $e){ ?>
                             @php
@@ -1268,7 +1268,7 @@ if(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'lhs')
                     </td>
                     <td>
                         <?php try{ ?> 
-                            {{bcdiv($pam_total,1,2)}}
+                            {{number_format( ($pam_female + $pam_male ) /2,2)}}  
                         <?php }catch(\Exception $e){ ?>
                             @if($averagemale == 0 && $averagefemale > 0)
                             {{$averagefemale}}

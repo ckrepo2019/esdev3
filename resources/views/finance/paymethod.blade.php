@@ -6,7 +6,7 @@
       <div class="row mb-2">
         <div class="col-sm-6">
           <!-- <h1>Finance</h1> -->
-          
+
         </div>
         <div class="col-sm-6">
           <ol class="breadcrumb float-sm-right">
@@ -27,8 +27,8 @@
   		</div>
   		<div class="card-body">
         <div class="row">
-          <div class="col-8"> 
-            
+          <div class="col-8">
+
           </div>
           <div class="col-4">
             <div class="input-group mb-3">
@@ -55,14 +55,14 @@
                     <th class="text-center">PERCENTAGE</th>
                     <th></th>
                     <th></th>
-                  </tr>  
-                </thead> 
+                  </tr>
+                </thead>
                 <tbody id="paymethod-list">
-                  
-                </tbody>             
+
+                </tbody>
               </table>
             </div>
-          </div>          
+          </div>
         </div>
   		</div>
   	</div>
@@ -111,7 +111,7 @@
                   </select>
                 </div>
               </div>
-              
+
             </div>
             <!-- /.card-body -->
             <!-- /.card-footer -->
@@ -125,19 +125,19 @@
     </div> {{-- dialog --}}
   </div>
 
-  
 
 
-  
 
-  
+
+
+
 @endsection
 
 @section('js')
   <script type="text/javascript">
-    
+
     $(document).ready(function(){
-      
+
       searchMOP();
       function searchMOP(query)
       {
@@ -152,7 +152,7 @@
           {
             $('#paymethod-list').html(data.output);
           }
-        });   
+        });
       }
 
       $(document).on('click', '#btnmop-delete', function(){
@@ -173,14 +173,14 @@
                 url:"{{route('mopdel')}}",
                 method:'GET',
                 data:{
-                  mopid:mopid          
+                  mopid:mopid
                 },
                 dataType:'',
                 success:function(data)
                 {
 
-                  searchMOP(); 
-                    
+                  searchMOP();
+
 
                   Swal.fire(
                     'Deleted!',
@@ -189,13 +189,18 @@
                   );
 
                 }
-              }); 
+              });
             }
           });
 
 
       });
-      
+
+      $(document).on('keyup', '#txtsearchitem', function(){
+        var query = $(this).val();
+        searchMOP(query);
+      })
+
     });
 
   </script>

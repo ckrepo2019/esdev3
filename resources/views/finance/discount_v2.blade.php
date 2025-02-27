@@ -2,20 +2,20 @@
 
 @section('content')
   <section class="content">
-  			
+
         <div class="row mb-2 ml-2">
 			<div class="col-md-6"><h1 class="m-0 text-dark">Discounts</h1></div>
 			<div class="col-md-6 text-right text-xl" >
 				<button id="setup" class="btn btn-lg  btn-info" data-toggle="tooltip" title="Discount Setup">
 					<i class="fas fa-cogs"></i>
-				</button>	
+				</button>
 			</div>
         </div>
 		<div class="row">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header bg-primary">
-                        
+
                     </div>
                     <div class="card-body">
 						<div class="row form-group">
@@ -64,14 +64,14 @@
 										<th>PARTICULARS</th>
 										<th>DISCOUNT</th>
 									</tr>
-									</thead> 
-									<tbody id="discount_body" style="cursor: pointer;"></tbody>             
+									</thead>
+									<tbody id="discount_body" style="cursor: pointer;"></tbody>
 								</table>
 							</div>
 						</div>
                     </div>
                 </div>
-            </div>          
+            </div>
         </div>
   </section>
 @endsection
@@ -234,7 +234,7 @@
 							</table>
 						</div>
 					</div>
-					
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -268,17 +268,17 @@
             </div>
         </div> {{-- dialog --}}
     </div>
-  
 
-  
+
+
 @endsection
 
 @section('jsUP')
 	<style>
 		input[type=checkbox] {
 			transform: scale(1.5);
-			
-			
+
+
 		}
 
 		.loader{
@@ -338,20 +338,20 @@
 		}
 	</style>
 
-	
+
 @endsection
 
 @section('js')
-  
+
   <script type="text/javascript">
-    
+
     $(document).ready(function(){
         $('.select2').select2({
             theme: 'bootstrap4'
         });
 
         $(window).resize(function(){
-            screenadjust()    
+            screenadjust()
         })
 
         screenadjust()
@@ -365,19 +365,18 @@
             // $('.screen-adj').css('height', screen_height - 223);
         }
 
-		// $('.numberonly').keypress(function (e) {    
+		// $('.numberonly').keypress(function (e) {
 		$(document).on('keypress', '.discount_amount', function(e){
-			var charCode = (e.which) ? e.which : event.keyCode    
+			var charCode = (e.which) ? e.which : event.keyCode
 
 			if (String.fromCharCode(charCode).match(/[^0-9%.]/g))
 			{
 				return false;
 			}
-
 		});
 
 		$(document).on('keypress', '#txtpercent', function(e){
-			var charCode = (e.which) ? e.which : event.keyCode    
+			var charCode = (e.which) ? e.which : event.keyCode
 
 			if (String.fromCharCode(charCode).match(/[^0-9.]/g))
 			{
@@ -432,7 +431,7 @@
 				// dataType: "dataType",
 				success: function (data) {
 					$('#discount_body').empty()
-					$.each(data, function (index, val) { 
+					$.each(data, function (index, val) {
 						 $('#discount_body').append(`
 						 	<tr data-id="`+val.studdiscountid+`" group-id="`+val.groupid+`">
 								<td>`+val.fullname+`</td>
@@ -454,7 +453,7 @@
 				// dataType: "dataType",
 				success: function (data) {
 					$('#setuplist').empty()
-					$.each(data, function (key, value) { 
+					$.each(data, function (key, value) {
 						if(value.percent == 1)
 						{
 							$('#setuplist').append(`
@@ -474,7 +473,7 @@
 						}
 					})
 
-					
+
 				}
 			});
 		}
@@ -501,7 +500,7 @@
 
 					var totalcharge = 0;
 
-					$.each(data, function (index, val) { 
+					$.each(data, function (index, val) {
 
 						$('#discount_data').append(`
 						 	<tr data-id="`+val.id+`" class-id="`+val.classid+`">
@@ -548,7 +547,7 @@
 			$('#stat').text('Create')
 			$('#saveDiscount').attr('data-id', '')
 			$('#deleteDiscount').hide()
-			
+
 			setTimeout(() => {
 				$('#particulars').focus()
 			}, 500)
@@ -566,7 +565,7 @@
 			else{
 				var percent = 0
 			}
-			
+
 			if($('#chkpercent').prop('checked') == true)
 			{
 				var percent = 1
@@ -702,7 +701,7 @@
 					$('#particulars').val(data.particulars)
 					$('#txtpercent').val(data.amount)
 					$('#saveDiscount').attr('data-id', data.id)
-					
+
 					if(data.percent == 1)
 					{
 						$('#chkpercent').prop('checked', true)
@@ -738,14 +737,34 @@
 						},
 						// dataType: "dataType",
 						success: function (data) {
-							Swal.fire(
-								'Deleted!',
-								'Discount has been Deleted',
-								'success'
-							)
+                            if(data == 'done')
+                            {
+                                Swal.fire(
+                                    'Deleted!',
+                                    'Discount has been Deleted',
+                                    'success'
+                                )
 
-							GetDiscountSetup()
-							$('#modal-setupdetail').modal('hide')
+                                GetDiscountSetup()
+                                $('#modal-setupdetail').modal('hide')
+                            }
+                            else{
+                                const Toast = Swal.mixin({
+                                    toast: true,
+                                    position: "top-end",
+                                    showConfirmButton: false,
+                                    timer: 3000,
+                                    timerProgressBar: true,
+                                    didOpen: (toast) => {
+                                        toast.onmouseenter = Swal.stopTimer;
+                                        toast.onmouseleave = Swal.resumeTimer;
+                                    }
+                                });
+                                Toast.fire({
+                                    type: "error",
+                                    title: "Can't Delete. Discount is in use"
+                                });
+                            }
 						}
 					});
 
@@ -822,7 +841,7 @@
 						else{
 							$('#discount_setup').empty()
 							$('#discount_setup').append('<option value="0">SELECT DISCOUNT</option>')
-							$.each(data, function (indexInArray, value) { 
+							$.each(data, function (indexInArray, value) {
 								$('#discount_setup').append(`
 									<option value="`+value.id+`">`+value.particulars+`</option>
 								`)
@@ -855,7 +874,7 @@
 			})
 
 			$('#discount_totaldiscamount').text(parseFloat(totaldiscAmount, 10).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString())
-			
+
 		})
 
 		$(document).on('keyup', '.discount_amount', function(){
@@ -868,11 +887,19 @@
 
 					$(this).find('.discount_discamount').text(calcDiscount(chargeAmount, discountAmount))
 					$('.discount_include').trigger('click')
+
+
 				}
 				else{
 					$(this).find('.discount_discamount').text('0.00')
 				}
 			})
+
+            if($(this).val().length == 0)
+            {
+                $(this).val(0)
+                $(this).trigger('keyup')
+            }
 		})
 
 		$(document).on('change', '.discount_amount', function(){
@@ -888,7 +915,10 @@
 				$(this).val(value)
 			}
 
-			
+            // if($(this).val() == '')
+
+
+
 		})
 
 		function calcDiscount(charge_amount, discount)
@@ -910,7 +940,7 @@
 				// console.log(totalDiscount)
 			}
 
-			
+
 
 			// $(".totalSum").text('$' + parseFloat(total, 10).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString());
 		}
@@ -973,8 +1003,8 @@
 								if($(this).find('.discount_include').prop('checked') == true)
 								{
 									disc_array.push({
-										'id':$(this).attr('data-id'), 
-										'classid':$(this).attr('class-id'), 
+										'id':$(this).attr('data-id'),
+										'classid':$(this).attr('class-id'),
 										'chargeamount':$(this).find('.discount_balance').text(),
 										'discountamount':$(this).find('.discount_discamount').text(),
 										'discount':$(this).find('.discount_amount').val()
@@ -1010,12 +1040,12 @@
 								}
 							});
 
-							
+
 						}
 					})
 				}
 			}
-				
+
 		})
 
 		function onCreate()
@@ -1025,7 +1055,7 @@
 			$('#discount_data').empty()
 			$('#discount_totaldiscamount').text('')
 			$('#discount_totalamount').text('')
-			
+
 			setTimeout(() => {
 				$('#discount_students').val(0).trigger('change')
 			}, 500);
@@ -1071,7 +1101,7 @@
 				success: function (data) {
 					$('#discount_setup').empty()
 
-					$.each(data, function (indexInArray, value) { 
+					$.each(data, function (indexInArray, value) {
 						 $('#discount_setup').append(`
 						 	<option value="`+value.id+`">`+value.particulars+`</option></option>
 						 `)
@@ -1085,7 +1115,7 @@
 		// 	viewsetup = 'detail'
 
 		// 	$('#modal-overlay').modal('show')
-			
+
 		// 	setTimeout(function(){
 		// 		$.ajax({
 		// 			type: "GET",
@@ -1097,20 +1127,20 @@
 		// 			success: function (data) {
 		// 				$('#discount_students').val(data.studid).trigger('change')
 		// 				discount_charges();
-						
+
 		// 				setTimeout(function(){
-		// 					$.each(data.groups, function (index, val) { 
+		// 					$.each(data.groups, function (index, val) {
 		// 						// console.log('val: ' + val.classid)
 		// 						// $('#discount_data tr[class-id="'+val.classid+'"]').find('.discount_balance').text()
 		// 						// $('#discount_data tr[class="'+val.classid+'"]').find('.discount_include').prop('checked', true)
 		// 						// $('#discount_data tr[class="'+val.classid+'"]').find('.discount_amount').val(val.discount)
 		// 						// $('#discount_data tr[class="'+val.classid+'"]').find('.discount_amount').trigger('keyup')
-							
+
 
 		// 						// $('#discount_data tr[class-id="'+val.classid+'"]').find('.discount_include').prop('checked', true);
 		// 						$('#discount_data tr[class-id="'+val.classid+'"]').find('.discount_include').trigger('click');
 		// 						$('#modal-discount').modal('show')
-								
+
 		// 					});
 		// 				}, 1500)
 
@@ -1118,16 +1148,16 @@
 		// 					manageuilock()
 		// 					$('#modal-overlay').modal('hide')
 		// 				}, 2000);
-							
+
 		// 				setTimeout(function(){
 		// 					$('#discount_setup').val(data.discountid).trigger('change')
 		// 				}, 500)
 
-						
-						
+
+
 		// 			}
 		// 		});
-		// 	}, 0)		
+		// 	}, 0)
 		// })
 
 		$(document).on('click', '#discount_body tr', function(){
@@ -1157,7 +1187,7 @@
 					manageuilock()
 					$('#modal-overlay').modal('hide')
 					$('#modal-discount').modal('show')
-					
+
 				}
 			});
 		})
@@ -1168,5 +1198,5 @@
 
   </script>
 
-  
+
 @endsection

@@ -413,7 +413,8 @@
 
                 <div class="modal-footer justify-content-between">
                     <button class="btn btn-primary btn-sm eval" id="btn_proceed">Proceed</button>
-                    <button class="btn btn-success btn-sm update_sched" id="btn_updatesched">Update Sched</button>
+                    <button class="btn btn-success btn-sm update_sched" id="btn_updatesched" disabled>Update
+                        Sched</button>
                     <button class="btn btn-danger btn-sm remove_sched" id="btn_removesched">Remove Sched</button>
                 </div>
             </div>
@@ -598,12 +599,11 @@
                                 <thead>
                                     <tr>
                                         <th width="15%">Section</th>
-                                        <th width="27%">Subject</th>
+                                        <th width="35%">Subject</th>
                                         <th width="15%" class="text-center">Time & Day</th>
                                         <th width="10%" class="text-center">Room</th>
                                         <th width="8%" class="text-center align-middle">Enrolled</th>
                                         <th width="8%" class="text-center align-middle">Percentage</th>
-                                        <th width="8%" class="text-center align-middle">Term</th>
                                         <th width="9%" class="text-center align-middle">Edit Sched</th>
                                     </tr>
                                 </thead>
@@ -963,9 +963,6 @@
                         },
                         {
                             "data": "levelname"
-                        },
-                        {
-                            "data": null
                         },
                         {
                             "data": null
@@ -1409,27 +1406,6 @@
                             'targets': 6,
                             'orderable': false,
                             'createdCell': function(td, cellData, rowData, row, col) {
-                                var term = rowData.term
-
-                                if (term == 1) {
-                                    term = 'First Term'
-                                } else if (term == 2) {
-                                    term = 'Second Term'
-                                } else {
-                                    term = ''
-                                }
-
-                                $(td)[0].innerHTML = term
-                                $(td).addClass('align-middle')
-                                $(td).addClass('text-center')
-                                // $(td).addClass('p-0')
-                            }
-
-                        },
-                        {
-                            'targets': 7,
-                            'orderable': false,
-                            'createdCell': function(td, cellData, rowData, row, col) {
                                 var table = 'table-borderless'
                                 var multiple = ''
 
@@ -1448,7 +1424,7 @@
                                         .detailid + '" data-levelid="' + rowData.levelid +
                                         '" data-sectionid="' + rowData.sectionid +
                                         '" data-subjid="' + rowData.subjid +
-                                        '" id="editteachersched" class="pl-2" style="oadding-top: 10px;"><i class="text-primary far fa-edit"  data-toggle="tooltip" data-placement="top" title="Edit Schedule"></i></a><p class="text-muted mb-0" style="font-size:.7rem"></p></td></tr>'
+                                        '" id="editteachersched" class="pl-2" style="oadding-top: 10px;" ><i class="text-primary far fa-edit"  data-toggle="tooltip" data-placement="top" title="Edit Schedule"></i></a><p class="text-muted mb-0" style="font-size:.7rem"></p></td></tr>'
                                 })
                                 text += '</table>'
                                 // $.each(rowData.schedule,function(a,b){
@@ -1489,6 +1465,7 @@
                 $('#headupdatesched').show();
                 $('#btn_proceed').hide();
                 $('#btn_updatesched').show();
+                $('#btn_updatesched').attr('disabled', false);
                 $('#btn_removesched').show();
                 $('.day').prop('checked', false);
 
@@ -1587,6 +1564,8 @@
 
             // teacher own sched update sched 
             $(document).on('click', '#btn_updatesched', function() {
+                console.log('hello');
+
                 var valid_data = true;
                 var detailid = $('#id_up_detailid').val();
                 var acadprogid = $('#id_up_acadprogid').val();
@@ -1619,6 +1598,9 @@
                 var filterd_schedinfo = schedinfo.filter(x => x.subjid == subjid && x.levelid == levelid &&
                     x.detailid == detailid);
 
+
+
+                // return false
 
                 if (schedclass == "") {
                     Toast.fire({
@@ -2490,7 +2472,7 @@
                 var acadprog = $(this).attr('data-acadprogid');
                 if (levelid == 14 || levelid == 15) {
                     var semid = sh_subjects.filter(x => x.levelid == levelid && x.subjid == subjid)[0]
-                    .semid;
+                        .semid;
                 } else {
                     var semid = null;
                 }

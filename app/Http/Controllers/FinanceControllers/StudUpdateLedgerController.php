@@ -46,7 +46,7 @@ class StudUpdateLedgerController extends Controller
             }
 
         }
-        elseif($levelid >= 17 && $levelid <= 21)
+        elseif($levelid >= 17 && $levelid <= 25)
         {
             $courses = db::table('college_courses')
                 ->select('id', 'courseabrv as code')
@@ -152,7 +152,7 @@ class StudUpdateLedgerController extends Controller
 				->groupBy('studid')
                 ->get();
         }
-        elseif($levelid >= 17 && $levelid <= 21)
+        elseif($levelid >= 17 && $levelid <= 25)
         {
             if($subjid == 0)
             {
@@ -288,7 +288,7 @@ class StudUpdateLedgerController extends Controller
                             $q->where('semid', $semid);
                         }
                     }
-                    elseif($levelid >= 17 && $levelid <= 21)
+                    elseif($levelid >= 17 && $levelid <= 25)
                     {
                         $q->where('semid', $semid);
                     }

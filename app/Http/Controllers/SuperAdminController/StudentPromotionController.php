@@ -128,6 +128,7 @@ class StudentPromotionController extends \App\Http\Controllers\Controller
 
                   $enrolled = DB::table('enrolledstud')
                         ->where('enrolledstud.deleted', 0)
+                        ->whereNotIn('enrolledstud.studstatus', [0, 3, 5, 6, 7])
                         ->join('studinfo', function ($join) {
                               $join->on('enrolledstud.studid', '=', 'studinfo.id');
                               $join->where('studinfo.deleted', 0);
@@ -225,6 +226,7 @@ class StudentPromotionController extends \App\Http\Controllers\Controller
 
                   $enrolled = DB::table('sh_enrolledstud')
                         ->where('sh_enrolledstud.deleted', 0)
+                        ->whereNotIn('sh_enrolledstud.studstatus', [0, 3, 5, 6, 7])
                         ->join('studinfo', function ($join) {
                               $join->on('sh_enrolledstud.studid', '=', 'studinfo.id');
                               $join->where('studinfo.deleted', 0);
@@ -338,6 +340,7 @@ class StudentPromotionController extends \App\Http\Controllers\Controller
             } else if ($acadprog == 6) {
 
                   $enrolled = DB::table('college_enrolledstud')
+                        ->whereNotIn('college_enrolledstud.studstatus', [0, 3, 5, 6, 7])
                         ->where('college_enrolledstud.deleted', 0)
                         ->join('studinfo', function ($join) {
                               $join->on('college_enrolledstud.studid', '=', 'studinfo.id');
@@ -713,6 +716,7 @@ class StudentPromotionController extends \App\Http\Controllers\Controller
                                           ->where('id', $item->id)
                                           ->take(1)
                                           ->update([
+                                                'studstatus' => 1,
                                                 'promotionstatus' => 0,
                                                 'updatedby' => auth()->user()->id,
                                                 'updateddatetime' => \Carbon\Carbon::now('Asia/Manila')
@@ -769,7 +773,6 @@ class StudentPromotionController extends \App\Http\Controllers\Controller
             $auto_enroll = $request->get('auto_enroll');
 
             $students = self::enrolled_students($syid, $semid, $gradelevel, $studid, $condition);
-
             $sy_desc = DB::table('sy')
                   ->where('id', $syid)
                   ->first();
@@ -892,6 +895,7 @@ class StudentPromotionController extends \App\Http\Controllers\Controller
                                                 ->where('syid', $syid)
                                                 ->where('semid', $semid)
                                                 ->where('studid', $item->studid)
+                                                ->whereIn('studstatus',[1,2,4])
                                                 ->first();
 
 
@@ -922,6 +926,7 @@ class StudentPromotionController extends \App\Http\Controllers\Controller
 
                                           DB::table('studinfo')
                                                 ->where('id', $item->studid)
+                                                ->whereIn('studstatus',[1,2,4])
                                                 ->where('deleted', 0)
                                                 ->take(1)
                                                 ->update([
@@ -957,6 +962,7 @@ class StudentPromotionController extends \App\Http\Controllers\Controller
                                                 ->where('sh_enrolledstud.deleted', 0)
                                                 ->where('sh_enrolledstud.syid', $next_sy->id)
                                                 ->where('sh_enrolledstud.studid', $item->studid)
+                                                ->whereIn('sh_enrolledstud.studstatus',[1,2,4])
                                                 ->select(
                                                       'sh_enrolledstud.sectionid',
                                                       'sh_enrolledstud.studstatus',
@@ -986,6 +992,7 @@ class StudentPromotionController extends \App\Http\Controllers\Controller
                                                 ->where('college_enrolledstud.deleted', 0)
                                                 ->where('college_enrolledstud.syid', $next_sy->id)
                                                 ->where('college_enrolledstud.studid', $item->studid)
+                                                ->whereIn('college_enrolledstud.studstatus',[1,2,4])
                                                 ->select(
                                                       'college_enrolledstud.sectionID as sectionid',
                                                       'college_enrolledstud.studstatus',
@@ -1046,7 +1053,7 @@ class StudentPromotionController extends \App\Http\Controllers\Controller
 
                         } else if ($acadprog == 6) {
 
-
+                              
                         } else {
 
                               $promstat = 0;
@@ -1090,6 +1097,7 @@ class StudentPromotionController extends \App\Http\Controllers\Controller
                                           })
                                           ->where('sh_enrolledstud.deleted', 0)
                                           ->where('sh_enrolledstud.syid', $next_sy->id)
+                                          ->whereIn('sh_enrolledstud.studstatus',[1,2,4])
                                           ->where('sh_enrolledstud.studid', $item->studid)
                                           ->select(
 
@@ -1115,6 +1123,7 @@ class StudentPromotionController extends \App\Http\Controllers\Controller
                                           ->where('enrolledstud.deleted', 0)
                                           ->where('enrolledstud.syid', $next_sy->id)
                                           ->where('enrolledstud.studid', $item->studid)
+                                          ->whereIn('enrolledstud.studstatus',[1,2,4])
                                           ->select(
                                                 'enrolledstud.sectionid',
                                                 'enrolledstud.studstatus',
@@ -1217,11 +1226,13 @@ class StudentPromotionController extends \App\Http\Controllers\Controller
                                           ->where('syid', $syid)
                                           ->where('semid', $semid)
                                           ->where('studid', $item->studid)
+                                          ->whereIn('studstatus',[1,2,4])
                                           ->take(1)
                                           ->update([
                                                 'updatedby' => auth()->user()->id,
                                                 'updateddatetime' => \Carbon\Carbon::now('Asia/Manila'),
-                                                'promotionstatus' => 1
+                                                'promotionstatus' => 1,
+                                                'studstatus' => 0
                                           ]);
 
                                     if ($semid == 1) {
@@ -1229,6 +1240,7 @@ class StudentPromotionController extends \App\Http\Controllers\Controller
                                           DB::table('studinfo')
                                                 ->where('id', $item->studid)
                                                 ->where('deleted', 0)
+                                                ->whereIn('studstatus',[1,2,4])
                                                 ->take(1)
                                                 ->update([
                                                       'studstatus' => 0,
@@ -1259,6 +1271,7 @@ class StudentPromotionController extends \App\Http\Controllers\Controller
                                                 ->where('college_enrolledstud.deleted', 0)
                                                 ->where('college_enrolledstud.syid', $next_sy->id)
                                                 ->where('college_enrolledstud.studid', $item->studid)
+                                                ->whereIn('college_enrolledstud.studstatus',[1,2,4])
                                                 ->select(
                                                       'college_enrolledstud.sectionID as sectionid',
                                                       'college_enrolledstud.studstatus',
@@ -1281,6 +1294,7 @@ class StudentPromotionController extends \App\Http\Controllers\Controller
                                                 $enrollmentcourse = DB::table('college_enrolledstud')
                                                       ->where('college_enrolledstud.syid', $syid)
                                                       ->where('college_enrolledstud.studid', $item->studid)
+                                                      ->whereIn('college_enrolledstud.studstatus',[1,2,4])
                                                       ->where('deleted', 0)
                                                       ->where('semid', $semid)
                                                       ->select('courseid')
@@ -1360,6 +1374,7 @@ class StudentPromotionController extends \App\Http\Controllers\Controller
                                                       ->where('sh_enrolledstud.deleted', 0)
                                                       ->where('sh_enrolledstud.syid', $next_sy->id)
                                                       ->where('sh_enrolledstud.studid', $item->studid)
+                                                      ->whereIn('sh_enrolledstud.studstatus',[1,2,4])
                                                       ->select(
                                                             'strandid',
                                                             'sh_enrolledstud.sectionid',
@@ -1383,6 +1398,7 @@ class StudentPromotionController extends \App\Http\Controllers\Controller
                                                       ->where('enrolledstud.deleted', 0)
                                                       ->where('enrolledstud.syid', $next_sy->id)
                                                       ->where('enrolledstud.studid', $item->studid)
+                                                      ->whereIn('enrolledstud.studstatus',[1,2,4])
                                                       ->select(
                                                             'enrolledstud.sectionid',
                                                             'enrolledstud.studstatus',

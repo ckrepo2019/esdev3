@@ -92,7 +92,7 @@
                               @if($first)
                                     <td class="p-2 text-center align-middle">
                                           <span class="text-primary text-bold">{{$item->classification}}</span>
-                                          <br>{{$item->day}}
+                                          <br><span id="sorted-day">{{$item->day}}</span>
                                     </td>
                                     <td class="p-2 text-center align-middle">{{$item->start}}<br>{{$item->end}}</td>
                                     <td class="p-2 text-center align-middle">{{$item->roomname}}</td>
@@ -123,7 +123,7 @@
                         <tr style="font-size:11px !important">
                               <td class="p-2 text-center align-middle">
                                     <span class="text-primary text-bold">{{$item->classification}}</span>
-                                    <br>{{$item->day}}
+                                    <br><span id="sorted-day2">{{$item->day}}</span>
                               </td>
                               <td class="p-2 text-center align-middle"> {{$item->start}}<br>{{$item->end}}</td>
                               <td class="p-2 text-center align-middle">{{$item->roomname}}</td>

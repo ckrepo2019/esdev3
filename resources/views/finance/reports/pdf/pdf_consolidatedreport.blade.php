@@ -2,7 +2,7 @@
 <html>
     <head>
         <style>
-            *   {
+            *   {                    
                     font-family: Arial, Helvetica, sans-serif;
                 }
 
@@ -26,7 +26,7 @@
                 width: 150px;
             }
 
-
+            
         </style>
     </head>
     <body>
@@ -46,11 +46,11 @@
         </table>
         <div style="line-height: 10px;"></div>
         <table style="width: 100%; font-size: 10px; line-height: 20px;">
-
+            
         </table>
         <div style="line-height: 2px;"></div>
         <div style="line-height: 2px; font-weight: bold; font-size: 10px;">OFFICIAL RECEIPT NO.: {{$rangeOR}}</div>
-
+        
         <table style="width: 100%; font-size: 10px;">
             <thead>
                 <tr style="text-align: right;">
@@ -59,13 +59,13 @@
                     <th style="font-weight: bold;">SHS</th>
                     <th style="font-weight: bold;">HS</th>
                     <th style="font-weight: bold;">GS</th>
-                    {{-- <th style="font-weight: bold;">GENERAL</th> --}}
+                    <th style="font-weight: bold;">GENERAL</th>
                     <th style="font-weight: bold;">Total</th>
                 </tr>
             </thead>
             <tbody>
                 {!! $cashtransaction !!}
-
+            
 
 
             {{-- foreach here --}}
@@ -99,10 +99,10 @@
                     <th style="font-weight: bold;">{{number_format($gentotalshs, 2)}}</th>
                     <th style="font-weight: bold;">{{number_format($gentotalhs, 2)}}</th>
                     <th style="font-weight: bold;">{{number_format($gentotalgs, 2)}}</th>
-                    {{-- <th style="font-weight: bold;">{{number_format($gentotalgen, 2)}}</th> --}}
+                    <th style="font-weight: bold;">{{number_format($gentotalgen, 2)}}</th>
                     <th style="font-weight: bold;">{{number_format($gentotal, 2)}}</th>
                 </tr>
-
+                
             </tbody>
             <tfoot>
                 <tr>
@@ -135,7 +135,7 @@
 
             {{$sig->title_2}}:
         </div>
-
+        
         <div style="line-height: 5px;"></div>
         <table style="width: 100%; table-layout: fixed; font-size: 10px; font-weight: bold;">
             <tr>

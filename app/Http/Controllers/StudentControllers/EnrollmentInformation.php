@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\StudentControllers;
 
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 use DB;
 use File;
 use Image;
@@ -137,6 +138,7 @@ class EnrollmentInformation extends \App\Http\Controllers\Controller
         $syid = $request->get('syid');
         $levelid = $request->get('levelid');
 
+        // return $request->all();
         // $studendinfo = Session::get('studentInfo');
         // $studid = $studendinfo->id;
 
@@ -161,82 +163,121 @@ class EnrollmentInformation extends \App\Http\Controllers\Controller
             $strandid = $enrollment[0]->strandid;
             $semid = DB::table('semester')->where('isactive',1)->first()->id;
             $schedule = \App\Http\Controllers\PrincipalControllers\ScheduleController::get_schedule($levelid,$syid,$sectionid,$semid,$strandid);
-        }else if($acadprog == 6){
+        }else if($acadprog == 6 || $acadprog == 8){
             $semid = DB::table('semester')->where('isactive',1)->first()->id;
             $schedule = \App\Http\Controllers\SuperAdminController\StudentLoading::collegestudentsched_plot($studid,$syid,$semid);
-            if($schedule[0]->status == 1){
+                if($schedule[0]->status == 1){
                 $schedule = $schedule[0]->info;
                 $schedule = collect($schedule)->where('schedstatus','!=','DROPPED')->values();
                 foreach($schedule as $item){
                     $item->subjdesc = $item->subjDesc;
-                    foreach($item->schedule as $sched_item){
-                        $sched_item->teacher = $item->teacher;
-                    }
+                    $item->teacher = $item->teacher;
+                    // foreach($item->schedule as $sched_item){
+                    //     $sched_item->teacher = $item->teacher;
+                    // }
                 }
             }else{
                 $schedule = array();
             }
         }
         else{
+
             $schedule = \App\Http\Controllers\PrincipalControllers\ScheduleController::get_schedule($levelid,$syid,$sectionid);
 
-			
         }
+
+        // return $schedule;
 
         $today_sched = array();
-
         foreach($schedule as $item){
-            if(isset($item->schedule)){
-                foreach($item->schedule as $sched_item){
-                    $contains = collect($sched_item->days)->contains(function ($value, $key) use($day){
-                                return $value == $day;
-                            });
-    
-                    if($contains){
-                        array_push($today_sched,(object)[
-                            'subject'=>$item->subjdesc,
-                            'teacher'=>$sched_item->teacher,
-                            'time'=>$sched_item->time,
-                            'sort'=>\Carbon\Carbon::create($sched_item->start)->isoFormat('HH'),
-                            'start'=>\Carbon\Carbon::create($sched_item->start)->isoFormat('HH:mm'),
-                            'end'=>\Carbon\Carbon::create($sched_item->end)->isoFormat('HH:mm')
-                        ]);
-                    }
-                }
-            }else{
-                return collect($item);
+            $daysArray = explode(',', $item->days);
+            $contains = in_array($day, $daysArray) ? 1 : 0;
+            if($contains == 1){
+                array_push($today_sched,(object)[
+                    'subject'=>$item->subjdesc,
+                    'teacher'=>$item->teacher,
+                    'time'=>$item->schedtime,
+                    'sort'=>\Carbon\Carbon::create($item->start)->isoFormat('HH'),
+                    'start'=>\Carbon\Carbon::create($item->start)->isoFormat('HH:mm'),
+                    'end'=>\Carbon\Carbon::create($item->end)->isoFormat('HH:mm')
+                ]);
             }
-           
+            
         }
+        // foreach($schedule as $item){
+        //     if(isset($item->schedule)){
+        //         foreach($item->schedule as $sched_item){
+                    
+        //             $contains = collect($sched_item->days)->contains(function ($value, $key) use($day){
+        //                         return $value == $day;
+        //                     });
 
-        $time = \Carbon\Carbon::now('Asia/Manila')->isoFormat('HH:mm');
+                            
+        //             if($contains){
+        //                 array_push($today_sched,(object)[
+        //                     'subject'=>$item->subjdesc,
+        //                     'teacher'=>$sched_item->teacher,
+        //                     'time'=>$sched_item->time,
+        //                     'sort'=>\Carbon\Carbon::create($sched_item->start)->isoFormat('HH'),
+        //                     'start'=>\Carbon\Carbon::create($sched_item->start)->isoFormat('HH:mm'),
+        //                     'end'=>\Carbon\Carbon::create($sched_item->end)->isoFormat('HH:mm')
+        //                 ]);
+        //             }
+        //         }
+        //     }else{
+        //         return collect($item);
+        //     }
+           
+        // }
 
+
+        // $time = \Carbon\Carbon::now('Asia/Manila')->isoFormat('HH:mm');
+        $time = Carbon::now('Asia/Manila');
+        
+        // return $time;
         $current_sched = true;
         $next_sched = true;        
         $cn_sched = array();
 
-        foreach(collect($today_sched)->sortBy('sort')->values() as $item){
-            if(!$current_sched && $next_sched){
-                $item->sched="next";
-                array_push($cn_sched,$item);
-                $next_sched = false;
-            }
-            if($time >= $item->start && $time <= $item->end){
-                if($current_sched){
-                    $item->sched="current";
-                    array_push($cn_sched,$item);
-                    $current_sched = false;
-                }
-            }
-        }
+        // foreach(collect($today_sched)->sortBy('sort')->values() as $item){
+        //     if(!$current_sched && $next_sched){
+        //         $item->sched="next";
+        //         array_push($cn_sched,$item);
+        //         $next_sched = false;
+        //     }
+        //     if($time >= $item->start && $time <= $item->end){
 
-        if(count($cn_sched) == 0){
-            $next_shed = collect($today_sched)->sortBy('sort')->where('start','>',$time)->values();
-            if(count($next_shed) > 0){
-                $next_shed[0]->sched ="next";
-                array_push($cn_sched,$next_shed[0]);
+        //         if($current_sched){
+        //             $item->sched="current";
+        //             array_push($cn_sched,$item);
+        //             $current_sched = false;
+        //         }
+        //     }
+        // }
+
+        // if(count($cn_sched) == 0){
+        //     $next_shed = collect($today_sched)->sortBy('sort')->where('start','>',$time)->values();
+        //     if(count($next_shed) > 0){
+        //         $next_shed[0]->sched ="next";
+        //         array_push($cn_sched,$next_shed[0]);
+        //     }
+        // }
+
+        foreach (collect($today_sched)->sortBy('sort')->values() as $item) {
+            $start_time = Carbon::createFromFormat('H:i', $item->start, 'Asia/Manila');
+            $end_time = Carbon::createFromFormat('H:i', $item->end, 'Asia/Manila');
+        
+            if ($time->between($start_time, $end_time, true)) {
+                $item->sched = 'current';
+            } elseif ($time->greaterThan($end_time)) {
+                $item->sched = 'previous';
+            } elseif ($time->lessThan($start_time)) {
+                $item->sched = 'next';
             }
+        
+            $cn_sched[] = $item; // Add the updated schedule to the $cn_sched array
         }
+        
 
         return $cn_sched;
 
@@ -264,7 +305,6 @@ class EnrollmentInformation extends \App\Http\Controllers\Controller
         
                         
         $enrollment =  \App\Models\SuperAdmin\SuperAdminData::enrollment_record($syid, $semid, $studid);
-
         foreach($enrollment as $item){
             $middlename = explode(" ",$item->middlename);
             $temp_middle = '';
@@ -679,6 +719,7 @@ class EnrollmentInformation extends \App\Http\Controllers\Controller
                         $join->on('college_enrolledstud.sectionid','=','college_sections.id');
                         $join->where('college_sections.deleted',0);
                     })
+                    ->join('college_courses','college_sections.courseID', '=', 'college_courses.id')
                     ->join('gradelevel',function($join){
                         $join->on('college_enrolledstud.yearLevel','=','gradelevel.id');
                         $join->where('gradelevel.deleted',0);
@@ -696,10 +737,11 @@ class EnrollmentInformation extends \App\Http\Controllers\Controller
                         'sectionDesc as sectionname',
                         'college_enrolledstud.yearLevel as levelid',
                         'college_classsched.id as schedid',
-                        'college_enrolledstud.courseid'
+                        'college_enrolledstud.courseid',
+                        'college_courses.courseabrv'
                     )
                     ->get();
-
+                    return $check_enrollment;
                     if(count($check_enrollment) > 0){
 
                         $collegesection = DB::table('college_schedgroup_detail')
@@ -836,7 +878,7 @@ class EnrollmentInformation extends \App\Http\Controllers\Controller
         if($levelid == 14 || $levelid == 15){
             $schedule = \App\Http\Controllers\PrincipalControllers\ScheduleController::get_schedule($levelid,$syid,$sectionid,$semid,$strandid);
         }
-        elseif($levelid >= 17 && $levelid <= 20){
+        elseif($levelid >= 17){
             $schedule = \App\Http\Controllers\SuperAdminController\StudentLoading::collegestudentsched_plot($studid,$syid,$semid);
             if($schedule[0]->status == 1){
                 $schedule = $schedule[0]->info;
@@ -844,9 +886,9 @@ class EnrollmentInformation extends \App\Http\Controllers\Controller
                 foreach($schedule as $item){
                     $item->subjdesc = $item->subjDesc;
                     $item->subjcode = $item->subjCode;
-                    foreach($item->schedule as $sched_item){
-                        $sched_item->teacher = $item->teacher;
-                    }
+                    // foreach($item->schedule as $sched_item){
+                    //     $sched_item->teacher = $item->teacher;
+                    // }
                     $item->datatype = "college";
                 }
             }else{
@@ -879,8 +921,7 @@ class EnrollmentInformation extends \App\Http\Controllers\Controller
 
         if($type == 'today'){
             $day = \Carbon\Carbon::now('Asia/Manila')->dayOfWeekIso ;
-            $today_sched = self::get_today_sched($schedule);
-            return collect($today_sched)->sortBy('sort')->values();
+            return $schedule;
         }else if($type == 'all'){
             return view('studentPortal.pages.schedplot')->with('schedule',$schedule);
         }
@@ -916,21 +957,19 @@ class EnrollmentInformation extends \App\Http\Controllers\Controller
         $day = \Carbon\Carbon::now('Asia/Manila')->dayOfWeekIso ;
         $today_sched = array();
         foreach($schedule as $item){
-            foreach($item->schedule as $sched_item){
-                $contains = collect($sched_item->days)->contains(function ($value, $key) use($day){
-                            return $value == $day;
-                        });
-                if($contains){
-                    array_push($today_sched,(object)[
-                        'subject'=>$item->subjdesc,
-                        'teacher'=>$sched_item->teacher,
-                        'time'=>$sched_item->time,
-                        'sort'=>\Carbon\Carbon::create($sched_item->start)->isoFormat('HH'),
-                        'start'=>\Carbon\Carbon::create($sched_item->start)->isoFormat('hh:mm A'),
-                        'end'=>\Carbon\Carbon::create($sched_item->end)->isoFormat('hh:mm A')
-                    ]);
-                }
+            $daysArray = explode(',', $item->days);
+            $contains = in_array($day, $daysArray) ? 1 : 0;
+            if($contains == 1){
+                array_push($today_sched,(object)[
+                    'subject'=>$item->subjdesc,
+                    'teacher'=>$item->teacher,
+                    'time'=>$item->schedtime,
+                    'sort'=>\Carbon\Carbon::create($item->start)->isoFormat('HH'),
+                    'start'=>\Carbon\Carbon::create($item->start)->isoFormat('HH:mm'),
+                    'end'=>\Carbon\Carbon::create($item->end)->isoFormat('HH:mm')
+                ]);
             }
+            
         }
         return $today_sched;
     }
@@ -938,22 +977,24 @@ class EnrollmentInformation extends \App\Http\Controllers\Controller
 
     public static function college_grade($studid = null,$syid = null,$semid = null){
 
-        $grades = DB::table('college_studentprospectus')
+        $grades = DB::table('college_stud_term_grades')
+                    ->join('college_classsched','college_stud_term_grades.schedid','=','college_classsched.id')
                     ->join('college_prospectus',function($join){
-                        $join->on('college_studentprospectus.prospectusID','=','college_prospectus.id');
+                        $join->on('college_classsched.subjectID','=','college_prospectus.id');
                         $join->where('college_prospectus.deleted',0);
                     })
-                    ->where('college_studentprospectus.deleted',0)
-                    ->where('college_studentprospectus.studid',$studid)
-                    ->where('college_studentprospectus.syid',$syid)
-                    ->where('college_studentprospectus.semid',$semid)
+                    ->join('studinfo',function($join) use($studid){
+                        $join->on('studinfo.id','=','college_stud_term_grades.studid');
+                        $join->where('studinfo.id',$studid);
+                    })
+                    ->where('college_stud_term_grades.deleted',0)
+                    ->where('college_classsched.syID',$syid)
+                    ->where('college_classsched.semesterID',$semid)
                     ->select(
-                            'college_studentprospectus.*',
-                            'subjectID'
+                            'college_stud_term_grades.*',
+                            'college_classsched.subjectID',
                         )
                     ->get();
-
-
         $schedule = \App\Http\Controllers\SuperAdminController\StudentLoading::collegestudentsched_plot($studid,$syid,$semid);
 
         $schedule = collect($schedule[0]->info)->where('schedstatus','!=','DROPPED')->values();
@@ -961,43 +1002,44 @@ class EnrollmentInformation extends \App\Http\Controllers\Controller
         $temp_grades = array();
 
         foreach($schedule as $item){
-            $check = collect($grades)->where('prospectusID',$item->subjectID)->first();
+            $check = collect($grades)->where('subjectID',$item->subjectID)->first();
             $item->finalgrade = null;
             if(isset($check->id)){
 
-                if($check->prelemstatus != 4){
-                    $check->prelemgrade = null;
+                if($check->prelim_status != 5){
+                    $check->prelim_transmuted = null;
                 }
-                if($check->midtermstatus != 4){
-                    $check->midtermgrade = null;
+                if($check->midterm_status != 5){
+                    $check->midterm_transmuted = null;
                 }
-                if($check->prefistatus != 4){
-                    $check->prefigrade = null;
+                if($check->prefinal_status != 5){
+                    $check->prefinal_transmuted = null;
                 }
-                if($check->finalstatus != 4){
-                    $check->finalgrade = null;
-                    $check->fg = null;
-                    $check->fgremarks = null;
+                if($check->final_status != 5){
+                    $check->final_transmuted = null;
+                    $check->final_grade_transmuted = null;
+                    $check->final_remarks = null;
                 }
 
                 $check->subjDesc = $item->subjDesc;
                 $check->subjCode = $item->subjCode;
                 array_push($temp_grades,$check);
             }else{
-                $check = collect($grades)->where('subjectID',$item->main_subjid)->first();
+                $check = collect($grades)->where('subjectID',$item->subjectID)->first();
                 if(isset($check->id)){
     
-                    if($check->prelemstatus != 4){
-                        $check->prelemgrade = null;
+                    if($check->prelim_status != 5){
+                        $check->prelim_transmuted = null;
                     }
-                    if($check->midtermstatus != 4){
-                        $check->midtermgrade = null;
+                    if($check->midterm_status != 5){
+                        $check->midterm_transmuted = null;
                     }
-                    if($check->prefistatus != 4){
-                        $check->prefigrade = null;
+                    if($check->prefinal_status != 5){
+                        $check->prefinal_transmuted = null;
                     }
-                    if($check->finalstatus != 4){
-                        $check->finalgrade = null;
+                    if($check->final_status != 5){
+                        $check->final_transmuted = null;
+                        $check->final_remarks = null;
                     }
     
                     $check->subjDesc = $item->subjDesc;
@@ -1017,6 +1059,7 @@ class EnrollmentInformation extends \App\Http\Controllers\Controller
     public static function enrollment_reportcard(Request $request){
 
         $syid = $request->get('syid');
+        $purpose = $request->get('purpose');
 
         $semid = null;
         $strandid = null;
@@ -1026,12 +1069,25 @@ class EnrollmentInformation extends \App\Http\Controllers\Controller
         $clsetup = array();
         $ageevaldate = array();
         $remarks_setup = array();
+        $user = null;
+        
+        if( isset($purpose) && $purpose == 'mobile' ){
+            $user = DB::table('users')->where('id', $request->studid)->get()->first();
 
-        if(auth()->user()->type == 9){
-            $studid = DB::table('studinfo')->where('sid',str_replace('P','',auth()->user()->email))->first()->id;
-        }else{
-            $studid = DB::table('studinfo')->where('sid',str_replace('S','',auth()->user()->email))->first()->id;
+            if(auth()->user()->type == 9){
+                $studid = DB::table('studinfo')->where('sid',str_replace('P','',$user->email))->first()->id;
+            }else{
+                $studid = DB::table('studinfo')->where('sid',str_replace('S','',$user->email))->first()->id;
+            }
+            
+        }else {
+            if(auth()->user()->type == 9){
+                $studid = DB::table('studinfo')->where('sid',str_replace('P','',auth()->user()->email))->first()->id;
+            }else{
+                $studid = DB::table('studinfo')->where('sid',str_replace('S','',auth()->user()->email))->first()->id;
+            }
         }
+
         $school = DB::table('schoolinfo')->first()->abbreviation;
         
         $check_enrollment = DB::table('enrolledstud')   
@@ -1167,7 +1223,7 @@ class EnrollmentInformation extends \App\Http\Controllers\Controller
                     $item->q4  = $item->q4 < 75 &&  $item->q4status == 4  ? '' :$item->q4;
                 }
             }
-        }elseif ($levelid >= 17 && $levelid <= 20) {
+        }elseif ($levelid >= 17) {
             $semid = $request->get('semid');
             $studgrades = self::college_grade($studid,$syid,$semid);
             $setup = DB::table('semester_setup')

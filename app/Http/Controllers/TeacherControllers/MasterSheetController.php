@@ -2427,8 +2427,8 @@ class MasterSheetController extends Controller
     }
 
     function studentawards(Request $request)
-    {
-
+{
+    try {
         $gradelevel = $request->get('gradelevel');
         $section = $request->get('section');
         $syid = $request->get('sy');
@@ -2454,7 +2454,7 @@ class MasterSheetController extends Controller
                 ->first();
         }
 
-        $schoolinfo = Db::table('schoolinfo')->first();
+        $schoolinfo = DB::table('schoolinfo')->first();
         $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
         $spreadsheet = $reader->load("Student_Ranking.xlsx");
         $sheet = $spreadsheet->getActiveSheet();
@@ -2471,11 +2471,11 @@ class MasterSheetController extends Controller
         $sheet->setCellValue('A3', $schoolinfo->address);
         $sheet->setCellValue('A4', $schoolyearinfo->sydesc);
         $sheet->setCellValue('A5', $gradelevelinfo->levelname . ' - ' . $sections->sectionname);
+        
         $malecount = 1;
         $startcellno = 10;
 
         if (count($students) > 0) {
-
             if ($gradelevel == 14 || $gradelevel == 15) {
                 $students = collect($students)->where('student', '!=', 'SUBJECTS')->where('semid', $semid)->values();
             } else {
@@ -2498,17 +2498,28 @@ class MasterSheetController extends Controller
 
         $version = "V5";
 
+        // To handle any issues with buffer output
         try {
             ob_end_clean();
         } catch (\Exception $e) {
+            // Do nothing if the buffer is already clean
         }
-
 
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
         header('Content-Type: application/vnd.ms-excel');
         header('Content-Disposition: attachment; filename="' . 'SR ' . str_replace("GRADE ", "_G", $gradelevelinfo->levelname) . str_replace(" ", "_", $sections->sectionname) . '_SY' . $schoolyearinfo->sydesc . '_' . \Carbon\Carbon::now('Asia/Manila')->isoFormat('YYYYMMDDThhMMSS') . $version . '.xlsx');
         $writer->save("php://output");
+    } catch (\Exception $e) {
+        // Return an error response with status and message
+         // Example of returning with error alert
+    return redirect()->back()->with('error', 'An error occurred while processing student awards. Incomplete grading, please try again later.');
+        // return response()->json([
+        //     'status' => 'error',
+        //     'message' => 'An error occurred while processing student awards. Incomplete grading, please try again later.'
+        // ], 500);
     }
+}
+
 
     public function finalcomposite(Request $request)
     {
@@ -3386,6 +3397,9 @@ class MasterSheetController extends Controller
         }
 
         $studentcol = 10;
+
+      
+
         foreach ($students as $item) {
             $sheet->setCellValue('A' . $studentcol, $studentcol - 9);
             $sheet->setCellValue('B' . $studentcol, $item->studentname);
@@ -3394,8 +3408,11 @@ class MasterSheetController extends Controller
             foreach ($item->grades as $item) {
                 if ($item->id != 'G1') {
                     $temp_qg = 'q' . $quarter;
+                    
+                    if (!empty($grade->$temp_qg)) {
+                        $sheet->setCellValue(chr($letterval) . $studentcol, $grade->$temp_qg);
+                    }
 
-                    $sheet->setCellValue(chr($letterval) . $studentcol, $item->$temp_qg);
                     $letterval += 1;
                 }
             }
@@ -3404,6 +3421,7 @@ class MasterSheetController extends Controller
 
         }
 
+        // dd($quarter, $students);
 
 
         $sheet->removeRow($studentcol, 500 - $studentcol);
@@ -3448,7 +3466,6 @@ class MasterSheetController extends Controller
 
 
         // return $subjid;
-
 
         $levelname = DB::table('gradelevel')
             ->where('id', $gradelevel)
@@ -3499,6 +3516,45 @@ class MasterSheetController extends Controller
         $spreadsheet = $reader->load("GSA-PL.xlsx");
 
         $sheetcount = 1;
+
+        $principal = DB::table('teacher')
+        ->where('usertypeid', 2)
+        ->where('deleted', 0)
+        ->where('isactive', 1)
+        ->first();
+        
+
+        $principal_name = '';
+
+        if ($principal) {
+            $principal_name =
+                ($principal->firstname ?? '') .
+                ' ' .
+                ($principal->middlename ? $principal->middlename[0] . '. ' : '') .
+                ($principal->lastname ?? '') .
+                ($principal->suffix ? ', ' . $principal->suffix : '');
+        }else { 
+             $principal = DB::table('faspriv')
+            ->where('faspriv.usertype', 2)
+            ->where('faspriv.deleted', 0)
+            ->join('teacher', 'faspriv.userid', '=', 'teacher.userid')
+            ->select(
+                'teacher.*'
+            )
+            ->first();
+
+            if ($principal) {
+                $principal_name =
+                    ($principal->firstname ?? '') .
+                    ' ' .
+                    ($principal->middlename ? $principal->middlename[0] . '. ' : '') .
+                    ($principal->lastname ?? '') .
+                    ($principal->suffix ? ', ' . $principal->suffix : '');
+            }
+
+        }
+
+        // return $principal_name;
 
         foreach ($sections as $item) {
 
@@ -3755,27 +3811,30 @@ class MasterSheetController extends Controller
             $sheet->setCellValue('I46', '="or SIMPLY the PL is  "&TEXT(J41,"0.00")&"% and "&TEXT(J43*100,"0.00")&"% of the entire class"');
             $sheet->setCellValue('I47', 'has a grade of at least 75% and above in ' . $item->levelname . '-' . $item->sectionname . ' ' . $subject->subjdesc);
 
-            $sheet->setCellValue('A66', strtoupper('Sr. Editha D. Dismas, TDM'));
+          
+
+            $sheet->setCellValue('A66', strtoupper($principal_name));
             $sheet->setCellValue('A60', '');
             $sheet->setCellValue('A54', $adviser);
 
             $sheet = $spreadsheet->setActiveSheetIndexByName('SUMMARY');
 
             $sheet->setCellValue('A' . ($sheetcount + 18), $item->sectionname);
-
+            
             $sheet->setCellValue('A' . ($sheetcount + 43), $item->sectionname);
-
+            
             $sheet->setCellValue('B' . ($sheetcount + 18), $item->male);
             $sheet->setCellValue('C' . ($sheetcount + 18), $item->female);
-
-
+            
+            
             $sheet->setCellValue('F' . ($sheetcount + 18), $item->totalmalemstook);
             $sheet->setCellValue('G' . ($sheetcount + 18), $item->totalfemalemstook);
-
-
+            
+            
             $sheet->setCellValue('B' . ($sheetcount + 43), $item->malewithabove75grades);
             $sheet->setCellValue('C' . ($sheetcount + 43), $item->femalewithabove75grades);
-
+            $sheet->setCellValue('A85', strtoupper($principal_name));
+            
             $sheetcount += 1;
 
 

@@ -43,6 +43,18 @@
                         </p>
                     </a>
                 </li>
+
+                <li class="nav-item">
+                    <a href="/hr/settings/notification/index"
+                        class="nav-link {{ Request::url() == url('/hr/settings/notification/index') ? 'active' : '' }}">
+                        <i class="nav-icon  fas fa-exclamation"></i>
+                        <p>
+                            Notification & Request
+                            {{-- <span class="ml-2 badge badge-primary">2</span> --}}
+                        </p>
+                    </a>
+                </li>
+
                 {{-- <li class="nav-item">
                     <a href="/user/profile" class="nav-link {{Request::url() == url('/user/profile') ? 'active' : ''}}">
                         <i class="nav-icon fa fa-user"></i>
@@ -75,6 +87,29 @@
                         </p>
                     </a>
                 </li> --}}
+
+                <li class="nav-header text-warning">DOCUMENT TRACKING</li>
+                <li class="nav-item">
+                    <a href="/documenttracking"
+                        class="nav-link {{ Request::url() == url('/documenttracking') ? 'active' : '' }}">
+                        <i class="nav-icon fa fa-file"></i>
+                        <p>
+                            Document Tracking
+                        </p>
+                    </a>
+                </li>
+
+
+                <li class="nav-header text-warning">Employee Requirements</li>
+                <li class="nav-item">
+                    <a href="/hr/requirements/employee"
+                        class="nav-link {{ Request::fullUrl() === url('/hr/requirements/employee') ? 'active' : '' }}">
+                        <i class="nav-icon fa fa-folder-open"></i>
+                        <p>
+                            My Requirements
+                        </p>
+                    </a>
+                </li>
 				
                 <li class="nav-header text-warning">Your Portal</li>
 

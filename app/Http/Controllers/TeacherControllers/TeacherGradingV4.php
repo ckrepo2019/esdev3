@@ -236,6 +236,7 @@ class TeacherGradingV4 extends \App\Http\Controllers\Controller
                 if($gradelevel == 14 || $gradelevel == 15){
                     $strand = $item->strandid;
                 }
+                
                 if($activesy == 2 && $grading_version->version == 'v2'){
                     $grades = \App\Http\Controllers\SuperAdminController\StudentGradeEvaluation::sf9_grades_gv2($gradelevel,$item->studid,$activesy,$strand,$activesem,$section,$isSF9);
                 }else{

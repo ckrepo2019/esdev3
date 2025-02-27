@@ -51,15 +51,15 @@
 
                         <div class="block-content font-size-sm pb-3">
                             <div class="row">
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <div class="block">
                                         <div class="block-content">
-                                            <img src="{{ asset('books/no-image-found.jpg') }}" alt="" id="cover_img"
-                                                style="width:100%; height: 270px;">
+                                            <img src="" alt="Cover Image" id="cover_img"
+                                                style="height: 270px; width: 100%; object-fit: contain; object-position: center; ">
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <strong>ISBN</strong>
                                     <p class="font-w600 text-primary" id="visbn"></p>
                                     <strong>Author</strong>
@@ -71,27 +71,32 @@
                                     <strong>Date Received</strong>
                                     <p class="text-muted" id="vdatereceived"></p>
                                 </div>
-                                <div class="col-md-3">
-                                    <strong>Title</strong>
-                                    <p class="text-muted" id="vtitle"></p>
-                                    <strong>Edition</strong>
-                                    <p class="text-muted" id="vedition"></p>
-                                    <strong>Copyright</strong>
-                                    <p class="text-muted" id="vcopyright"></p>
-                                    <strong>Category</strong>
-                                    <p class="text-muted" id="vcategory"></p>
-                                    <strong>Call Number</strong>
-                                    <p class="text-muted" id="vcallnumber"></p>
-                                </div>
-                                <div class="col-md-3">
-                                    <strong>Price</strong>
-                                    <p class="text-muted" id="vprice"></p>
-                                    <strong>Quantity</strong>
-                                    <p class="text-muted" id="vquantity"></p>
-                                    <strong>Available</strong>
-                                    <p class="text-muted" id="vavailable"></p>
-                                    <strong>Description</strong>
-                                    <p class="text-muted pr-1" id="vdescription"></p>
+                                <div class="col-md-12">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <strong>Title</strong>
+                                            <p class="text-muted" id="vtitle"></p>
+                                            <strong>Edition</strong>
+                                            <p class="text-muted" id="vedition"></p>
+                                            <strong>Copyright</strong>
+                                            <p class="text-muted" id="vcopyright"></p>
+                                            <strong>Category</strong>
+                                            <p class="text-muted" id="vcategory"></p>
+                                            <strong>Call Number</strong>
+                                            <p class="text-muted" id="vcallnumber"></p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <strong>Price</strong>
+                                            <p class="text-muted" id="vprice"></p>
+                                            <strong>Quantity</strong>
+                                            <p class="text-muted" id="vquantity"></p>
+                                            <strong>Available</strong>
+                                            <p class="text-muted" id="vavailable"></p>
+                                            <strong>Description</strong>
+                                            <p class="text-muted pr-1" id="vdescription"></p>
+                                        </div>
+
+                                    </div>
                                 </div>
                             </div>
 
@@ -151,7 +156,7 @@
 @endsection
 
 @section('js_after')
-    <script src="{{ asset('js/plugins/select2/js/select2.full.min.js') }}"></script>
+    {{-- <script src="{{ asset('js/plugins/select2/js/select2.full.min.js') }}"></script>
     <script src="{{ asset('js/plugins/datatables/jquery.dataTables.min.js') }}"></script>
     <script src="{{ asset('js/plugins/datatables/dataTables.bootstrap4.min.js') }}"></script>
     <script src="{{ asset('js/plugins/datatables/buttons/dataTables.buttons.min.js') }}"></script>
@@ -159,7 +164,7 @@
     <script src="{{ asset('js/plugins/datatables/buttons/buttons.html5.min.js') }}"></script>
     <script src="{{ asset('js/plugins/datatables/buttons/buttons.flash.min.js') }}"></script>
     <script src="{{ asset('js/plugins/datatables/buttons/buttons.colVis.min.js') }}"></script>
-    <script src="{{ asset('js/pages/tables_datatables.js') }}"></script>
+    <script src="{{ asset('js/pages/tables_datatables.js') }}"></script> --}}
 
     <script>
         $("#fullscreenButton").click();
@@ -179,7 +184,9 @@
                     url: '{{ route('get.masterlist.book') }}',
                     success: function(data) {
                         console.log(data)
-                        $('#cover_img').attr('src', data.book_img);
+                        $('#cover_img').attr('src', data.book_img).attr('onerror',
+                            "this.onerror=null;this.src='{{ asset('assets/lms/lost.png') }}';"
+                        );
                         $('#visbn').text(data.book_isbn ?? '--');
                         $('#vtitle').text(data.book_title ?? '--');
                         $('#vauthor').text(data.book_author ?? '--');
@@ -256,7 +263,7 @@
                     categoryid: categoryid ?? null,
                     action: 'getall'
                 },
-                url: '{{ route('books') }}',
+                url: '{{ route('lib.books') }}',
                 success: function(data) {
                     console.log(data)
                     load_books_datatable(data);
@@ -296,7 +303,7 @@
                         className: 'text-center align-middle',
                         render: function(data, type, row) {
                             var img =
-                                `<img class="shadow my-2 align-self-center" src="${row.book_img}" style="height:124px; width:110px;"/>`
+                                `<img class="shadow my-2 align-self-center" src="/${row.book_img}" style="height:124px; width:110px;" onerror="this.onerror=null;this.src='{{ asset('assets/lms/lost.png') }}';" />`
                             return img;
                         }
                     },

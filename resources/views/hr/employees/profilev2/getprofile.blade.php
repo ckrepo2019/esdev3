@@ -451,7 +451,7 @@
                 <input type="text" class="form-control" id="standardallowance_desc" placeholder="Enter Description" onkeyup="this.value = this.value.toUpperCase();" >
               </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-6" hidden>
               <div class="form-group mb-0" style="padding-left: 4px!important;">
                 <div class="form-check pr-3">
                   <input class="form-check-input baseonattendance" type="checkbox">
@@ -459,7 +459,7 @@
                 </div>
               </div>
             </div>
-            <div class="col-md-6 text-right">
+            <div class="col-md-6 text-right" hidden>
               <div class="form-group mb-0" style="padding-left: 4px!important;">
                 <div class="form-check">
                   <input class="form-check-input paidfreeday" type="checkbox">
@@ -2052,7 +2052,7 @@
     </div>
   </div> --}}
   
-  <div class="card">
+  <div class="card" hidden>
     <div class="card-header bg-dark" id="basic_info">
       <h5 class="" style="color: rgb(235, 235, 235);"><i class="fas fa-layer-group" style="padding-top: 10px; padding-right: 5px;"></i>ALLOWANCE SETUP</h5>
     </div>

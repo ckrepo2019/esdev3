@@ -6,7 +6,7 @@
       <div class="row mb-2">
         <div class="col-sm-6">
           <!-- <h1>Finance</h1> -->
-          
+
         </div>
         <div class="col-sm-6">
           <ol class="breadcrumb float-sm-right">
@@ -34,7 +34,7 @@
               <div class="col-md-4 input-group">
                 <input type="search" id="txtfilter" class="form-control filter" placeholder="Search">
                 <div class="input-group-append">
-                  <button id="btncreatemap" class="btn btn-warning"><i class="far fa-plus-square"></i> Create</button>  
+                  <button id="btncreatemap" class="btn btn-warning"><i class="far fa-plus-square"></i> Create</button>
                 </div>
               </div>
             </div>
@@ -66,7 +66,7 @@
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label>Description</label> 
+            <label>Description</label>
             <input type="search" name="" id="txtdesc" class="form-control">
           </div>
         </div>
@@ -81,10 +81,10 @@
 
         </div>
       </div>
-    </div> 
+    </div>
   </div>
 
-  
+
 @endsection
 {{-- @section('jsUP')
   <style type="text/css">
@@ -135,7 +135,7 @@
           }
         });
       }
-      
+
 
       $(document).on('click', '#btncreatemap', function(){
         $('#txtdesc').val('');
@@ -149,7 +149,7 @@
 
         console.log($('#mapAction').text());
 
-        if($('#mapAction').text() == 'Create') 
+        if($('#mapAction').text() == 'Create')
         {
           $.ajax({
             url:"{{route('savemapping')}}",
@@ -182,7 +182,7 @@
               else
               {
 
-                loadmap() 
+                loadmap()
                 const Toast = Swal.mixin({
                   toast: true,
                   position: 'top-end',
@@ -201,7 +201,7 @@
                 })
               }
 
-              
+
             }
           });
         }
@@ -240,7 +240,7 @@
               else
               {
 
-                loadmap();  
+                loadmap();
                 const Toast = Swal.mixin({
                   toast: true,
                   position: 'top-end',
@@ -258,12 +258,12 @@
                   title: 'Map name updated.'
                 })
 
-                
+
               }
 
-              
+
             }
-          }); 
+          });
         }
       });
 
@@ -321,7 +321,7 @@
               {
                 if(data == 0)
                 {
-                  loadmap();  
+                  loadmap();
                   const Toast = Swal.mixin({
                     toast: true,
                     position: 'top-end',
@@ -341,7 +341,7 @@
                 }
                 else
                 {
-                  loadmap();  
+                  loadmap();
                   const Toast = Swal.mixin({
                     toast: true,
                     position: 'top-end',
@@ -364,6 +364,10 @@
           }
         })
       });
+
+      $(document).on('keyup', '#txtfilter', function(){
+        loadmap();
+      })
 
     });
   </script>

@@ -127,18 +127,29 @@
                                 @if(DB::table('schoolinfo')->first()->withschoolfolder == 1)
                                 <li class="nav-item">
                                     <a class="{{Request::url() == url('/schoolfolderv2/index') ? 'active':''}} nav-link" href="/schoolfolderv2/index">
-                                        <i class="nav-icon fa fa-calendar"></i>
+                                        <i class="nav-icon fa fa-folder"></i>
                                         <p>
                                             @if(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'bct')
                                             BCT Commons
                                             @else
-                                            Doc Con
+                                            File Directory
                                             @endif
                                         </p>
                                     </a>
                                 </li>
                                 @endif
                             @endif
+
+                            <li class="nav-item">
+                              <a href="/hr/settings/notification/index" class="nav-link {{Request::url() == url('/hr/settings/notification/index') ? 'active' : ''}}">
+                                  <i class="nav-icon  fas fa-exclamation"></i>
+                                  <p>
+                                      Notification & Request
+                                      {{-- <span class="ml-2 badge badge-primary">2</span> --}}
+                                  </p>
+                              </a>
+                          </li>
+
           @php
               $countapproval = DB::table('hr_leaveemployeesappr')
                   ->where('appuserid', auth()->user()->id)
@@ -204,7 +215,7 @@
               </p>
             </a>
           </li>
-          @if($schoolinfo->snr == 'ldcu')
+          @if($schoolinfo->snr == 'ldcu' || strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'ldcu')
             @php
               $scholarship = DB::table('scholarship_applicants')->where('deleted', 0)->where('scholar_status', 'SUBMITTED')->count();
             @endphp
@@ -287,6 +298,15 @@
                                 </p>
                             </a>
                         </li>
+
+                        <li class="nav-item">
+                          <a class="{{Request::fullUrl() == url('/tesda/enrollment') ? 'active':''}} nav-link" href="/tesda/enrollment">
+                              <i class="nav-icon far fa-circle"></i>
+                              <p>
+                                  TESDA Prereg
+                              </p>
+                          </a>
+                      </li>
             </ul>
           </li>
 
@@ -302,7 +322,6 @@
             {{(Request::Is('finance/labfees')) ? 'menu-open' : ''}}
 			{{(Request::Is('finance/espsetup')) ? 'menu-open' : ''}}
 			{{(Request::Is('finance/books')) ? 'menu-open' : ''}}
-            {{(Request::Is('finance/assessmentunit')) ? 'menu-open' : ''}}
             ">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-wallet"></i>
@@ -395,7 +414,15 @@
               </li>--}}
             </ul>
           </li>
-          <li class="nav-item has-treeview
+          <li class="nav-item">
+            <a href="{!! route('onlinepay')!!}" class="nav-link {{(Request::Is('finance/onlinepay')) ? 'active' : ''}}">
+              <i class="fas fa-gem nav-icon"></i>
+              <p>
+                Online Payment <span id="olpayCount" class="badge badge-warning right viewolpaycount">{{App\FinanceModel::countOnlinePayment()}}</span>
+              </p>
+            </a>
+          </li>
+          {{-- <li class="nav-item has-treeview
                   {{(Request::Is('finance/onlinepay')) ? 'menu-open' : ''}}
                   {{(Request::Is('finance/olreceipt')) ? 'menu-open' : ''}}
                   ">
@@ -426,7 +453,7 @@
                 </li>
               @endif
             </ul>
-          </li>
+          </li> --}}
 
 		<li class="nav-item">
             <a href="{!! route('exampermit')!!}" class="nav-link {{(Request::Is('finance/exampermit')) ? 'active' : ''}}">
@@ -437,14 +464,14 @@
             </a>
 		</li>
 
-          <li class="nav-item">
+          {{-- <li class="nav-item">
             <a href="{!! route('expenses')!!}" class="nav-link {{(Request::Is('finance/expenses')) ? 'active' : ''}}">
               <i class="fas fa-share-square nav-icon"></i>
               <p>
                 Expenses
               </p>
             </a>
-          </li>
+          </li> --}}
 
           <li class="nav-item">
             <a href="{!! route('disbursement')!!}" class="nav-link {{(Request::Is('finance/disbursement')) ? 'active' : ''}}">
@@ -691,14 +718,14 @@
               </p>
             </a>
           </li>
-          <li class="nav-item">
+          {{-- <li class="nav-item">
             <a href="/finance/reportonlinepayments/view" class="nav-link {{(Request::Is('finance/reportonlinepayments/view')) ? 'active' : ''}}">
               <i class="nav-icon fas fa-user-friends"></i>
               <p>
                 Online Payments
               </p>
             </a>
-          </li>
+          </li> --}}
 		<li class="nav-item">
 			<a href="/finance/stockcard/view" class="nav-link {{(Request::Is('finance/stockcard/view')) ? 'active' : ''}}">
 				<i class="nav-icon fas fa-boxes"></i>
@@ -761,59 +788,76 @@
                 </a>
             </li>
         @endif
-                            @if(isset(DB::table('schoolinfo')->first()->withleaveapp))
-                                @if(DB::table('schoolinfo')->first()->withleaveapp == 1)
-                                <li class="nav-item">
-                                    <a href="/leaves/apply/index"  id="dashboard" class="nav-link {{Request::url() == url('/leaves/apply/index') ? 'active' : ''}}">
-                                        <i class="nav-icon fa fa-file"></i>
-                                        <p>
-                                            Apply Leave
-                                        </p>
-                                    </a>
-                                </li>
-                                @endif
-                            @else
-                                <li class="nav-item">
-                                    <a href="/leaves/apply/index"  id="dashboard" class="nav-link {{Request::url() == url('/leaves/apply/index') ? 'active' : ''}}">
-                                        <i class="nav-icon fa fa-file"></i>
-                                        <p>
-                                            Apply Leave
-                                        </p>
-                                    </a>
-                                </li>
-                            @endif
-                            @if(isset(DB::table('schoolinfo')->first()->withovertimeapp))
-                                @if(DB::table('schoolinfo')->first()->withovertimeapp == 1)
-                                <li class="nav-item">
-                                    <a href="/overtime/apply/index"  id="dashboard" class="nav-link {{Request::url() == url('/overtime/apply/index') ? 'active' : ''}}">
-                                        <i class="nav-icon fa fa-file"></i>
-                                        <p>
-                                            Apply Overtime
-                                        </p>
-                                    </a>
-                                </li>
-                                @endif
-                            @endif
-                            @if(isset(DB::table('schoolinfo')->first()->withundertimeapp))
-                                @if(DB::table('schoolinfo')->first()->withundertimeapp == 1)
-                                <li class="nav-item">
-                                    <a href="/overtime/apply/index"  id="dashboard" class="nav-link {{Request::url() == url('/overtime/apply/index') ? 'active' : ''}}">
-                                        <i class="nav-icon fa fa-file"></i>
-                                        <p>
-                                            Apply Overtime
-                                        </p>
-                                    </a>
-                                </li>
-                                @endif
-                            @endif
-                            <li class="nav-item">
-                                <a href="/dtr/attendance/index" class="nav-link {{Request::url() == url('/dtr/attendance/index') ? 'active' : ''}}">
-                                    <i class="nav-icon fa fa-file"></i>
-                                    <p>
-                                        Daily Time Record
-                                    </p>
-                                </a>
-                            </li>
+              {{-- @if(isset(DB::table('schoolinfo')->first()->withleaveapp))
+                  @if(DB::table('schoolinfo')->first()->withleaveapp == 1)
+                  <li class="nav-item">
+                      <a href="/leaves/apply/index"  id="dashboard" class="nav-link {{Request::url() == url('/leaves/apply/index') ? 'active' : ''}}">
+                          <i class="nav-icon fa fa-file"></i>
+                          <p>
+                              Apply Leave
+                          </p>
+                      </a>
+                  </li>
+                  @endif
+              @else
+                  <li class="nav-item">
+                      <a href="/leaves/apply/index"  id="dashboard" class="nav-link {{Request::url() == url('/leaves/apply/index') ? 'active' : ''}}">
+                          <i class="nav-icon fa fa-file"></i>
+                          <p>
+                              Apply Leave
+                          </p>
+                      </a>
+                  </li>
+              @endif --}}
+              {{-- @if(isset(DB::table('schoolinfo')->first()->withovertimeapp))
+                  @if(DB::table('schoolinfo')->first()->withovertimeapp == 1)
+                  <li class="nav-item">
+                      <a href="/overtime/apply/index"  id="dashboard" class="nav-link {{Request::url() == url('/overtime/apply/index') ? 'active' : ''}}">
+                          <i class="nav-icon fa fa-file"></i>
+                          <p>
+                              Apply Overtime
+                          </p>
+                      </a>
+                  </li>
+                  @endif
+              @endif --}}
+              {{-- @if(isset(DB::table('schoolinfo')->first()->withundertimeapp))
+                  @if(DB::table('schoolinfo')->first()->withundertimeapp == 1)
+                  <li class="nav-item">
+                      <a href="/overtime/apply/index"  id="dashboard" class="nav-link {{Request::url() == url('/overtime/apply/index') ? 'active' : ''}}">
+                          <i class="nav-icon fa fa-file"></i>
+                          <p>
+                              Apply Overtime
+                          </p>
+                      </a>
+                  </li>
+                  @endif
+              @endif --}}
+              <li class="nav-header text-warning">My Applications</li>
+              {{-- <li class="nav-item">
+                  <a href="/hr/leaves/index?action=myleave" class="nav-link {{ Request::fullUrl() === url('/hr/leaves/index?action=myleave') ? 'active' : '' }}">
+                      <i class="nav-icon fa fa-calendar-alt"></i>
+                      <p>
+                          Leave Applications
+                      </p>
+                  </a>
+              </li> --}}
+              <li class="nav-item">
+                  <a href="/leaves/apply/index"  id="dashboard" class="nav-link {{Request::url() == url('/leaves/apply/index') ? 'active' : ''}}">
+                      <i class="nav-icon fa fa-file"></i>
+                      <p>
+                          Leave Applications
+                      </p>
+                  </a>
+              </li>
+              <li class="nav-item">
+                  <a href="/dtr/attendance/index" class="nav-link {{Request::url() == url('/dtr/attendance/index') ? 'active' : ''}}">
+                      <i class="nav-icon fa fa-file"></i>
+                      <p>
+                          Daily Time Record
+                      </p>
+                  </a>
+              </li>
         </ul>
       </nav>
       <br>

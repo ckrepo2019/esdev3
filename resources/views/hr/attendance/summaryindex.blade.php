@@ -56,7 +56,7 @@
               <div class="col-md-4">
                   <label>Department</label>
                   <select class="form-control form-control" id="select-department">
-                    <option value="0"></option>
+                    <option value="0">All</option>
                     @if(count($departments)>0)
                       @foreach($departments as $department)
                       <option value="{{$department->id}}">{{ucwords($department->department)}}</option>

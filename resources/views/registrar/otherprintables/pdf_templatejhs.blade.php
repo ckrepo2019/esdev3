@@ -482,7 +482,7 @@
                         <div style="width: 100%; font-size: 20px !important;">Department of Education</div>
                         <div style="width: 100%; font-size: 15px !important;">{{DB::table('schoolinfo')->first()->regiontext}}</div>
                         <div style="width: 100%; font-size: 15px !important;">{{DB::table('schoolinfo')->first()->divisiontext}}</div>
-                        <div style="width: 100%; font-size: 15px !important;">{{DB::table('schoolinfo')->first()->districttext}}</div>
+                        {{-- <div style="width: 100%; font-size: 15px !important;">{{DB::table('schoolinfo')->first()->districttext}}</div> --}}
                     </td>
                     <td rowspan="2" style="vertical-align: middle; text-align: left; width: 15%;"><img src="{{base_path()}}/public/assets/images/department_of_Education.png" alt="school" width="80px"></td>
                 </tr>

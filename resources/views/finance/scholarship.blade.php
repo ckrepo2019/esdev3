@@ -4,22 +4,37 @@
   <section class="content">
   			<!-- Payment Items -->
         <div class="row mb-2 ml-2">
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <h1 class="m-0 text-dark">Scholarship Application</h1>
             </div>
-            <div class="col-md-6 text-right">
-                <button id="scholarship_setup" class="btn btn-default btn-lg" data-toggle="tooltip" title="Scolarship Setup">
-                    <i class="fas fa-cogs"></i>
-                </button>
+            <div class="col-md-3">
+
             </div>
-            
+            <div class="col-md-2">
+                <select id="app_status" class="select2 form-control form-control-lg">
+                    <option value="ALL">ALL</option>
+                    <option value="SUBMITTED">SUBMITTED</option>
+                    <option value="APPROVED">APPROVED</option>
+                    <option value="DISAPPROVED">DISAPPROVED</option>
+                </select>
+            </div>
+            <div class="col-md-3 text-right">
+                <div class="input-group mb-3">
+                    <input type="search" class="form-control form-control" id="app_search" placeholder="Search">
+                    <div class="input-group-append">
+                        <button id="scholarship_setup" class="btn btn-default" data-toggle="tooltip" title="Scolarship Setup">
+                            <i class="fas fa-cogs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
 
 		<div class="row">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header bg-primary">
-                        
+
                     </div>
                     <div class="card-body">
                         <div id="main_table" class="table-responsive p-0">
@@ -32,17 +47,17 @@
                                     <th>SCHOOL YEAR</th>
                                     <th>SEMESTER</th>
                                     <th>STATUS</th>
-                                    
+
                                   </tr>
-                                </thead> 
+                                </thead>
                                 <tbody id="app_list" style="cursor: pointer;">
-                                    
-                                </tbody>             
+
+                                </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
-            </div>          
+            </div>
         </div>
   </section>
 @endsection
@@ -63,12 +78,12 @@
                             <div class="col-md-7">
                                 <div class="row">
                                     <div class="col-md-12" id="app_name">
-                                        
+
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-12" id="app_level">
-                                        
+
                                     </div>
                                 </div>
                             </div>
@@ -92,22 +107,22 @@
                         <hr>
                         <div class="row form-group">
                             <div class="col-md-12 text-bold">
-                                REQUIREMENTS: 
+                                REQUIREMENTS:
                             </div>
                         </div>
                         <div class="row form-group">
                             <div class="col-md-12 responsive">
                                 <table class="table table-sm text-sm">
                                     <tbody style="cursor: pointer" id="app_requirements">
-                                        
+
                                     </tbody>
                                 </table>
                             </div>
                         </div>
-                        
+
 
                     </div>
-                    
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -122,55 +137,56 @@
         <div class="modal-dialog modal-md">
             <div class="modal-content">
                 <div class="modal-header bg-secondary">
-                <h4 class="modal-title"><span id="setup_name"></span></h4>
+                <h4 class="modal-title">CREDIT ADJUSTMENT</h4>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">×</span>
                 </button>
                 </div>
-               
-                <form id="req_form" action="/finance/scholarship_setup_upload" method="POST" enctype="multipart/form-data" detail-id="0">
-                    @csrf
-                    <div class="modal-body">
-                        <div class="card-body">
-                            <div class="row form-group">
-                                <div class="col-md-12 responsive">
-                                    <table class="table table-sm text-sm">
-                                        <thead>
-                                            <tr>
-                                                <th colspan="2">CHARGES</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="charges_list">
-                                            
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
 
-                            <div class="form-group row">
-                                <div class="col-md-12">
-                                    <label for="req_description">CREDIT ADJUSTMENT</label>
-                                    <select name="" id="adj_class" class="select2 form-control">
-                                    </select>
-                                </div>
-                                
-                            </div>
-                            <div class="form-group row">
-                                <div class="col-md-12">
-                                    <label for="req_description">AMOUNT</label>
-                                    <input id="adj_amount" type="text" class="form-control" placeholder="0.00">
-                                </div>
-                                
+
+                @csrf
+                <div class="modal-body">
+                    <div class="card-body">
+                        <div class="row form-group">
+                            <div class="col-md-12 responsive">
+                                <table class="table table-sm text-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>CHARGES</th>
+                                            <th class="text-center">AMOUNT</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="charges_list">
+
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
+
+                        <div class="form-group row">
+                            <div class="col-md-12">
+                                <label for="req_description">CLASSIFICATION</label>
+                                <select name="" id="adj_class" class="select2 form-control">
+                                </select>
+                            </div>
+
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-12">
+                                <label for="req_description">AMOUNT</label>
+                                <input id="adj_amount" type="text" class="form-control" placeholder="0.00">
+                            </div>
+
+                        </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button id="class_delete" type="button" class="btn btn-danger" style="display: none">Delete</button>
-                        {{-- <button id="req_save" type="button" class="btn btn-primary" data-id="0">Upload</button> --}}
-                        <button id="adj_post" class="btn btn-primary">Proceed</button>
-                    </div>
-                </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button id="class_delete" type="button" class="btn btn-danger" style="display: none">Delete</button>
+                    {{-- <button id="req_save" type="button" class="btn btn-primary" data-id="0">Upload</button> --}}
+                    <button id="adj_post" class="btn btn-primary">Proceed</button>
+                </div>
+
             </div>
         </div> {{-- dialog --}}
     </div>
@@ -185,7 +201,7 @@
                 </button>
                 </div>
                 <div class="modal-body">
-                    
+
                     <div class="card-body">
                         <div class="form-group row">
                             <div class="col-md-7"></div>
@@ -215,10 +231,10 @@
                                 </table>
                             </div>
                         </div>
-                        
+
 
                     </div>
-                    
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -284,7 +300,7 @@
                     <span aria-hidden="true">×</span>
                 </button>
                 </div>
-               
+
                 <form id="req_form" action="/finance/scholarship_setup_upload" method="POST" enctype="multipart/form-data" detail-id="0">
                     @csrf
                     <div class="modal-body">
@@ -322,31 +338,31 @@
         </div> {{-- dialog --}}
     </div>
 
-    
 
 
-  
 
-  
+
+
+
 @endsection
 
 @section('js')
-  
+
   <script src="{{ asset('plugins/bs-custom-file-input/bs-custom-file-input.min.js') }}"></script>
   <script type="text/javascript">
     $(function () {
         bsCustomFileInput.init()
     })
-    
+
     $(document).ready(function(){
         $('.select2').select2({
             theme: 'bootstrap4'
         });
 
-        
+
 
         $(window).resize(function(){
-            screenadjust()    
+            screenadjust()
         })
 
         screenadjust()
@@ -382,8 +398,8 @@
             var setup_endofsubmission = $('#setup_endofsubmission').val();
             var setup_active = $('#setup_active').is(':checked');
             var filter = $('#setup_search').val();
-            var dataid = $(this).attr('data-id')    
-            
+            var dataid = $(this).attr('data-id')
+
             $.ajax({
                 type: "POST",
                 url: "{{ route('scholarship_setup_create') }}",
@@ -422,7 +438,7 @@
                         $("#modal-scholarship_setup_detail").modal('hide');
                     }
 
-                    
+
                 }
             });
         })
@@ -496,7 +512,7 @@
 
                     $('#modal-scholarship_setup_upload').modal('hide')
                     setup_load()
-                    
+
                 },
                 error: function(xhr, status, error) {
                     // handle error response
@@ -591,11 +607,11 @@
                                 });
                             }
                         }
-                    });        
+                    });
                 }
             });
 
-            
+
         })
 
         $(document).on('click', '.detailedit', function(){
@@ -604,7 +620,7 @@
             $.ajax({
                 type: "GET",
                 url: "{{ route('scholarship_setup_detail_read') }}",
-                
+
                 data: {
                     id:id
                 },
@@ -660,18 +676,18 @@
                                     title: "Reqirement has been deleted."
                                 });
                         }
-                    });        
+                    });
                 }
-            });  
+            });
         })
 
         applicant_load()
 
         function applicant_load()
         {
-            var filter = $('#app_filter').val()
-            var status = $('#app_filter_status').val()
-            
+            var filter = $('#app_search').val()
+            var status = $('#app_status').val()
+
             $.ajax({
                 type: "GET",
                 url: "{{ route('scholarship_app_load') }}",
@@ -684,6 +700,14 @@
                 }
             });
         }
+
+        $(document).on('change', '#app_search', function(){
+            applicant_load()
+        })
+
+        $(document).on('change', '#app_status', function(){
+            applicant_load()
+        })
 
         $(document).on('click', '#app_list tr', function(){
             var id = $(this).attr('data-id')
@@ -714,7 +738,7 @@
                                 </td>
                             </tr>
                         `)
-                        
+
                     });
 
                     $('#app_approve').attr('data-id', id)
@@ -763,15 +787,34 @@
                 },
                 // dataType: "dataType",
                 success: function (data) {
-                    
+                    $('#charges_list').empty()
+                    $('#adj_class').empty()
+
+
+
+                    $.each(data.charges, function (index, val) {
+                        $('#charges_list').append(`
+                            <tr>
+                                <td>`+val.particulars+`</td>
+                                <td class="text-right">`+parseFloat(val.balance, 10).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString()+`</td>
+                            </tr>
+                        `)
+
+                        $('#adj_class').append(`
+                            <option value="`+val.classid+`">`+val.particulars+`</option>
+                        `)
+                    });
+
+                    $('#modal-app_approve').modal('show')
                 }
             });
-
-            $('#modal-app_approve').modal('show')
         })
 
-		$(document).on('click', '#app_approve', function(){
-            var id = $(this).attr('data-id')
+		$(document).on('click', '#adj_post', function(){
+            var id = $('#app_approve').attr('data-id')
+            var classid = $('#adj_class').val()
+            var amount = $('#adj_amount').val()
+
             Swal.fire({
                 title: "Approve Applicant?",
                 text: "",
@@ -781,12 +824,14 @@
                 cancelButtonColor: "#d33",
                 confirmButtonText: "Approve"
             }).then((result) => {
-                if (result.value) {
+                if (result.value == true) {
                     $.ajax({
                         type: "POST",
                         url: "{{ route('scholarship_app_approve') }}",
                         data: {
-                            id:id
+                            id:id,
+                            classid:classid,
+                            amount:amount
                         },
                         headers: {
                             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -794,6 +839,7 @@
                         success: function (data) {
                             applicant_load()
                             $('#modal-scholarship').modal('hide')
+                            $('#modal-app_approve').modal('hide')
 
                             const Toast = Swal.mixin({
                                 toast: true,
@@ -865,5 +911,5 @@
 	})
 
   </script>
-  
+
 @endsection

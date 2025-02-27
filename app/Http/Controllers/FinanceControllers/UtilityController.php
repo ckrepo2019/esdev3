@@ -41,12 +41,12 @@ class UtilityController extends Controller
 			{
 				$batchid = $tvbatch->id;
 			}
-			
+
 			$studinfo = db::table('studinfo')
 				->where('id', $studid)
 				->first();
 
-			
+
 
 			if($studinfo->levelid == 15 || $studinfo->levelid == 14)
 			{
@@ -83,7 +83,7 @@ class UtilityController extends Controller
 					->where('studid', $studid)
 					->where('syid', $syid)
 					->where('semid', $semid)
-					->first();	
+					->first();
 
 				if($enrollstud)
 				{
@@ -127,7 +127,7 @@ class UtilityController extends Controller
 					{
 						if(FinanceModel::shssetup() == 0)
 						{
-							$q->where('semid', $semid);	
+							$q->where('semid', $semid);
 						}
 					}
 					if($levelid >= 17 && $levelid <= 20)
@@ -223,7 +223,7 @@ class UtilityController extends Controller
 								<button class="btn btn-danger btn-sm rpa-itemremove" data-id="'.$ledger->id.'"><i class="fas fa-trash-alt"></i></button>-->
 							</td>
 						</tr>
-					';	
+					';
 				}
 			}
 
@@ -270,7 +270,7 @@ class UtilityController extends Controller
 			echo json_encode($data);
 		}
 	}
-	
+
 	public function resetpayment(Request $request)
 	{
 		if($request->ajax())
@@ -312,7 +312,7 @@ class UtilityController extends Controller
 				$enrollstud = db::table('college_enrolledstud')
 					->where('studid', $studid)
 					->where('deleted', 0)
-					->first();	
+					->first();
 
 				if($enrollstud)
 				{
@@ -324,11 +324,11 @@ class UtilityController extends Controller
 				$enrollstud = db::table('enrolledstud')
 					->where('studid', $studid)
 					->where('deleted', 0)
-					->first();		
+					->first();
 
 				// if($enrollstud)
 				// {
-					
+
 				// }
 
 				$dateenrolled = $enrollstud->dateenrolled;
@@ -340,9 +340,9 @@ class UtilityController extends Controller
 			//clear studledger
 
 
-			// 
+			//
 
-			
+
 
 
 			$studledger = db::table('studledger')
@@ -350,11 +350,11 @@ class UtilityController extends Controller
 				->where('deleted', 0)
 				->where('syid', FinanceModel::getSYID())
 				->where(function($q) use($levelid){
-				    if($levelid == 14 || $levelid == 15)    
+				    if($levelid == 14 || $levelid == 15)
 				    {
 				        $q->where('semid', FinanceModel::getSemID());
 				    }
-				    if($levelid >= 17 && $levelid <= 20)    
+				    if($levelid >= 17 && $levelid <= 20)
 				    {
 				        $q->where('semid', FinanceModel::getSemID());
 				    }
@@ -381,16 +381,16 @@ class UtilityController extends Controller
 				}
 			}
 
-			
+
 			db::table('studpayscheddetail')
 				->where('studid', $studid)
 				->where('syid', FinanceModel::getSYID())
 				->where(function($q) use($levelid){
-				    if($levelid == 14 || $levelid == 15)    
+				    if($levelid == 14 || $levelid == 15)
 				    {
 				        $q->where('semid', FinanceModel::getSemID());
 				    }
-				    if($levelid >= 17 && $levelid <= 20)    
+				    if($levelid >= 17 && $levelid <= 20)
 				    {
 				        $q->where('semid', FinanceModel::getSemID());
 				    }
@@ -403,11 +403,11 @@ class UtilityController extends Controller
 				->where('studid', $studid)
 				->where('syid', FinanceModel::getSYID())
 				->where(function($q) use($levelid){
-				    if($levelid == 14 || $levelid == 15)    
+				    if($levelid == 14 || $levelid == 15)
 				    {
 				        $q->where('semid', FinanceModel::getSemID());
 				    }
-				    if($levelid >= 17 && $levelid <= 20)    
+				    if($levelid >= 17 && $levelid <= 20)
 				    {
 				        $q->where('semid', FinanceModel::getSemID());
 				    }
@@ -427,11 +427,11 @@ class UtilityController extends Controller
 				->where('studid', $studid)
 				->where('syid', FinanceModel::getSYID())
 				->where(function($q) use($levelid){
-				    if($levelid == 14 || $levelid == 15)    
+				    if($levelid == 14 || $levelid == 15)
 				    {
 				        $q->where('semid', FinanceModel::getSemID());
 				    }
-				    if($levelid >= 17 && $levelid <= 20)    
+				    if($levelid >= 17 && $levelid <= 20)
 				    {
 				        $q->where('semid', FinanceModel::getSemID());
 				    }
@@ -439,7 +439,7 @@ class UtilityController extends Controller
 				->where('deleted', 0)
 				->where('classid', $balforwardsetup->classid)
 				->first();
-			
+
 			if($balforwardledger)
 			{
 				if($balforwardledger->createddatetime <= $dateenrolled)
@@ -529,7 +529,7 @@ class UtilityController extends Controller
 							$totalbalforward = 0;
 
 							foreach($paymentsetup as $mop)
-							{	
+							{
 								if($mop->paymentno != $mop->noofpayment)
 								{
 									$totalbalforward += $divbal;
@@ -638,7 +638,7 @@ class UtilityController extends Controller
 
 
 				}
-			
+
 			}
 
 			$units = 0;
@@ -659,7 +659,7 @@ class UtilityController extends Controller
 						FROM college_studsched
 					INNER JOIN college_classsched ON college_studsched.`schedid` = college_classsched.`id`
 					INNER JOIN college_prospectus ON college_classsched.`subjectID` = college_prospectus.`id`
-					WHERE college_studsched.`studid` = ? and college_studsched.`deleted` = 0	
+					WHERE college_studsched.`studid` = ? and college_studsched.`deleted` = 0
 	  			', [$studid]);
 
 	  			$units = $totalunits[0]->totalunits;
@@ -710,11 +710,11 @@ class UtilityController extends Controller
 						->where('studid', $studid)
 						->where('syid', FinanceModel::getSYID())
 						->where(function($q) use($levelid){
-						    if($levelid == 14 || $levelid == 15)    
+						    if($levelid == 14 || $levelid == 15)
 						    {
 						        $q->where('semid', FinanceModel::getSemID());
 						    }
-						    if($levelid >= 17 && $levelid <= 20)    
+						    if($levelid >= 17 && $levelid <= 20)
 						    {
 						        $q->where('semid', FinanceModel::getSemID());
 						    }
@@ -822,8 +822,8 @@ class UtilityController extends Controller
 	  						$paytAmount += $divPay;
 
 	  						if($paycount != $paymentno)
-	  						{	
-	  							
+	  						{
+
 	  							$scheditem = db::table('studpayscheddetail')
 			  						->insert([
 			  							'studid' => $studid,
@@ -842,18 +842,18 @@ class UtilityController extends Controller
 			  							'createdby' => auth()->user()->id
 			  						]);
 
-			  						
+
 	  						}
 	  						else
 	  						{
 	  							if($paytAmount <= $tuitionamount)
 	  							{
-	  								
+
 	  								$paydisbalance = $tuitionamount - $paytAmount;
 			  						$paydisbalance = number_format($paydisbalance, 2, '.', '');
 
 			  						$divPay += $paydisbalance;
-			  						
+
 			  						// echo ' paydisbalance: ' . $paydisbalance;
 			  						// echo ' +divPay: '. $divPay;
 			  						$scheditem = db::table('studpayscheddetail')
@@ -876,7 +876,7 @@ class UtilityController extends Controller
 	  							}
 	  							else
 	  							{
-	  								
+
 	  								$paydisbalance = $paytAmount - $tuitionamount;
 	  								$paydisbalance = number_format($paydisbalance, 2, '.', '');
 
@@ -901,9 +901,9 @@ class UtilityController extends Controller
 				  						]);
 	  							}
 	  						}
-	  						
+
 			  			}
-			  			
+
   					}
   					else
   					{
@@ -922,7 +922,7 @@ class UtilityController extends Controller
 			  					{
 				  					$pAmount = round($pay->percentamount * ($tui->amount/100), 2);
 				  					$curAmount = (round($curAmount - $pAmount, 2));
- 
+
 				  					$scheditem = db::table('studpayscheddetail')
 				  					->insert([
 				  							'studid' => $studid,
@@ -962,7 +962,7 @@ class UtilityController extends Controller
 				  							'classid' => $tui->classid,
 				  							'createddatetime' => FinanceModel::getServerDateTime(),
 			  								'createdby' => auth()->user()->id
-				  						]);	
+				  						]);
 			  						$curAmount = 0;
 			  					}
 			  				}
@@ -980,7 +980,7 @@ class UtilityController extends Controller
 
 	  		if($levelid == 14 || $levelid == 15)
 	  		{
-	  			$getdp = db::table('chrngtransdetail')				
+	  			$getdp = db::table('chrngtransdetail')
 					->select('studid', 'syid', 'semid', 'itemkind', 'payschedid', 'isdp', 'chrngtransdetail.classid', 'chrngtransdetail.amount')
 					->join('chrngtrans', 'chrngtransdetail.chrngtransid', '=', 'chrngtrans.id')
 					->join('items', 'chrngtransdetail.payschedid', '=', 'items.id')
@@ -1072,11 +1072,11 @@ class UtilityController extends Controller
 								{
 									// echo '[' . $dpBal . '>' . $sched->amount . ']';
 									$schedbal = $sched->amount - $sched->amountpay;
-									
+
 									if($dpBal > $schedbal)
 									{
 										$tDP = 0;
-										
+
 										$deductDP = db::table('studpayscheddetail')
 											->where('id', $sched->id)
 											->update([
@@ -1094,7 +1094,7 @@ class UtilityController extends Controller
 										$aPay = $sched->amountpay + $dpBal;
 
 										// echo ' aPay = ' . $aPay;
-										
+
 										$deductDP = db::table('studpayscheddetail')
 											->where('id', $sched->id)
 											->update([
@@ -1103,7 +1103,7 @@ class UtilityController extends Controller
 												'updateddatetime' => FinanceModel::getServerDateTime(),
 												'updatedby' => auth()->user()->id
 											]);
-										
+
 
 										$dpBal = 0;
 									}
@@ -1113,7 +1113,7 @@ class UtilityController extends Controller
 							if($dpBal > 0)
 							{
 								$gpaydetail = db::select('
-									SELECT studid, syid, semid, tuitiondetailid, classid, particulars, SUM(amount) AS amount, SUM(amountpay) AS amountpay, SUM(balance) AS balance 
+									SELECT studid, syid, semid, tuitiondetailid, classid, particulars, SUM(amount) AS amount, SUM(amountpay) AS amountpay, SUM(balance) AS balance
 									FROM studpayscheddetail
 									WHERE studid = ?  AND syid = ? and semid = ? AND deleted = 0 and balance > 0
 									GROUP BY classid
@@ -1130,7 +1130,7 @@ class UtilityController extends Controller
 											->get();
 
 									if($dpBal > 0)
-									{		
+									{
 										foreach($paysched as $sched)
 										{
 											if($dpBal > $sched->balance)
@@ -1149,7 +1149,7 @@ class UtilityController extends Controller
 											{
 												$tDP = $sched->balance - $dpBal;
 												$aPay = $sched->amountpay + $dpBal;
-												
+
 												$deductDP = db::table('studpayscheddetail')
 													->where('id', $sched->id)
 													->update([
@@ -1158,7 +1158,7 @@ class UtilityController extends Controller
 														'updateddatetime' => FinanceModel::getServerDateTime(),
 														'updatedby' => auth()->user()->id
 													]);
-												
+
 
 												$dpBal = 0;
 											}
@@ -1186,11 +1186,11 @@ class UtilityController extends Controller
 									{
 										// echo '[' . $dpBal . '>' . $sched->amount . ']';
 										$schedbal = $sched->amount - $sched->amountpay;
-										
+
 										if($dpBal > $schedbal)
 										{
 											$tDP = 0;
-											
+
 											$deductDP = db::table('studpayscheddetail')
 												->where('id', $sched->id)
 												->update([
@@ -1208,7 +1208,7 @@ class UtilityController extends Controller
 											$aPay = $sched->amountpay + $dpBal;
 
 											// echo ' aPay = ' . $aPay;
-											
+
 											$deductDP = db::table('studpayscheddetail')
 												->where('id', $sched->id)
 												->update([
@@ -1217,7 +1217,7 @@ class UtilityController extends Controller
 													'updateddatetime' => FinanceModel::getServerDateTime(),
 													'updatedby' => auth()->user()->id
 												]);
-											
+
 
 											$dpBal = 0;
 										}
@@ -1227,7 +1227,7 @@ class UtilityController extends Controller
 								if($dpBal > 0)
 								{
 									$gpaydetail = db::select('
-										SELECT studid, syid, semid, tuitiondetailid, classid, particulars, SUM(amount) AS amount, SUM(amountpay) AS amountpay, SUM(balance) AS balance 
+										SELECT studid, syid, semid, tuitiondetailid, classid, particulars, SUM(amount) AS amount, SUM(amountpay) AS amountpay, SUM(balance) AS balance
 										FROM studpayscheddetail
 										WHERE studid = ?  AND syid = ? and semid = ? AND deleted = 0 and balance > 0
 										GROUP BY classid
@@ -1244,7 +1244,7 @@ class UtilityController extends Controller
 												->get();
 
 										if($dpBal > 0)
-										{		
+										{
 											foreach($paysched as $sched)
 											{
 												if($dpBal > $sched->balance)
@@ -1263,7 +1263,7 @@ class UtilityController extends Controller
 												{
 													$tDP = $sched->balance - $dpBal;
 													$aPay = $sched->amountpay + $dpBal;
-													
+
 													$deductDP = db::table('studpayscheddetail')
 														->where('id', $sched->id)
 														->update([
@@ -1272,7 +1272,7 @@ class UtilityController extends Controller
 															'updateddatetime' => FinanceModel::getServerDateTime(),
 															'updatedby' => auth()->user()->id
 														]);
-													
+
 
 													$dpBal = 0;
 												}
@@ -1289,7 +1289,7 @@ class UtilityController extends Controller
 	  		}
 	  		elseif($levelid >= 17 && $levelid <=20)
 	  		{
-	  			$getdp = db::table('chrngtransdetail')				
+	  			$getdp = db::table('chrngtransdetail')
 					->select('studid', 'syid', 'semid', 'itemkind', 'payschedid', 'isdp', 'chrngtransdetail.classid', 'chrngtransdetail.amount')
 					->join('chrngtrans', 'chrngtransdetail.chrngtransid', '=', 'chrngtrans.id')
 					->join('items', 'chrngtransdetail.payschedid', '=', 'items.id')
@@ -1374,7 +1374,7 @@ class UtilityController extends Controller
 								->where('syid', FinanceModel::getSYID())
 								->where('semid', FinanceModel::getSemID())
 								->where('deleted', 0)
-								->get();							
+								->get();
 						}
 
 						if(count($getpaySched) > 0)
@@ -1385,11 +1385,11 @@ class UtilityController extends Controller
 								{
 									// echo '[' . $dpBal . '>' . $sched->amount . ']';
 									$schedbal = $sched->amount - $sched->amountpay;
-									
+
 									if($dpBal > $schedbal)
 									{
 										$tDP = 0;
-										
+
 										$deductDP = db::table('studpayscheddetail')
 											->where('id', $sched->id)
 											->update([
@@ -1407,7 +1407,7 @@ class UtilityController extends Controller
 										$aPay = $sched->amountpay + $dpBal;
 
 										// echo ' aPay = ' . $aPay;
-										
+
 										$deductDP = db::table('studpayscheddetail')
 											->where('id', $sched->id)
 											->update([
@@ -1416,7 +1416,7 @@ class UtilityController extends Controller
 												'updateddatetime' => FinanceModel::getServerDateTime(),
 												'updatedby' => auth()->user()->id
 											]);
-										
+
 
 										$dpBal = 0;
 									}
@@ -1426,7 +1426,7 @@ class UtilityController extends Controller
 							if($dpBal >0)
 							{
 								$gpaydetail = db::select('
-									SELECT studid, syid, semid, tuitiondetailid, classid, particulars, SUM(amount) AS amount, SUM(amountpay) AS amountpay, SUM(balance) AS balance 
+									SELECT studid, syid, semid, tuitiondetailid, classid, particulars, SUM(amount) AS amount, SUM(amountpay) AS amountpay, SUM(balance) AS balance
 									FROM studpayscheddetail
 									WHERE studid = ?  AND syid = ? and semid = ? AND deleted = 0 and balance > 0
 									GROUP BY classid
@@ -1443,7 +1443,7 @@ class UtilityController extends Controller
 											->get();
 
 									if($dpBal > 0)
-									{		
+									{
 										foreach($paysched as $sched)
 										{
 											if($dpBal > $sched->balance)
@@ -1462,7 +1462,7 @@ class UtilityController extends Controller
 											{
 												$tDP = $sched->balance - $dpBal;
 												$aPay = $sched->amountpay + $dpBal;
-												
+
 												$deductDP = db::table('studpayscheddetail')
 													->where('id', $sched->id)
 													->update([
@@ -1471,7 +1471,7 @@ class UtilityController extends Controller
 														'updateddatetime' => FinanceModel::getServerDateTime(),
 														'updatedby' => auth()->user()->id
 													]);
-												
+
 
 												$dpBal = 0;
 											}
@@ -1480,13 +1480,13 @@ class UtilityController extends Controller
 
 								}
 							}
-						}						
+						}
 					}
 				}
 	  		}
 	  		else
 	  		{
-	  			$getdp = db::table('chrngtransdetail')				
+	  			$getdp = db::table('chrngtransdetail')
 						->select('studid', 'syid', 'semid', 'itemkind', 'payschedid', 'isdp', 'chrngtransdetail.classid', 'chrngtransdetail.amount')
 						->join('chrngtrans', 'chrngtransdetail.chrngtransid', '=', 'chrngtrans.id')
 						->join('items', 'chrngtransdetail.payschedid', '=', 'items.id')
@@ -1553,7 +1553,7 @@ class UtilityController extends Controller
 										{
 											$tDP = $sched->amount - $dpBal;
 											$aPay = $sched->amountpay + $dpBal;
-											
+
 											$deductDP = db::table('studpayscheddetail')
 												->where('id', $sched->id)
 												->update([
@@ -1600,9 +1600,9 @@ class UtilityController extends Controller
 								->where('syid', FinanceModel::getSYID())
 								->whereIn('classid', $classarray)
 								->where('deleted', 0)
-								->get();	
+								->get();
 						}
-						
+
 
 						if(count($getpaySched) > 0)
 						{
@@ -1617,7 +1617,7 @@ class UtilityController extends Controller
 									if($dpBal > $schedbal)
 									{
 										$tDP = 0;
-										
+
 										$deductDP = db::table('studpayscheddetail')
 											->where('id', $sched->id)
 											->update([
@@ -1633,7 +1633,7 @@ class UtilityController extends Controller
 									{
 										$tDP = $schedbal - $dpBal;
 										$aPay = $sched->amountpay + $dpBal;
-										
+
 										$deductDP = db::table('studpayscheddetail')
 											->where('id', $sched->id)
 											->update([
@@ -1642,17 +1642,17 @@ class UtilityController extends Controller
 												'updateddatetime' => FinanceModel::getServerDateTime(),
 												'updatedby' => auth()->user()->id
 											]);
-										
+
 
 										$dpBal = 0;
-									}		
+									}
 								}
 							}
 
 							if($dpBal > 0)
 							{
 								$gpaydetail = db::select('
-									SELECT studid, syid, semid, tuitiondetailid, classid, particulars, SUM(amount) AS amount, SUM(amountpay) AS amountpay, SUM(balance) AS balance 
+									SELECT studid, syid, semid, tuitiondetailid, classid, particulars, SUM(amount) AS amount, SUM(amountpay) AS amountpay, SUM(balance) AS balance
 									FROM studpayscheddetail
 									WHERE studid = ?  AND syid = ? AND deleted = 0 and balance > 0
 									GROUP BY classid
@@ -1668,7 +1668,7 @@ class UtilityController extends Controller
 											->get();
 
 									if($dpBal > 0)
-									{		
+									{
 										foreach($paysched as $sched)
 										{
 											if($dpBal > $sched->balance)
@@ -1689,7 +1689,7 @@ class UtilityController extends Controller
 											{
 												$tDP = $sched->balance - $dpBal;
 												$aPay = $sched->amountpay + $dpBal;
-												
+
 												$deductDP = db::table('studpayscheddetail')
 													->where('id', $sched->id)
 													->update([
@@ -1698,7 +1698,7 @@ class UtilityController extends Controller
 														'updateddatetime' => FinanceModel::getServerDateTime(),
 														'updatedby' => auth()->user()->id
 													]);
-												
+
 
 												$dpBal = 0;
 											}
@@ -1726,11 +1726,11 @@ class UtilityController extends Controller
 									{
 										// echo '[' . $dpBal . '>' . $sched->amount . ']';
 										$schedbal = $sched->amount - $sched->amountpay;
-										
+
 										if($dpBal > $schedbal)
 										{
 											$tDP = 0;
-											
+
 											$deductDP = db::table('studpayscheddetail')
 												->where('id', $sched->id)
 												->update([
@@ -1748,7 +1748,7 @@ class UtilityController extends Controller
 											$aPay = $sched->amountpay + $dpBal;
 
 											// echo ' aPay = ' . $aPay;
-											
+
 											$deductDP = db::table('studpayscheddetail')
 												->where('id', $sched->id)
 												->update([
@@ -1757,7 +1757,7 @@ class UtilityController extends Controller
 													'updateddatetime' => FinanceModel::getServerDateTime(),
 													'updatedby' => auth()->user()->id
 												]);
-											
+
 
 											$dpBal = 0;
 										}
@@ -1767,7 +1767,7 @@ class UtilityController extends Controller
 								if($dpBal > 0)
 								{
 									$gpaydetail = db::select('
-										SELECT studid, syid, semid, tuitiondetailid, classid, particulars, SUM(amount) AS amount, SUM(amountpay) AS amountpay, SUM(balance) AS balance 
+										SELECT studid, syid, semid, tuitiondetailid, classid, particulars, SUM(amount) AS amount, SUM(amountpay) AS amountpay, SUM(balance) AS balance
 										FROM studpayscheddetail
 										WHERE studid = ?  AND syid = ? and semid = ? AND deleted = 0 and balance > 0
 										GROUP BY classid
@@ -1804,7 +1804,7 @@ class UtilityController extends Controller
 												{
 													$tDP = $sched->balance - $dpBal;
 													$aPay = $sched->amountpay + $dpBal;
-													
+
 													$deductDP = db::table('studpayscheddetail')
 														->where('id', $sched->id)
 														->update([
@@ -1813,7 +1813,7 @@ class UtilityController extends Controller
 															'updateddatetime' => FinanceModel::getServerDateTime(),
 															'updatedby' => auth()->user()->id
 														]);
-													
+
 
 													$dpBal = 0;
 												}
@@ -1856,11 +1856,11 @@ class UtilityController extends Controller
 	  			$adjbal = $adj->amount;
 	  			$adjbal = number_format($adj->amount, 2, '.', '');
 	  			$particulars = $adj->description;
-  			
+
   				if($adj->iscredit == 1)
   				{
 
-  					
+
 
   					$checkadjledger = db::table('studledger')
   						->where('studid', $studid)
@@ -1916,13 +1916,13 @@ class UtilityController extends Controller
 		  				->where('classid', $adj->classid)
 		  				->where('balance' , '>', 0)
 		  				->where('deleted', 0)
-		  				->first();		  			
+		  				->first();
 
 		  			if($scheddetail)
 		  			{
 		  				// echo ' bal: ' . $adjbal;
 	  					if($scheddetail->balance >= $adjbal)
-	  					{	
+	  					{
 	  						db::table('studpayscheddetail')
 			  					->where('id', $scheddetail->id)
 			  					->update([
@@ -1957,7 +1957,7 @@ class UtilityController extends Controller
 			  					goto adjloop;
 			  				}
 
-	  					}	
+	  					}
 	  				}
 	  				else
 	  				{
@@ -1982,7 +1982,7 @@ class UtilityController extends Controller
 			  			{
 			  				// echo ' bal: ' . $adjbal;
 		  					if($scheddetail->balance >= $adjbal)
-		  					{	
+		  					{
 		  						db::table('studpayscheddetail')
 				  					->where('id', $scheddetail->id)
 				  					->update([
@@ -2048,7 +2048,7 @@ class UtilityController extends Controller
 
 		  			if($checkadjledger)
 		  			{
-		  				
+
 		  			}
 		  			else
 		  			{
@@ -2170,11 +2170,11 @@ class UtilityController extends Controller
 					  		}
 				  		}
 
-			  			
+
   					}
 
   				}
-	  			
+
 	  		}
 	  		// return 22222;
 	  		//Check Adjustment
@@ -2257,13 +2257,13 @@ class UtilityController extends Controller
 										'createddatetime' => FinanceModel::getServerDateTime()
 									]);
 							}
-						}							
+						}
 
 
-		  			}	
+		  			}
 		  			else
 		  			{
-		  				
+
 
 		  				db::table('studpayscheddetail')
 		  					->insert([
@@ -2298,7 +2298,7 @@ class UtilityController extends Controller
 			// 	->where('deleted', 0)
 			// 	->where('classid', $balforwardsetup->classid)
 			// 	->first();
-			
+
 
 			// if($balforwardledger)
 			// {
@@ -2428,7 +2428,7 @@ class UtilityController extends Controller
 	  							'void' => 0,
 	  							'updatedby' => auth()->user()->id,
 	  							'updateddatetime' => FinanceModel::getServerDateTime()
-	  						]);	
+	  						]);
 	  				}
 	  			}
 	  			else
@@ -2439,9 +2439,9 @@ class UtilityController extends Controller
   							'void' => 0,
   							'updatedby' => auth()->user()->id,
   							'updateddatetime' => FinanceModel::getServerDateTime()
-  						]);	
+  						]);
 	  			}
-	  			
+
 	  		}
 
 
@@ -2536,7 +2536,7 @@ class UtilityController extends Controller
 			  						->where('id', $scheddetail->id)
 			  						->update([
 			  							'amountpay' => $scheddetail->amountpay + $scheddetail->balance, //$detail->amount,
-			  							'balance' => 0, 
+			  							'balance' => 0,
 			  							'updateddatetime' => FinanceModel::getServerDateTime(),
 			  							'updatedby' => auth()->user()->id
 			  						]);
@@ -2552,7 +2552,7 @@ class UtilityController extends Controller
 			  					->where('id', $scheddetail->id)
 	  							->update([
 			  							'amountpay' => $scheddetail->amountpay + $detailbal,
-			  							'balance' => $scheddetail->balance - $detailbal, 
+			  							'balance' => $scheddetail->balance - $detailbal,
 			  							'updateddatetime' => FinanceModel::getServerDateTime(),
 			  							'updatedby' => auth()->user()->id
 			  						]);
@@ -2593,7 +2593,7 @@ class UtilityController extends Controller
 			  					{
 			  						// $detailbal += $detail->amount;
 			  						// echo ' scheddetailid: ' . $scheddetail->id;
-			  						
+
 			  						if($detailbal >= $scheddetail->balance)
 			  						{
 			  							echo ' scheddetailid: ' . $scheddetail->id;
@@ -2601,7 +2601,7 @@ class UtilityController extends Controller
 					  						->where('id', $scheddetail->id)
 					  						->update([
 					  							'amountpay' => $scheddetail->amountpay + $scheddetail->balance, //$detail->amount,
-					  							'balance' => 0, 
+					  							'balance' => 0,
 					  							'updateddatetime' => FinanceModel::getServerDateTime(),
 					  							'updatedby' => auth()->user()->id
 					  						]);
@@ -2616,7 +2616,7 @@ class UtilityController extends Controller
 					  					->where('id', $scheddetail->id)
 			  							->update([
 					  							'amountpay' => $scheddetail->amountpay + $detailbal,
-					  							'balance' => $scheddetail->balance - $detailbal, 
+					  							'balance' => $scheddetail->balance - $detailbal,
 					  							'updateddatetime' => FinanceModel::getServerDateTime(),
 					  							'updatedby' => auth()->user()->id
 					  						]);
@@ -2659,7 +2659,7 @@ class UtilityController extends Controller
 						  						->where('id', $scheddetail->id)
 						  						->update([
 						  							'amountpay' => $scheddetail->amountpay + $scheddetail->balance, //$detail->amount,
-						  							'balance' => 0, 
+						  							'balance' => 0,
 						  							'updateddatetime' => FinanceModel::getServerDateTime(),
 						  							'updatedby' => auth()->user()->id
 						  						]);
@@ -2674,7 +2674,7 @@ class UtilityController extends Controller
 						  					->where('id', $scheddetail->id)
 				  							->update([
 						  							'amountpay' => $scheddetail->amountpay + $detailbal,
-						  							'balance' => $scheddetail->balance - $detailbal, 
+						  							'balance' => $scheddetail->balance - $detailbal,
 						  							'updateddatetime' => FinanceModel::getServerDateTime(),
 						  							'updatedby' => auth()->user()->id
 						  						]);
@@ -2752,7 +2752,7 @@ class UtilityController extends Controller
 						}
 
 						$q->where('college_enrolledstud.semid', $semid);
-					}	
+					}
 					elseif($levelid == 14 || $levelid == 15)
 					{
 						if($grantee > 0)
@@ -2768,7 +2768,7 @@ class UtilityController extends Controller
 						{
 							if(db::table('schoolinfo')->first()->shssetup == 0)
 							{
-								$q->where('sh_enrolledstud.semid', $semid);		
+								$q->where('sh_enrolledstud.semid', $semid);
 							}
 						}
 					}
@@ -2820,7 +2820,7 @@ class UtilityController extends Controller
 				{
 					$ledgeramount = $ledger->amount;
 				}
-					
+
 
 
 				$name = $stud->lastname . ', '. $stud->firstname . ' ' . $stud->middlename ;
@@ -2868,17 +2868,17 @@ class UtilityController extends Controller
 			echo json_encode($data);
 		}
 	}
-	
+
 	public function calcLedger(Request $request)
 	{
 		if($request->ajax())
 		{
 			$studid = $request->get('studid');
-			
+
 			$stud = db::table('studinfo')
 				->where('id', $studid)
 				->first();
-			
+
 			$levelid = $stud->levelid;
 
 			$ledgeramount = db::table('studledger')
@@ -2959,7 +2959,7 @@ class UtilityController extends Controller
 
 					foreach($studpayscheddetail as $sched)
 					{
-						db::table('studpayscheddetail')						
+						db::table('studpayscheddetail')
 							->where('id', $sched->id)
 							->update([
 								'amountpay' => 0,
@@ -3004,13 +3004,13 @@ class UtilityController extends Controller
 						'payment' => $chrngtrans->amountpaid,
 						'updateddatetime' => FinanceModel::getServerDateTime(),
 						'updatedby' => auth()->user()->id
-					]);	
+					]);
 
 				return 1;
 			}
 			else
 			{
-				return 5;	
+				return 5;
 			}
 		}
 	}
@@ -3233,7 +3233,7 @@ class UtilityController extends Controller
 
 				if($adj->iscredit == 1)
 				{
-					$iscredit = 'CREDIT';					
+					$iscredit = 'CREDIT';
 				}
 				else
 				{
@@ -3298,7 +3298,7 @@ class UtilityController extends Controller
 
 	public function lockfees(Request $request)
 	{
-		
+
 		$lockfees = $request->get('lockfees');
 
 		db::table('schoolinfo')
@@ -3307,7 +3307,7 @@ class UtilityController extends Controller
 			]);
 
 		return back();
-		
+
 	}
 
 	public function fwd_gennegstud(Request $request)
@@ -3363,7 +3363,7 @@ class UtilityController extends Controller
 				->where('syid', FinanceModel::getSYID())
 				->where('semid', FinanceModel::getSemID())
 				->get();
-			
+
 			$ledgerlist = '';
 
 			foreach($studledger as $ledger)
@@ -3451,7 +3451,7 @@ class UtilityController extends Controller
 					<td class="text-right text-bold">'.number_format($totalschedpayamount, 2).'</td>
 					<td class="text-right text-bold">'.number_format($totalpayschedbal, 2).'</td>
 					<td></td>
-				</tr>	
+				</tr>
 			';
 
 			$data = array(
@@ -3496,7 +3496,7 @@ class UtilityController extends Controller
 
 			foreach($studpayscheddetail as $paysched)
 			{
-				
+
 				if($fwdbal > 0)
 				{
 					if($fwdbal > $paysched->balance)
@@ -3611,7 +3611,7 @@ class UtilityController extends Controller
 					// 			<td></td>
 					// 			<td>'.$detail->items.'</td>
 					// 			<td class="text-right">'.number_format($detail->amount, 2).'</td>
-					// 		</tr>		
+					// 		</tr>
 					// 	';
 
 					// 	$totalDetail += $detail->amount;
@@ -3623,7 +3623,7 @@ class UtilityController extends Controller
 					// 	<tr class="bg-primary" data-id="'.$trans->id.'">
 					// 		<td colspan="3" class="text-right">TOTAL: </td>
 					// 		<td class="text-right text-bold text-lg">'.number_format($trans->amountpaid, 2).'</td>
-					// 	</tr>		
+					// 	</tr>
 					// ';
 				}
 
@@ -3632,7 +3632,7 @@ class UtilityController extends Controller
 						<tr class="bg-success" data-id="">
 							<td colspan="2" class="text-right">GRAND TOTAL: </td>
 							<td class="text-right text-bold text-lg">'.number_format($totaltrans, 2).'</td>
-						</tr>		
+						</tr>
 					';
 
 
@@ -3748,7 +3748,7 @@ class UtilityController extends Controller
 			$studcount = count($studinfo);
 
 			$array_studlist = array();
-			
+
 			foreach($studinfo as $stud)
 			{
 				array_push($array_studlist, (object)[
@@ -3835,7 +3835,7 @@ class UtilityController extends Controller
 
 
 				// echo 'studid: ' . $stud->id . ' ledger: ' . $studledger->balance . ' - ' . ' paysched: ' . $studpayscheddetail->balance . '<br>' ;
-				
+
 				if(floatval($studledger->balance) != floatval($studpayscheddetail->balance))
 				{
 					if(floatval($studledger->balance) < 0 && floatval($studpayscheddetail->balance) == 0)
@@ -3854,7 +3854,7 @@ class UtilityController extends Controller
 						';
 					}
 
-					
+
 
 					$disbalcount += 1;
 				}
@@ -3867,7 +3867,7 @@ class UtilityController extends Controller
 				);
 
 				echo json_encode($data);
-			}	
+			}
 		}
 	}
 
@@ -3960,12 +3960,12 @@ class UtilityController extends Controller
 					->where('deleted', 0)
 					->count();
 
-			
+
 				if($chkledger == 0)
 				{
 					if($toledger == 'true')
 					{
-						db::table('studledger')	
+						db::table('studledger')
 							->insert([
 								'studid' => $studid,
 								'semid' => FinanceModel::getSemID(),
@@ -4026,7 +4026,7 @@ class UtilityController extends Controller
 												'balance' => $pay->balance - $dpamount,
 												'updatedby' => auth()->user()->id,
 												'updateddatetime' => FinanceModel::getServerDateTime()
-											]);						
+											]);
 
 										$dpamount = 0;
 									}
@@ -4072,7 +4072,7 @@ class UtilityController extends Controller
 														'balance' => $pay->balance - $dpamount,
 														'updatedby' => auth()->user()->id,
 														'updateddatetime' => FinanceModel::getServerDateTime()
-													]);						
+													]);
 
 												$dpamount = 0;
 											}
@@ -4121,7 +4121,7 @@ class UtilityController extends Controller
 												'balance' => $pay->balance - $dpamount,
 												'updatedby' => auth()->user()->id,
 												'updateddatetime' => FinanceModel::getServerDateTime()
-											]);						
+											]);
 
 										$dpamount = 0;
 									}
@@ -4153,7 +4153,7 @@ class UtilityController extends Controller
 				$levelid = $stud->levelid;
 				$curAmount = $chrngtrans->amountpaid;
 
-				db::table('studledger')	
+				db::table('studledger')
 					->insert([
 						'studid' => $studid,
 						'semid' => FinanceModel::getSemID(),
@@ -4190,7 +4190,7 @@ class UtilityController extends Controller
 
 
 				foreach($payscheddetail as $paysched)
-				{	
+				{
 					if($curAmount > 0)
 					{
 						if($curAmount > $paysched->balance)
@@ -4361,7 +4361,7 @@ class UtilityController extends Controller
  					->where('ornum', 'like', $ledger->ornum)
  					->first();
 
-				
+
 
 				if($trans)
 				{
@@ -4389,7 +4389,7 @@ class UtilityController extends Controller
 						$transstatus = 'TRUE';
 					}
 
-					
+
 					if($ledger->void != $trans->cancelled)
 					{
 						$list .='
@@ -4584,7 +4584,7 @@ class UtilityController extends Controller
 		if($request->ajax())
 		{
 			$classid = $request->get('classid');
-			
+
 			$class = db::table('itemclassification')
 				->where('id', $classid)
 				->first();
@@ -4690,7 +4690,7 @@ class UtilityController extends Controller
 			}
 			else
 			{
-				$itemized = 0;	
+				$itemized = 0;
 			}
 
 			// return $itemized;
@@ -4959,7 +4959,7 @@ class UtilityController extends Controller
 
         $levelid = db::table('studinfo')->where('id', $studid)->first()->levelid;
 
-        
+
         $paysched = db::table('studpayscheddetail')
             ->where('syid', $syid)
             ->where(function($q) use($levelid, $semid){
@@ -4979,7 +4979,7 @@ class UtilityController extends Controller
             ->where('studid', $studid)
             ->where('deleted', 0)
             ->get();
-    
+
         foreach($paysched as $pay)
         {
             $bal = $pay->amount - $pay->amountpay;
@@ -5085,7 +5085,7 @@ class UtilityController extends Controller
 
 	    		foreach($cashtrans as $trans)
 	    		{
-	    			if($ornums == '')	
+	    			if($ornums == '')
 	    			{
 	    				$ornums = $trans->ornum;
 	    			}
@@ -5164,7 +5164,7 @@ class UtilityController extends Controller
 				$enrollstud = db::table('college_enrolledstud')
 					->where('studid', $studid)
 					->where('deleted', 0)
-					->first();	
+					->first();
 
 				if($enrollstud)
 				{
@@ -5176,7 +5176,7 @@ class UtilityController extends Controller
 				$enrollstud = db::table('enrolledstud')
 					->where('studid', $studid)
 					->where('deleted', 0)
-					->first();		
+					->first();
 
 				$dateenrolled = $enrollstud->dateenrolled;
 			}
@@ -5222,14 +5222,14 @@ class UtilityController extends Controller
 				}
 			}
 
-			
+
 			db::table('studpayscheddetail')
 				->where('studid', $studid)
 				->where('syid', FinanceModel::getSYID())
 				->where(function($q) use($levelid){
 					if($levelid == 14 || $levelid == 15)
 					{
-						if(FinanceModel::shssetup() == 0)	
+						if(FinanceModel::shssetup() == 0)
 						{
 							$q->where('semid', FinanceModel::getSemID());
 						}
@@ -5250,7 +5250,7 @@ class UtilityController extends Controller
 				->where(function($q) use($levelid){
 					if($levelid == 14 || $levelid == 15)
 					{
-						if(FinanceModel::shssetup() == 0)	
+						if(FinanceModel::shssetup() == 0)
 						{
 							$q->where('semid', FinanceModel::getSemID());
 						}
@@ -5278,7 +5278,7 @@ class UtilityController extends Controller
 				->where(function($q) use($levelid){
 					if($levelid == 14 || $levelid == 15)
 					{
-						if(FinanceModel::shssetup() == 0)	
+						if(FinanceModel::shssetup() == 0)
 						{
 							$q->where('semid', FinanceModel::getSemID());
 						}
@@ -5292,7 +5292,7 @@ class UtilityController extends Controller
 				->where('deleted', 0)
 				->where('classid', $balforwardsetup->classid)
 				->first();
-			
+
 			if($balforwardledger)
 			{
 				if($balforwardledger->createddatetime <= $dateenrolled)
@@ -5382,7 +5382,7 @@ class UtilityController extends Controller
 							$totalbalforward = 0;
 
 							foreach($paymentsetup as $mop)
-							{	
+							{
 								if($mop->paymentno != $mop->noofpayment)
 								{
 									$totalbalforward += $divbal;
@@ -5566,7 +5566,7 @@ class UtilityController extends Controller
 						->where(function($q) use($levelid){
 							if($levelid == 14 || $levelid == 15)
 							{
-								if(FinanceModel::shssetup() == 0)	
+								if(FinanceModel::shssetup() == 0)
 								{
 									$q->where('semid', FinanceModel::getSemID());
 								}
@@ -5588,7 +5588,7 @@ class UtilityController extends Controller
 							->where(function($q) use($levelid){
 								if($levelid == 14 || $levelid == 15)
 								{
-									if(FinanceModel::shssetup() == 0)	
+									if(FinanceModel::shssetup() == 0)
 									{
 										$q->where('semid', FinanceModel::getSemID());
 									}
@@ -5658,8 +5658,8 @@ class UtilityController extends Controller
 	  						$paytAmount += $divPay;
 
 	  						if($paycount != $paymentno)
-	  						{	
-	  							
+	  						{
+
 	  							$scheditem = db::table('studpayscheddetail')
 			  						->insert([
 			  							'studid' => $studid,
@@ -5678,18 +5678,18 @@ class UtilityController extends Controller
 			  							'createdby' => auth()->user()->id
 			  						]);
 
-			  						
+
 	  						}
 	  						else
 	  						{
 	  							if($paytAmount <= $tuitionamount)
 	  							{
-	  								
+
 	  								$paydisbalance = $tuitionamount - $paytAmount;
 			  						$paydisbalance = number_format($paydisbalance, 2, '.', '');
 
 			  						$divPay += $paydisbalance;
-			  						
+
 			  						// echo ' paydisbalance: ' . $paydisbalance;
 			  						// echo ' +divPay: '. $divPay;
 			  						$scheditem = db::table('studpayscheddetail')
@@ -5712,7 +5712,7 @@ class UtilityController extends Controller
 	  							}
 	  							else
 	  							{
-	  								
+
 	  								$paydisbalance = $paytAmount - $tuitionamount;
 	  								$paydisbalance = number_format($paydisbalance, 2, '.', '');
 
@@ -5737,9 +5737,9 @@ class UtilityController extends Controller
 				  						]);
 	  							}
 	  						}
-	  						
+
 			  			}
-			  			
+
   					}
   					else
   					{
@@ -5758,7 +5758,7 @@ class UtilityController extends Controller
 			  					{
 				  					$pAmount = round($pay->percentamount * ($tui->amount/100), 2);
 				  					$curAmount = (round($curAmount - $pAmount, 2));
- 
+
 				  					$scheditem = db::table('studpayscheddetail')
 				  					->insert([
 				  							'studid' => $studid,
@@ -5798,7 +5798,7 @@ class UtilityController extends Controller
 				  							'classid' => $tui->classid,
 				  							'createddatetime' => FinanceModel::getServerDateTime(),
 			  								'createdby' => auth()->user()->id
-				  						]);	
+				  						]);
 			  						$curAmount = 0;
 			  					}
 			  				}
@@ -5839,7 +5839,7 @@ class UtilityController extends Controller
 	  			$adjbal = $adj->amount;
 	  			$adjbal = number_format($adj->amount, 2, '.', '');
 	  			$particulars = $adj->description;
-  			
+
   				if($adj->iscredit == 1)
   				{
   					$checkadjledger = db::table('studledger')
@@ -5866,7 +5866,7 @@ class UtilityController extends Controller
 		  					]);
 		  			}
 
-		  			
+
   				}
   				else
   				{
@@ -5913,7 +5913,7 @@ class UtilityController extends Controller
 		  					]);
 		  			}
   				}
-	  			
+
 	  		}
 	  		// return 22222;
 	  		//Check Adjustment
@@ -6012,13 +6012,13 @@ class UtilityController extends Controller
 										'createddatetime' => FinanceModel::getServerDateTime()
 									]);
 							}
-						}							
+						}
 
 
-		  			}	
+		  			}
 		  			else
 		  			{
-		  				
+
 
 		  				db::table('studpayscheddetail')
 		  					->insert([
@@ -6074,7 +6074,7 @@ class UtilityController extends Controller
 					}
 				})
 				->get();
-            
+
             $_tid = 0;
 			foreach($ledger_payments as $ledpay)
 			{
@@ -6085,7 +6085,7 @@ class UtilityController extends Controller
 				// goto Adjustment;
 
 				//DP Transactions
-				
+
 				if($_tid != 0)
 				{
 
@@ -6115,13 +6115,13 @@ class UtilityController extends Controller
 
 					if(count($getdp) > 0)
 					{
-						
+
 
 						// echo ' DP transactions: ' . $ledpay->transid . '; amount:';
 						foreach($getdp as $dp)
 						{
 							$dpBal = $dp->amount;
-							
+
 							echo ' DP transactions: ' . $ledpay->transid . '; amount:' . $dp->amount;
 
 							$getpaySched = db::table('studpayscheddetail')
@@ -6152,9 +6152,9 @@ class UtilityController extends Controller
 								{
 									// echo '[' . $dpBal . '>' . $sched->amount . ']';
 									// $schedbal = $sched->amount - $sched->amountpay;
-									
+
 									if($dpBal > $sched->balance)
-									{	
+									{
 										$deductDP = db::table('studpayscheddetail')
 											->where('id', $sched->id)
 											->update([
@@ -6172,7 +6172,7 @@ class UtilityController extends Controller
 										$aPay = $sched->amountpay + $dpBal;
 
 										// echo ' aPay = ' . $aPay;
-										
+
 										$deductDP = db::table('studpayscheddetail')
 											->where('id', $sched->id)
 											->update([
@@ -6181,7 +6181,7 @@ class UtilityController extends Controller
 												'updateddatetime' => FinanceModel::getServerDateTime(),
 												'updatedby' => auth()->user()->id
 											]);
-										
+
 
 										$dpBal = 0;
 									}
@@ -6237,7 +6237,7 @@ class UtilityController extends Controller
 											->get();
 
 									if($dpBal > 0)
-									{		
+									{
 										foreach($paysched as $sched)
 										{
 											if($dpBal > $sched->balance)
@@ -6257,7 +6257,7 @@ class UtilityController extends Controller
 											{
 												$tDP = $sched->balance - $dpBal;
 												$aPay = $sched->amountpay + $dpBal;
-												
+
 												$deductDP = db::table('studpayscheddetail')
 													->where('id', $sched->id)
 													->update([
@@ -6266,7 +6266,7 @@ class UtilityController extends Controller
 														'updateddatetime' => FinanceModel::getServerDateTime(),
 														'updatedby' => auth()->user()->id
 													]);
-												
+
 
 												$dpBal = 0;
 											}
@@ -6290,7 +6290,7 @@ class UtilityController extends Controller
 					$ee_amount = FinanceModel::checkEE($studid, $syid, $semid);
 
 					$getdp = array();
-					
+
 					if($ee_amount > 0)
 					{
 						$getdp1 = db::table('chrng_earlyenrollmentpayment')
@@ -6337,7 +6337,7 @@ class UtilityController extends Controller
 						->groupBy('classid')
 						->get();
 
-					
+
 
 					foreach($dpsetup as $setup)
 					{
@@ -6359,7 +6359,7 @@ class UtilityController extends Controller
 
 					foreach($getdp2 as $_dp1)
 					{
-						array_push($getdp, $_dp1);	
+						array_push($getdp, $_dp1);
 					}
 
 					if(count($getdp) > 0)
@@ -6393,11 +6393,11 @@ class UtilityController extends Controller
 									{
 										// echo '[' . $dpBal . '>' . $sched->amount . ']';
 										$schedbal = $sched->amount - $sched->amountpay;
-										
+
 										if($dpBal > $schedbal)
 										{
 											$tDP = 0;
-											
+
 											$deductDP = db::table('studpayscheddetail')
 												->where('id', $sched->id)
 												->update([
@@ -6419,7 +6419,7 @@ class UtilityController extends Controller
 											$aPay = $sched->amountpay + $dpBal;
 
 											// echo ' aPay = ' . $aPay;
-											
+
 											$deductDP = db::table('studpayscheddetail')
 												->where('id', $sched->id)
 												->update([
@@ -6428,7 +6428,7 @@ class UtilityController extends Controller
 													'updateddatetime' => RegistrarModel::getServerDateTime(),
 													'updatedby' => auth()->user()->id
 												]);
-											
+
 											RegistrarModel::chrngdistlogs($studid, $dp->chrngtransid, $dp->chrngtransdetailid, $sched->id, $sched->classid, $dpBal);
 											RegistrarModel::procItemized($studid, $sched->classid, $dpBal, $syid, $semid);
 
@@ -6471,7 +6471,7 @@ class UtilityController extends Controller
 											->where('syid', $syid)
 											->where('balance', '>', 0)
 											->groupBy('classid')
-											->get();									
+											->get();
 									}
 
 									foreach($gpaydetail as $detail)
@@ -6485,7 +6485,7 @@ class UtilityController extends Controller
 												->get();
 
 										if($dpBal > 0)
-										{		
+										{
 											foreach($paysched as $sched)
 											{
 												if($dpBal > $sched->balance)
@@ -6508,7 +6508,7 @@ class UtilityController extends Controller
 												{
 													$tDP = $sched->balance - $dpBal;
 													$aPay = $sched->amountpay + $dpBal;
-													
+
 													$deductDP = db::table('studpayscheddetail')
 														->where('id', $sched->id)
 														->update([
@@ -6517,7 +6517,7 @@ class UtilityController extends Controller
 															'updateddatetime' => RegistrarModel::getServerDateTime(),
 															'updatedby' => auth()->user()->id
 														]);
-													
+
 													RegistrarModel::chrngdistlogs($studid, 0, 0, $sched->id, $sched->classid, $dpBal);
 													RegistrarModel::procItemized($studid, $sched->classid, $dpBal, $syid, $semid);
 
@@ -6536,7 +6536,7 @@ class UtilityController extends Controller
 										{
 											$retdp = 1;
 											goto dptoempty_sh;
-											
+
 										}
 									}
 								}
@@ -6557,11 +6557,11 @@ class UtilityController extends Controller
 										{
 											// echo '[' . $dpBal . '>' . $sched->amount . ']';
 											$schedbal = $sched->amount - $sched->amountpay;
-											
+
 											if($dpBal > $schedbal)
 											{
 												$tDP = 0;
-												
+
 												$deductDP = db::table('studpayscheddetail')
 													->where('id', $sched->id)
 													->update([
@@ -6579,7 +6579,7 @@ class UtilityController extends Controller
 												$aPay = $sched->amountpay + $dpBal;
 
 												// echo ' aPay = ' . $aPay;
-												
+
 												$deductDP = db::table('studpayscheddetail')
 													->where('id', $sched->id)
 													->update([
@@ -6588,17 +6588,17 @@ class UtilityController extends Controller
 														'updateddatetime' => RegistrarModel::getServerDateTime(),
 														'updatedby' => auth()->user()->id
 													]);
-												
+
 
 												$dpBal = 0;
 											}
 										}
 									}
-									
+
 									if($dpBal > 0)
 									{
 										$gpaydetail = db::select('
-											SELECT studid, syid, semid, tuitiondetailid, classid, particulars, SUM(amount) AS amount, SUM(amountpay) AS amountpay, SUM(balance) AS balance 
+											SELECT studid, syid, semid, tuitiondetailid, classid, particulars, SUM(amount) AS amount, SUM(amountpay) AS amountpay, SUM(balance) AS balance
 											FROM studpayscheddetail
 											WHERE studid = ?  AND syid = ? and semid = ? AND deleted = 0 and balance > 0
 											GROUP BY classid
@@ -6615,7 +6615,7 @@ class UtilityController extends Controller
 													->get();
 
 											if($dpBal > 0)
-											{		
+											{
 												foreach($paysched as $sched)
 												{
 													if($dpBal > $sched->balance)
@@ -6635,7 +6635,7 @@ class UtilityController extends Controller
 													{
 														$tDP = $sched->balance - $dpBal;
 														$aPay = $sched->amountpay + $dpBal;
-														
+
 														$deductDP = db::table('studpayscheddetail')
 															->where('id', $sched->id)
 															->update([
@@ -6644,7 +6644,7 @@ class UtilityController extends Controller
 																'updateddatetime' => RegistrarModel::getServerDateTime(),
 																'updatedby' => auth()->user()->id
 															]);
-														
+
 														RegistrarModel::chrngdistlogs($studid, 0, 0, $sched->id, $sched->classid, $dpBal);
 														$dpBal = 0;
 													}
@@ -6653,11 +6653,11 @@ class UtilityController extends Controller
 
 										}
 
-									}		
+									}
 								}
-							
+
 							}
-						}	
+						}
 					}
 
 				}
@@ -6666,7 +6666,7 @@ class UtilityController extends Controller
 
 				// return 'aaa';
 
-				//Cashier Transactions	
+				//Cashier Transactions
 
 				if($ledpay->transid != null)
 				{
@@ -6679,9 +6679,9 @@ class UtilityController extends Controller
 	  					->where('classid', '!=', $balclassid)
 	  					->whereNotIn('classid', $dpclass_array)
 	  					->get();
-				}				
+				}
 
-					
+
 				// if(FinanceModel::like_match('%ADJ%', $ledpay->particulars) == false)
 				if($ledpay->transid != null)
 				{
@@ -6690,7 +6690,7 @@ class UtilityController extends Controller
 	  					goto endreset;
 	  				}
 	  				else
-	  				{	
+	  				{
 	  					$detailbal = 0;
 		  				$detailclassid = 0;
 		  				// echo ' '. $ledpay->transid .'; ';
@@ -6736,7 +6736,7 @@ class UtilityController extends Controller
 		  						// echo ' detailbal: ' . $detailbal
 
 		  					if($scheddetail)
-		  					{	
+		  					{
 		  						echo 'ledgeramount: ' . $ledgeramount . ' ';
 		  						// $detailbal = $ledgeramount;
 		  						$detailbal += $detail->amount;
@@ -6747,13 +6747,13 @@ class UtilityController extends Controller
 				  						->where('id', $scheddetail->id)
 				  						->update([
 				  							'amountpay' => $scheddetail->amountpay + $scheddetail->balance, //$detail->amount,
-				  							'balance' => 0, 
+				  							'balance' => 0,
 				  							'updateddatetime' => FinanceModel::getServerDateTime(),
 				  							'updatedby' => auth()->user()->id
 				  						]);
 
 				  					echo ' 1st: ' . $scheddetail->balance;
-				  					
+
 				  					$detailbal -= $scheddetail->balance;
 				  					$ledgeramount -= $scheddetail->balance;
 		  						}
@@ -6763,7 +6763,7 @@ class UtilityController extends Controller
 				  					->where('id', $scheddetail->id)
 		  							->update([
 				  							'amountpay' => $scheddetail->amountpay + $detailbal,
-				  							'balance' => $scheddetail->balance - $detailbal, 
+				  							'balance' => $scheddetail->balance - $detailbal,
 				  							'updateddatetime' => FinanceModel::getServerDateTime(),
 				  							'updatedby' => auth()->user()->id
 				  						]);
@@ -6809,7 +6809,7 @@ class UtilityController extends Controller
 				  					{
 				  						// $detailbal += $detail->amount;
 				  						// echo ' scheddetailid: ' . $scheddetail->id;
-				  						
+
 				  						if($detailbal >= $scheddetail->balance)
 				  						{
 				  							// echo ' scheddetailid: ' . $scheddetail->id;
@@ -6817,7 +6817,7 @@ class UtilityController extends Controller
 						  						->where('id', $scheddetail->id)
 						  						->update([
 						  							'amountpay' => $scheddetail->amountpay + $scheddetail->balance, //$detail->amount,
-						  							'balance' => 0, 
+						  							'balance' => 0,
 						  							'updateddatetime' => FinanceModel::getServerDateTime(),
 						  							'updatedby' => auth()->user()->id
 						  						]);
@@ -6825,7 +6825,7 @@ class UtilityController extends Controller
 						  					echo ' 3rd: ' . $scheddetail->balance;
 						  					$detailbal -= $scheddetail->balance;
 						  					$ledgeramount -= $scheddetail->balancel;
-						  					
+
 				  						}
 				  						else
 				  						{
@@ -6834,7 +6834,7 @@ class UtilityController extends Controller
 						  					->where('id', $scheddetail->id)
 				  							->update([
 						  							'amountpay' => $scheddetail->amountpay + $detailbal,
-						  							'balance' => $scheddetail->balance - $detailbal, 
+						  							'balance' => $scheddetail->balance - $detailbal,
 						  							'updateddatetime' => FinanceModel::getServerDateTime(),
 						  							'updatedby' => auth()->user()->id
 						  						]);
@@ -6845,7 +6845,7 @@ class UtilityController extends Controller
 				  							$detailbal = 0;
 				  						}
 
-				  						
+
 				  						// echo ' scheddetail: ' . $scheddetail->id;
 				  						// echo ' detailbal: ' . $detailbal;
 				  					}
@@ -6870,7 +6870,7 @@ class UtilityController extends Controller
 							  						->where('id', $scheddetail->id)
 							  						->update([
 							  							'amountpay' => $scheddetail->amountpay + $scheddetail->balance, //$detail->amount,
-							  							'balance' => 0, 
+							  							'balance' => 0,
 							  							'updateddatetime' => FinanceModel::getServerDateTime(),
 							  							'updatedby' => auth()->user()->id
 							  						]);
@@ -6886,7 +6886,7 @@ class UtilityController extends Controller
 							  					->where('id', $scheddetail->id)
 					  							->update([
 							  							'amountpay' => $scheddetail->amountpay + $detailbal,
-							  							'balance' => $scheddetail->balance - $detailbal, 
+							  							'balance' => $scheddetail->balance - $detailbal,
 							  							'updateddatetime' => FinanceModel::getServerDateTime(),
 							  							'updatedby' => auth()->user()->id
 							  						]);
@@ -6895,7 +6895,7 @@ class UtilityController extends Controller
 
 					  							$ledgeramount -= $detailbal;
 					  							$detailbal = 0;
-					  							
+
 					  						}
 					  					}
 				  					}
@@ -6944,7 +6944,7 @@ class UtilityController extends Controller
 				  						->where('id', $scheddetail->id)
 				  						->update([
 				  							'amountpay' => $scheddetail->amountpay + $scheddetail->balance, //$detail->amount,
-				  							'balance' => 0, 
+				  							'balance' => 0,
 				  							'updateddatetime' => FinanceModel::getServerDateTime(),
 				  							'updatedby' => auth()->user()->id
 				  						]);
@@ -6960,7 +6960,7 @@ class UtilityController extends Controller
 				  					->where('id', $scheddetail->id)
 		  							->update([
 				  							'amountpay' => $scheddetail->amountpay + $detailbal,
-				  							'balance' => $scheddetail->balance - $detailbal, 
+				  							'balance' => $scheddetail->balance - $detailbal,
 				  							'updateddatetime' => FinanceModel::getServerDateTime(),
 				  							'updatedby' => auth()->user()->id
 				  						]);
@@ -7005,7 +7005,7 @@ class UtilityController extends Controller
 				  					{
 				  						// $detailbal += $detail->amount;
 				  						// echo ' scheddetailid: ' . $scheddetail->id;
-				  						
+
 				  						if($detailbal >= $scheddetail->balance)
 				  						{
 				  							// echo ' scheddetailid: ' . $scheddetail->id;
@@ -7013,7 +7013,7 @@ class UtilityController extends Controller
 						  						->where('id', $scheddetail->id)
 						  						->update([
 						  							'amountpay' => $scheddetail->amountpay + $scheddetail->balance, //$detail->amount,
-						  							'balance' => 0, 
+						  							'balance' => 0,
 						  							'updateddatetime' => FinanceModel::getServerDateTime(),
 						  							'updatedby' => auth()->user()->id
 						  						]);
@@ -7029,7 +7029,7 @@ class UtilityController extends Controller
 						  					->where('id', $scheddetail->id)
 				  							->update([
 						  							'amountpay' => $scheddetail->amountpay + $detailbal,
-						  							'balance' => $scheddetail->balance - $detailbal, 
+						  							'balance' => $scheddetail->balance - $detailbal,
 						  							'updateddatetime' => FinanceModel::getServerDateTime(),
 						  							'updatedby' => auth()->user()->id
 						  						]);
@@ -7062,7 +7062,7 @@ class UtilityController extends Controller
 							  						->where('id', $scheddetail->id)
 							  						->update([
 							  							'amountpay' => $scheddetail->amountpay + $scheddetail->balance, //$detail->amount,
-							  							'balance' => 0, 
+							  							'balance' => 0,
 							  							'updateddatetime' => FinanceModel::getServerDateTime(),
 							  							'updatedby' => auth()->user()->id
 							  						]);
@@ -7078,7 +7078,7 @@ class UtilityController extends Controller
 							  					->where('id', $scheddetail->id)
 					  							->update([
 							  							'amountpay' => $scheddetail->amountpay + $detailbal,
-							  							'balance' => $scheddetail->balance - $detailbal, 
+							  							'balance' => $scheddetail->balance - $detailbal,
 							  							'updateddatetime' => FinanceModel::getServerDateTime(),
 							  							'updatedby' => auth()->user()->id
 							  						]);
@@ -7104,10 +7104,10 @@ class UtilityController extends Controller
 
 		  					echo ' ___detailbal: ' . $detailbal;
 
-		  					
+
 		  				}
-		  				
-		  				goto endreset;	
+
+		  				goto endreset;
 	  				}
 	  			}
 
@@ -7160,12 +7160,12 @@ class UtilityController extends Controller
 				  				->where('classid', $adj->classid)
 				  				->where('balance' , '>', 0)
 				  				->where('deleted', 0)
-				  				->first();		
+				  				->first();
 
 				  			if($scheddetail)
 				  			{
 				  				if($scheddetail->balance >= $adjbal)
-			  					{	
+			  					{
 			  						// echo ' schedid+: ' . $scheddetail->id . '; classid: ' . $scheddetail->classid . '; pay: ' . $adjbal . '; ';
 			  						db::table('studpayscheddetail')
 					  					->where('id', $scheddetail->id)
@@ -7178,7 +7178,7 @@ class UtilityController extends Controller
 						  						'updateddatetime' => FinanceModel::getServerDateTime()
 						  					]);
 
-					  				
+
 					  				$adjbal = 0;
 					  				// echo ' adjbal: ' . $adjbal . '; ';
 			  					}
@@ -7233,7 +7233,7 @@ class UtilityController extends Controller
 					  			if($scheddetail)
 					  			{
 					  				if($scheddetail->balance >= $adjbal)
-				  					{	
+				  					{
 
 				  						// echo ' schedid: ' . $scheddetail->id . '; classid: ' . $scheddetail->classid . '; pay: ' . $adjbal;
 				  						db::table('studpayscheddetail')
@@ -7396,11 +7396,11 @@ class UtilityController extends Controller
 	  			}
 
 	  			// Adjustment Transactions
-				
-				endreset:	
+
+				endreset:
 				// return ' endledger: ' . $ledgeramount;
 			}
-            
+
             FinanceModel::reloadforwardbalance($studid, FinanceModel::getSYID(), FinanceModel::getSemID(), $levelid);
             FinanceModel::reloadrefundables($studid, $levelid);
 			FinanceModel::ledgeritemizedreset($studid);
@@ -7685,7 +7685,7 @@ class UtilityController extends Controller
     		echo json_encode($data);
     	}
     }
-    
+
     public function ftd_cashiertdetail_edit(Request $request)
     {
     	if($request->ajax())
@@ -7786,7 +7786,7 @@ class UtilityController extends Controller
     		}
 
 
-    	
+
     	}
     }
 
@@ -7797,6 +7797,11 @@ class UtilityController extends Controller
 		$semid = $request->get('semid');
 		$feesid = $request->get('feesid');
 
+		if(!$feesid){
+			$studinfo = DB::table('studinfo')->where('id', $studid)->first();
+			$feesid = ($studinfo && $studinfo->feesid) ? $studinfo->feesid : 0;
+		}
+
 		$enrollid = 0;
 
 		$stud = db::table('studinfo')
@@ -7804,7 +7809,7 @@ class UtilityController extends Controller
 			->first();
 
 		$levelid = 0;
-		
+
 		$einfo = db::table('enrolledstud')
 			->select('id', 'studstatus', 'levelid')
 			->where('syid', $syid)
@@ -7870,9 +7875,9 @@ class UtilityController extends Controller
 
 				if($einfo)
 				{
-					
+
 					$levelid = $einfo->levelid;
-					$enrollid = $einfo->id;		
+					$enrollid = $einfo->id;
 				}
 				else
 				{
@@ -7881,7 +7886,7 @@ class UtilityController extends Controller
 			}
 		}
 
-		
+
 
 		//Clear Payments(Ledger, LedgerItemized, StudpayschedLedger, TransItems)
 
@@ -7890,25 +7895,25 @@ class UtilityController extends Controller
 		$balclassid = db::table('balforwardsetup')->first()->classid;
 
 		$studledger = db::table('studledger')
-		->where('studid', $studid)
-		->where('syid', $syid)
-		->where(function($q) use($levelid, $semid){
-			if($levelid == 14 || $levelid == 15)
-			{
-				if(FinanceModel::shssetup() == 0)
-				{
-					$q->where('semid', $semid);
-				}
-			}
-			if($levelid >= 17 && $levelid <= 20)
-			{
-				$q->where('semid', $semid);
-			}
-		})
-		->update([
-			'deleted' => 1,
-			'deleteddatetime' => FinanceModel::getServerDateTime()
-		]);
+            ->where('studid', $studid)
+            ->where('syid', $syid)
+            ->where(function($q) use($levelid, $semid){
+                if($levelid == 14 || $levelid == 15)
+                {
+                    if(FinanceModel::shssetup() == 0)
+                    {
+                        $q->where('semid', $semid);
+                    }
+                }
+                if($levelid >= 17 && $levelid <= 20)
+                {
+                    $q->where('semid', $semid);
+                }
+            })
+            ->update([
+                'deleted' => 1,
+                'deleteddatetime' => FinanceModel::getServerDateTime()
+            ]);
 
 		// foreach($studledger as $ledger)
 		// {
@@ -7947,7 +7952,7 @@ class UtilityController extends Controller
 			// ]);
 
 		//StudpayschedDetail
-		db::table('studpayscheddetail')    		
+		db::table('studpayscheddetail')
 			->where('studid', $studid)
 			->where('syid', $syid)
 			->where(function($q) use($levelid, $semid){
@@ -7995,7 +8000,7 @@ class UtilityController extends Controller
 
 		//Generate Fees
 		FinanceUtilityModel::resetv3_generatefees($studid, $levelid, $enrollid, $syid, $semid, $feesid);
-		
+
 		//Generate ESP
 		FinanceUtilityModel::resetv3_generateesp($studid, $levelid, $enrollid, $syid, $semid, $feesid);
 
@@ -8005,7 +8010,7 @@ class UtilityController extends Controller
 		//Generate Balance Forwarding
 		// FinanceUtilityModel::resetv3_generateoldaccounts($studid, $levelid, $syid, $semid);
 		FinanceUtilityModel::resetv3_generateoa_v2($studid, $levelid, $syid, $semid, 0);
-		
+
 		//Generate Labfees
 		FinanceUtilityModel::resetv3_generatelabfees($studid, $levelid, $enrollid, $syid, $semid);
 
@@ -8017,9 +8022,9 @@ class UtilityController extends Controller
 
 		//Genrate Payments
 		FinanceUtilityModel::resetv3_generatepayments($studid, $levelid, $enrollid, $syid, $semid);
-		
+
 		return 'done';
-    	
+
     }
 
     public function besetup_save(Request $request)
@@ -8048,7 +8053,7 @@ class UtilityController extends Controller
 					'itemid' => $itemid,
 					'mopid' => $mopid
 				]);
-		
+
     	}
     }
 
@@ -8108,7 +8113,7 @@ class UtilityController extends Controller
 							<td>'.$trans->semid.'</td>
 							<td class="text-right">'.number_format($trans->amountpaid, 2).'</td>
 						</tr>
-					';	
+					';
 				}
 
 				$totalamount += $trans->amountpaid;
@@ -8195,7 +8200,7 @@ class UtilityController extends Controller
 
     				$trxamount = $cashtrx->amount;
 
-    				
+
     				foreach($dpitems as $_items)
     				{
 
@@ -8233,14 +8238,14 @@ class UtilityController extends Controller
     							if($trxamount > $tuition->amount)
     							{
     								$list .='
-			    						<tr 
+			    						<tr
 			    							data-transid="'.$trans->id.'" data-ornum="'.$trans->ornum.'" data-itemid="'.$tuition->itemid.'" data-classid="'.$tuition->classid.'" data-amount="'.$tuition->amount.'" data-studid="'.$trans->studid.'" data-syid="'.$trans->syid.'" data-semid="'.$trans->semid.'
 			    						">
 			    							<td>'.$trans->ornum.'</td>
 			    							<td>'.$tuition->description.'</td>
 			    							<td class="text-right">'.number_format($tuition->amount, 2).'</td>
 			    						</tr>
-			    					';		
+			    					';
 
 			    					$trxamount -= $tuition->amount;
 			    					$totalamount += $tuition->amount;
@@ -8248,14 +8253,14 @@ class UtilityController extends Controller
     							else
 	    						{
     								$list .='
-			    						<tr 
+			    						<tr
 			    							data-transid="'.$trans->id.'" data-ornum="'.$trans->ornum.'" data-itemid="'.$tuition->itemid.'" data-classid="'.$tuition->classid.'" data-amount="'.$trxamount.'" data-studid="'.$trans->studid.'" data-syid="'.$trans->syid.'" data-semid="'.$trans->semid.'
 			    						">
 			    							<td>'.$trans->ornum.'</td>
 			    							<td>'.$tuition->description.'</td>
 			    							<td class="text-right">'.number_format($trxamount, 2).'</td>
 			    						</tr>
-			    					';		
+			    					';
 
 			    					$totalamount += $trxamount;
 			    					$trxamount = 0;
@@ -8313,7 +8318,7 @@ class UtilityController extends Controller
             	]);
     	}
     }
-	
+
 	public static function api_adjunits(Request $request)
     {
     	$studid = $request->get('studid');
@@ -8416,9 +8421,9 @@ class UtilityController extends Controller
 
 		// return 'done';
 
-		
+
     }
-	
+
 	public static function getpaidinfo($syid, $semid)
 	{
 		$getpaid = db::table('chrngtrans')
@@ -8428,7 +8433,7 @@ class UtilityController extends Controller
 			->where(function($q) use($semid){
 				if($semid != null || $semid != 0)
 				{
-					$q->where('chrngtrans.semid', $semid);		
+					$q->where('chrngtrans.semid', $semid);
 				}
 			})
 			//->where('chrngtrans.semid', $semid)
@@ -8436,10 +8441,10 @@ class UtilityController extends Controller
 			->where('kind', '!=', 'item')
 			->groupBy('studid')
 			->get();
-			
+
 		return $getpaid;
 	}
-	
+
 	public function u_temp_studportal(Request $request)
 	{
 		return view('finance/utilities/studportal');
@@ -8473,7 +8478,7 @@ class UtilityController extends Controller
 			{
 				$levels .='
 					<option value="'.$level->id.'">'.$level->levelname.'</option>
-				';	
+				';
 			}
 		}
 
@@ -8599,7 +8604,7 @@ class UtilityController extends Controller
     						<td class="text-bold">'.$detail->itemname.'</td>
     						<td class="text-right text-bold">'.number_format($detail->amount, 2).'</td>
     					</tr>
-    				';	
+    				';
 
     				$grandtotal += $detail->amount;
     			}
@@ -8616,9 +8621,9 @@ class UtilityController extends Controller
     	return $list;
 
     	// return view('finance/utilities/viewtuition', compact('tuition', 'tuition'));
-    	// $pdf = PDF::loadview('enrollment/pdf/studentinformation',compact('studinfo','schoolinfo'))->setPaper('8.5x11','portrait'); 
+    	// $pdf = PDF::loadview('enrollment/pdf/studentinformation',compact('studinfo','schoolinfo'))->setPaper('8.5x11','portrait');
     }
-	
+
 	public static function assessment_gen(Request $request)
     {
     	$studid = $request->get('studid');
@@ -8708,6 +8713,26 @@ class UtilityController extends Controller
     		}
     	}
 
+        $acadprogid = db::table('gradelevel')->where('id', $levelid)->first()->acadprogid;
+        $assessmentsetup = db::table('assessment_setup')
+            ->where('acadprogid', $acadprogid)
+            ->first();
+
+        $payment_array = array();
+        $paysetup = '';
+
+        if($assessmentsetup)
+        {
+            $paysetup = db::table('paymentsetup')
+                ->select('paymentsetupdetail.*')
+                ->join('paymentsetupdetail', 'paymentsetup.id', '=', 'paymentsetupdetail.paymentid')
+                ->where('paymentsetup.id', $assessmentsetup->mop)
+                ->where('paymentsetupdetail.deleted', 0)
+                ->get();
+
+
+        }
+
  		$paysched = db::table('studpayscheddetail')
  			->select(db::raw('SUM(amount) AS amount'))
  			->where('studid', $studid)
@@ -8731,7 +8756,7 @@ class UtilityController extends Controller
     					}
     				}
  				}
- 				elseif($levelid >= 17 && $levelid <= 21)
+ 				elseif($levelid >= 17 && $levelid <= 25)
  				{
  					$q->where('semid', $semid);
  				}
@@ -8750,46 +8775,27 @@ class UtilityController extends Controller
  			->where('deleted', 0)
  			->first();
 
- 		if($paysched)
- 		{
- 			$amount = $paysched->amount/$paymonth;
- 		}
+			 if($paysched)
+			 {
+				 $amount = $paysched->amount/$paymonth;
+			 }
 
- 		$paysetup = db::table('paymentsetup')
- 			->select('paymentsetupdetail.*')
- 			->join('paymentsetupdetail', 'paymentsetup.id', '=', 'paymentsetupdetail.paymentid')
- 			->where(function($q) use($levelid){
-				if($levelid == 14 || $levelid == 15)
-				{
-					$q->where('paymentsetup.id', 3);
-				}
-				elseif($levelid >= 17 && $levelid <= 21)
-				{
-					$q->where('paymentsetup.id', 4);
-				}
-				else{
-					$q->where('paymentsetup.id', 3);
-				}
-			})
- 			->where('paymentsetupdetail.deleted', 0)
- 			->get();
+         foreach($paysetup as $pay)
+         {
+             $pay_month = date_format(date_create($pay->duedate), 'm');
+             if($pay_month == $month)
+             {
+                 $paymentno = $pay->paymentno;
+             }
 
- 		$payment_array = array();
+             array_push($payment_array, (object)[
+                 'paymentno' => $pay->paymentno,
+                 'duedate' => $pay->duedate,
+                 'amount' => $amount
+             ]);
+         }
 
- 		foreach($paysetup as $pay)
- 		{
- 			$pay_month = date_format(date_create($pay->duedate), 'n');
- 			if($pay_month == $month)
- 			{
- 				$paymentno = $pay->paymentno;
- 			}
 
- 			array_push($payment_array, (object)[
- 				'paymentno' => $pay->paymentno,
- 				'duedate' => $pay->duedate,
- 				'amount' => $amount
- 			]);
- 		}
 
 
 
@@ -8820,7 +8826,7 @@ class UtilityController extends Controller
     					}
     				}
  				}
- 				elseif($levelid >= 17 && $levelid <= 21)
+ 				elseif($levelid >= 17 && $levelid <= 25)
  				{
  					$q->where('semid', $semid);
  				}
@@ -8867,7 +8873,7 @@ class UtilityController extends Controller
 		 				'duedate' => $fee->duedate,
 		 				'amount' => number_format($fee->amount - $totalpayment, 2),
 		 				'particulars' => $month
-		 			]); 				
+		 			]);
 
 		 			$totalpayment = 0;
 	 			}
@@ -8879,16 +8885,15 @@ class UtilityController extends Controller
 	 				'duedate' => $fee->duedate,
 	 				'amount' => number_format($fee->amount, 2),
 	 				'particulars' => $month
-	 			]);	 			
+	 			]);
 	 		}
- 			
+
  		}
 
 
 
  		$assessment = collect($assessment)->where('paymentno', '<=', $paymentno);
-
  		return $assessment;
     }
-	
+
 }

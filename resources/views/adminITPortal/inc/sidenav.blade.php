@@ -1,26 +1,19 @@
-
 <nav class="mt-2">
     <ul class="nav nav-pills nav-sidebar flex-column side" data-widget="treeview" role="menu" data-accordion="false">
-        @if(strtolower(Session::get('schoolinfo')->abbreviation) != 'sbc')
         <li class="nav-item">
-            <a  class="{{Request::url() == url('/home') ? 'active':''}} nav-link" href="/home">
-                <i class="nav-icon fa fa-list"></i>
-                <p>
-                    School List
-                </p>
-            </a>
-        </li>
-        @endif
-        <li class="nav-item">
-            <a  class="{{Request::url() == url('/viewschool/'.Session::get('schoolinfo')->id) ? 'active':''}} nav-link" href="/viewschool/{{Session::get('schoolinfo')->id}}">
+            <a class="{{ Request::url() == url('/viewschool/' . Session::get('schoolinfo')->id) ? 'active' : '' }} nav-link"
+                href="/viewschool/{{ Session::get('schoolinfo')->id }}">
                 <i class="nav-icon fa fa-home"></i>
                 <p>
-                Home
+                    Home
                 </p>
             </a>
         </li>
-        <li class="nav-item has-treeview {{Request::url() == url('/director/finance/cashiertransactionsindex') || Request::url() == url('/printable/cor') || Request::url() == url('/printable/gwaranking') || Request::url() == url('/printable/coranking') ||Request::url() == url('/student/cor/printing') || Request::url() == url('/printable/studentacademicrecord') || Request::url() == url('/printable/masterlist') || Request::url() == url('/printable/othercertification/index') ? 'menu-open' : ''}}">
-            <a href="#"class="nav-link {{Request::url() == url('/printable/certification/index') || Request::url() == url('/printable/cor') || Request::url() == url('/printable/gwaranking') || Request::url() == url('/printable/coranking') ||Request::url() == url('/student/cor/printing') || Request::url() == url('/printable/studentacademicrecord') || Request::url() == url('/printable/masterlist') || Request::url() == url('/printable/othercertification/index') ? 'active' : ''}}">
+
+        <li
+            class="nav-item has-treeview {{ Request::url() == url('/director/finance/cashiertransactionsindex') || Request::url() == url('/printable/cor') || Request::url() == url('/printable/gwaranking') || Request::url() == url('/printable/coranking') || Request::url() == url('/student/cor/printing') || Request::url() == url('/printable/studentacademicrecord') || Request::url() == url('/printable/masterlist') || Request::url() == url('/printable/othercertification/index') ? 'menu-open' : '' }}">
+            <a
+                href="#"class="nav-link {{ Request::url() == url('/printable/certification/index') || Request::url() == url('/printable/cor') || Request::url() == url('/printable/gwaranking') || Request::url() == url('/printable/coranking') || Request::url() == url('/student/cor/printing') || Request::url() == url('/printable/studentacademicrecord') || Request::url() == url('/printable/masterlist') || Request::url() == url('/printable/othercertification/index') ? 'active' : '' }}">
                 <i class="nav-icon fas fa-caret-right"></i>
                 <p>
                     Finance Reports
@@ -28,20 +21,22 @@
                 </p>
             </a>
             <ul class="nav nav-treeview udernavs">
-                <li class="nav-item"> 
-                    <a href="/director/finance/cashiertransactionsindex" class="nav-link {{Request::getRequestUri() == '/director/finance/cashiertransactionsindex' ? 'active' : ''}}">
-                    <i class="nav-icon  far fa-circle"></i>
-                    <p>
-                        Cashier Transactions
-                    </p>
+                <li class="nav-item">
+                    <a href="/director/finance/cashiertransactionsindex"
+                        class="nav-link {{ Request::getRequestUri() == '/director/finance/cashiertransactionsindex' ? 'active' : '' }}">
+                        <i class="nav-icon  far fa-circle"></i>
+                        <p>
+                            Cashier Transactions
+                        </p>
                     </a>
                 </li>
-                <li class="nav-item"> 
-                    <a href="/director/finance/collectionsindex" class="nav-link {{Request::getRequestUri() == '/director/finance/collectionsindex' ? 'active' : ''}}">
-                    <i class="nav-icon  far fa-circle"></i>
-                    <p>
-                        Collection
-                    </p>
+                <li class="nav-item">
+                    <a href="/director/finance/collectionsindex"
+                        class="nav-link {{ Request::getRequestUri() == '/director/finance/collectionsindex' ? 'active' : '' }}">
+                        <i class="nav-icon  far fa-circle"></i>
+                        <p>
+                            Collection
+                        </p>
                     </a>
                 </li>
                 {{-- <li class="nav-item"> 
@@ -70,8 +65,8 @@
                 </li> --}}
             </ul>
         </li>
-        <li class="nav-item has-treeview {{Request::url() == url('/hr/index') ? 'menu-open' : ''}}">
-            <a href="#"class="nav-link {{Request::url() == url('/hr/index') ? 'active' : ''}}">
+        <li class="nav-item has-treeview {{ Request::url() == url('/hr/index') ? 'menu-open' : '' }}">
+            <a href="#"class="nav-link {{ Request::url() == url('/hr/index') ? 'active' : '' }}">
                 <i class="nav-icon fas fa-caret-right"></i>
                 <p>
                     Human Resource
@@ -79,24 +74,47 @@
                 </p>
             </a>
             <ul class="nav nav-treeview udernavs">
-                <li class="nav-item"> 
-                    <a href="/hr/index" class="nav-link {{Request::getRequestUri() == '/hr/index' ? 'active' : ''}}">
-                    <i class="nav-icon  far fa-circle"></i>
-                    <p>
-                       Employee Profile
-                    </p>
+                <li class="nav-item">
+                    <a href="/hr/index" class="nav-link {{ Request::getRequestUri() == '/hr/index' ? 'active' : '' }}">
+                        <i class="nav-icon  far fa-circle"></i>
+                        <p>
+                            Employee Profile
+                        </p>
                     </a>
                 </li>
             </ul>
         </li>
         <li class="nav-item">
-            <a href="/aadmin/enrollment" class="nav-link {{Request::url() == url('/aadmin/enrollment') ? 'active':''}}">
+            <a href="/aadmin/enrollment"
+                class="nav-link {{ Request::url() == url('/aadmin/enrollment') ? 'active' : '' }}">
                 <i class="nav-icon fas fa-poll"></i>
                 <p>Enrollment Statistics</p>
             </a>
         </li>
-    
-   {{-- <li class="nav-item">
+
+        <li class="nav-header text-warning">My Applications</li>
+        <li class="nav-item">
+            <a href="/hr/leaves/index?action=myleave"
+                class="nav-link {{ Request::fullUrl() === url('/hr/leaves/index?action=myleave') ? 'active' : '' }}">
+                <i class="nav-icon fa fa-calendar-alt"></i>
+                <p>
+                    Leave Applications
+                </p>
+            </a>
+        </li>
+
+        <li class="nav-header text-warning">Employee Requirements</li>
+        <li class="nav-item">
+            <a href="/hr/requirements/employee"
+                class="nav-link {{ Request::fullUrl() === url('/hr/requirements/employee') ? 'active' : '' }}">
+                <i class="nav-icon fa fa-folder-open"></i>
+                <p>
+                    My Requirements
+                </p>
+            </a>
+        </li>
+
+        {{-- <li class="nav-item">
         <a class="{{Request::url() == url('/adminviewenrolledstudents') ? 'active':''}} nav-link" href="/adminviewenrolledstudents">
             <i class="nav-icon fa fa-users"></i>
             <p>
@@ -105,13 +123,13 @@
             </p>
         </a>
     </li> --}}
-            {{-- <li class="nav-item">
+        {{-- <li class="nav-item">
                 <a href="/academic/index" class="nav-link {{Request::url() == url('/academic/index') ? 'active':''}}">
                     <i class="far fa-circle nav-icon"></i>
                     <p>Academic</p>
                 </a>
             </li> --}}
-            {{-- <li class="nav-item has-treeview 
+        {{-- <li class="nav-item has-treeview 
             {{ Request::url() == url('/academic/students') 
                 || Request::url() == url('/teacher/profile') 
             
@@ -144,14 +162,14 @@
                     </li>
                 </ul>
             </li> --}}
-            {{-- <li class="nav-item">
+        {{-- <li class="nav-item">
                 <a href="/hr/index" class="nav-link {{Request::url() == url('/hr/index') ? 'active':''}}">
                     <i class="far fa-circle nav-icon"></i>
                     <p>HR</p>
                 </a>
             </li> --}}
-    
-    {{-- <li class="nav-item has-treeview 
+
+        {{-- <li class="nav-item has-treeview 
     {{ Request::url() == url('enrollmentReport') 
         || Request::url() == url('cashtransReport') 
     
@@ -184,9 +202,9 @@
             </li>
         </ul>
     </li> --}}
-   
-     <!-- <li class="nav-item">
-        <a class="{{Request::url() == url('/admingetrooms') ? 'active':''}} nav-link" href="/admingetrooms">
+
+        <!-- <li class="nav-item">
+        <a class="{{ Request::url() == url('/admingetrooms') ? 'active' : '' }} nav-link" href="/admingetrooms">
             <i class="nav-icon fa fa-door-open"></i>
             <p>
                 Rooms
@@ -194,7 +212,7 @@
         </a>
     </li>
     <li class="nav-item">
-        <a class="{{Request::url() == url('/adminloadholidays') ? 'active':''}} nav-link" href="/adminloadholidays">
+        <a class="{{ Request::url() == url('/adminloadholidays') ? 'active' : '' }} nav-link" href="/adminloadholidays">
             <i class="nav-icon fa fa-thumbtack"></i>
             <p>
                 School Calendar
@@ -203,7 +221,7 @@
     </li>
     <li class="nav-header">SETUP</li>
     <li class="nav-item">
-        <a class="{{Request::url() == url('/manageschoolyear') ? 'active':''}} nav-link" href="/manageschoolyear">
+        <a class="{{ Request::url() == url('/manageschoolyear') ? 'active' : '' }} nav-link" href="/manageschoolyear">
             <i class="nav-icon fab fa-pushed"></i>
             <p>
                 School Year
@@ -220,7 +238,7 @@
     </li> --}}
 
     <li class="nav-item">
-        <a class="{{Request::url() == url('/truncanator') ? 'active':''}} nav-link" href="/truncanator">
+        <a class="{{ Request::url() == url('/truncanator') ? 'active' : '' }} nav-link" href="/truncanator">
             <i class="nav-icon fa fa-chart-line"></i>
             <p>
                 Truncanator
@@ -269,7 +287,5 @@
             </li>
         </ul>
     </li> --}} -->
-</ul>
+    </ul>
 </nav>
-
-

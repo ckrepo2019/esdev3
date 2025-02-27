@@ -316,7 +316,7 @@
                     categoryid: categoryid ?? null,
                     action: 'getall'
                 },
-                url: '{{ route('books') }}',
+                url: '{{ route('lib.books') }}',
                 success: function(data) {
                     console.log(data)
                     load_books_datatable(data);

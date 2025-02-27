@@ -41,11 +41,14 @@ class RouteServiceProvider extends ServiceProvider
 
         $this->mapDocumentTrackingRoutes();
 
+        $this->mapTesdaRoutes();
+
         $this->mapGuidanceRoutes();
 
         $this->mapAdmissionRoutes();
 
         $this->mapLibraryRoutes();
+
     }
 
     /**
@@ -93,6 +96,14 @@ class RouteServiceProvider extends ServiceProvider
             ->namespace($this->namespace)
             ->group(base_path('routes/library.php'));
 
+    }
+
+    protected function mapTesdaRoutes()
+    {
+        Route::prefix('tesda')
+            ->middleware('web')
+            ->namespace($this->namespace)
+            ->group(base_path('routes/tesda.php'));
     }
 
     /**

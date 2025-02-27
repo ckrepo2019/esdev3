@@ -344,7 +344,6 @@ class SuperAdminData extends Model
                                         )
                                         ->get();
 
-
         if(count($enrollment_record) > 0){
 
             $collegesection = DB::table('college_schedgroup_detail')
@@ -382,32 +381,32 @@ class SuperAdminData extends Model
                                 )
                                 ->get();
 
-            foreach($enrollment_record as $item){
-                        $courseid = $item->courseid;
-                        $checkcoursegroup = collect($collegesection)->where('schedid',$item->schedid)->where('courseid',$courseid)->values();
-                        if(count($checkcoursegroup) != 0){
-                                $text = $checkcoursegroup[0]->courseabrv;
-                                $text .= '-'.$checkcoursegroup[0]->levelname[0] . ' '.$checkcoursegroup[0]->schedgroupdesc;
-                                $item->sectionname = $text;   
-                        }else{
-                                $collegeid = DB::table('college_courses')
-                                                ->where('id',$courseid)
-                                                ->select('collegeid')
-                                                ->first();
-                                if(isset($collegeid)){
-                                    $checkcoursegroup = collect($collegesection)->where('schedid',$item->schedid)->where('collegeid',$collegeid->collegeid)->values();
-                                    if(count($checkcoursegroup) != 0){
-                                            $text = $checkcoursegroup[0]->collegeabrv;
-                                            $text .= '-'.$checkcoursegroup[0]->levelname[0] . ' '.$checkcoursegroup[0]->schedgroupdesc;
-                                            $item->sectionname = $text;  
-                                    }else{
-                                            $item->sectionname = 'Not Found';
-                                    }
-                                }else{
-                                    $item->sectionname = null;
-                                }
-                        }
-                    }
+            // foreach($enrollment_record as $item){
+            //             $courseid = $item->courseid;
+            //             $checkcoursegroup = collect($collegesection)->where('schedid',$item->schedid)->where('courseid',$courseid)->values();
+            //             if(count($checkcoursegroup) != 0){
+            //                     $text = $checkcoursegroup[0]->courseabrv;
+            //                     $text .= '-'.$checkcoursegroup[0]->levelname[0] . ' '.$checkcoursegroup[0]->schedgroupdesc;
+            //                     $item->sectionname = $text;   
+            //             }else{
+            //                     $collegeid = DB::table('college_courses')
+            //                                     ->where('id',$courseid)
+            //                                     ->select('collegeid')
+            //                                     ->first();
+            //                     if(isset($collegeid)){
+            //                         $checkcoursegroup = collect($collegesection)->where('schedid',$item->schedid)->where('collegeid',$collegeid->collegeid)->values();
+            //                         if(count($checkcoursegroup) != 0){
+            //                                 $text = $checkcoursegroup[0]->collegeabrv;
+            //                                 $text .= '-'.$checkcoursegroup[0]->levelname[0] . ' '.$checkcoursegroup[0]->schedgroupdesc;
+            //                                 $item->sectionname = $text;  
+            //                         }else{
+            //                                 $item->sectionname = 'Not Found';
+            //                         }
+            //                     }else{
+            //                         $item->sectionname = null;
+            //                     }
+            //             }
+            //         }
         }
 
     

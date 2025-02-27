@@ -144,16 +144,6 @@
                                     <input type="text" class="form-control" id="input_hours" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'');">
                               </div>
                         </div>
-                        <div class="row">
-                              <div class="col-md-12 form-group">
-                                    <label for="">Term</label>
-                                    <select name="" id="input_term" class="form-control">
-                                          <option value="0" selected>Select Term</option> 
-                                          <option value="1">First Term</option> 
-                                          <option value="2">Second Term</option>
-                                    </select>
-                              </div>
-                        </div>
                         <!-- JAM END: add subjunit input-->
                         <div class="row not_sh" hidden>
                               <div class="col-md-12 form-group">
@@ -284,25 +274,26 @@
                               <div class="card-body">
                                     <div class="row">
                                           <div class="col-md-12"  style="font-size:.8rem">
-                                                <table class="table-hover table table-sm mb-0" id="subject_table" width="100%" >
-                                                      <thead class="thead-light">
-                                                            <tr>
-                                                                  <th width="4%" class="p-0 align-middle text-center" >#</th>
-                                                                  <th width="38%" >Description</th>
-                                                                  <th width="7%" class="p-0 align-middle text-center" style="font-size:.65rem">Term</th>
-                                                                  <th width="6%" class="p-0 align-middle text-center" style="font-size:.65rem" id="subj_th0">Units</th>
-                                                                  <th width="6%" class="p-0 align-middle text-center" style="font-size:.65rem" id="subj_th1">Consolidated</th>
-                                                                  <th width="6%" class="p-0 align-middle text-center" style="font-size:.65rem" id="subj_th2">Component</th>
-                                                                  <th width="6%" class="p-0 align-middle text-center" style="font-size:.65rem" id="subj_th3">Specialized</th>
-                                                                  <th width="6%" class="p-0 align-middle text-center" style="font-size:.65rem">Display</th>
-                                                                  <th width="5%" class="p-0 align-middle text-center" style="font-size:.65rem">Computation</th>
-                                                                  <th width="5%" class="p-0 align-middle text-center" style="font-size:.65rem" id="subj_th4">%</th>
-                                                                  <th width="5%" class="p-0 align-middle text-center" style="font-size:.65rem" >Hrs</th>
-                                                                  <th width="3%"></th>
-                                                                  <th width="3%"></th>
-                                                            </tr>
-                                                      </thead>
-                                                </table>
+                                                <div style="overflow-x: auto">
+                                                      <table class="table-hover table table-sm mb-0 " id="subject_table" width="100%" >
+                                                            <thead class="thead-light">
+                                                                  <tr>
+                                                                        <th width="4%" class="p-1 align-middle text-center" >#</th>
+                                                                        <th width="45%" >Description</th>
+                                                                        <th width="6%" class="p-1 align-middle text-center" style="font-size:.65rem" id="subj_th0">Units</th>
+                                                                        <th width="6%" class="p-1 align-middle text-center" style="font-size:.65rem" id="subj_th1">Consolidated</th>
+                                                                        <th width="6%" class="p-1 align-middle text-center" style="font-size:.65rem" id="subj_th2">Component</th>
+                                                                        <th width="6%" class="p-1 align-middle text-center" style="font-size:.65rem" id="subj_th3">Specialized</th>
+                                                                        <th width="6%" class="p-1 align-middle text-center" style="font-size:.65rem">Display</th>
+                                                                        <th width="5%" class="p-1 align-middle text-center" style="font-size:.65rem">Computation</th>
+                                                                        <th width="5%" class="p-1 align-middle text-center" style="font-size:.65rem" id="subj_th4">%</th>
+                                                                        <th width="5%" class="p-1 align-middle text-center" style="font-size:.65rem" >Hrs</th>
+                                                                        <th width="3%"></th>
+                                                                        <th width="3%"></th>
+                                                                  </tr>
+                                                            </thead>
+                                                      </table>
+                                                </div>
                                           </div>
                                     </div>
                               </div>
@@ -347,13 +338,17 @@
                   table.destroy();
 
                   $(document).on('change','#filter_type',function(){
+                        console.log('HELLO');
+                        
                         $('#subject_to_modal').attr('disabled','disabled')
                         $('#comp_holder').attr('hidden','hidden')
                         $('#comp_subjects').val("").change()
                         if($(this).val() == ""){
                               all_subject = []
                               subject_datatable()
+                              console.log('A',$(this).val());
                         }else{
+                              console.log('B',$(this).val());
                               filter_change()
                         }
                   })
@@ -406,7 +401,8 @@
                                     stage:$('#filter_type').val()
                               },
 					success:function(data) {
-
+                                    console.log(data);
+                                    
                                     if(data.length > 0){
                                           Toast.fire({
                                                 type: 'info',
@@ -707,7 +703,6 @@
 
                         selected_subject = $(this).attr('data-id')
                         temp_subj = all_subject.filter(x=>x.id == selected_subject)
-
                         $('#subject_to_create')[0].innerHTML = '<i class="far fa-edit"></i> Update'
                         $('#subject_to_create').addClass('btn-primary')
                         $('#subject_to_create').removeClass('btn-success')
@@ -717,8 +712,6 @@
                         // JAM START: add subjunit value in displaying when edit modal is dislpayed
                         $('#input_subjunit').val(temp_subj[0].subjunit)
                         $('#input_hours').val(temp_subj[0].hours)
-                        console.log(temp_subj[0].term,'---');
-                        $('#input_term').val(temp_subj[0].term).trigger('change')
                         // JAM END
 
                         if(temp_subj[0].isCon == 1){
@@ -913,8 +906,7 @@
                         var per = 0
                         var isVisible = 1
                         var isInSF9 = 1
-                        var term = $('#input_term').val()
-                        
+
                         if($('#isCon').prop('checked')==true){
                               isCon = 1
                               comps = $('#comp_subjects').val()
@@ -932,6 +924,7 @@
                         if($('#isInSF9').prop('checked')==false){
                               isInSF9 = 0
                         }
+
                         $.ajax({
 					type:'GET',
 					url: '/superadmin/setup/subject/update',
@@ -950,8 +943,7 @@
                                     type:$('#input_type').val(),
                                     stage:$('#filter_type').val(),
                                     isVisible:isVisible,
-                                    isInSF9:isInSF9,
-                                    term:term
+                                    isInSF9:isInSF9
                               },
 					success:function(data) {
                                     $('#subject_to_create').removeAttr('disabled')
@@ -1025,7 +1017,6 @@
                               columns: [
                                     { "data": "subjcode" },
                                     { "data": "search" },
-                                    { "data": "term" },
                                     { "data": null },
                                     { "data": null },
                                     { "data": null },
@@ -1055,7 +1046,7 @@
                                           }
                                     },
                                     {
-                                          'targets': 10,
+                                          'targets': 9,
                                           'orderable': false, 
                                           'createdCell':  function (td, cellData, rowData, row, col) {
                                                 $(td).addClass('align-middle')
@@ -1125,7 +1116,7 @@
                                                             type = '-  <i class="text-danger">Academic</i>'
                                                       }else if(rowData.type == 4){
                                                             type = '-  <i class="text-danger">Institutional</i>'
-                                                      }
+                                                      }else
 
                                                       type = ''
 
@@ -1155,25 +1146,6 @@
                                           'targets': 2,
                                           'orderable': false, 
                                           'createdCell':  function (td, cellData, rowData, row, col) {
-                                                var term = rowData.term
-                                                if (term == 1) {
-                                                      term = 'First Term'
-                                                } else if (term == 2) {
-                                                      term = 'Second Term'
-                                                } else {
-                                                      term = ''
-                                                }
-
-                                                $(td).addClass('align-middle')
-                                                $(td).addClass('text-center')
-                                                $(td).text(term)
-                                                
-                                          }
-                                    },
-                                    {
-                                          'targets': 3,
-                                          'orderable': false, 
-                                          'createdCell':  function (td, cellData, rowData, row, col) {
                                                 $(td).addClass('align-middle')
                                                 $(td).addClass('text-center')
                                                 $(td).text(rowData.subjunit)
@@ -1181,12 +1153,13 @@
                                           }
                                     },
                                     {
-                                          'targets': 4,
+                                          'targets': 3,
                                           'orderable': false, 
                                           'createdCell':  function (td, cellData, rowData, row, col) {
 
                                                 var ischecked = 'checked="checked"'
                                                 var disabled = ''
+                                                var type = ''
 
                                                 if(rowData.isCon == 0){
                                                       ischecked = ''
@@ -1206,6 +1179,8 @@
                                                             type = 'Academic'
                                                       }else if(rowData.type == 5){
                                                             type = 'Institutional'
+                                                      }else {
+                                                            type = 'N/A'
                                                       }
 
                                                       var buttons = type;
@@ -1226,7 +1201,7 @@
                                           }
                                     },
                                     {
-                                          'targets': 5,
+                                          'targets': 4,
                                           'orderable': false, 
                                           'createdCell':  function (td, cellData, rowData, row, col) {
 
@@ -1261,7 +1236,7 @@
                                           }
                                     },
                                     {
-                                          'targets': 6,
+                                          'targets': 5,
                                           'orderable': false, 
                                           'createdCell':  function (td, cellData, rowData, row, col) {
 
@@ -1295,7 +1270,7 @@
                                           }
                                     },
                                     {
-                                          'targets': 7,
+                                          'targets': 6,
                                           'orderable': false, 
                                           'createdCell':  function (td, cellData, rowData, row, col) {
 
@@ -1326,7 +1301,7 @@
                                           }
                                     },
                                     {
-                                          'targets': 8,
+                                          'targets': 7,
                                           'orderable': false, 
                                           'createdCell':  function (td, cellData, rowData, row, col) {
 
@@ -1352,7 +1327,7 @@
                                           }
                                     },
                                     {
-                                          'targets': 9,
+                                          'targets': 8,
                                           'orderable': false, 
                                           'createdCell':  function (td, cellData, rowData, row, col) {
                                                 var buttons = '';
@@ -1378,7 +1353,7 @@
                                     },
 
                                     {
-                                          'targets': 11,
+                                          'targets': 10,
                                           'orderable': false, 
                                           'createdCell':  function (td, cellData, rowData, row, col) {
                                                 var buttons = '<a href="#" class="edit" data-id="'+rowData.id+'"><i class="far fa-edit"></i></a>';
@@ -1389,7 +1364,7 @@
                                           }
                                     },
                                     {
-                                          'targets': 12,
+                                          'targets': 11,
                                           'orderable': false, 
                                           'createdCell':  function (td, cellData, rowData, row, col) {
                                                 var buttons = '<a href="#" class="delete" data-id="'+rowData.id+'"><i class="far fa-trash-alt text-danger"></i></a>';
@@ -1423,7 +1398,7 @@
                         var label_text = $($('#subject_table_wrapper')[0].children[0])[0].children[0]
 
                         if($('#filter_type').val() != ""){
-                              $(label_text)[0].innerHTML = '<button class="btn btn-primary btn-sm" id="subject_to_modal" style="font-size:.8rem !important"><i class="fas fa-plus"></i> Add Subject</button>'
+                              $(label_text)[0].innerHTML = '<button class="btn btn-primary btn-sm mb-md-0 mb-2" id="subject_to_modal" style="font-size:.8rem !important"><i class="fas fa-plus"></i> Add Subject</button>'
                         }else{
                               $(label_text)[0].innerHTML = ''
                         }

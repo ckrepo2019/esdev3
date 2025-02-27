@@ -126,15 +126,22 @@
     </footer>
     <table style="width: 100%; table-layout: fixed;">
         <tr>
-            <td rowspan="3" style="width: 20%; vertical-align: top;">
+            <td style="width: 20%; vertical-align: top;">
                 <img src="{{ base_path() }}/public/{{ $schoolinfo->picurl }}" alt="school" width="130px" />
             </td>
-            <td style="text-align: center; font-weight: bold; vertical-align: bottom; font-size: 18px;">
-                {{ DB::table('schoolinfo')->first()->schoolname }}</td>
-            <td rowspan="5" style="width: 20%;">
+            <td style="font-weight: bold; font-size: 18px;">
+                {{ DB::table('schoolinfo')->first()->schoolname }} <br><br>
+                <span style="font-size: 12px;">{{ DB::table('schoolinfo')->first()->address }}</span><br>
+                <span style="font-size: 14px; color: rgb(0, 140, 255);margin-top:10px;"> OFFICE OF THE REGISTRAR</span>
+            </td>
+            <td
+                style="font-weight: bold; font-size: 18px;text-align: right; vertical-align: bottom;padding-right: 5px;">
+                <span style="font-size: 14px; color: rgb(0, 140, 255);"> TRANSCRIPT<br>OF RECORD</span>
+            </td>
+            <td rowspan="2" style="width: 20%;">
                 @if ($getphoto)
-                    <img src="{{ URL::asset($getphoto->picurl . '?random="' . \Carbon\Carbon::now('Asia/Manila')->isoFormat('MMDDYYHHmmss')) }}"
-                        style="width: 100%; margin: 0px; position: absolute;" />
+                    <img src="{{ $getphoto->picurl . '?random="' . \Carbon\Carbon::now('Asia/Manila')->isoFormat('MMDDYYHHmmss') }}"
+                        style="width: 100%; margin: 0px; position: absolute; border: 2px solid black;" alt="student photo" />
                 @else
                     @php
                         if (strtoupper($studentinfo->gender) == 'FEMALE') {
@@ -143,20 +150,33 @@
                             $avatar = 'avatar/S(M) 1.png';
                         }
                         $picExists = !empty($studentinfo->picurl) && file_exists(public_path($studentinfo->picurl));
+                        // dd(URL::asset($studentinfo->picurl . '?random="' . \Carbon\Carbon::now('Asia/Manila')->isoFormat('MMDDYYHHmmss')));
                     @endphp
 
                     @if ($picExists)
-                        <img src="{{ asset($studentinfo->picurl) }}" alt="student"
-                            style="width: 100%; margin: 0px; position: absolute;">
+
+                        @php
+                            $picurl =
+                                str_replace('jpg', 'png', $studentinfo->picurl) .
+                                '?random="' .
+                                \Carbon\Carbon::now('Asia/Manila')->isoFormat('MMDDYYHHmmss') .
+                                '"';
+                                // dd(asset($picurl));
+                        @endphp
+                        <img src="{{ $picurl }}"
+                        onerror="this.onerror = null, this.src='{{ $avatar }}'" alt="student pic" 
+                        style="width: 100%; margin: 0px; position: absolute;border: 1px solid black; height: 140px; width: 140px; background-size: cover !important; background-position: center; background-repeat: no-repeat;">
+
+                        {{-- <img src="{{ asset($picurl) }}" alt="student pic" style="width: 100%; margin: 0px; position: absolute;border: 1px solid black; height: 146px;" onerror="this.onerror=null;this.src='{{ asset('avatar/unknown.png') }}'"> --}}
                     @else
-                        <img src="{{ asset($avatar) }}" alt="student"
-                            style="width: 100%; margin: 0px; position: absolute;">
+                        <img src="{{$avatar }}" alt="student avatar"
+                            style="width: 100%; margin: 0px; position: absolute;border: 2px solid black;">
                     @endif
 
                 @endif
             </td>
         </tr>
-        <tr>
+        {{-- <tr>
             <td style="text-align: center; font-size: 10.5px;">
                 @if (strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'sait')
                     {{ DB::table('schoolinfo')->first()->address }}<br />Tel. no. 828-6058 Email Add: <u
@@ -165,31 +185,31 @@
                     {{ DB::table('schoolinfo')->first()->address }}
                 @endif
             </td>
-        </tr>
-        <tr>
+        </tr> --}}
+        {{-- <tr>
             <td style="text-align: center; font-weight: bold; vertical-align: top;">COLLEGIATE ACADEMIC RECORD<br />
                 @if (file_exists(base_path() . '/public/assets/images/sait/office-of-the-registrar.png'))
                     <img src="{{ base_path() }}/public/assets/images/sait/office-of-the-registrar.png" alt="office"
                         width="250px" />
                 @else
-                    {{-- <img src="{{asset('assets/images/avatars/Obi-Wan-Kenobi.png')}}" alt="office" width="250px"/> --}}
+                    
                 @endif
             </td>
-        </tr>
-        <tr>
+        </tr> --}}
+        {{-- <tr>
             <td></td>
             <td style="text-align: center; font-weight: bold; ">OFFICIAL TRANSCRIPT OF
                 RECORD</td>
-        </tr>
+        </tr> --}}
         {{-- <tr>
             <td style="border-bottom: 2px solid #4a7ebb;"></td>
             <td style="border-bottom: 2px solid #4a7ebb;"></td>
         </tr> --}}
-    </table>
+    </table><br>
 
-    <div style="border-bottom: 4px solid #4a7ebb;"></div>
+    <div style="border-bottom: 1px solid black;"></div>
 
-    <table style="width: 100%; font-size: 12px; margin-top: 5px;">
+    {{-- <table style="width: 100%; font-size: 12px; margin-top: 5px;">
         <tr>
             <th colspan="5" style="text-align: center; font-weight: bold; font-size: 18px;">
                 {{ $records[0]->coursename }}</th>
@@ -215,9 +235,113 @@
             <td style="text-align: center;">Middle Name</td>
             <td></td>
         </tr>
+    </table> --}}
+    <br>
+
+    <table
+        style="width: 100%; font-size: 12px;border-collapse: collapse; table-layout: fixed; border: 1px solid black; margin: 0px">
+        <tr>
+            <td width="20%" style="background-color: black; color: white; text-align: center;padding:2px;">
+                <b>PERSONAL DATA</b>
+            </td>
+            <td width="30%"> </td>
+            <td width="5%"></td>
+            <td width="15%"> </td>
+            <td width="30%"></td>
+        </tr>
+        <tr>
+            <td width="20%" style="padding-left: 5px; padding-top: 10px"><b>Name:</b></td>
+            <td width="30%"> {{ $studentinfo->firstname }} {{ $studentinfo->middlename }}.
+                {{ $studentinfo->lastname }}, {{ $studentinfo->suffix }}</td>
+            <td width="5%"></td>
+            <td width="15%" style="text-align: left;"> <b>Student ID No. :</b> </td>
+            <td width="30%"> {{ $studentinfo->sid }} </td>
+        </tr>
+        <tr>
+            <td style="padding-left: 5px"><b>Date of Birth:</b></td>
+            <td> {{ $studentinfo->dob != null ? date('j F Y', strtotime($studentinfo->dob)) : '' }} </td>
+            <td></td>
+            <td> <b>Special Order No.:</b> </td>
+            <td> </td>
+        </tr>
+        <tr>
+            <td style="padding-left: 5px"><b>Place of Birth:</b></td>
+            <td> {{ $studentinfo->pob }} </td>
+            <td></td>
+            <td> <b>Course:</b> </td>
+            <td> {{ $records[0]->coursename }} </td>
+        </tr>
+        <tr>
+            <td style="padding-left: 5px"><b>Permanent Address:</b></td>
+            <td colspan="4">{{ $studentinfo->street }}, {{ $studentinfo->barangay }},
+                {{ $studentinfo->city }},
+                {{ $studentinfo->province }}
+            </td>
+        </tr>
+        <tr>
+            <td style="padding-left: 5px; padding-bottom: 5px"><b>Nationality:</b></td>
+            <td> {{ $studentinfo->nationality }} </td>
+            <td></td>
+            <td> <b>Date Graduated:</b> </td>
+            <td> {{ $details->graduationdate }} </td>
+        </tr>
     </table>
 
-    <table style="width: 100%; font-size: 12px; margin-top: 20px; table-layout: fixed;">
+    <table
+        style="width: 100%; font-size: 12px;border-collapse: collapse; table-layout: fixed; border: 1px solid black;margin: 0px; transform: translateY(-2px);">
+        <tr>
+            <td width="20%" style="background-color: black; color: white; text-align: center;padding:2px;">
+                <b>ENTRANCE</b>
+            </td>
+            <td width="30%"> </td>
+            <td width="5%"></td>
+            <td width="15%"> </td>
+            <td width="30%"></td>
+        </tr>
+        <tr>
+            <td colspan="5" style="padding-left: 5px; padding-top: 10px"><b>Date / Term and School Year Admitted:</b>
+                @if ($enrollment_his && $enrollment_his->created_at != null)
+                    {{ date('F j, Y, g:i A', strtotime($enrollment_his->created_at)) }}
+            </td>
+            @endif
+        </tr>
+        <tr>
+            <td colspan="5">
+                <table style="table-layout: fixed;" width="100%">
+                    <tr>
+                        <td width="15%" style="padding-left: 5px; "><b>Category: </b></td>
+                        <td width="5%" style="text-align: right !important;">
+                            <input type="checkbox" name="category" @if ($acadprog == 5) checked @endif>
+                        </td>
+                        <td width="10%"> SHS </td>
+                        <td width="5%">
+                            <input type="checkbox" name="category" @if ($acadprog == 7) checked @endif>
+                        </td>
+                        <td width="25%" style="white-space: nowrap;">Vocation Level/Graduate</td>
+                        <td width="5%">
+                            <input type="checkbox" name="category" @if ($acadprog == 6) checked @endif>
+                        </td>
+                        <td width="15%" style="white-space: nowrap;">College Level</td>
+                        <td width="5%">
+                            <input type="checkbox" name="category" @if ($iscollege_grad) checked @endif>
+                        </td>
+                        <td width="15%" style="white-space: nowrap;">College Graduate</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="5" style="padding-left: 5px;"><b>Last School Attended:</b>
+                {{ $studentinfo->lastschoolatt }} </td>
+        </tr>
+        <tr>
+            <td colspan="5" style="padding-left: 5px;padding-bottom: 5px"><b>Date Graduated / Last Term and School
+                    Year Attended:</b> {{ $lastterm }} </td>
+        </tr>
+
+    </table>
+
+    {{-- <table style="width: 100%; font-size: 12px; margin-top: 20px; table-layout: fixed;">
         <tr>
             <td style="width: 15%;">Date of Birth</td>
             <td style="width: 20%; text-align: left;">:
@@ -251,9 +375,9 @@
                 {{ $studentinfo->city }},
                 {{ $studentinfo->province }}</td>
         </tr>
-    </table>
+    </table> --}}
 
-    <div style="width: 100%; margin-top: 10px; font-size: 12.5px; text-align: center; font-weight: bold;">RECORDS OF
+    {{-- <div style="width: 100%; margin-top: 10px; font-size: 12.5px; text-align: center; font-weight: bold;">RECORDS OF
         PRELIMINARY EDUCATION</div>
     <table style="width: 100%; font-size: 12px;" border="1">
         <tr>
@@ -294,16 +418,17 @@
             <td style="width: 16%;">NSTP Serial No.:</td>
             <td>{{ $details->nstpserialno ?? '' }}</td>
         </tr>
-    </table>
-    <div style="width: 100%; font-weight: bold; text-align: center; margin-top: 5px;">C O L L E G I A T E
-        &nbsp;&nbsp;&nbsp;&nbsp;R E C O R D</div>
-    <table style="width: 100%; font-size: 12px;" border="1">
-        <thead>
+    </table> --}}
+    {{-- <div style="width: 100%; font-weight: bold; text-align: center; margin-top: 5px;">C O L L E G I A T E
+        &nbsp;&nbsp;&nbsp;&nbsp;R E C O R D</div> --}}
+    <table
+        style="width: 100%; font-size: 12px;margin-top: 20px; table-layout: fixed; border-collapse: collapse; border: 1px solid black">
+        <thead style="border: 1px solid black">
             <tr>
-                <th style="width: 13%;">SUBJECTS<br />& NUMBERS</th>
-                <th>DESCRIPTIVE TITLE</th>
-                <th style="width: 12%;">FINAL<br />GRADE</th>
-                <th style="width: 12%;">CREDITS</th>
+                <th style="width: 13%; border: 1px solid black;">Course No.</th>
+                <th style="border: 1px solid black;">Descriptive Title</th>
+                <th style="width: 12%; border: 1px solid black;">Grades</th>
+                <th style="width: 12%; border: 1px solid black;">Units</th>
             </tr>
         </thead>
         @if (count($records) > 0)
@@ -313,6 +438,7 @@
                     $subjnum = count($record->subjdata);
                     $break = 0;
                 @endphp
+
                 @if ($initialschool == strtolower($record->schoolname))
                 @else
                     @php
@@ -323,21 +449,24 @@
                         // $firstcountrows+=2;
                     @endphp
                 @endif
+
                 @if (count($record->subjdata) > 0)
                     <tr style="font-size: 12px;">
-                        <td></td>
-                        <td style="background-color: #ddd; font-weight: bold; text-align: center;">AY
-                            {{ $record->sydesc }} @if ($record->semid == 1)
+                        <td colspan="4" style="font-weight: bold; text-align: left; padding: 5px;">
+                            @if ($initialschool != $record->coursename)
+                                {{ strtoupper($initialschool) }} <br>
+                            @endif
+
+                            @if ($record->semid == 1)
                                 1st Semester
                             @elseif($record->semid == 2)
                                 2nd Semester
                             @else
                                 Summer
                             @endif
+                            {{ $record->sydesc }}
                             <!--- {{ strtoupper($initialschool) }}-->
                         </td>
-                        <td style="text-align: center; border-bottom: hidden;"></td>
-                        <td style="text-align: center; border-bottom: hidden;"></td>
                     </tr>
                     @php
                         $firstcountrows += 1;
@@ -445,13 +574,14 @@
         <div style="width: 100%; page-break-before: always; text-align: center; font-weight: bold;">
             {{ DB::table('schoolinfo')->first()->schoolname }}
         </div>
-        <table style="width: 100%; font-size: 12px;" border="1">
-            <thead>
+        <table
+            style="width: 100%; font-size: 12px; table-layout: fixed; border-collapse: collapse; border: 1px solid black">
+            <thead style="border: 1px solid black">
                 <tr>
-                    <th style="width: 13%;">SUBJECTS<br />& NUMBERS</th>
-                    <th>DESCRIPTIVE TITLE</th>
-                    <th style="width: 12%;">FINAL<br />GRADE</th>
-                    <th style="width: 12%;">CREDITS</th>
+                    <th style="width: 13%; border: 1px solid black;">Course No.</th>
+                    <th style="border: 1px solid black;">Descriptive Title</th>
+                    <th style="width: 12%; border: 1px solid black;">Grades</th>
+                    <th style="width: 12%; border: 1px solid black;">Units</th>
                 </tr>
             </thead>
             @if (collect($records)->where('display', '0')->count() > 0)
@@ -473,19 +603,21 @@
                     @endif
                     @if (count($record->subjdata) > 0)
                         <tr style="font-size: 12px;">
-                            <td></td>
-                            <td style="background-color: #ddd; font-weight: bold; text-align: center;">AY
-                                {{ $record->sydesc }} @if ($record->semid == 1)
+                            <td colspan="4" style="font-weight: bold; text-align: left; padding: 5px;">
+                                @if ($initialschool != $record->coursename)
+                                    {{ strtoupper($initialschool) }} <br>
+                                @endif
+
+                                @if ($record->semid == 1)
                                     1st Semester
                                 @elseif($record->semid == 2)
                                     2nd Semester
                                 @else
                                     Summer
                                 @endif
+                                {{ $record->sydesc }}
                                 <!--- {{ strtoupper($initialschool) }}-->
                             </td>
-                            <td style="text-align: center; border-bottom: hidden;"></td>
-                            <td style="text-align: center; border-bottom: hidden;"></td>
                         </tr>
                         @php
                             $countrows += 1;

@@ -8,85 +8,93 @@
 <link rel="stylesheet" href="{{asset('plugins/fullcalendar-daygrid/main.min.css')}}">
 <link rel="stylesheet" href="{{asset('plugins/fullcalendar-timegrid/main.min.css')}}">
 <link rel="stylesheet" href="{{asset('plugins/fullcalendar-bootstrap/main.min.css')}}"> --}}
-<link rel="stylesheet" href="{{asset('plugins/datatables-bs4/css/dataTables.bootstrap4.css')}}">
+<link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.css') }}">
 @extends('registrar.layouts.app')
 
 @section('content')
-
     <style>
-        
-        .donutTeachers{
+        .donutTeachers {
             margin-top: 90px;
             margin: 0 auto;
-            background: transparent url("{{asset('assets/images/corporate-grooming-20140726161024.jpg')}}") no-repeat  28% 60%;
+            background: transparent url("{{ asset('assets/images/corporate-grooming-20140726161024.jpg') }}") no-repeat 28% 60%;
             background-size: 30%;
         }
-        .donutStudents{
+
+        .donutStudents {
             margin-top: 90px;
             margin: 0 auto;
-            background: transparent url("{{asset('assets/images/student-cartoon-png-2.png')}}") no-repeat  28% 60%;
+            background: transparent url("{{ asset('assets/images/student-cartoon-png-2.png') }}") no-repeat 28% 60%;
             background-size: 30%;
         }
-        #studentstable{
+
+        #studentstable {
             font-size: 13px;
         }
+
         @media (min-width: 768px) {
             .modal-xl {
                 width: 90%;
-                max-width:1200px;
+                max-width: 1200px;
             }
         }
-        
-    .alert {
-        position: relative;
-        padding: .75rem 1.25rem;
-        margin-bottom: 1rem;
-        border: 1px solid transparent;
-        border-radius: .25rem;
-    }
-    .alert-primary {
-        color: #004085;
-        background-color: #cce5ff;
-        border-color: #b8daff;
-    }
-    .alert-secondary {
-        color: #383d41;
-        background-color: #e2e3e5;
-        border-color: #d6d8db;
-    }
-    .alert-success {
-        color: #155724;
-        background-color: #d4edda;
-        border-color: #c3e6cb;
-    }
-    .alert-danger {
-        color: #721c24;
-        background-color: #f8d7da;
-        border-color: #f5c6cb;
-    }
-    .alert-warning {
-        color: #856404;
-        background-color: #fff3cd;
-        border-color: #ffeeba;
-    }
-    .alert-info {
-        color: #0c5460;
-        background-color: #d1ecf1;
-        border-color: #bee5eb;
-    }
-    .alert-dark {
-        color: #1b1e21;
-        background-color: #d6d8d9;
-        border-color: #c6c8ca;
-    }
-    .alert-pale-green{
-        background-color: white;
-        border-color: #c3e6cb;
-        border-radius: 15px;
-    }
 
+        .alert {
+            position: relative;
+            padding: .75rem 1.25rem;
+            margin-bottom: 1rem;
+            border: 1px solid transparent;
+            border-radius: .25rem;
+        }
+
+        .alert-primary {
+            color: #004085;
+            background-color: #cce5ff;
+            border-color: #b8daff;
+        }
+
+        .alert-secondary {
+            color: #383d41;
+            background-color: #e2e3e5;
+            border-color: #d6d8db;
+        }
+
+        .alert-success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .alert-danger {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        .alert-warning {
+            color: #856404;
+            background-color: #fff3cd;
+            border-color: #ffeeba;
+        }
+
+        .alert-info {
+            color: #0c5460;
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+        }
+
+        .alert-dark {
+            color: #1b1e21;
+            background-color: #d6d8d9;
+            border-color: #c6c8ca;
+        }
+
+        .alert-pale-green {
+            background-color: white;
+            border-color: #c3e6cb;
+            border-radius: 15px;
+        }
     </style>
-    <section class="content-header">
+    {{-- <section class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
@@ -100,59 +108,45 @@
                 </div><!-- /.col -->
             </div><!-- /.row -->
         </div>
-    </section>
+    </section> --}}
+    <section class="content-header">
+        <div class="container-fluid">
+            <h1><i class="fas fa-cog"></i>Certification of Ranking</h1>
+            <ol class="breadcrumb float-sm-left">
+                <li class="breadcrumb-item"><a href="/home">Home</a></li>
+                <li class="breadcrumb-item active">{{ isset($page) ? $page : 'Certification of Ranking' }}</li>
+            </ol>
+        </div>
+    </section><br>
     <div class="card">
         <div class="card-header">
-            <div class="row mb-2">
-                <div class="col-md-6">
-                    <label>Select Student</label>
-                    <select class="form-control  select2" id="select-student">
-                        @foreach($students as $student)
-                            <option value="{{$student->id}}">{{$student->lastname}}, {{$student->firstname}}</option>
-                        @endforeach
-                    </select>
-                </div>
-                {{-- <div class="col-md-3">
-                    <label>Select School Year</label>
-                    <select class="form-control" id="select-syid">
-                        @foreach(DB::table('sy')->get() as $sy)
-                            <option value="{{$sy->id}}" @if($sy->isactive == 1) selected @endif>{{$sy->sydesc}}</option>
-                        @endforeach
-                    </select>
-                </div> --}}
-                <div class="col-md-6 text-right">
-                    {{-- <label>Select Semester</label>
-                    <select class="form-control" id="select-semid">
-                        @foreach(DB::table('semester')->get() as $semester)
-                            <option value="{{$semester->id}}" @if($semester->isactive == 1) selected @endif>{{$semester->semester}}</option>
-                        @endforeach
-                    </select> --}}
-                    <label>&nbsp;</label><br/>
-                    <button type="button" class="btn btn-primary" id="btn-generate"><i class="fa fa-sync"></i> Generate</button>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="table-responsive">
+
+                        <table id="studentList" class="table table-sm table-bordered table-valign-middle table-hover w-100">
+                            <thead class="thead-light">
+                                <tr>
+                                    {{-- <th></th> --}}
+                                    <th width="5">Student ID</th>
+                                    <th width="35">Student Name</th>
+                                    <th width="35">Grade Level</th>
+                                    {{-- <th class="text-center">Status</th> --}}
+                                    <th width="5" class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentListBody">
+                            </tbody>
+                        </table>
+
+                    </div>
                 </div>
             </div>
-            {{-- <div class="row mb-2">
-                <div class="col-md-3">
-                    <label>Select Template</label>
-                    <select class="form-control" id="select-template">
-                        <option value="jhs">JHS</option>
-                        <option value="shs">SHS</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label>Given this date</label>
-                    <input type="date" class="form-control" id="givendate" value="{{date('Y-m-d')}}"/>
-                </div>
-                <div class="col-md-6 text-right">
-                    <label>&nbsp;</label><br/>
-                    <button type="button" class="btn btn-primary" id="btn-generate"><i class="fa fa-sync"></i> Generate</button>
-                </div>
-            </div> --}}
         </div>
     </div>
     <div id="container-filter">
     </div>
-    
+
     {{-- <div class="modal fade" id="modal-uploadphoto" aria-hidden="true" style="display: none;">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -178,14 +172,106 @@
 
 
     <!-- jQuery -->
-    @endsection
-    @section('footerjavascript')
+@endsection
+@section('footerjavascript')
     <script>
         $('.select2').select2({
-          theme: 'bootstrap4'
+            theme: 'bootstrap4'
         })
-        $('#btn-generate').on('click', function(){
-            var studid = $('#select-student').val();
+
+        studentListTable()
+
+        function studentListTable() {
+
+            $("#studentList").DataTable({
+                destroy: true,
+                searching: true,
+                initComplete: function() {
+                    var api = this.api();
+                    var searchBox = $(
+                            '<input type="search" class="form-control form-control-sm" placeholder="Type to search...">'
+                        )
+                        .on('input', function() {
+                            api.search(this.value).draw();
+                        });
+                    $('.dataTables_filter label').html('<span class="me-2"></span>').append(
+                        searchBox);
+                },
+                info: false,
+                lengthChange: false,
+                autoWidth: false,
+                paging: false,
+                ajax: {
+                    url: '/printable/student_coranking',
+                    type: 'GET',
+                    dataSrc: function(json) {
+                        console.log(json)
+                        return json.students;
+                    }
+                },
+                columns: [{
+                        "data": "sid"
+                    },
+                    {
+                        "data": "lastname"
+                    },
+                    {
+                        "data": "levelname"
+                    },
+                    {
+                        "data": "firstname"
+                    },
+                ],
+                order: [
+                    [1, 'asc']
+                ], // Sort by the second column (lastname), ascending
+                columnDefs: [
+
+                    {
+                        'targets': 0,
+                        'orderable': false,
+                        'createdCell': function(td, cellData, rowData, row, col) {
+                            $(td).html(rowData.sid).addClass('align-middle');
+                        }
+                    },
+                    {
+                        'targets': 1,
+                        'orderable': false,
+                        'createdCell': function(td, cellData, rowData, row, col) {
+                            $(td).html(rowData.lastname + ', ' + rowData.firstname).addClass(
+                                'align-middle');
+                        }
+                    },
+
+                    {
+                        'targets': 2,
+                        'orderable': false,
+                        'createdCell': function(td, cellData, rowData, row, col) {
+                            $(td).html(rowData.levelname).addClass('align-middle');
+                        }
+                    },
+
+                    {
+                        'targets': 3,
+                        'orderable': false,
+                        'createdCell': function(td, cellData, rowData, row, col) {
+                            var buttons =
+                                '<button type="button" class="btn btn-primary btn-sm btn-generate" id="btn-generate" data-id="' +
+                                rowData.id +
+                                '"><i class="fa fa-sync"></i> Generate</button>';
+                            $(td)[0].innerHTML = buttons;
+                            $(td).addClass('text-center align-middle');
+                        }
+                    }
+
+                ],
+
+            });
+        }
+
+        $(document).on('click', '#btn-generate', function() {
+            // var studid = $('#select-student').val();
+            var studid = $(this).data('id');
             // var syid = $('#select-syid').val();
             // var semid = $('#select-semid').val();
             // var template = $('#select-template').val();
@@ -199,22 +285,23 @@
             })
             $.ajax({
                 url: '/printable/coranking',
-                type:'GET',
+                type: 'GET',
                 // dataType: 'json',
                 data: {
                     action: 'generate',
-                    studid      :  studid
+                    studid: studid
                     // syid        :  syid,
                     // semid       :  semid,
                     // givendate       :  givendate,
                     // template    :  template
                 },
-                success:function(data) {
+                success: function(data) {
                     $('#container-filter').empty()
                     $('#container-filter').append(data)
                     $(".swal2-container").remove();
                     $('body').removeClass('swal2-shown')
                     $('body').removeClass('swal2-height-auto')
+                    $('#corankingModal').modal('show');
                 }
             })
         })

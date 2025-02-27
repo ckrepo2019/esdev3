@@ -35,9 +35,9 @@ class LibraryBookController extends \App\Http\Controllers\Controller
         $filteredBooks = collect($books)
             ->filter(function ($item) use ($request) {
                 if ($item->book_img) {
-                    $item->book_img = asset($item->book_img);
+                    // $item->book_img = asset($item->book_img);
                 } else {
-                    $item->book_img = asset('books/no-image-found.jpg');
+                    $item->book_img = 'books/no-image-found.jpg';
                 }
                 $item->library_branch = DB::table('libraries')->whereIn('id', explode(',', $item->library_branch))->pluck('library_name')->toArray();
                 $item->book_available = $this->countCirculationsForBook($item->book_qty, $item->id);
@@ -226,9 +226,9 @@ class LibraryBookController extends \App\Http\Controllers\Controller
             $book->book_description_short = Str::limit($book->book_description, 100);
             $book->branch_index = explode(',', $book->library_branch);
             if ($book->book_img) {
-                $book->book_img = asset($book->book_img);
+                $book->book_img = '/' . $book->book_img;
             } else {
-                $book->book_img = asset('books/no-image-found.jpg');
+                $book->book_img = '/books/no-image-found.jpg';
             }
 
             $branchIds = explode(',', $book->library_branch);

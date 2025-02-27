@@ -67,7 +67,7 @@ class SubmittedRequirements extends \App\Http\Controllers\Controller
             $sid = $request->get('sid');
 
             $documents = \App\Http\Controllers\SuperAdminController\DocumentsController::list($request);
-
+           
             $uploadeddocuments = DB::table('preregistrationreqregistrar')
                                           ->join('preregistrationreqlist',function($join){
                                                 $join->on('preregistrationreqregistrar.requirement','=','preregistrationreqlist.id');
@@ -80,6 +80,7 @@ class SubmittedRequirements extends \App\Http\Controllers\Controller
                                                 'description'
                                           )
                                           ->get();
+                                          // dd($uploadeddocuments);
 
             $uploadedbystud =  $submitted = DB::table('preregistrationrequirements')
                                     ->join('preregistrationreqlist',function($join){
@@ -94,7 +95,7 @@ class SubmittedRequirements extends \App\Http\Controllers\Controller
                                           'description'
                                     )
                                     ->get();
-
+                                   
             $uploadeddocuments = collect($uploadeddocuments)->toArray();
             
             foreach($uploadedbystud as $uploadedbystuditem){
@@ -110,7 +111,8 @@ class SubmittedRequirements extends \App\Http\Controllers\Controller
 
             }
             
-
+            // dd($uploadeddocuments);
+            // dd($documents);
 
             foreach($documents as $item){
                   $check = collect($uploadeddocuments)
@@ -155,128 +157,169 @@ class SubmittedRequirements extends \App\Http\Controllers\Controller
             
       }
 
-      public static function students(Request $request){
+      public static function students(Request $request) {
+            $search = $request->get('search')['value'] ?? null;
+        
+            // Determine the pagination values
+            $length = $request->get('length', 10); // Default length to 10 if not provided
+            $start = $request->get('start', 0); // Default start to 0 if not provided
+        
+            // Query to fetch students
+            $studentsQuery = DB::table('studinfo')
+                ->where('studinfo.deleted', 0)
+                ->where('studinfo.studisactive', 1)
+                ->join('gradelevel', function($join) {
+                    $join->on('studinfo.levelid', '=', 'gradelevel.id')
+                         ->where('gradelevel.deleted', 0);
+                })
+                ->select(
+                    'studinfo.id',
+                    'studinfo.levelid',
+                    'lastname',
+                    'firstname',
+                    'middlename',
+                    'suffix',
+                    'sid',
+                    'studtype',
+                    'gradelevel.levelname',
+                    DB::raw("CONCAT(studinfo.lastname, ' ', studinfo.firstname) as studentname")
+                )
+                ->orderBy('studentname');
+        
+            // Apply search filters if search value is present
+            if ($search !== null) {
+                $studentsQuery->where(function($query) use($search) {
+                    $query->where('sid', 'like', '%' . $search . '%')
+                          ->orWhere('lastname', 'like', '%' . $search . '%')
+                          ->orWhere('firstname', 'like', '%' . $search . '%')
+                          ->orWhere('middlename', 'like', '%' . $search . '%');
+                });
+            }
+        
+            // Apply pagination with LIMIT and OFFSET
+            $students = $studentsQuery
+                ->limit($length)
+                ->offset($start)
+                ->get();
+        
+            // Get the total count of students matching the criteria
+            $studentCountQuery = DB::table('studinfo')
+                ->where('studinfo.deleted', 0)
+                ->where('studinfo.studisactive', 1)
+                ->join('gradelevel', function($join) {
+                    $join->on('studinfo.levelid', '=', 'gradelevel.id')
+                         ->where('gradelevel.deleted', 0);
+                });
+        
+            if ($search !== null) {
+                $studentCountQuery->where(function($query) use($search) {
+                    $query->where('sid', 'like', '%' . $search . '%')
+                          ->orWhere('lastname', 'like', '%' . $search . '%')
+                          ->orWhere('firstname', 'like', '%' . $search . '%')
+                          ->orWhere('middlename', 'like', '%' . $search . '%');
+                });
+            }
+        
+            $studentCount = $studentCountQuery->count();
+        
+            // Fetch pre-registration requirements setup
+            $reqSetup = DB::table('preregistrationreqlist')
+                ->where('deleted', 0)
+                ->get();
+        
+            foreach ($students as $student) {
+                // Filter the documents required based on student type and level
+                $docNum = $reqSetup
+                    ->whereIn('doc_studtype', [$student->studtype, null])
+                    ->where('levelid', $student->levelid)
+                    ->count();
+        
+                $student->docnum = $docNum;
+                $student->levelname = str_replace(' COLLEGE', '', $student->levelname);
+        
+                // Get uploaded documents by the student
+                $uploadedDocuments = DB::table('preregistrationreqregistrar')
+                    ->join('preregistrationreqlist', function($join) {
+                        $join->on('preregistrationreqregistrar.requirement', '=', 'preregistrationreqlist.id')
+                             ->where('preregistrationreqlist.deleted', 0);
+                    })
+                    ->where('studid', $student->id)
+                    ->where('preregistrationreqregistrar.deleted', 0)
+                    ->select('preregistrationreqregistrar.*', 'description')
+                    ->get();
 
-            $search = $request->get('search');
-            $search = $search['value'];
-
-            $students = DB::table('studinfo')
-                              ->where('studinfo.deleted',0)
-                              ->where('studinfo.studisactive',1)
-                              ->where(function($query) use($search){
-                                    if($search != null){
-                                          $query->where('sid','like','%'.$search.'%');
-                                          $query->orWhere('lastname','like','%'.$search.'%');
-                                          $query->orWhere('firstname','like','%'.$search.'%');
-                                          $query->orWhere('middlename','like','%'.$search.'%'); 
-                                    }
-                              })
-                              ->join('gradelevel',function($join){
-                                    $join->on('studinfo.levelid','=','gradelevel.id');
-                                    $join->where('gradelevel.deleted',0);
-                              })
-                              ->select(
-                                    'studinfo.id',
-                                    'studinfo.levelid',
-                                    'lastname',
-                                    'firstname',
-                                    'middlename',
-                                    'suffix',
-                                    'sid',
-                                    'studtype',
-                                    'gradelevel.levelname',
-                                    DB::raw("CONCAT(studinfo.lastname,' ',studinfo.firstname) as studentname")
-                              )
-                              ->take($request->get('length'))
-                              ->skip($request->get('start'))
-                              ->orderBy('studentname')
-                              ->get();
-
-            $student_count = DB::table('studinfo')
-                              ->where('studinfo.deleted',0)
-                              ->where('studinfo.studisactive',1)
-                              ->join('gradelevel',function($join){
-                                    $join->on('studinfo.levelid','=','gradelevel.id');
-                                    $join->where('gradelevel.deleted',0);
-                              })
-                              ->where(function($query) use($search){
-                                    if($search != null){
-                                          $query->where('sid','like','%'.$search.'%');
-                                          $query->orWhere('lastname','like','%'.$search.'%');
-                                          $query->orWhere('firstname','like','%'.$search.'%');
-                                          $query->orWhere('middlename','like','%'.$search.'%'); 
-                                    }
-                              })
-                              ->count();
-
-            $reqsetup = DB::table('preregistrationreqlist')
-                              ->where('deleted',0)
-                              ->get();
-
-            foreach($students as $item){
-
-                  $docnum = collect($reqsetup)
-                                    ->whereIn('doc_studtype',[$item->studtype,null])
-                                    ->where('levelid',$item->levelid)
-                                    ->values();
-
-                  $item->docnum = count($docnum);
-
-
-                  $item->levelname = str_replace(' COLLEGE','',$item->levelname);
-
-                  $uploadeddocuments = DB::table('preregistrationreqregistrar')
-                                          ->join('preregistrationreqlist',function($join){
-                                                $join->on('preregistrationreqregistrar.requirement','=','preregistrationreqlist.id');
-                                                $join->where('preregistrationreqlist.deleted',0);
-                                          })
-                                          ->select(
-                                                'preregistrationreqregistrar.*',
-                                                'description'
-                                          )
-                                          ->where('studid',$item->id)
-                                          ->where('preregistrationreqregistrar.deleted',0)
-                                          ->get();
-
-                  $sid = $item->sid;
-
-                  $uploadedbystud =  $submitted = DB::table('preregistrationrequirements')
-                                          ->where('qcode',$sid)
-                                          ->where('deleted',0)
-                                          ->select(
-                                                'preregistrationrequirements.*',
-                                                'preregistrationrequirements.preregreqtype as requirement'
-                                          )
-                                          ->get();
-
-                  $uploadeddocuments = collect($uploadeddocuments)->toArray();
+                    // Iterate through each document to check the 'picurl' validity
+                  foreach ($uploadedDocuments as $document) {
+                        // Check if the picurl exists and is not null
+                        if (isset($document->picurl) && !empty($document->picurl)) {
+                        // Construct the full path to the file
+                        $filePath = public_path($document->picurl);
                   
-                  foreach($uploadedbystud as $uploadedbystuditem){
-                        array_push($uploadeddocuments,$uploadedbystuditem);
+                        // Check if the file exists on the server
+                        if (file_exists($filePath)) {
+                              $document->picurl_valid = true;
+                        } else {
+                              $document->picurl_valid = false;
+                        }
+                        } else {
+                        $document->picurl_valid = false; // Mark as invalid if picurl is not set or empty
+                        }
                   }
-                  
+        
+                // Get additional documents submitted by the student using QR code
+                $uploadedByStud = DB::table('preregistrationrequirements')
+                    ->where('qcode', $student->sid)
+                    ->where('deleted', 0)
+                    ->select('preregistrationrequirements.*', 'preregistrationrequirements.preregreqtype as requirement')
+                    ->get();
+        
+                // Combine the documents
+                $request->merge(['levelid' => $student->levelid]);
+                $documents = \App\Http\Controllers\SuperAdminController\DocumentsController::list($request);
 
-                  $item->uploaded =  $uploadeddocuments;
-
-                  $item->monitoring = collect($uploadeddocuments)
-                                          ->whereIn('requirement',collect($docnum)->pluck('id'))
-                                          ->unique('requirement')
-                                          ->count();
-
-                                          
-
-
+                $uploads = $uploadedDocuments->merge($uploadedByStud); // Merging uploaded docs by registrar and student
+                
+                // Initialize an empty array for student uploads
+                $student->uploaded = [];
+                
+                // Loop through each document and check if it's uploaded
+                foreach ($documents as $item) {
+                    // Collect uploaded documents that match the current document's requirement
+                    $check = collect($uploads)->where('requirement', $item->id)->values();
+                
+                    // If there's any matching document uploaded, add the item to the student's uploaded list
+                    if ($check->isNotEmpty()) {
+                        $student->uploaded = array_merge($student->uploaded, $check->toArray()); // Merge arrays
+                    }
+                
+                
+                    // Attach the uploaded document(s) to the current item
+                  //   $item->uploaded = $check;
+                }
+                
+                // Convert $student->uploaded to a collection for further operations
+                $uploadedCollection = collect($student->uploaded);
+                
+                // Count unique required documents uploaded by the student based on the `requirement` field
+                $student->monitoring = $uploadedCollection
+                    ->whereIn('requirement', $reqSetup->pluck('id')) // Filter based on required document IDs
+                    ->unique('requirement') // Remove duplicate entries based on the requirement ID
+                    ->count();
+                
             }
 
+         
 
-            return @json_encode((object)[
-                'data'=>$students,
-                'recordsTotal'=>$student_count,
-                'recordsFiltered'=>$student_count
+            // dd($students);
+        
+            return response()->json([
+                'data' => $students,
+                'recordsTotal' => $studentCount,
+                'recordsFiltered' => $studentCount
             ]);
-
-
-      }      
+        }
+        
+            
       
       public static function upload(Request $request){
 

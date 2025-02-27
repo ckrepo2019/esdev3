@@ -97,12 +97,7 @@ $refid = DB::table('usertype')
                 <strong>Description is required</strong>
               </span>
             </div>
-            <div class="form-group">
-                <div class="row">
-                    <div class="col-md-12">
-                        
-                    </div>
-                </div>
+            <div class="form-group" hidden>
                 <div class="row">
                     <div class="col-md-6">
                         <div class="floatinginput">
@@ -124,7 +119,7 @@ $refid = DB::table('usertype')
                     </div>
                 </div>
             </div>
-            <div class="form-group">
+            <div class="form-group" hidden>
                 <div class="row">
                     <div class="col-md-12">
                         <span><b>REST DAY</b></span>
@@ -141,12 +136,6 @@ $refid = DB::table('usertype')
                         </div>
                     </div>
                     <div class="col-md-6">
-                        {{-- <div class="floatinginput">
-                            <input type="number" id="modrestdayifnotwork"  class="form-control ifnotwork percentageInput modpercentageInput" name="modrestdayifnotwork"/>
-                            <span>IF NOT WORK</span>
-                            <span class="invalid-feedback" role="alert">
-                            <strong>If Not Work is required</strong>
-                        </div> --}}
                     </div>
                 </div>
             </div>
@@ -167,31 +156,13 @@ $refid = DB::table('usertype')
         <div class="card-body">
             <div class="row">
                 <div class="col-md-12">
-                    {{-- <table width="100%" class="table table-bordered table-head-fixed " id="overtime_datatable"  style="font-size: 16px">
-                        <thead>
-                            <tr>
-                                <th width="21%" rowspan="2" style="vertical-align: middle;">Holiday</th>
-                                <th width="16%" rowspan="2" class="text-center" style="vertical-align: middle;">If Work</th>
-                                <th width="16%" rowspan="2" class="text-center" style="vertical-align: middle;">If Not Work</th>
-                                <th colspan="2" class="text-center p-0" style="vertical-align: middle">
-                                    <span>Rest Day</span>
-                                </th>
-                                <th width="10%" rowspan="2" class="text-center" style="vertical-align: middle; border: 1px solid #dee2e6;">Action</th>
-                            </tr>
-                            <tr>
-                                <th width="16%" class="text-center">If Work</th>
-                                <th width="16%" class="text-center" style="border-right: 1px solid #dee2e6;">If Not Work</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table> --}}
                     <table width="100%" class="table table-bordered table-head-fixed " id="overtime_datatable"  style="font-size: 16px">
                         <thead>
                             <tr>
                                 <th width="30%" style="vertical-align: middle;">Holiday</th>
-                                <th width="20%" class="text-center" style="vertical-align: middle;">If Work</th>
-                                <th width="20%" class="text-center" style="vertical-align: middle;">If Not Work</th>
-                                <th width="20%" class="text-center p-0" style="vertical-align: middle"><span>Rest Day If Work</span></th>
+                                <th width="20%" class="text-center" style="vertical-align: middle;" hidden>If Work</th>
+                                <th width="20%" class="text-center" style="vertical-align: middle;" hidden>If Not Work</th>
+                                <th width="20%" class="text-center p-0" style="vertical-align: middle" hidden><span>Rest Day If Work</span></th>
                                 <th width="10%" class="text-center" style="vertical-align: middle; border: 1px solid #dee2e6;">Action</th>
                             </tr>
                         </thead>
@@ -518,9 +489,9 @@ $refid = DB::table('usertype')
                 data: holidayTypes,
                 columns : [
                     {"data" : 'description'},
-                    {"data" : null},
-                    {"data" : null},
-                    {"data" : null},
+                    // {"data" : null},
+                    // {"data" : null},
+                    // {"data" : null},
                     {"data" : null}
                 ], 
                 columnDefs: [
@@ -533,53 +504,53 @@ $refid = DB::table('usertype')
                             $(td).addClass('text-left align-middle');
                         }
                     },
+                    // {
+                    //     'targets': 1,
+                    //     'orderable': false, 
+                    //     createdCell: function (td, cellData, rowData, row, col) {
+                    //         var content = '<div class="input-group">' +
+                    //                             '<input type="number" class="percentageInput form-control" placeholder="Enter %" style="width: 100px;" min="0" value="'+rowData.ifwork+'">' +
+                    //                             '<div class="input-group-append">' +
+                    //                             '<span class="input-group-text">%</span>' +
+                    //                             '</div>' +
+                    //                         '</div>';
+                    //         $(td).html(content);
+                    //         $(td).addClass('text-center align-middle');
+                    //         $(td).css('padding', '0 !important');
+                    //     }
+                    // },
+                    // {
+                    //     'targets': 2,
+                    //     'orderable': false, 
+                    //     createdCell: function (td, cellData, rowData, row, col) {
+                    //         var content = '<div class="input-group">' +
+                    //                             '<input type="number" class="percentageInput form-control" placeholder="Enter %" min="0" value="'+rowData.ifnotwork+'">' +
+                    //                             '<div class="input-group-append">' +
+                    //                             '<span class="input-group-text">%</span>' +
+                    //                             '</div>' +
+                    //                         '</div>';
+                    //         $(td).html(content);
+                    //         $(td).addClass('text-center align-middle');
+                    //         $(td).css('padding', '0 !important');
+                    //     }
+                    // },
+                    // {
+                    //     'targets': 3,
+                    //     'orderable': false, 
+                    //     createdCell: function (td, cellData, rowData, row, col) {
+                    //         var content = '<div class="input-group">' +
+                    //                             '<input type="number" class="percentageInput form-control" placeholder="Enter %" style="width: 100px;" min="0" value="'+rowData.restdayifwork+'">' +
+                    //                             '<div class="input-group-append">' +
+                    //                             '<span class="input-group-text">%</span>' +
+                    //                             '</div>' +
+                    //                         '</div>';
+                    //         $(td).html(content);
+                    //         $(td).addClass('text-center align-middle');
+                    //         $(td).css('padding', '0 !important');
+                    //     }
+                    // },
                     {
                         'targets': 1,
-                        'orderable': false, 
-                        createdCell: function (td, cellData, rowData, row, col) {
-                            var content = '<div class="input-group">' +
-                                                '<input type="number" class="percentageInput form-control" placeholder="Enter %" style="width: 100px;" min="0" value="'+rowData.ifwork+'">' +
-                                                '<div class="input-group-append">' +
-                                                '<span class="input-group-text">%</span>' +
-                                                '</div>' +
-                                            '</div>';
-                            $(td).html(content);
-                            $(td).addClass('text-center align-middle');
-                            $(td).css('padding', '0 !important');
-                        }
-                    },
-                    {
-                        'targets': 2,
-                        'orderable': false, 
-                        createdCell: function (td, cellData, rowData, row, col) {
-                            var content = '<div class="input-group">' +
-                                                '<input type="number" class="percentageInput form-control" placeholder="Enter %" min="0" value="'+rowData.ifnotwork+'">' +
-                                                '<div class="input-group-append">' +
-                                                '<span class="input-group-text">%</span>' +
-                                                '</div>' +
-                                            '</div>';
-                            $(td).html(content);
-                            $(td).addClass('text-center align-middle');
-                            $(td).css('padding', '0 !important');
-                        }
-                    },
-                    {
-                        'targets': 3,
-                        'orderable': false, 
-                        createdCell: function (td, cellData, rowData, row, col) {
-                            var content = '<div class="input-group">' +
-                                                '<input type="number" class="percentageInput form-control" placeholder="Enter %" style="width: 100px;" min="0" value="'+rowData.restdayifwork+'">' +
-                                                '<div class="input-group-append">' +
-                                                '<span class="input-group-text">%</span>' +
-                                                '</div>' +
-                                            '</div>';
-                            $(td).html(content);
-                            $(td).addClass('text-center align-middle');
-                            $(td).css('padding', '0 !important');
-                        }
-                    },
-                    {
-                        'targets': 4,
                         'orderable': false, 
                         createdCell: function (td, cellData, rowData, row, col) {
                             var content = '<a href="javascript:void(0)" id="delete_holidaytype" holidaytypeid="'+rowData.id+'"><i class="fas fa-trash text-danger" style="font-size: 18px;"></i></a>&nbsp;&nbsp;&nbsp;'+

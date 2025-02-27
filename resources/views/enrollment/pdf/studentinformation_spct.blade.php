@@ -92,15 +92,13 @@
             <td style="width: 30%; border-bottom: 1px solid black;">&nbsp;{{$studentinfo->levelname}}</td>
             <td style="width: 2%;">&nbsp;<td>
             <td style="width: 3%; border: 1px solid black; text-align: center;" >{{strtolower($studentinfo->studtype) != 'old' ? '/' : ''}}<td>
-            <td style="width: 20%; vertical-align: bottom;">
-                <span style=" font-size: 15px !important; line-height: 5px;">&nbsp;&nbsp;&nbsp;New/transferee</span>
+            <td style="width: 24.5%; vertical-align: bottom;">
+                <span style="  line-height: 5px;">&nbsp;&nbsp;&nbsp;New/transferee</span>
             </td>
-            <td style="width: 3%; border: 1px solid black !important; text-align: center;" ><div class="grades">{{strtolower($studentinfo->studtype) == 'old' ? '4' : ''}}</div><td>
-            <td style="width: 7%; vertical-align: bottom;">
-                <span style=" font-size: 15px !important; line-height: 5px;">&nbsp;Old</span>
+            <td style="width: 3%; border: 1px solid black !important; text-align: center;" >{{strtolower($studentinfo->studtype) == 'old' ? '/' : ''}}<td>
+            <td style="width: 24.5%; vertical-align: bottom;">
+                <span style="  line-height: 5px;">&nbsp;&nbsp;&nbsp;Old</span>
             </td>
-            <td width="7%">Grantee:</td>
-            <td  width="15%" style=" border-bottom: 1px solid black; ">{{{$studentinfo->description}}}</td>
         </tr> 
     </table>
     <table style="width: 100%; margin-top: 5px">
@@ -406,7 +404,7 @@
             <td style="width: 13%; ">First Name: </td>
             <td style="width: 35%; border-bottom: 1px solid black;">{{$studentinfo->gfname}}</td>
             <td style="width: 15%; ">&nbsp;&nbsp;Occupation:   </td>
-            <td style="border-bottom: 1px solid black;">{{$studentinfo->guardianrelation}}</td>
+            <td style="border-bottom: 1px solid black;">{{$studentinfo->goccupation}}</td>
         </tr>
     </table>
     <table style="width: 100%; margin-top: 8px;">
@@ -430,7 +428,7 @@
             <td >Relationship with the student: </td>
         </tr>
         <tr>
-            <td style="border-bottom: 1px solid black;">&nbsp;</td>
+            <td style="border-bottom: 1px solid black;">&nbsp;{{$studentinfo->guardianrelation}}</td>
         </tr>
         <tr>
             <td ><em style="font-weight: bold;">Contact person in case of emergency </em> <em style="">(Recipient for news, announcement and school information)</em></td>

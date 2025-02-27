@@ -151,10 +151,10 @@
                 <div class="row m-2">
                     <div class="col-md-8">
                         <label>Select a student:</label>
-                        <select class="form-control select2" id="select-student">
+                        <select class="form-control select2" id="select-student" >
                             @if(count($students)>0)
                                 @foreach($students as $student)
-                                    <option value="{{$student->id}}">{{$student->lastname}}, {{$student->firstname}} {{$student->middlename}} {{$student->middlename}}</option>
+                                    <option value="{{$student->id}}" levelid="{{$student->levelid}}">{{$student->lastname}}, {{$student->firstname}} {{$student->middlename}} {{$student->middlename}}</option>
                                 @endforeach
                             @endif
                         </select>
@@ -232,7 +232,7 @@
                 </div>
                 <div class="row m-2">
                     <div class="col-md-12 align-self-end text-right" id="container-export">
-                        <button type="button" class="btn btn-default"@if(count($templates)>0) id="btn-export-pdf"@else disabled @endif hidden><i class="fas fa-file-pdf"></i> Export as PDF</button>
+                        <button type="button" class="btn btn-default" id="btn-printpdf" hidden><i class="fas fa-file-pdf text-danger"></i> COE PDF</button>
                         <button type="button" class="btn btn-default"@if(count($templates)>0) id="btn-export"@else disabled @endif><i class="fa fa-download fa-sm"></i> Export Certificate</button>
                         @if(count($templates)==0)
                         <br/>
@@ -566,29 +566,35 @@
             var so_series = $('#input-so_series').val();
             var so_date = $('#input-so_date').val();
 
-            window.open("/printable/certifications?action=export&typefile="+"docs"+"&syid="+syid+"&semid="+semid+"&certtype="+certtype+"&studid="+studid+"&templateid="+templateid+"&dateissued="+dateissued+"&purpose="+purpose+"&registrar="+registrar+"&subjid="+subject+"&quarter="+quarter+"&dateofgraduation="+dateofgraduation, "_blank");
+            window.open("/printable/certifications?action=export&syid="+syid+"&semid="+semid+"&certtype="+certtype+"&studid="+studid+"&templateid="+templateid+"&dateissued="+dateissued+"&purpose="+purpose+"&registrar="+registrar+"&subjid="+subject+"&quarter="+quarter+"&dateofgraduation="+dateofgraduation, "_blank");
         })
 
-        $(document).on('click','#btn-export-pdf', function(){
+        $(document).on('click', '#btn-printpdf', function(){
             var syid = $('#select-syid').val();
             var semid = $('#select-semid').val();
             var certtype = $('#select-certtype').val();
+            var levelid = $('#select-student option:selected').attr('levelid'); // Corrected to get attribute from selected option
             var studid = $('#select-student').val();
-            var templateid = $('#select-template').val();
             var dateissued = $('#input-dateissued').val();
-            var purpose = $('#input-purpose').val();
-            var quarter = $('#select-quarter').val();
-            var subject = $('#select-subject').val();
-            var subject = $('#select-subject').val();
-            var dateofgraduation = $('#input-dateofgraduation').val();
-            var registrar = $('#select-registrar option:selected').text();
+            var template = $('#select-template').val();
 
-            var so_num = $('#input-so_num').val();
-            var so_series = $('#input-so_series').val();
-            var so_date = $('#input-so_date').val();
+            if (levelid == 16 || levelid < 13) {
+                template = 'jhs';
+            } else if(levelid >= 14 && levelid <= 15){
+                template = 'shs';
+            } else {
+                template = 'college';
+            }
 
-            window.open("/printable/certifications?action=export&typefile="+"pdf"+"&syid="+syid+"&semid="+semid+"&certtype="+certtype+"&studid="+studid+"&templateid="+templateid+"&dateissued="+dateissued+"&purpose="+purpose+"&registrar="+registrar+"&subjid="+subject+"&quarter="+quarter+"&dateofgraduation="+dateofgraduation, "_blank");
+            if (template == 'jhs') {
+                window.open(`/printable/certification/generate/?export=pdf&template=${template}&syid=${syid}&studid=${studid}&givendate=${dateissued}`, "_blank");
+            } else {
+                window.open(`/printable/certification/generate/?export=pdf&template=${template}&syid=${syid}&semid=${semid}&studid=${studid}&givendate=${dateissued}`, "_blank");
+            }
         })
-        
+
+                
     })
+
+
 </script>

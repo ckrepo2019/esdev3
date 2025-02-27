@@ -314,7 +314,7 @@ class RegisterRFIDController extends Controller
                                         ->whereNull('dateexpired')
                                         ->first();
                                        
-                if(isset($rfid_renewal_list)){
+                if(isset($rfid_renewal_list_detail) && $rfid_renewal_list_detail != null){
                     $item->datetime = \Carbon\Carbon::create($rfid_renewal_list_detail->createddatetime)->isoFormat('MMM DD, YYYY hh:mm A');
                     $item->date = \Carbon\Carbon::create($rfid_renewal_list_detail->createddatetime)->isoFormat('MM/DD/YYYY');
                 }

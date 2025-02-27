@@ -34,8 +34,18 @@
           <span class="badge badge-danger navbar-badge">3</span>
         </a>
       </li> --}}
-    <li class="nav-item dropdown sideright">
-      <a href="#" id="logout" class="nav-link">
+      <li class="nav-item dropdown">
+        <a class="nav-link" data-toggle="dropdown" href="#">
+            <i class="far fa-comments"></i>
+            <span class="badge badge-danger navbar-badge" id="notification_count"></span>
+        </a>
+        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right" id="notification_holder">
+            <a href="/hr/settings/notification/index" class="dropdown-item dropdown-footer">See All Messages</a>
+        </div>
+      </li>
+
+      <li class="nav-item dropdown sideright">
+        <a href="#" id="logout" class="nav-link">
           <!-- <i class="fas fa-sign-out-alt logouthover" style="margin-right: 7px; color: #fff"></i> -->
           <span class="logoutshow" id="logoutshow"> Logout</span>
           <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">

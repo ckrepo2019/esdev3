@@ -7,6 +7,7 @@ use DB;
 use Carbon\Carbon;
 use App\RegistrarModel;
 use App\FinanceModel;
+use App\Http\Controllers\DeanControllers\CollegeStudentLoadingController;
 
 class FinanceUtilityModel extends Model
 {
@@ -27,7 +28,7 @@ class FinanceUtilityModel extends Model
                     $grantee = $_estud->grantee;
                 }
             }
-            elseif($glevel >= 17 && $levelid <= 20)
+            elseif($glevel >= 17 && $glevel <= 25)
             {
 
             }
@@ -48,43 +49,7 @@ class FinanceUtilityModel extends Model
                 ->where('deleted', 0)
                 ->where('levelid', $glevel)
                 ->where('syid', $syid)
-                // ->where('semid', $semid)
-                ->where(function($q) use($glevel, $semid){
-                    if($glevel == 14 || $glevel == 15)
-                    {
-                        if($semid == 3)
-                        {
-                            $q->where('semid', $semid);
-                        }
-                        else
-                        {
-                            if(FinanceModel::shssetup() == 0)
-                            {
-                                $q->where('semid', $semid);
-                            }
-                            else
-                            {
-                                $q->where('semid', '!=', 3);
-                            }
-                        }
-
-                    }
-                    elseif($glevel >= 17 && $glevel <= 21)
-                    {
-                        $q->where('semid', $semid);
-                    }
-                    else
-                    {
-                        if($semid == 3)
-                        {
-                            $q->where('semid', $semid);
-                        }
-                        else
-                        {
-                            $q->where('semid', '!=', 3);
-                        }
-                    }
-                })
+                ->where('semid', $semid)
                 ->where('grantee', $grantee)
                 ->first();
 
@@ -122,7 +87,7 @@ class FinanceUtilityModel extends Model
         {
             $enroll_table = 'sh_enrolledstud';
         }
-        elseif($glevel >= 17 && $glevel <= 21)
+        elseif($glevel >= 17 && $glevel <= 25)
         {
             $enroll_table = 'college_enrolledstud';
         }
@@ -138,16 +103,19 @@ class FinanceUtilityModel extends Model
         if($enrollinfo)
         {
             $dateenrolled = $enrollinfo->createddatetime;
+        }
+        else
+        {
+            $dateenrolled = FinanceModel::getServerDateTime();
+        }
 
+        if($enrollinfo)
+        {
             db::table($enroll_table)
                 ->where('id', $enrollinfo->id)
                 ->update([
                     'feesid' => $feesid
                 ]);
-        }
-        else
-        {
-            $dateenrolled = FinanceModel::getServerDateTime();
         }
 
         $tuition = db::table('tuitionheader')
@@ -157,43 +125,100 @@ class FinanceUtilityModel extends Model
             ->join('grantee', 'tuitionheader.grantee', '=', 'grantee.id')
             ->where('tuitionheader.id', $feesid)
             ->where('tuitiondetail.deleted', 0)
+            ->where('pschemeid', '!=', null)
             ->get();
 
+        if(count($tuition) == 0)
+        {
+            $_fees = db::table('tuitionheader')
+                ->where('syid', $syid)
+                ->where(function($q) use($glevel, $semid){
+                    if($glevel >= 17 && $glevel <= 25)
+                    {
+                        $q->where('semid', $semid);
+                    }
+                })
+                ->where('levelid', $glevel)
+                ->where('deleted', 0)
+                ->first();
 
-        if($glevel >= 17 && $glevel <=21)
+            if($_fees)
+            {
+                $feesid = $_fees->id;
+
+                $tuition = db::table('tuitionheader')
+                    ->select('tuitionheader.id', 'tuitiondetail.id as tuitiondetailid', 'syid', 'levelid', 'grantee.description', 'itemclassification.description as particulars', 'amount', 'itemclassification.id as classid', 'pschemeid', 'semid', 'istuition', 'persubj', 'permop', 'permopid')
+                    ->leftjoin('tuitiondetail', 'tuitionheader.id', '=', 'tuitiondetail.headerid')
+                    ->join('itemclassification', 'tuitiondetail.classificationid', '=', 'itemclassification.id')
+                    ->join('grantee', 'tuitionheader.grantee', '=', 'grantee.id')
+                    ->where('tuitionheader.id', $feesid)
+                    ->where('tuitiondetail.deleted', 0)
+                    ->get();
+            }
+        }
+
+
+        if($glevel >= 17 && $glevel <=25)
         {
             $ausubjects = db::table('tuition_assessmentunit')
                 ->where('deleted', 0)
                 ->get();
 
-            $ausubjects = collect($ausubjects);
-
-            $totalunits = db::table('college_studsched')
-                ->select('college_prospectus.subjectid as subjid', 'labunits', 'lecunits')
-                ->join('college_classsched', 'college_studsched.schedid', '=', 'college_classsched.id')
-                ->join('college_prospectus', 'college_classsched.subjectID', '=', 'college_prospectus.id')
-                ->join('college_sections', 'college_classsched.sectionID', '=', 'college_sections.id')
-                ->where('college_studsched.studid', $studid)
-                ->where('college_studsched.deleted', 0)
-                ->where('college_classsched.deleted', 0)
-                ->where('college_classsched.syID', $syid)
-                ->where('college_classsched.semesterID', $semid)
-                ->where('college_studsched.schedstatus', '!=', 'DROPPED')
-                // ->where('college_sections.section_specification', '!=', 2)
+            $college_subjects = DB::table('college_subjects')
+                ->where('deleted', 0)
                 ->get();
 
+            $college_prospectus = DB::table('college_prospectus')
+                ->where('deleted', 0)
+                ->get();
+
+            $college_subjects = collect($college_subjects);
+            $college_prospectus = collect($college_prospectus);
+            $ausubjects = collect($ausubjects);
+            // $totalunits = db::table('college_studsched')
+            //     ->select(db::raw('SUM(lecunits) + SUM(labunits) AS totalunits'))
+            //     ->join('college_classsched', 'college_studsched.schedid', '=', 'college_classsched.id')
+            //     ->join('college_prospectus', 'college_classsched.subjectID', '=', 'college_prospectus.id')
+            //     ->join('college_sections', 'college_classsched.sectionID', '=', 'college_sections.id')
+            //     ->where('college_studsched.studid', $studid)
+            //     ->where('college_studsched.deleted', 0)
+            //     ->where('college_classsched.deleted', 0)
+            //     ->where('college_classsched.syID', $syid)
+            //     ->where('college_classsched.semesterID', $semid)
+            //     ->where('college_sections.section_specification', '!=', 2)
+            //     ->where('college_studsched.schedstatus', '!=', 'DROPPED')
+            //     ->first();
+
             $units = 0;
+            $subjcount = 0;
 
-            foreach($totalunits as $subject)
+            $studentloads = CollegeStudentLoadingController::getAddedStudentLoading($studid, 'all', $syid, $semid, 0);
+            // $studentloads = json_decode($studentloads[0]->studentLoading);
+            $studentloads = collect($studentloads);
+            $studentloads = $studentloads['original']['studentLoading'];
+            // return $studentloads;
+            foreach ($studentloads as $loads)
             {
-                $getau = $ausubjects->where('subjid', $subject->subjid)->first();
+                // $units += $loads['totalUnits'];
+                // $subjcount += 1;
 
-                if($getau)
+                $prospectus = $college_prospectus->where('id', $loads['subjectID'])->first();
+
+                if($prospectus)
                 {
-                    $units += $getau->assessmentunit;
+                    $getsubject = $college_subjects->where('id', $prospectus->subjectID)->first();
+                    if($getsubject)
+                    {
+                        $getau = $ausubjects->where('subjid', $getsubject->id)->first();
+                        if($getau) {
+                            $units += $getau->assessmentunit;
+                        } else{
+                            $units += $loads['lecunits'] + $loads['labunits'];
+                        }
+                    }
                 }
                 else{
-                    $units += $subject->lecunits + $subject->labunits;
+                    $units += $loads['lecunits'] + $loads['labunits'];
                 }
             }
 
@@ -206,7 +231,6 @@ class FinanceUtilityModel extends Model
             //     $units = 0;
             // }
         }
-
         // if(count($tuition) > 0)
         // {
         //     $feesid = $tuition[0]->id;
@@ -224,8 +248,10 @@ class FinanceUtilityModel extends Model
 
         foreach($tuition as $tui)
         {
-            if($glevel >= 17 && $glevel <=21)
+            if($glevel >= 17 && $glevel <=25)
             {
+                $totalunits = 0;
+
                 if($tui->istuition == 1)
                 {
                     // echo $tui->amount . ' * ' . $units;
@@ -250,7 +276,7 @@ class FinanceUtilityModel extends Model
                         ->where('college_classsched.semesterID', $semid)
                         ->count();
 
-                    $tuitionamount *= $totalsubj;
+                    $tuitionamount *= $subjcount;
                 }
 
                 if($tui->permop == 1)
@@ -526,7 +552,7 @@ class FinanceUtilityModel extends Model
                     }
 
                 }
-                elseif($levelid >= 17 && $levelid <= 21)
+                elseif($levelid >= 17 && $levelid <= 25)
                 {
                     $q->where('semid', $semid);
                 }
@@ -658,7 +684,7 @@ class FinanceUtilityModel extends Model
                     }
 
                 }
-                elseif($levelid >= 17 && $levelid <= 21)
+                elseif($levelid >= 17 && $levelid <= 25)
                 {
                     $q->where('semid', $semid);
                 }
@@ -730,7 +756,7 @@ class FinanceUtilityModel extends Model
                                 }
 
                             }
-                            elseif($levelid >= 17 && $levelid <= 21)
+                            elseif($levelid >= 17 && $levelid <= 25)
                             {
                                 $q->where('semid', $semid);
                             }
@@ -777,7 +803,7 @@ class FinanceUtilityModel extends Model
                                                 }
                                             }
                                         }
-                                        elseif($levelid >= 17 && $levelid <= 21)
+                                        elseif($levelid >= 17 && $levelid <= 25)
                                         {
                                             $q->where('semid', $semid);
                                         }
@@ -797,45 +823,48 @@ class FinanceUtilityModel extends Model
                                     ->where('deleted', 0)
                                     ->first();
 
-                                if($lineamount > $_bookpaysched->balance)
+                                if($_bookpaysched)
                                 {
-                                    db::table('studpayscheddetail')
-                                        ->where('id', $_bookpaysched->id)
-                                        ->update([
-                                            'amountpay' => $_bookpaysched->amountpay + $_bookpaysched->balance,
-                                            'balance' => 0,
-                                            'updatedby' => auth()->user()->id,
-                                            'updateddatetime' => FinanceModel::getServerDateTime(),
-                                        ]);
+                                    if($lineamount > $_bookpaysched->balance)
+                                    {
+                                        db::table('studpayscheddetail')
+                                            ->where('id', $_bookpaysched->id)
+                                            ->update([
+                                                'amountpay' => $_bookpaysched->amountpay + $_bookpaysched->balance,
+                                                'balance' => 0,
+                                                'updatedby' => auth()->user()->id,
+                                                'updateddatetime' => FinanceModel::getServerDateTime(),
+                                            ]);
 
-                                    // if($scheddetail->classid == 2)
-                                    // {
-                                    //     echo 'aaa; <br>';
-                                    // }
+                                        // if($scheddetail->classid == 2)
+                                        // {
+                                        //     echo 'aaa; <br>';
+                                        // }
 
-                                    // FinanceModel::chrngdistlogs($studid, $chrngtransid, $chrngtransdetailid, $_bookpaysched->id, $_bookpaysched->classid, $_bookpaysched->balance);
-                                    FinanceUtilityModel::procItemized($_bookpaysched->tuitiondetailid, $cashtrans->payscheddetailid, $_bookpaysched->balance, $_bookpaysched->classid, $levelid, $chrngtransid, $ornum, $studid, $kind, $syid, $semid, $cashtrans->itemid);
+                                        // FinanceModel::chrngdistlogs($studid, $chrngtransid, $chrngtransdetailid, $_bookpaysched->id, $_bookpaysched->classid, $_bookpaysched->balance);
+                                        FinanceUtilityModel::procItemized($_bookpaysched->tuitiondetailid, $cashtrans->payscheddetailid, $_bookpaysched->balance, $_bookpaysched->classid, $levelid, $chrngtransid, $ornum, $studid, $kind, $syid, $semid, $cashtrans->itemid);
 
-                                    $lineamount -= $_bookpaysched->balance;
-
-
-                                }
-                                else
-                                {
-                                    db::table('studpayscheddetail')
-                                        ->where('id', $_bookpaysched->id)
-                                        ->update([
-                                            'amountpay' => $_bookpaysched->amountpay + $lineamount,
-                                            'balance' => $_bookpaysched->balance - $lineamount,
-                                            'updatedby' => auth()->user()->id,
-                                            'updateddatetime' => FinanceModel::getServerDateTime(),
-                                        ]);
-
-                                    // FinanceModel::chrngdistlogs($studid, $chrngtransid, $chrngtransdetailid, $_bookpaysched->id, $_bookpaysched->classid, $lineamount);
-                                    FinanceUtilityModel::procItemized($_bookpaysched->tuitiondetailid, $cashtrans->payscheddetailid, $lineamount, $_bookpaysched->classid, $levelid, $chrngtransid, $ornum, $studid, $kind, $syid, $semid, $cashtrans->itemid);
+                                        $lineamount -= $_bookpaysched->balance;
 
 
-                                    $lineamount = 0;
+                                    }
+                                    else
+                                    {
+                                        db::table('studpayscheddetail')
+                                            ->where('id', $_bookpaysched->id)
+                                            ->update([
+                                                'amountpay' => $_bookpaysched->amountpay + $lineamount,
+                                                'balance' => $_bookpaysched->balance - $lineamount,
+                                                // 'updatedby' => auth()->user()->id,
+                                                'updateddatetime' => FinanceModel::getServerDateTime(),
+                                            ]);
+
+                                        // FinanceModel::chrngdistlogs($studid, $chrngtransid, $chrngtransdetailid, $_bookpaysched->id, $_bookpaysched->classid, $lineamount);
+                                        FinanceUtilityModel::procItemized($_bookpaysched->tuitiondetailid, $cashtrans->payscheddetailid, $lineamount, $_bookpaysched->classid, $levelid, $chrngtransid, $ornum, $studid, $kind, $syid, $semid, $cashtrans->itemid);
+
+
+                                        $lineamount = 0;
+                                    }
                                 }
                             }
                             else
@@ -932,7 +961,7 @@ class FinanceUtilityModel extends Model
                                         }
 
                                     }
-                                    elseif($levelid >= 17 && $levelid <= 21)
+                                    elseif($levelid >= 17 && $levelid <= 25)
                                     {
                                         $q->where('semid', $semid);
                                     }
@@ -1128,7 +1157,7 @@ class FinanceUtilityModel extends Model
                                     $q->where('semid', $semid);
                                 }
                             }
-                            if($levelid >= 17 && $levelid <= 21)
+                            if($levelid >= 17 && $levelid <= 25)
                             {
                                 $q->where('semid', $semid);
                             }
@@ -1153,7 +1182,7 @@ class FinanceUtilityModel extends Model
                                         $q->where('semid', $semid);
                                     }
                                 }
-                                if($levelid >= 17 && $levelid <= 21)
+                                if($levelid >= 17 && $levelid <= 25)
                                 {
                                     $q->where('semid', $semid);
                                 }
@@ -1175,7 +1204,7 @@ class FinanceUtilityModel extends Model
                                             $q->where('semid', $semid);
                                         }
                                     }
-                                    if($levelid >= 17 && $levelid <= 21)
+                                    if($levelid >= 17 && $levelid <= 25)
                                     {
                                         $q->where('semid', $semid);
                                     }
@@ -1256,6 +1285,7 @@ class FinanceUtilityModel extends Model
                 {
                     $itemized = db::table('studledgeritemized')
                         ->where('itemid', $itemid)
+                        ->where('classificationid', $classid)
                         // ->where('id', $payschedid)
                         ->where('studid', $studid)
                         ->where('syid', $syid)
@@ -1267,7 +1297,7 @@ class FinanceUtilityModel extends Model
                                     $q->where('semid', $semid);
                                 }
                             }
-                            if($levelid >= 17 && $levelid <= 20)
+                            if($levelid >= 17 && $levelid <= 25)
                             {
                                 $q->where('semid', $semid);
                             }
@@ -1290,7 +1320,7 @@ class FinanceUtilityModel extends Model
                                         $q->where('semid', $semid);
                                     }
                                 }
-                                if($levelid >= 17 && $levelid <= 20)
+                                if($levelid >= 17 && $levelid <= 25)
                                 {
                                     $q->where('semid', $semid);
                                 }
@@ -1313,7 +1343,7 @@ class FinanceUtilityModel extends Model
                                             $q->where('semid', $semid);
                                         }
                                     }
-                                    if($levelid >= 17 && $levelid <= 20)
+                                    if($levelid >= 17 && $levelid <= 25)
                                     {
                                         $q->where('semid', $semid);
                                     }
@@ -1422,7 +1452,7 @@ class FinanceUtilityModel extends Model
                                     $q->where('semid', $semid);
                                 }
                             }
-                            if($levelid >= 17 && $levelid <= 20)
+                            if($levelid >= 17 && $levelid <= 25)
                             {
                                 $q->where('semid', $semid);
                             }
@@ -1504,7 +1534,7 @@ class FinanceUtilityModel extends Model
 
 	public static  function resetv3_generatelabfees($studid, $levelid, $enrollid, $syid, $semid)
     {
-        if($levelid >= 17 && $levelid <= 21)
+        if($levelid >= 17 && $levelid <= 25)
         {
             $enrollinfo = db::table('college_enrolledstud')
                 ->where('id', $enrollid)
@@ -1531,13 +1561,25 @@ class FinanceUtilityModel extends Model
             {
                 array_push($labsubjects, $labfee->subjid);
             }
+            // return $studid;
+            // $studsched = db::table('college_studsched')
+            //     ->select('college_prospectus.subjectID', 'college_prospectus.subjCode')
+            //     ->join('college_classsched', 'college_studsched.schedid', '=', 'college_classsched.id')
+            //     ->join('college_prospectus', 'college_classsched.subjectID', '=', 'college_prospectus.id')
+            //     ->where('college_studsched.studid', $studid)
+            //     ->where('college_studsched.deleted', 0)
+            //     ->where('college_classsched.deleted', 0)
+            //     ->where('college_classsched.syID', $syid)
+            //     ->where('college_classsched.semesterID', $semid)
+            //     ->whereIn('college_prospectus.subjectID', $labsubjects)
+            //     ->get();
 
-            $studsched = db::table('college_studsched')
+            $studsched = db::table('college_loadsubject')
                 ->select('college_prospectus.subjectID', 'college_prospectus.subjCode')
-                ->join('college_classsched', 'college_studsched.schedid', '=', 'college_classsched.id')
+                ->join('college_classsched', 'college_loadsubject.schedid', '=', 'college_classsched.id')
                 ->join('college_prospectus', 'college_classsched.subjectID', '=', 'college_prospectus.id')
-                ->where('college_studsched.studid', $studid)
-                ->where('college_studsched.deleted', 0)
+                ->where('college_loadsubject.studid', $studid)
+                ->where('college_loadsubject.deleted', 0)
                 ->where('college_classsched.deleted', 0)
                 ->where('college_classsched.syID', $syid)
                 ->where('college_classsched.semesterID', $semid)
@@ -1713,7 +1755,7 @@ class FinanceUtilityModel extends Model
                         $q->where('semid', $semid);
                     }
                 }
-                if($levelid >= 17 && $levelid <= 20 )
+                if($levelid >= 17 && $levelid <= 25 )
                 {
                     $q->where('semid', $semid);
                 }
@@ -1736,7 +1778,7 @@ class FinanceUtilityModel extends Model
                         }
                     }
 
-                    if($levelid >= 17 && $levelid <= 20)
+                    if($levelid >= 17 && $levelid <= 25)
                     {
                         $q->where('semid', $semid);
                     }
@@ -1792,7 +1834,7 @@ class FinanceUtilityModel extends Model
                     ->join('oldaccountdetails', 'oldaccounts.id', '=', 'oldaccountdetails.headerid')
                     ->where('syid', $syid)
                     ->where(function($q) use($levelid, $semid){
-                        if($levelid >= 17 && $levelid <= 21)
+                        if($levelid >= 17 && $levelid <= 25)
                         {
                             $q->where('semid', $semid);
                         }
@@ -1891,7 +1933,7 @@ class FinanceUtilityModel extends Model
                     ->where('studid', $studid)
                     ->where('syid', $syid)
                     ->where(function($q) use($levelid, $semid){
-                        if($levelid >= 17 && $levelid <= 21)
+                        if($levelid >= 17 && $levelid <= 25)
                         {
                             $q->where('semid', $semid);
                         }
@@ -1936,7 +1978,7 @@ class FinanceUtilityModel extends Model
                     ->where('studid', $studid)
                     ->where('syfrom', $syid)
                     ->where(function($q) use($levelid, $semid){
-                        if($levelid >= 17 && $levelid <= 21)
+                        if($levelid >= 17 && $levelid <= 25)
                         {
                             $q->where('semfrom', $semid);
                         }
@@ -1986,7 +2028,7 @@ class FinanceUtilityModel extends Model
                     ->where('studid', $studid)
                     ->where('syid', $syid)
                     ->where(function($q) use($levelid, $semid){
-                        if($levelid >= 17 && $levelid <= 21)
+                        if($levelid >= 17 && $levelid <= 25)
                         {
                             $q->where('semid', $semid);
                         }
@@ -2046,7 +2088,7 @@ class FinanceUtilityModel extends Model
                     ->where('studid', $studid)
                     ->where('syfrom', $syid)
                     ->where(function($q) use($levelid, $semid){
-                        if($levelid >= 17 && $levelid <= 21)
+                        if($levelid >= 17 && $levelid <= 25)
                         {
                             $q->where('semfrom', $semid);
                         }
@@ -2131,7 +2173,7 @@ class FinanceUtilityModel extends Model
             ->where('studid', $studid)
             ->where('syid', $oa->syid)
             ->where(function($q) use($levelid, $oa){
-                if($levelid >= 17 && $levelid <= 21)
+                if($levelid >= 17 && $levelid <= 25)
                 {
                     $q->where('semid', $oa->semid);
                 }
@@ -2168,7 +2210,7 @@ class FinanceUtilityModel extends Model
             ->where('studid', $studid)
             ->where('syid', $oa->syfrom)
             ->where(function($q) use($levelid, $oa){
-                if($levelid >= 17 && $levelid <= 21)
+                if($levelid >= 17 && $levelid <= 25)
                 {
                     $q->where('semid', $oa->semfrom);
                 }
@@ -2198,7 +2240,7 @@ class FinanceUtilityModel extends Model
                 ->where('studid', $studid)
                 ->where('syid', $oa->syfrom)
                 ->where(function($q) use($levelid, $oa){
-                    if($levelid >= 17 && $levelid <= 21)
+                    if($levelid >= 17 && $levelid <= 25)
                     {
                         $q->where('semid', $oa->semfrom);
                     }
@@ -2223,7 +2265,7 @@ class FinanceUtilityModel extends Model
                 ->where('studid', $studid)
                 ->where('syid', $oa->syfrom)
                 ->where(function($q) use($levelid, $oa){
-                    if($levelid >= 17 && $levelid <= 21)
+                    if($levelid >= 17 && $levelid <= 25)
                     {
                         $q->where('semid', $oa->semfrom);
                     }
@@ -2245,7 +2287,7 @@ class FinanceUtilityModel extends Model
         }
     }
 
-	public static function resetv3_generateadjustments($studid, $levelid, $syid, $semid)
+	public static function resetv3_generateadjustments($studid, $levelid, $syid, $semid, $studadjid = "")
     {
         $adjustments = db::table('adjustments')
             ->select(db::raw('adjustments.id, adjustmentdetails.id as detailid, classid, amount, description, mop, iscredit, isdebit, syid, semid, adjstatusdatetime, adjustments.createddatetime'))
@@ -2254,6 +2296,12 @@ class FinanceUtilityModel extends Model
             ->where('syid', $syid)
             ->where('adjustmentdetails.deleted', 0)
 			->where('adjustments.deleted', 0)
+            ->where(function($q) use($studadjid){
+                if($studadjid != "")
+                {
+                    $q->where('adjustments.id', $studadjid);
+                }
+            })
             ->where(function($q) use($levelid, $semid){
                 if($levelid == 14 || $levelid == 15)
                 {
@@ -2262,7 +2310,7 @@ class FinanceUtilityModel extends Model
                         $q->where('semid', $semid);
                     }
                 }
-                if($levelid >= 17 && $levelid <= 20)
+                if($levelid >= 17 && $levelid <= 25)
                 {
                     $q->where('semid', $semid);
                 }
@@ -2356,7 +2404,7 @@ class FinanceUtilityModel extends Model
                                         $q->where('semid', $semid);
                                     }
                                 }
-                                if($levelid >= 17 && $levelid <= 20)
+                                if($levelid >= 17 && $levelid <= 25)
                                 {
                                     $q->where('semid', $semid);
                                 }
@@ -2443,7 +2491,7 @@ class FinanceUtilityModel extends Model
                     ->where('classificationid', $adj->classid)
                     ->where('syid', $syid)
                     ->where(function($q) use($levelid, $semid) {
-                        if($levelid >= 17 && $levelid <= 20)
+                        if($levelid >= 17 && $levelid <= 25)
                         {
                             $q->where('semid', $semid);
                         }
@@ -2461,7 +2509,7 @@ class FinanceUtilityModel extends Model
                         // ->where('classificationid', $adj->classid)
                         ->where('syid', $syid)
                         ->where(function($q) use($levelid, $semid) {
-                            if($levelid >= 17 && $levelid <= 20)
+                            if($levelid >= 17 && $levelid <= 25)
                             {
                                 $q->where('semid', $semid);
                             }
@@ -2512,7 +2560,7 @@ class FinanceUtilityModel extends Model
                         // ->where('classificationid', $adj->classid)
                         ->where('syid', $syid)
                         ->where(function($q) use($levelid, $semid) {
-                            if($levelid >= 17 && $levelid <= 20)
+                            if($levelid >= 17 && $levelid <= 25)
                             {
                                 $q->where('semid', $semid);
                             }
@@ -2568,7 +2616,7 @@ class FinanceUtilityModel extends Model
                         ->where('deleted', 0)
                         ->where('syid', $syid)
                         ->where(function($q) use($levelid, $semid){
-                            if($levelid >= 17 && $levelid <= 20)
+                            if($levelid >= 17 && $levelid <= 25)
                             {
                                 $q->where('semid', $semid);
                             }
@@ -2620,6 +2668,13 @@ class FinanceUtilityModel extends Model
 
                     // return $adj->classid;
 
+                    $chrngsetup = db::table('chrngsetup')
+                        ->where('deleted', 0)
+                        ->get();
+
+                    $chrngsetup = collect($chrngsetup);
+
+
                     $paysched = db::table('studpayscheddetail')
                         ->where('studid', $studid)
                         ->where('classid', $adj->classid)
@@ -2632,7 +2687,7 @@ class FinanceUtilityModel extends Model
                                     $q->where('semid', $semid);
                                 }
                             }
-                            if($levelid >= 17 && $levelid <= 20)
+                            if($levelid >= 17 && $levelid <= 25)
                             {
                                 $q->where('semid', $semid);
                             }
@@ -2655,7 +2710,7 @@ class FinanceUtilityModel extends Model
                                         $q->where('semid', $semid);
                                     }
                                 }
-                                if($levelid >= 17 && $levelid <= 20)
+                                if($levelid >= 17 && $levelid <= 25)
                                 {
                                     $q->where('semid', $semid);
                                 }
@@ -2667,8 +2722,16 @@ class FinanceUtilityModel extends Model
 
                     foreach($paysched as $sched)
                     {
+                        $_itemized = 0;
                         if($adjamount > 0)
                         {
+                            $_setup = $chrngsetup->where('classid', $sched->classid)->first();
+
+                            if($_setup)
+                            {
+                                $_itemized = $_setup->itemized;
+                            }
+
                             if($adjamount > $sched->balance)
                             {
                                 db::table('studpayscheddetail')
@@ -2680,6 +2743,11 @@ class FinanceUtilityModel extends Model
                                     ]);
 
                                 $adjamount -= $sched->balance;
+
+                                if($_itemized == 1)
+                                {
+                                    FinanceUtilityModel::discount_itemized($studid, $syid, $semid, $levelid, $sched->amountpay, $sched->classid);
+                                }
                             }
                             else
                             {
@@ -2692,6 +2760,11 @@ class FinanceUtilityModel extends Model
                                     ]);
 
                                 $adjamount = 0;
+
+                                if($_itemized == 1)
+                                {
+                                    FinanceUtilityModel::discount_itemized($studid, $syid, $semid, $levelid, $adjamount, $sched->classid);
+                                }
                             }
                         }
                     }
@@ -2712,7 +2785,7 @@ class FinanceUtilityModel extends Model
                                         $q->where('semid', $semid);
                                     }
                                 }
-                                if($levelid >= 17 && $levelid <= 20)
+                                if($levelid >= 17 && $levelid <= 25)
                                 {
                                     $q->where('semid', $semid);
                                 }
@@ -2735,6 +2808,11 @@ class FinanceUtilityModel extends Model
                                         ]);
 
                                     $adjamount -= $sched->balance;
+
+                                    if($_itemized == 1)
+                                    {
+                                        FinanceUtilityModel::discount_itemized($studid, $syid, $semid, $levelid, $sched->amountpay, $sched->classid);
+                                    }
                                 }
                                 else
                                 {
@@ -2747,6 +2825,11 @@ class FinanceUtilityModel extends Model
                                         ]);
 
                                     $adjamount = 0;
+
+                                    if($_itemized == 1)
+                                    {
+                                        FinanceUtilityModel::discount_itemized($studid, $syid, $semid, $levelid, $adjamount, $sched->classid);
+                                    }
                                 }
                             }
                         }
@@ -2785,7 +2868,7 @@ class FinanceUtilityModel extends Model
                         }
                     }
                 }
-                if($levelid >= 17 && $levelid <= 21)
+                if($levelid >= 17 && $levelid <= 25)
                 {
                     $q->where('semid', $semid);
                 }
@@ -2852,7 +2935,7 @@ class FinanceUtilityModel extends Model
                                 $q->where('semid', $semid);
                             }
                         }
-                        if($levelid >= 17 && $levelid <= 21)
+                        if($levelid >= 17 && $levelid <= 25)
                         {
                             $q->where('semid', $semid);
                         }
@@ -2913,7 +2996,7 @@ class FinanceUtilityModel extends Model
                                 }
                             }
                         }
-                        elseif($levelid >= 17 && $levelid <= 21)
+                        elseif($levelid >= 17 && $levelid <= 25)
                         {
                             $q->where('semid', $semid);
                         }
@@ -2999,7 +3082,7 @@ class FinanceUtilityModel extends Model
                                     }
                                 }
                             }
-                            elseif($levelid >= 17 && $levelid <= 21)
+                            elseif($levelid >= 17 && $levelid <= 25)
                             {
                                 $q->where('semid', $semid);
                             }
@@ -3089,7 +3172,7 @@ class FinanceUtilityModel extends Model
                         }
                     }
                 }
-                elseif($levelid >= 17 && $levelid <= 21)
+                elseif($levelid >= 17 && $levelid <= 25)
                 {
                     $q->where('semid', $semid);
                 }
@@ -3142,6 +3225,81 @@ class FinanceUtilityModel extends Model
                 }
             }
         }
+
+        if($amount > 0)
+        {
+            $itemized = db::table('studledgeritemized')
+                ->where('studid', $studid)
+                ->where('syid', $syid)
+                ->where(function($q) use($levelid, $semid){
+                    if($levelid == 14 || $levelid == 15)
+                    {
+                        if($semid == 3)
+                        {
+                            $q->where('semid', 3);
+                        }
+                        else
+                        {
+                            if(FinanceModel::shssetup() == 0)
+                            {
+                                $q->where('semid', $semid);
+                            }
+                        }
+                    }
+                    elseif($levelid >= 17 && $levelid <= 25)
+                    {
+                        $q->where('semid', $semid);
+                    }
+                    else
+                    {
+                        if($semid == 3)
+                        {
+                            $q->where('semid', 3);
+                        }
+                        else
+                        {
+                            $q->where('semid', '!=', 3);
+                        }
+                    }
+                })
+                ->where('deleted', 0)
+                // ->where('classificationid', $classid)
+                ->whereColumn('itemamount', '>', 'totalamount')
+                ->get();
+
+            // echo 'amount: ' . $amount . '<br>';
+
+            foreach($itemized as $item)
+            {
+                if($amount > 0)
+                {
+                    $balance = $item->itemamount - $item->totalamount;
+
+                    if($balance > $amount)
+                    {
+                        db::table('studledgeritemized')
+                            ->where('id', $item->id)
+                            ->update([
+                                'totalamount' => $item->totalamount + $amount,
+                                'updateddatetime' => FinanceModel::getServerDateTime()
+                            ]);
+
+                        $amount = 0;
+                    }
+                    else
+                    {
+                        db::table('studledgeritemized')
+                            ->where('id', $item->id)
+                            ->update([
+                                'totalamount' => $item->totalamount + $balance,
+                                'updateddatetime' => FinanceModel::getServerDateTime()
+                            ]);
+
+                        $amount -= $balance;
+                    }
+                }
+            }
+        }
     }
 
     public static function discount_detaildist1($studid, $syid, $semid, $levelid, $discamount, $discountclassid)
@@ -3158,7 +3316,7 @@ class FinanceUtilityModel extends Model
                         $q->where('semid', $semid);
                     }
                 }
-                if($levelid >= 17 && $levelid <= 20)
+                if($levelid >= 17 && $levelid <= 25)
                 {
                     $q->where('semid', $semid);
                 }
@@ -3183,7 +3341,7 @@ class FinanceUtilityModel extends Model
                         $q->where('semid', $semid);
                     }
                 }
-                if($levelid >= 17 && $levelid <= 20)
+                if($levelid >= 17 && $levelid <= 25)
                 {
                     $q->where('semid', $semid);
                 }
@@ -3277,7 +3435,7 @@ class FinanceUtilityModel extends Model
                         $q->where('semid', $semid);
                     }
                 }
-                if($levelid >= 17 && $levelid <= 20)
+                if($levelid >= 17 && $levelid <= 25)
                 {
                     $q->where('semid', $semid);
                 }
@@ -3365,7 +3523,7 @@ class FinanceUtilityModel extends Model
                         }
                     }
                 }
-                elseif($glevel >= 17 && $glevel >= 21)
+                elseif($glevel >= 17 && $glevel >= 25)
                 {
                     $q->where('semid', $semid);
                 }
@@ -3454,12 +3612,312 @@ class FinanceUtilityModel extends Model
         }
     }
 
-	public static function assessment_gen($studid, $syid, $semid, $month)
+	// public static function assessment_gen($studid, $syid, $semid, $month)
+    // {
+    //     $levelid = 0;
+    //     $amount = 0;
+    //     $paymentno = 0;
+    //     $currentamount = 0;
+
+    //     $einfo = db::table('enrolledstud')
+    //         ->select('levelid')
+    //         ->where('studid', $studid)
+    //         ->where('syid', $syid)
+    //         ->where(function($q) use($semid){
+    //             if($semid == 3)
+    //             {
+    //                 $q->where('ghssemid', 3);
+    //             }
+    //             else
+    //             {
+    //                 $q->where('ghssemid', '!=', 3);
+    //             }
+    //         })
+    //         ->where('deleted', 0)
+    //         ->first();
+
+    //     if($einfo)
+    //     {
+    //         $levelid = $einfo->levelid;
+    //     }
+    //     else
+    //     {
+    //         $einfo = db::table('sh_enrolledstud')
+    //             ->select('levelid')
+    //             ->where('studid', $studid)
+    //             ->where('syid', $syid)
+    //             ->where(function($q) use($semid){
+    //                 if($semid == 3)
+    //                 {
+    //                     $q->where('semid', 3);
+    //                 }
+    //                 else
+    //                 {
+    //                     if(db::table('schoolinfo')->first()->shssetup == 0)
+    //                     {
+    //                         $q->where('semid', $semid);
+    //                     }
+    //                     else
+    //                     {
+    //                         $q->where('semid', '!=', 3);
+    //                     }
+    //                 }
+    //             })
+    //             ->where('deleted', 0)
+    //             ->first();
+
+    //         if($einfo)
+    //         {
+    //             $levelid = $einfo->levelid;
+    //         }
+    //         else
+    //         {
+    //             $einfo = db::table('college_enrolledstud')
+    //                 ->select('yearLevel as levelid')
+    //                 ->where('studid', $studid)
+    //                 ->where('syid', $syid)
+    //                 ->where('semid', $semid)
+    //                 ->where('deleted', 0)
+    //                 ->first();
+
+    //             if($einfo)
+    //             {
+    //                 $levelid = $einfo->levelid;
+    //             }
+    //             else
+    //             {
+    //                 $levelid = db::table('studinfo')->where('id', $studid)->first()->levelid;
+    //             }
+    //         }
+    //     }
+
+    //     $acadid = db::table('gradelevel')
+    //         ->where('id', $levelid)
+    //         ->first()
+    //         ->acadprogid;
+
+    //     $setup = db::table('assessment_setup')
+    //         ->where('acadprogid', $acadid)
+    //         ->first();
+
+    //     $mopsetup = db::table('paymentsetup')
+    //         ->where('id', $setup->mop)
+    //         ->first();
+
+    //     $divamount = $mopsetup->noofpayment;
+
+    //     $paysched = db::table('studpayscheddetail')
+    //         ->select(db::raw('SUM(amount) AS amount'))
+    //         ->where('studid', $studid)
+    //         ->where('syid', $syid)
+    //         ->where(function($q) use($semid, $levelid){
+    //             if($levelid == 14 || $levelid == 15)
+    //             {
+    //                 if($semid == 3)
+    //                 {
+    //                     $q->where('semid', 3);
+    //                 }
+    //                 else
+    //                 {
+    //                     if(db::table('schoolinfo')->first()->shssetup == 0)
+    //                     {
+    //                         $q->where('semid', $semid);
+    //                     }
+    //                     else
+    //                     {
+    //                         $q->where('semid', '!=', 3);
+    //                     }
+    //                 }
+    //             }
+    //             elseif($levelid >= 17 && $levelid <= 21)
+    //             {
+    //                 $q->where('semid', $semid);
+    //             }
+    //             else
+    //             {
+    //                 if($semid == 3)
+    //                 {
+    //                     $q->where('semid', 3);
+    //                 }
+    //                 else
+    //                 {
+    //                     $q->where('semid', '!=', 3);
+    //                 }
+    //             }
+    //         })
+    //         ->where('deleted', 0)
+    //         ->first();
+
+    //     if($paysched)
+    //     {
+    //         $amount = $paysched->amount/$divamount;
+    //         $currentamount = $paysched->amount;
+    //     }
+
+    //     $paysetup = db::table('paymentsetup')
+    //         ->select('paymentsetupdetail.*')
+    //         ->join('paymentsetupdetail', 'paymentsetup.id', '=', 'paymentsetupdetail.paymentid')
+    //         ->where('paymentsetup.id', $setup->mop)
+    //         ->where('paymentsetupdetail.deleted', 0)
+    //         ->get();
+
+    //     $payment_array = array();
+    //     $paycounter = 1;
+    //     $_payamount = 0;
+
+    //     foreach($paysetup as $pay)
+    //     {
+    //         $pay_month = date_format(date_create($pay->duedate), 'm');
+    //         if($pay_month == $month)
+    //         {
+    //             $paymentno = $pay->paymentno;
+    //         }
+
+    //         if($paycounter != 10)
+    //         {
+    //             $amount = number_format($amount, 2, '.', '');
+    //             array_push($payment_array, (object)[
+    //                 'paymentno' => $pay->paymentno,
+    //                 'duedate' => $pay->duedate,
+    //                 'amount' => $amount
+    //             ]);
+
+    //             $paycounter += 1;
+    //             $_payamount += $amount;
+    //         }
+    //         else
+    //         {
+    //             if($_payamount > $currentamount)
+    //             {
+    //                 $amount = $_payamount - $currentamount;
+    //             }
+    //             else
+    //             {
+    //                 $amount = $currentamount - $_payamount;
+    //             }
+
+    //             $amount = number_format($amount, 2, '.', '');
+    //             array_push($payment_array, (object)[
+    //                 'paymentno' => $pay->paymentno,
+    //                 'duedate' => $pay->duedate,
+    //                 'amount' => $amount
+    //             ]);
+    //         }
+
+
+    //     }
+
+
+
+    //     $fees = collect($payment_array);
+
+    //     // return $fees;
+
+    //     $paysched = db::table('studpayscheddetail')
+    //         ->select(db::raw('SUM(amountpay) AS amount'))
+    //         ->where('studid', $studid)
+    //         ->where('syid', $syid)
+    //         ->where(function($q) use($semid, $levelid){
+    //             if($levelid == 14 || $levelid == 15)
+    //             {
+    //                 if($semid == 3)
+    //                 {
+    //                     $q->where('semid', 3);
+    //                 }
+    //                 else
+    //                 {
+    //                     if(db::table('schoolinfo')->first()->shssetup == 0)
+    //                     {
+    //                         $q->where('semid', $semid);
+    //                     }
+    //                     else
+    //                     {
+    //                         $q->where('semid', '!=', 3);
+    //                     }
+    //                 }
+    //             }
+    //             elseif($levelid >= 17 && $levelid <= 21)
+    //             {
+    //                 $q->where('semid', $semid);
+    //             }
+    //             else
+    //             {
+    //                 if($semid == 3)
+    //                 {
+    //                     $q->where('semid', 3);
+    //                 }
+    //                 else
+    //                 {
+    //                     $q->where('semid', '!=', 3);
+    //                 }
+    //             }
+    //         })
+    //         ->where('deleted', 0)
+    //         ->first();
+
+    //     $totalpayment = $paysched->amount;
+
+    //     $assessment = array();
+
+    //     foreach($fees as $fee)
+    //     {
+    //         $month = date_format(date_create($fee->duedate), 'F');
+
+    //         if($totalpayment > 0)
+    //         {
+    //             if($totalpayment > $fee->amount)
+    //             {
+    //                 array_push($assessment, (object)[
+    //                     'paymentno' => $fee->paymentno,
+    //                     'duedate' => $fee->duedate,
+    //                     'amount' => number_format($fee->amount, 2, '.', ''),
+    //                     'payment' => number_format($fee->amount, 2, '.', ''),
+    //                     'balance' => 0.00,
+    //                     'particulars' => $month
+    //                 ]);
+
+    //                 $totalpayment -= $fee->amount;
+    //             }
+    //             else
+    //             {
+    //                 array_push($assessment, (object)[
+    //                     'paymentno' => $fee->paymentno,
+    //                     'duedate' => $fee->duedate,
+    //                     'amount' => number_format($fee->amount, 2, '.', ''),
+    //                     'payment' => number_format($totalpayment, 2, '.', ''),
+    //                     'balance' => number_format($fee->amount - $totalpayment, 2, '.', ''),
+    //                     'particulars' => $month
+    //                 ]);
+
+    //                 $totalpayment = 0;
+    //             }
+    //         }
+    //         else
+    //         {
+    //             array_push($assessment, (object)[
+    //                 'paymentno' => $fee->paymentno,
+    //                 'duedate' => $fee->duedate,
+    //                 'amount' => number_format($fee->amount, 2, '.', ''),
+    //                 'payment' => 0.00,
+    //                 'balance' => number_format($fee->amount, 2, '.', ''),
+    //                 'particulars' => $month
+    //             ]);
+    //         }
+
+    //     }
+
+    //     $assessment = collect($assessment)->where('paymentno', '<=', $paymentno);
+
+    //     return $assessment;
+    // }
+
+    public static function assessment_gen($studid, $syid, $semid, $month)
     {
         $levelid = 0;
         $amount = 0;
         $paymentno = 0;
         $currentamount = 0;
+        // $numberofpayment = 0;
 
         $einfo = db::table('enrolledstud')
             ->select('levelid')
@@ -3571,7 +4029,7 @@ class FinanceUtilityModel extends Model
                         }
                     }
                 }
-                elseif($levelid >= 17 && $levelid <= 21)
+                elseif($levelid >= 17 && $levelid <= 25)
                 {
                     $q->where('semid', $semid);
                 }
@@ -3610,12 +4068,13 @@ class FinanceUtilityModel extends Model
         foreach($paysetup as $pay)
         {
             $pay_month = date_format(date_create($pay->duedate), 'n');
-            if($pay_month == $month)
+            if($pay_month == $month->monthid)
             {
                 $paymentno = $pay->paymentno;
             }
 
-            if($paycounter != 10)
+
+            if($paycounter != $mopsetup->noofpayment)
             {
                 $amount = number_format($amount, 2, '.', '');
                 array_push($payment_array, (object)[
@@ -3649,11 +4108,8 @@ class FinanceUtilityModel extends Model
 
         }
 
-
-
         $fees = collect($payment_array);
-
-        // return $fees;
+        // dd($fees);
 
         $paysched = db::table('studpayscheddetail')
             ->select(db::raw('SUM(amountpay) AS amount'))
@@ -3678,7 +4134,7 @@ class FinanceUtilityModel extends Model
                         }
                     }
                 }
-                elseif($levelid >= 17 && $levelid <= 21)
+                elseif($levelid >= 17 && $levelid <= 25)
                 {
                     $q->where('semid', $semid);
                 }
@@ -3749,11 +4205,11 @@ class FinanceUtilityModel extends Model
         }
 
         $assessment = collect($assessment)->where('paymentno', '<=', $paymentno);
-
+        // dd($assessment);
         return $assessment;
     }
 
-	public static function loaddiscount($studid, $levelid, $syid, $semid, $discountid)
+    public static function loaddiscount($studid, $levelid, $syid, $semid, $discountid)
     {
         $discamount = 0;
         $particulars = 'DISCOUNT: ';
@@ -3778,7 +4234,7 @@ class FinanceUtilityModel extends Model
                         }
                     }
                 }
-                if($levelid >= 17 && $levelid <= 21)
+                if($levelid >= 17 && $levelid <= 25)
                 {
                     $q->where('semid', $semid);
                 }
@@ -3840,7 +4296,7 @@ class FinanceUtilityModel extends Model
                                 $q->where('semid', $semid);
                             }
                         }
-                        if($levelid >= 17 && $levelid <= 21)
+                        if($levelid >= 17 && $levelid <= 25)
                         {
                             $q->where('semid', $semid);
                         }
@@ -3901,7 +4357,7 @@ class FinanceUtilityModel extends Model
                                 }
                             }
                         }
-                        elseif($levelid >= 17 && $levelid <= 21)
+                        elseif($levelid >= 17 && $levelid <= 25)
                         {
                             $q->where('semid', $semid);
                         }
@@ -3987,7 +4443,7 @@ class FinanceUtilityModel extends Model
                                     }
                                 }
                             }
-                            elseif($levelid >= 17 && $levelid <= 21)
+                            elseif($levelid >= 17 && $levelid <= 25)
                             {
                                 $q->where('semid', $semid);
                             }
@@ -4060,7 +4516,7 @@ class FinanceUtilityModel extends Model
     public static function einfo($studid, $syid, $semid)
     {
         $einfo = db::table('enrolledstud')
-            ->select('levelid')
+            ->select('levelid', 'sectionid', 'feesid')
             ->where('studid', $studid)
             ->where('syid', $syid)
             ->where(function($q) use($semid){
@@ -4083,7 +4539,7 @@ class FinanceUtilityModel extends Model
         else
         {
             $einfo = db::table('sh_enrolledstud')
-                ->select('levelid')
+                ->select('levelid', 'sectionid', 'feesid')
                 ->where('studid', $studid)
                 ->where('syid', $syid)
                 ->where(function($q) use($semid){
@@ -4113,7 +4569,7 @@ class FinanceUtilityModel extends Model
             else
             {
                 $einfo = db::table('college_enrolledstud')
-                    ->select('yearLevel as levelid')
+                    ->select('yearLevel as levelid', 'courseid', 'feesid')
                     ->where('studid', $studid)
                     ->where('syid', $syid)
                     ->where('semid', $semid)

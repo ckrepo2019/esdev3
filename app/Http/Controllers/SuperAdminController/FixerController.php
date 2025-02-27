@@ -100,13 +100,30 @@ class FixerController extends \App\Http\Controllers\Controller
                                           $join->where('gradelevel.deleted',0);
                                           $join->whereIn('gradelevel.acadprogid',$acad);
                                     })
-                                    ->orderBy('sortid')
+                                    
                                     ->select(
                                           'levelname',
                                           'sectionname',
                                           'sections.id'
                                     )
                                     ->get();
+
+                  $college_sections =      DB::table('college_sections')
+                                    ->where('college_sections.deleted',0)
+                                    ->join('gradelevel',function($join) use($acad){
+                                          $join->on('college_sections.yearID','=','gradelevel.id');
+                                          $join->where('gradelevel.deleted',0);
+                                          $join->whereIn('gradelevel.acadprogid',$acad);
+                                    })
+                                    ->orderBy('sortid')
+                                    ->select(
+                                          'levelname',
+                                          'sectionDesc as sectionname',
+                                          'college_sections.id'
+                                    )
+                                    ->get();
+
+                                    $sections = $sections->merge($college_sections);
             }
 
             // return $contact;
@@ -160,7 +177,11 @@ class FixerController extends \App\Http\Controllers\Controller
                                                 'mothername',
                                                 'fathername',
                                                 'guardianname',
-                                                'sid'
+                                                'sid',
+                                                'street',
+                                                'barangay',
+                                                'city',
+                                                'province'
                                           )
                                           ->get();
 
@@ -203,7 +224,11 @@ class FixerController extends \App\Http\Controllers\Controller
                                           'mothername',
                                           'fathername',
                                           'guardianname',
-                                          'sid'
+                                          'sid',
+                                          'street',
+                                          'barangay',
+                                          'city',
+                                          'province'
                                     )
                                     ->get();
 
@@ -250,7 +275,11 @@ class FixerController extends \App\Http\Controllers\Controller
                                           'mothername',
                                           'fathername',
                                           'guardianname',
-                                          'sid'
+                                          'sid',
+                                          'street',
+                                          'barangay',
+                                          'city',
+                                          'province'
                                     )
                                     ->get();
 
@@ -274,8 +303,15 @@ class FixerController extends \App\Http\Controllers\Controller
                                           $join->on('college_enrolledstud.studid','=','studinfo.id');
                                           $join->where('studinfo.deleted',0);
                                     })
+                                    ->join('college_sections',function($join){
+                                          $join->on('college_enrolledstud.sectionid','=','college_sections.id');
+                                          $join->where('college_sections.deleted',0);
+                                    })
                                     ->select(
                                           'studid',
+                                          'college_enrolledstud.yearLevel as levelid',
+                                          'college_sections.sectionDesc as sectionname',
+                                          'college_sections.id as sectionid',
                                           'studinfo.lastname',
                                           'studinfo.firstname',
                                           'studinfo.middlename',
@@ -290,7 +326,11 @@ class FixerController extends \App\Http\Controllers\Controller
                                           'mothername',
                                           'fathername',
                                           'guardianname',
-                                          'sid'
+                                          'sid',
+                                          'street',
+                                          'barangay',
+                                          'city',
+                                          'province'
                                     )
                                     ->get();
 

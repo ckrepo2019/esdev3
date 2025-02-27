@@ -34,17 +34,17 @@ class MonthlyCollectionController extends Controller
         // $account = db::table('account_account')
         // 		->get();
 
-        // return $account;		
+        // return $account;
     // return config('app.type');
         return view('finance/reports/monthlycollection');
     }
 
-    
+
 
     public function mc_generate(Request $request)
     {
         // $date = date_format(date_create($request->get('date')), 'Y-m-d');
-        // $type = 
+        // $type =
         $month = $request->get('mc_month');
         $year = $request->get('mc_year');
 
@@ -57,7 +57,7 @@ class MonthlyCollectionController extends Controller
         $headerlist = '<tr>';
         $bodylist = '';
         $arraygtotal = array();
-        
+
         array_push($items, 'DATE');
         array_push($items, 'OR NUMBER');
         array_push($items, 'TOTAL AMOUNT');
@@ -140,7 +140,7 @@ class MonthlyCollectionController extends Controller
         $headerlist .='</tr>';
         $array_bodylist = array();
         $grandtotal = 0;
-  
+
         $chrngtransaction = db::table('chrngtrans')
             // ->select('ornum', 'studname', 'amountpaid as totalamount')
             ->select(db::raw('transdate, ornum, studname, sum(amountpaid) as totalamount'))
@@ -154,7 +154,7 @@ class MonthlyCollectionController extends Controller
         {
             $ornum = 0;
             $rangefrom = 0;
-            $rangeto = 0;  
+            $rangeto = 0;
 
             $_date = date_format(date_create($_trans->transdate), 'Y-m-d');
 
@@ -180,7 +180,7 @@ class MonthlyCollectionController extends Controller
                     <td style="width:60px">'.$_date.'</td>
                     <td style="width:300">'.$rangefrom . ' - ' . $rangeto.'</td>
                     <td style="width:70px" class="text-right">'.number_format($_trans->totalamount, 2).'</td>
-            ';  
+            ';
 
             $grandtotal += $_trans->totalamount;
             // return $items;
@@ -209,7 +209,7 @@ class MonthlyCollectionController extends Controller
                         ->first();
 
                     if($trx->ornum != null)
-                    {   
+                    {
                         // echo 'ornum: ' . $trx->ornum . ' particulars: ' . $trx->particulars . ' amount: ' . $trx->amount . '<br>';
                         $arrayamount = 0;
                         $_item = str_replace('.', '', $_item);
@@ -239,7 +239,7 @@ class MonthlyCollectionController extends Controller
             <tr>
                 <td colspan="2" class="text-right text-bold">TOTAL:</td>
                 <td class="text-right text-bold">'.number_format($grandtotal, 2).'</td>
-            
+
         ';
 
         $arraygtotal = collect($arraygtotal);
@@ -248,7 +248,7 @@ class MonthlyCollectionController extends Controller
         $sumtotal = array();
 
         // return $items;
-        
+
         foreach($items as $_item)
         {
             // echo $_item . '<br>';
@@ -257,8 +257,8 @@ class MonthlyCollectionController extends Controller
             $_item = str_replace('.', '', $_item);
             if($_item != 'OR NUMBER' && $_item != 'DATE' && $_item != 'TOTAL AMOUNT' && $_item != 'TOTAL')
             {
-                
-                array_push($sumtotal, $arraygtotal->sum($_item));    
+
+                array_push($sumtotal, $arraygtotal->sum($_item));
             }
         }
         // return $sumtotal;
@@ -291,7 +291,7 @@ class MonthlyCollectionController extends Controller
         $orfrom = $request->get('orfrom');
         $orto = $request->get('orto');
         $type = $request->get('type');
-        
+
         // $returndate = date_format(date_create($date), 'mdY');
         // $displaydate = date_format(date_create($date), 'M d, Y');
         $month = $request->get('mc_month');
@@ -338,10 +338,10 @@ class MonthlyCollectionController extends Controller
             {
                 $item = $trans->particulars;
             }
-            
+
             if(!in_array($item, $items))
             {
-                array_push($items, $item);   
+                array_push($items, $item);
             }
         }
 
@@ -376,10 +376,10 @@ class MonthlyCollectionController extends Controller
         // $sheet->setCellValue('B5', $displaydate);
         // $sheet->setCellValue('B6', 'OR # ' . $orfirst . ' - ' . $orlast);
 
-        $sheet->getColumnDimension('A')->setWidth('3', 'pt');
-        $sheet->getColumnDimension('B')->setWidth('13', 'pt');
-        $sheet->getColumnDimension('C')->setWidth('40', 'pt');
-        $sheet->getColumnDimension('D')->setWidth('15', 'pt');
+        $sheet->getColumnDimension('A')->setWidth(3);
+        $sheet->getColumnDimension('B')->setWidth(13);
+        $sheet->getColumnDimension('C')->setWidth(40);
+        $sheet->getColumnDimension('D')->setWidth(15);
 
         $hcol = 'B';
         $sheet->getStyle('A9')->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
@@ -456,7 +456,7 @@ class MonthlyCollectionController extends Controller
         //         ->where('cancelled', 0)
         //         ->groupBy('ornum')
         //         ->orderBy('ornum')
-        //         ->get();   
+        //         ->get();
         // }
 
         $rcount = 1;
@@ -472,7 +472,7 @@ class MonthlyCollectionController extends Controller
             $_trx = db::table('chrngtrans')
                 ->whereBetween('transdate', [$_date . ' 00:00', $_date . ' 23:59'])
                 ->where('cancelled', 0)
-                ->get(); 
+                ->get();
 
             foreach($_trx as $t)
             {
@@ -482,7 +482,7 @@ class MonthlyCollectionController extends Controller
                 }
 
                 $ornum = $t->ornum;
-            } 
+            }
 
             $rangeto = $ornum;
 
@@ -504,7 +504,7 @@ class MonthlyCollectionController extends Controller
             // return $items;
             foreach($items as $_item)
             {
-                
+
                 if($_item != 'OR NUMBER' && $_item != 'DATE' && $_item != 'TOTAL AMOUNT' && $_item != 'TOTAL')
                 {
                     // echo $_trans->ornum . ' - ' . $_item .  '<br>';
@@ -526,13 +526,13 @@ class MonthlyCollectionController extends Controller
                         ->where('chrngcashtrans.deleted', 0)
                         ->where('cancelled', 0)
                         ->first();
-                    
+
                     if($trx->ornum != null)
-                    {   
+                    {
                         // echo 'ornum: ' . $trx->ornum . ' particulars: ' . $trx->particulars . ' amount: ' . $trx->amount . '<br>';
                         $arrayamount = 0;
                         // return $_item;
-                        $_item = str_replace('.', '', $_item);    
+                        $_item = str_replace('.', '', $_item);
                         array_push($arraygtotal, (object)[
                             $_item => $trx->amount,
                             'itemname' => $_item,
@@ -547,23 +547,23 @@ class MonthlyCollectionController extends Controller
 
                         $sheet->setCellValue($hcol .$row, $trx->amount);
                         $sheet->getStyle($hcol . $row)->getNumberFormat()->setFormatCode('#,##0.00');
-                        $sheet->getColumnDimension($hcol)->setWidth('15', 'pt');
+                        $sheet->getColumnDimension($hcol)->setWidth(15);
                         $sheet->getStyle($hcol . $row)->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
                     }
                     else
                     {
                         $sheet->setCellValue($hcol .$row, '');
                         $sheet->getStyle($hcol . $row)->getNumberFormat()->setFormatCode('#,##0.00');
-                        $sheet->getColumnDimension($hcol)->setWidth('15', 'pt');
+                        $sheet->getColumnDimension($hcol)->setWidth(15);
                         $sheet->getStyle($hcol . $row)->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
-                    } 
+                    }
                     $hcol++;
                 }
             }
 
             $sheet->setCellValue($hcol .$row, $_trans->totalamount);
             $sheet->getStyle($hcol . $row)->getNumberFormat()->setFormatCode('#,##0.00');
-            $sheet->getColumnDimension($hcol)->setWidth('15', 'pt');
+            $sheet->getColumnDimension($hcol)->setWidth(15);
             $sheet->getStyle($hcol . $row)->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
 
             $row++;
@@ -578,7 +578,7 @@ class MonthlyCollectionController extends Controller
         {
             // if($arraygtotal->sum($_item) > 0)
             // {
-            //     array_push($sumtotal, $arraygtotal->sum($_item));    
+            //     array_push($sumtotal, $arraygtotal->sum($_item));
             // }
 
             if($_item == 'P.E UNIFORM')
@@ -599,8 +599,8 @@ class MonthlyCollectionController extends Controller
                 $_item = str_replace('.', '', $_item);
                 if($_item != 'OR NUMBER' && $_item != 'DATE' && $_item != 'TOTAL AMOUNT' && $_item != 'TOTAL')
                 {
-                    array_push($sumtotal, $arraygtotal->sum($_item));    
-                }       
+                    array_push($sumtotal, $arraygtotal->sum($_item));
+                }
             }
 
         }
@@ -634,16 +634,10 @@ class MonthlyCollectionController extends Controller
         $sheet->getStyle($hcol . $row)->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
         $sheet->getStyle($hcol . $row)->getFont()->setBold(true);
 
-        if ($type == null) {
-            $sig = db::table('finance_sigs')
-                ->where('id', 1)
-                ->first();
-        } else {
-            $sig = db::table('finance_sigs')
-                ->where('id', 2)
-                ->first();
-        }
-       
+        $sig = db::table('finance_sigs')
+            ->where('id', 2)
+            ->first();
+
         $row ++;
         $row ++;
         $row ++;
@@ -674,6 +668,7 @@ class MonthlyCollectionController extends Controller
         $row++;
         $sheet->setCellValue('C' .$row, $sig->designation_3);
 
+
         $datenow = date_format(date_create(FinanceModel::getServerDateTime()), 'mdyhis');
 
         $dcprloc = 'dcpr/MonthlyCollection' . $datenow.'.xlsx';
@@ -690,7 +685,7 @@ class MonthlyCollectionController extends Controller
         $writer->save("php://output");
         exit();
     }
-    
+
 
     // Page footer
     // public function Footer() {
@@ -712,7 +707,7 @@ class EXPORTCRS extends TCPDF {
         $image_file = public_path().'/'.$schoollogo->picurl;
         $extension = explode('.', $schoollogo->picurl);
         $this->Image('@'.file_get_contents($image_file),60,9,17,17);
-        
+
         $schoolname = $this->writeHTMLCell(false, 50, 40, 10, '<span style="font-weight: bold">'.$schoollogo->schoolname.'</span>', false, false, false, $reseth=true, $align='C', $autopadding=true);
         $schooladdress = $this->writeHTMLCell(false, 50, 40, 15, '<span style="font-weight: bold; font-size: 10px;">'.$schoollogo->address.'</span>', false, false, false, $reseth=true, $align='C', $autopadding=true);
 
@@ -741,7 +736,7 @@ class EXPORTCRS extends TCPDF {
 
 // postTrans - Foreach
 // $transamount = $trans->amount;
-        
+
 //         $ledgeritemized = db::table('studledgeritemized')
 //           ->where('studid', $trans->studid)
 //           ->where('syid', $trans->syid)

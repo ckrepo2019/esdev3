@@ -43,6 +43,36 @@
                         </p>
                     </a>
                 </li>
+
+                @if (isset(DB::table('schoolinfo')->first()->withschoolfolder))
+                    @if (DB::table('schoolinfo')->first()->withschoolfolder == 1)
+                        <li class="nav-item">
+                            <a class="{{ Request::url() == url('/schoolfolderv2/index') ? 'active' : '' }} nav-link"
+                                href="/schoolfolderv2/index">
+                                <i class="nav-icon fa fa-folder"></i>
+                                <p>
+                                    @if (strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'bct')
+                                        BCT Commons
+                                    @else
+                                        File Directory
+                                    @endif
+                                </p>
+                            </a>
+                        </li>
+                    @endif
+                @endif
+
+                <li class="nav-item">
+                    <a href="/hr/settings/notification/index" class="nav-link {{Request::url() == url('/hr/settings/notification/index') ? 'active' : ''}}">
+                        <i class="nav-icon  fas fa-exclamation"></i>
+                        <p>
+                            Notification & Request
+                            {{-- <span class="ml-2 badge badge-primary">2</span> --}}
+                        </p>
+                    </a>
+                </li>
+      
+
                 <li class="nav-item">
                     <a href="/user/profile" class="nav-link {{Request::url() == url('/user/profile') ? 'active' : ''}}">
                         <i class="nav-icon fa fa-user"></i>
@@ -103,6 +133,30 @@
                         <i class="nav-icon fas fa-boxes"></i>
                         <p>
                             Stock Card
+                        </p>
+                    </a>
+                </li>
+
+                <li class="nav-header text-warning">DOCUMENT TRACKING</li>
+                <li class="nav-item">
+                    <a href="/documenttracking"
+                        class="nav-link {{ Request::url() == url('/documenttracking') ? 'active' : '' }}">
+                        <i class="nav-icon fa fa-file"></i>
+                        <p>
+                            Document Tracking
+                        </p>
+                    </a>
+                </li>
+
+
+
+                <li class="nav-header text-warning">Employee Requirements</li>
+                <li class="nav-item">
+                    <a href="/hr/requirements/index"
+                        class="nav-link {{ Request::fullUrl() === url('/hr/requirements/index') ? 'active' : '' }}">
+                        <i class="nav-icon fa fa-folder-open"></i>
+                        <p>
+                            Requirements
                         </p>
                     </a>
                 </li>

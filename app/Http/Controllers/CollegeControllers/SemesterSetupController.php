@@ -953,5 +953,20 @@ class SemesterSetupController extends Controller
 
         return $setup;
     }
+
+    public function getActiveSetupDean(Request $request){
+
+        $syid = $request->get('syid');
+        $semid = $request->get('semid');
+
+        $setup = DB::table('semester_setup')
+            ->where('activestatus', 1)
+            ->where('sy', $syid)
+            ->where('semester', $semid)
+            ->where('deleted', 0)
+            ->first();
+
+        return response()->json($setup);
+    }
     
 }

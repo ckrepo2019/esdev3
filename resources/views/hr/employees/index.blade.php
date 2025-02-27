@@ -40,13 +40,14 @@
             font-weight: 400;
         }
 
-        .monthsSelectdiv > .select2-container--default .select2-selection--multiple .select2-selection__choice {
-            background-color: #007bff!important;
-            border: 1px solid #006fe6!important;
+        .monthsSelectdiv>.select2-container--default .select2-selection--multiple .select2-selection__choice {
+            background-color: #007bff !important;
+            border: 1px solid #006fe6 !important;
             font-size: 13.5px;
-            padding-bottom: 3px!important;
+            padding-bottom: 3px !important;
         }
-        .monthsSelectdiv > .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+
+        .monthsSelectdiv>.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
             color: #000000 !important;
         }
 
@@ -309,8 +310,8 @@
                             style="border-radius: 25px !important;">Active Employees &nbsp;&nbsp;
                         </a>
                     </li>
-                    <li class="nav-item"><a class="nav-link inactiveemp" href="#tab_2-inactive-employees" data-toggle="tab"
-                            style="border-radius: 25px !important;">Inactive &nbsp;&nbsp;
+                    <li class="nav-item"><a class="nav-link inactiveemp" href="#tab_2-inactive-employees"
+                            data-toggle="tab" style="border-radius: 25px !important;">Inactive &nbsp;&nbsp;
                         </a>
                     </li>
                 </ul>
@@ -352,9 +353,10 @@
                             style="font-size: 15px; table-layout: fixed;">
                             <thead>
                                 <tr>
-                                    <th width="35%">EMPLOYEE</th>
-                                    <th width="15%" class="text-left">DESIGNATION</th>
-                                    <th width="20%">CONTACT DETAILS</th>
+                                    <th width="30%">EMPLOYEE</th>
+                                    <th width="13%" class="text-left">DESIGNATION</th>
+                                    <th width="18%">CONTACT DETAILS</th>
+                                    <th width="9%" class="text-center">STATUS</th>
                                     <th width="30%">&nbsp;</th>
                                 </tr>
                             </thead>
@@ -391,10 +393,10 @@
     </section>
 @endsection
 @section('footerjavascript')
-    <script src="{{ asset('plugins/select2/js/select2.full.min.js') }}"></script>
     <script src="{{ asset('plugins/datatables/jquery.dataTables.js') }}"></script>
     <script src="{{ asset('plugins/datatables-bs4/js/dataTables.bootstrap4.js') }}"></script>
     <script src="{{ asset('plugins/datatables-fixedcolumns/js/dataTables.fixedColumns.js') }}"></script>
+    <script src="{{ asset('plugins/select2/js/select2.full.min.js') }}"></script>
     <script src="{{ asset('plugins/moment/moment.min.js') }}"></script>
 
     <script>
@@ -412,19 +414,60 @@
             var checkedDepArray = [];
             var checkedEmpArray = [];
 
-            var months = [
-                {'id': 1, 'description': 'January'},
-                {'id': 2, 'description': 'February'},
-                {'id': 3, 'description': 'March'},
-                {'id': 4, 'description': 'April'},
-                {'id': 5, 'description': 'May'},
-                {'id': 6, 'description': 'June'},
-                {'id': 7, 'description': 'July'},
-                {'id': 8, 'description': 'August'},
-                {'id': 9, 'description': 'September'},
-                {'id': 10, 'description': 'October'},
-                {'id': 11, 'description': 'November'},
-                {'id': 12, 'description': 'December'}
+            getemployees();
+            getinactiveemployees()
+            select_departments()
+
+            $('.hired_status').select2()
+
+            var months = [{
+                    'id': 1,
+                    'description': 'January'
+                },
+                {
+                    'id': 2,
+                    'description': 'February'
+                },
+                {
+                    'id': 3,
+                    'description': 'March'
+                },
+                {
+                    'id': 4,
+                    'description': 'April'
+                },
+                {
+                    'id': 5,
+                    'description': 'May'
+                },
+                {
+                    'id': 6,
+                    'description': 'June'
+                },
+                {
+                    'id': 7,
+                    'description': 'July'
+                },
+                {
+                    'id': 8,
+                    'description': 'August'
+                },
+                {
+                    'id': 9,
+                    'description': 'September'
+                },
+                {
+                    'id': 10,
+                    'description': 'October'
+                },
+                {
+                    'id': 11,
+                    'description': 'November'
+                },
+                {
+                    'id': 12,
+                    'description': 'December'
+                }
             ];
 
             const Toast = Swal.mixin({
@@ -434,9 +477,7 @@
                 timer: 2000,
             });
 
-            getemployees();
-            getinactiveemployees()
-            select_departments()
+
 
             function getemployees() {
                 $('#table-employees-active').DataTable({
@@ -465,6 +506,9 @@
                         },
                         {
                             "data": null
+                        },
+                        {
+                            "data": null
                         }
                     ],
                     columnDefs: [{
@@ -472,12 +516,23 @@
                             'orderable': false,
                             'createdCell': function(td, cellData, rowData, row, col) {
                                 $(td).css('vertical-align', 'middle')
+                                var pic = ''
+                                if (rowData.hired_status == 1) {
+                                    pic = '<img class="img-circle elevation-1" src="/' + rowData
+                                        .picurl +
+                                        '" class="" alt="User Image" onerror="this.src=\'' +
+                                        avatar_unknown +
+                                        '\'" width="50px" height="50px" style="border: 5px solid #5cb85c;" />'
+                                } else {
+                                    pic = '<img class="img-circle elevation-1" src="/' + rowData
+                                        .picurl +
+                                        '" class="" alt="User Image" onerror="this.src=\'' +
+                                        avatar_unknown + '\'" width="50px" height="50px"/>'
+                                }
 
                                 $(td)[0].innerHTML = ' <div class="row">' +
                                     '<div class="col-md-3">' +
-                                    '<img class="img-circle elevation-1" src="/' + rowData.picurl +
-                                    '" class="" alt="User Image" onerror="this.src=\'' +
-                                    avatar_unknown + '\'" width="50px" height="50px"/>' +
+                                    pic +
                                     '</div>' +
                                     '<div class="col-md-9">' +
                                     '<div class="row">' +
@@ -489,6 +544,10 @@
                                     '</div>' +
                                     '</div>' +
                                     '</div>'
+
+                                $(td).find('.img-circle').css({
+                                    'border': '5px solid green !important'
+                                });
                             }
                         },
                         {
@@ -516,13 +575,15 @@
                                     `
                             <div class="row">
                                 <div class="col-md-12">
-                                    <small class="text-muted" style="font-size: 13px;"><i class="fa fa-phone"></i> &nbsp;` + (rowData
+                                    <small class="text-muted" style="font-size: 13px;"><i class="fa fa-phone"></i> &nbsp;` +
+                                    (rowData
                                         .contactnum == null ? 'Contact No. not set' : rowData
                                         .contactnum) +
                                     `</small>
                                 </div>
                                 <div class="col-md-12">
-                                    <small class="text-muted" style="font-size: 13px;"><i class="fa fa-address-book"></i> &nbsp;` + ((
+                                    <small class="text-muted" style="font-size: 13px;"><i class="fa fa-address-book"></i> &nbsp;` +
+                                    ((
                                             rowData.address == null || rowData.address == '' ||
                                             rowData.address == ' ') ? 'Home Address not set' :
                                         rowData.address) + `</small>
@@ -532,6 +593,24 @@
                         },
                         {
                             'targets': 3,
+                            'orderable': false,
+                            'createdCell': function(td, cellData, rowData, row, col) {
+
+                                var html =
+                                    `<select class="form-control hired_status form-control-sm select2" id="change_hired_status" name="" data-id="` +
+                                    rowData.id + `">
+                                                <option value="0" ${rowData.hired_status == 1 ? '' : 'selected'} >Select Status</option>
+                                                <option value="1" ${rowData.hired_status == 1 ? 'selected' : ''} >Newly hired</option>
+                                            </select>`
+
+                                $(td).css('vertical-align', 'middle')
+                                $(td).addClass('text-center')
+                                $(td)[0].innerHTML = html
+                            }
+                        },
+
+                        {
+                            'targets': 4,
                             'orderable': false,
                             'createdCell': function(td, cellData, rowData, row, col) {
                                 console.log(rowData);
@@ -656,13 +735,15 @@
                                     `
                         <div class="row">
                             <div class="col-md-12">
-                                <small class="text-muted" style="font-size: 13px;"><i class="fa fa-phone"></i> &nbsp;` + (rowData
+                                <small class="text-muted" style="font-size: 13px;"><i class="fa fa-phone"></i> &nbsp;` +
+                                    (rowData
                                         .contactnum == null ? 'Contact No. not set' : rowData
                                         .contactnum) +
                                     `</small>
                             </div>
                             <div class="col-md-12">
-                                <small class="text-muted" style="font-size: 13px;"><i class="fa fa-address-book"></i> &nbsp;` + ((rowData
+                                <small class="text-muted" style="font-size: 13px;"><i class="fa fa-address-book"></i> &nbsp;` +
+                                    ((rowData
                                             .address == null || rowData.address == '' || rowData
                                             .address == ' ') ? 'Home Address not set' : rowData
                                         .address) + `</small>
@@ -676,7 +757,7 @@
                             'createdCell': function(td, cellData, rowData, row, col) {
                                 if (refid != 26) {
                                     var html =
-                                        `<a href="/hr/employees/profile/index?employeeid=${rowData.id}" type="button" class="btn btn-sm text-center btn-default p-1 text-white" data-id="` +
+                                        `<a href="/hr/employees/profile/index?employeeid=${rowData.userid}" type="button" class="btn btn-sm text-center btn-default p-1 text-white" data-id="` +
                                         rowData.id +
                                         `" style="font-size: 13px; width: 40%; background-color: #343a40;border: 1px solid white; border-radius: 5px;">View Profile</a>
                         <a href="javascript:void(0)"  type="button" class="btn btn-sm text-center p-1 text-white btn-primary activateuser" data-id="` +
@@ -761,6 +842,35 @@
             $(document).on('click', '.activeemp', function() {
                 $('.emportinactiveemployeepdf').addClass('emportactiveemployeepdf')
                 $('.emportactiveemployeepdf').removeClass('emportinactiveemployeepdf')
+            })
+
+            $(document).on('change', '.hired_status', function() {
+                var id = $(this).attr('data-id')
+                var hired_status = $(this).val()
+
+                $.ajax({
+                    type: "GET",
+                    url: "/hr/employees/change_hired_status",
+                    data: {
+                        teacherid: id,
+                        hired_status: hired_status
+                    },
+                    success: function(data) {
+                        if (data.status == 0) {
+                            Toast.fire({
+                                type: 'error',
+                                title: data.message
+                            });
+                        } else {
+                            getemployees()
+
+                            Toast.fire({
+                                type: 'success',
+                                title: data.message
+                            });
+                        }
+                    }
+                });
             })
             // =================================
 
@@ -862,12 +972,13 @@
 
                     valid_data = false
                 }
-                
+
 
                 if (valid_data) {
 
                     var url = '/payrollclerk/employees/profile/getdatainfoprintables?selectoption=' +
-                        selectoption + '&filtereddata=' + filtereddata + '&checkedInfoArray=' + checkedInfo + '&months=' + months;
+                        selectoption + '&filtereddata=' + filtereddata + '&checkedInfoArray=' +
+                        checkedInfo + '&months=' + months;
                     window.open(url, '_blank');
 
                     // return false;
@@ -999,7 +1110,7 @@
                 })
             })
 
-            $(document).on('click', '#checkperinfodob', function(){
+            $(document).on('click', '#checkperinfodob', function() {
                 if ($(this).is(':checked')) {
                     $('.monthsSelectdiv').attr('hidden', false);
                 } else {
@@ -1007,7 +1118,7 @@
                 }
             })
 
-            $(document).on('click', '#monthdata', function(){
+            $(document).on('click', '#monthdata', function() {
                 $('#modal_monthdata').modal('show')
                 month_table()
             })
@@ -1147,12 +1258,12 @@
                                 `
                             } else {
                                 var html =
-                                '<input type="checkbox" class="checkperinfo" id="checkperinfo' +
-                                rowData.key + '" infodata="' + rowData.key +
-                                '" style="width: 18px; height: 18px; position: relative; top: 3px;">&nbsp;&nbsp;<span class="text-dark">' +
-                                rowData.description + '</span>';
+                                    '<input type="checkbox" class="checkperinfo" id="checkperinfo' +
+                                    rowData.key + '" infodata="' + rowData.key +
+                                    '" style="width: 18px; height: 18px; position: relative; top: 3px;">&nbsp;&nbsp;<span class="text-dark">' +
+                                    rowData.description + '</span>';
                             }
-                           
+
 
                             $(td).css('vertical-align', 'middle')
                             $(td).addClass('text-left p-1')
@@ -1168,7 +1279,7 @@
                                     };
                                 })
                             });
-                            
+
                         }
                     }]
                 });

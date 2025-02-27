@@ -23,7 +23,7 @@ class OldAccountsController extends Controller
         $sylist ='';
         $semlist ='';
 
-        if($levelid >= 17 && $levelid <= 20)
+        if($levelid >= 17 && $levelid <= 25)
         {
             $schoolyear = db::table('sy')
                 ->orderBy('sydesc')
@@ -187,7 +187,7 @@ class OldAccountsController extends Controller
                         $q->where('semid', $semid);
                     }
                 }
-                if($levelid >= 17 && $levelid <= 20)
+                if($levelid >= 17 && $levelid <= 25)
                 {
                     $q->where('studledger.semid', $semid);
                 }
@@ -499,7 +499,7 @@ class OldAccountsController extends Controller
             ->where('studid', $studid)
             ->where('syid', $syfrom)
             ->where(function($q) use($levelid, $semfrom){
-                if($levelid >= 17 && $levelid <= 21)
+                if($levelid >= 17 && $levelid <= 25)
                 {
                     $q->where('semid', $semfrom);
                 }
@@ -517,7 +517,7 @@ class OldAccountsController extends Controller
             ->where('studid', $studid)
             ->where('syfrom', $syfrom)
             ->where(function($q) use($levelid, $semfrom){
-                if($levelid >= 17 && $levelid <= 21)
+                if($levelid >= 17 && $levelid <= 25)
                 {
                     $q->where('semid', $semfrom);
                 }
@@ -650,7 +650,7 @@ class OldAccountsController extends Controller
                 {
                     $section = '';
 
-                    if($stud->levelid >= 17 && $stud->levelid <= 21)
+                    if($stud->levelid >= 17 && $stud->levelid <= 25)
                     {
                         $collegecourse = db::table('college_courses')
                             ->where('id', $stud->courseid)

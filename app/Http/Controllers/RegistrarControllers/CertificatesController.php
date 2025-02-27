@@ -24,7 +24,7 @@ class CertificatesController extends Controller
                 'suffix',
                 'gradelevel.id as levelid',
                 'gender',
-                'acadprogid',
+                'gradelevel.acadprogid',
                 'enrolledstud.sectionid',
                 'levelname',
                 'gradelevel.acadprogid',
@@ -50,7 +50,7 @@ class CertificatesController extends Controller
                 'strandcode',
                 'strandname',
                 'firstname',
-                'acadprogid',
+                'gradelevel.acadprogid',
                 'sh_enrolledstud.sectionid',
                 'middlename',
                 'suffix',
@@ -85,7 +85,7 @@ class CertificatesController extends Controller
                 'courseDesc as coursename',
                 'collegeDesc as collegename',
                 'gender',
-                'acadprogid',
+                'gradelevel.acadprogid',
                 'levelname',
                 'gradelevel.acadprogid',
                 'studentstatus.description as studentstatus'
@@ -149,6 +149,7 @@ class CertificatesController extends Controller
                 ->where('cert_type', $certtype)
                 ->where('deleted', '0')
                 ->get();
+
             $students = self::get_students($syid, $semid);
 
             return view('registrar.otherprintables.certifications.results')
@@ -156,17 +157,14 @@ class CertificatesController extends Controller
                 ->with('templates', $templates);
 
         } elseif ($request->get('action') == 'export') {
-            
             $students = self::get_students($syid, $semid);
             $schoolyear = DB::table('sy')->where('id', $request->get('syid'))->first()->sydesc;
-            $schoolinfo = DB::table('schoolinfo')->first();
             $semester = DB::table('semester')->where('id', $request->get('semid'))->first()->semester;
             // return $request->all();
             $studentinfo = collect($students)->where('id', $request->get('studid'))->first();
             $PHPWord = new \PhpOffice\PhpWord\PhpWord();
             $studid = $request->get('studid');
-            $registrar = $request->get('registrar');
-            // return collect($schoolinfo);
+            //return collect($studentinfo);
 
             $templateinfo = DB::table('printables')
                 ->where('id', $request->get('templateid'))
@@ -206,7 +204,7 @@ class CertificatesController extends Controller
                 $yearlevel = 'Fourth Year';
             } else if ($studentinfo->levelid == 21) {
                 $yearlevel = 'Fifth Year';
-            }else{
+            } else {
                 $yearlevel = $studentinfo->levelname;
             }
 
@@ -250,12 +248,11 @@ class CertificatesController extends Controller
             $document->setValue('date1', $date1);
             $document->setValue('date2', $date2);
 
-
             if ($studentinfo->acadprogid == 6) {
                 $records = collect(\App\Models\College\TOR::getrecords($request->get('studid'), DB::table('sy')->select('sy.*', 'id as syid')->where('id', $request->get('syid'))->get()))->where('semid', $request->get('semid'));
                 $subjects = collect($records)->count() == 0 ? array() : collect($records)->first()->subjdata;
 
-                
+
                 if (count($subjects) > 0) {
                     foreach ($subjects as $subject) {
                         $subject->subjectcode = $subject->subjcode;
@@ -288,7 +285,7 @@ class CertificatesController extends Controller
                 $quarter = $request->get('quarter');
                 $grade = collect($studgrades)->where('subjid', $request->get('subjid'))->values();
 
-                if(count($grade) > 0){ 
+                if (count($grade) > 0) {
                     if ($quarter == 1) {
                         $document->setValue($quarter, '1st Quarter');
                         $document->setValue($grade, $grade[0]->q1);
@@ -310,20 +307,13 @@ class CertificatesController extends Controller
 
             $document->saveAs($file_url);
 
-            if ($request->get('typefile') == "docs") {
-                header('Content-Type: application/octet-stream');
-                header("Content-Transfer-Encoding: utf-8");
-                header("Content-disposition: attachment; filename=" . $file_url);
-                readfile($file_url);
-                unlink($file_url);
+            header('Content-Type: application/octet-stream');
+            header("Content-Transfer-Encoding: utf-8");
+            header("Content-disposition: attachment; filename=" . $file_url);
+            readfile($file_url);
+            unlink($file_url);
 
-                exit();
-            } else {
-               
-                $pdf = PDF::loadview('registrar\otherprintables\certifications\pdf\coepdf',compact('subjects','studentinfo','schoolyear','semester','registrar','schoolinfo'));
-                return $pdf->stream('COE - '.date('Y').'.pdf');
-            }
-            
+            exit();
         } elseif ($request->get('action') == 'upload') {
             $syid = $request->get('syid');
             $semid = $request->get('semid');

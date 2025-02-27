@@ -98,6 +98,7 @@
             ->where('gradelevel.deleted','0')
             ->where('academicprogram.id','!=','2')
             ->where('academicprogram.id','!=','6')
+            ->where('academicprogram.id','!=','8')
             ->distinct()
             ->orderBy('academicprogram.id')
             ->get();

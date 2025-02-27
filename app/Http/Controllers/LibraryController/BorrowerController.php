@@ -4,9 +4,44 @@ namespace App\Http\Controllers\LibraryController;
 
 use Illuminate\Http\Request;
 use DB;
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Writer\PngWriter;
+use Endroid\QrCode\Encoding\Encoding;
+use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelHigh;
+use Endroid\QrCode\Label\Alignment\LabelAlignmentCenter;
+use Endroid\QrCode\RoundBlockSizeMode\RoundBlockSizeModeMargin;
+use Endroid\QrCode\Label\Font\NotoSans;
 
 class BorrowerController extends \App\Http\Controllers\Controller
 {
+
+    public function homeborrower()
+    {
+        return view('library.pages.homeborrower', ['dataUri' => $this->generate()]);
+    }
+
+    public function generate()
+    {
+        $result = Builder::create()
+            ->writer(new PngWriter())
+            ->writerOptions([])
+            ->data(auth()->user()->email)
+            ->encoding(new Encoding('UTF-8'))
+            ->errorCorrectionLevel(new ErrorCorrectionLevelHigh())
+            ->size(300)
+            ->margin(10)
+            ->roundBlockSizeMode(new RoundBlockSizeModeMargin())
+            ->labelText('Scan the code')
+            ->labelFont(new NotoSans(20))
+            ->labelAlignment(new LabelAlignmentCenter())
+            ->build();
+
+        $dataUri = $result->getDataUri();
+
+        return $dataUri;
+
+        // return view('qrcode', ['dataUri' => $dataUri]);
+    }
 
     public function index()
     {

@@ -775,74 +775,36 @@ class ClgCollegeAttendanceController extends Controller
 
         $months = collect($months)->toArray();
 
-        $collegeschedgroup = DB::table('college_schedgroup_detail')
-            ->where('college_schedgroup_detail.id', $sectionid)
-            ->join('college_schedgroup', function ($join) {
-                $join->on('college_schedgroup_detail.groupid', 'college_schedgroup.id')
-                ->where('college_schedgroup.deleted', 0);
-            })->get();
+      
 
-        $sec = DB::table('college_classsched')
-            ->join('college_schedgroup_detail', function ($join) use($sectionid){
-                $join->on('college_classsched.id', 'college_schedgroup_detail.schedid')
-                ->where('college_schedgroup_detail.id', $sectionid)
-                ->where('college_schedgroup_detail.deleted', 0);
-            })
-            ->select('college_classsched.sectionID')
-            ->where('college_classsched.deleted', 0)
-            ->first();
+        $enrollstudents = DB::table('college_enrolledstud')
+        ->join('studinfo', function ($join) {
+            $join->on('college_enrolledstud.studid', 'studinfo.id')
+            ->where('studinfo.deleted', 0);
+        })
+        ->select(
+            'college_enrolledstud.studid',
+            'studinfo.sid',
+            'studinfo.gender',
+            'studinfo.lastname',
+            'studinfo.firstname',
+            'studinfo.middlename',
+            'studinfo.gender',
+            DB::raw("CONCAT(lastname,' ',firstname,' ', COALESCE(`middlename`,'')) as studentname")
+        )
+        ->where('college_enrolledstud.syid', $syid)
+        ->where('college_enrolledstud.sectionID', $sectionid)
+        ->where('college_enrolledstud.deleted', 0)
+        // ->whereIn('college_enrolledstud.studstatus', [1,2,4])
+        ->orderBy('lastname', 'asc')
+        ->get();
 
-        $enrollstudents = DB::table('college_studsched')
-            ->join('college_enrolledstud', function ($join) use($syid, $semid, $collegeschedgroup) {
-                $join->on('college_studsched.studid', 'college_enrolledstud.studid')
-                ->where('college_enrolledstud.syid', $syid)
-                ->where('college_enrolledstud.semid', $semid)
-                ->where('college_studsched.deleted', 0)
-                ->whereIn('college_enrolledstud.courseid', collect($collegeschedgroup)->pluck('courseid'))
-                ->whereIn('college_enrolledstud.studstatus', [1,2,4]);
-            })
-            ->join('studinfo', function ($join) {
-                $join->on('college_enrolledstud.studid', 'studinfo.id')
-                ->where('studinfo.deleted', 0);
-            })
-            ->select(
-                'college_enrolledstud.studid',
-                'studinfo.gender',
-                'studinfo.lastname',
-                'studinfo.firstname',
-                'studinfo.middlename',
-                'studinfo.gender',
-                DB::raw("CONCAT(lastname,' ',firstname,' ', COALESCE(`middlename`,'')) as studentname")
-            )
-            ->whereIn('college_studsched.schedid', collect($collegeschedgroup)->pluck('schedid'))
-            ->where('college_studsched.schedstatus', '!=', 'DROPPED')
-            ->orderBy('studinfo.lastname', 'asc')
-            ->get();
-
-        // $enrollstudents = DB::table('college_enrolledstud')
-        //     ->join('studinfo', function ($join) {
-        //         $join->on('college_enrolledstud.studid', 'studinfo.id')
-        //         ->where('studinfo.deleted', 0);
-        //     })
-        //     ->select(
-        //         'college_enrolledstud.studid',
-        //         'studinfo.gender',
-        //         'studinfo.lastname',
-        //         'studinfo.firstname',
-        //         'studinfo.middlename',
-        //         'studinfo.gender',
-        //         DB::raw("CONCAT(lastname,' ',firstname,' ', COALESCE(`middlename`,'')) as studentname")
-        //     )
-        //     ->where('college_enrolledstud.syid', $syid)
-        //     ->where('college_enrolledstud.sectionID', $sections->sectionID)
-        //     ->whereIn('college_enrolledstud.studstatus', [1,2,4])
-        //     ->orderBy('studinfo.lastname', 'asc')
-        //     ->get();
+       
 
 
         $attendance = DB::table('college_attendance')
             ->join('studinfo', function ($join) {
-                $join->on('college_attendance.studid', 'studinfo.id')
+                $join->on('college_attendance.studid', 'studinfo.sid')
                 ->where('studinfo.deleted', 0);
             })
             ->select(
@@ -857,26 +819,32 @@ class ClgCollegeAttendanceController extends Controller
             ->where('college_attendance.syid',$syid)
             ->where('college_attendance.semid',$semid)
             ->where('college_attendance.subjectid',$subjectid)
-            ->where('college_attendance.sectionid',$sec->sectionID)
+            ->where('college_attendance.sectionid',$sectionid)
+            // ->where('college_attendance.sectionid',$sec->sectionID)
             // ->where('college_attendance.monthid', 1)
             // ->where('college_attendance.yearid',$yearid)
             ->where('college_attendance.deleted', 0)
             ->orderBy('studinfo.lastname', 'asc')
             ->get();
 
+        // return $attendance;
+        // dd($attendance);
+
         $schoolyear = DB::table('sy')
             ->where('id', $syid)
             ->first();
 
         $sections = DB::table('college_sections')
-            ->where('id', $sec->sectionID)
+            // ->where('id', $sec->sectionID)
+            ->where('id', $sectionid)
             ->where('deleted', 0)
             ->select('sectionDesc')
             ->first();
             
 			
         $gradelvlid = DB::table('college_sections')
-            ->where('id', $sec->sectionID)
+            // ->where('id', $sec->sectionID)
+            ->where('id', $sectionid)
             ->where('deleted', 0)
             ->select(
                 'yearID'
@@ -899,6 +867,177 @@ class ClgCollegeAttendanceController extends Controller
 
         return $pdf->stream();
     }
+
+    // public function clgattndcGeneratePDF($syid, $subjectid, $sectionid ,$semid, $arraymonth){
+        
+    //     $months = json_decode($arraymonth);
+
+    //     $months = collect($months)->toArray();
+
+    //     // $collegeschedgroup = DB::table('college_schedgroup_detail')
+    //     //     ->where('college_schedgroup_detail.id', $sectionid)
+    //     //     ->join('college_schedgroup', function ($join) {
+    //     //         $join->on('college_schedgroup_detail.groupid', 'college_schedgroup.id')
+    //     //         ->where('college_schedgroup.deleted', 0);
+    //     //     })->get();
+
+    //     // $sec = DB::table('college_classsched')
+    //     //     ->join('college_schedgroup_detail', function ($join) use($sectionid){
+    //     //         $join->on('college_classsched.id', 'college_schedgroup_detail.schedid')
+    //     //         ->where('college_schedgroup_detail.id', $sectionid)
+    //     //         ->where('college_schedgroup_detail.deleted', 0);
+    //     //     })
+    //     //     ->select('college_classsched.sectionID')
+    //     //     ->where('college_classsched.deleted', 0)
+    //     //     ->first();
+
+            
+
+    //     // $enrollstudents = DB::table('college_studsched')
+    //     //     ->join('college_enrolledstud', function ($join) use($syid, $semid, $collegeschedgroup) {
+    //     //         $join->on('college_studsched.studid', 'college_enrolledstud.studid')
+    //     //         ->where('college_enrolledstud.syid', $syid)
+    //     //         ->where('college_enrolledstud.semid', $semid)
+    //     //         ->where('college_studsched.deleted', 0)
+    //     //         ->whereIn('college_enrolledstud.courseid', collect($collegeschedgroup)->pluck('courseid'))
+    //     //         ->whereIn('college_enrolledstud.studstatus', [1,2,4]);
+    //     //     })
+
+    //     $enrollstudents = DB::table('college_enrolledstud')
+    //     ->join('studinfo', function ($join) {
+    //         $join->on('college_enrolledstud.studid', 'studinfo.id')
+    //         ->where('studinfo.deleted', 0);
+    //     })
+    //     ->select(
+    //         'college_enrolledstud.studid',
+    //         'studinfo.gender',
+    //         'studinfo.lastname',
+    //         'studinfo.firstname',
+    //         'studinfo.middlename',
+    //         'studinfo.gender',
+    //         DB::raw("CONCAT(lastname,' ',firstname,' ', COALESCE(`middlename`,'')) as studentname")
+    //     )
+    //     ->where('college_enrolledstud.syid', $syid)
+    //     ->where('college_enrolledstud.sectionID', $sectionid)
+    //     ->whereIn('college_enrolledstud.studstatus', [1,2,4])
+    //     ->orderBy('lastname', 'asc')
+    //     ->get();
+
+    //     //previous api
+    //     // $enrollstudents = DB::table('college_loadsubject')
+    //     // // ->join('college_enrolledstud', function ($join) use($syid, $semid, $collegeschedgroup) {
+    //     //     ->join('college_enrolledstud', function ($join) use($syid, $semid) {
+    //     //     $join->on('college_loadsubject.studid', 'college_enrolledstud.studid')
+    //     //     ->where('college_enrolledstud.syid', $syid)
+    //     //     ->where('college_enrolledstud.semid', $semid)
+    //     //     ->where('college_loadsubject.deleted', 0)
+    //     //     // ->whereIn('college_enrolledstud.courseid', collect($collegeschedgroup)->pluck('courseid'))
+    //     //     ->whereIn('college_enrolledstud.studstatus', [1,2,4]);
+    //     // })
+    //     //     ->join('studinfo', function ($join) {
+    //     //         $join->on('college_enrolledstud.studid', 'studinfo.id')
+    //     //         ->where('studinfo.deleted', 0);
+    //     //     })
+    //     //     ->select(
+    //     //         'college_enrolledstud.studid',
+    //     //         'studinfo.gender',
+    //     //         'studinfo.lastname',
+    //     //         'studinfo.firstname',
+    //     //         'studinfo.middlename',
+    //     //         'studinfo.gender',
+    //     //         DB::raw("CONCAT(lastname,' ',firstname,' ', COALESCE(`middlename`,'')) as studentname")
+    //     //     )
+    //     //     // ->whereIn('college_loadsubject.schedid', collect($collegeschedgroup)->pluck('schedid'))
+    //     //     // ->where('college_studsched.schedstatus', '!=', 'DROPPED')
+    //     //     ->orderBy('studinfo.lastname', 'asc')
+    //     //     ->get();
+
+    //     // $enrollstudents = DB::table('college_enrolledstud')
+    //     //     ->join('studinfo', function ($join) {
+    //     //         $join->on('college_enrolledstud.studid', 'studinfo.id')
+    //     //         ->where('studinfo.deleted', 0);
+    //     //     })
+    //     //     ->select(
+    //     //         'college_enrolledstud.studid',
+    //     //         'studinfo.gender',
+    //     //         'studinfo.lastname',
+    //     //         'studinfo.firstname',
+    //     //         'studinfo.middlename',
+    //     //         'studinfo.gender',
+    //     //         DB::raw("CONCAT(lastname,' ',firstname,' ', COALESCE(`middlename`,'')) as studentname")
+    //     //     )
+    //     //     ->where('college_enrolledstud.syid', $syid)
+    //     //     ->where('college_enrolledstud.sectionID', $sections->sectionID)
+    //     //     ->whereIn('college_enrolledstud.studstatus', [1,2,4])
+    //     //     ->orderBy('studinfo.lastname', 'asc')
+    //     //     ->get();
+
+
+    //     $attendance = DB::table('college_attendance')
+    //         ->join('studinfo', function ($join) {
+    //             $join->on('college_attendance.studid', 'studinfo.sid')
+    //             ->where('studinfo.deleted', 0);
+    //         })
+    //         ->select(
+    //             'college_attendance.*',
+    //             'studinfo.gender',
+    //             'studinfo.lastname',
+    //             'studinfo.firstname',
+    //             'studinfo.middlename',
+    //             'studinfo.gender',
+    //             DB::raw("CONCAT(lastname,' ',firstname,' ', COALESCE(`middlename`,'')) as studentname")
+    //         )
+    //         ->where('college_attendance.syid',$syid)
+    //         ->where('college_attendance.semid',$semid)
+    //         ->where('college_attendance.subjectid',$subjectid)
+    //         ->where('college_attendance.sectionid',$sectionid)
+    //         // ->where('college_attendance.sectionid',$sec->sectionID)
+    //         // ->where('college_attendance.monthid', 1)
+    //         // ->where('college_attendance.yearid',$yearid)
+    //         ->where('college_attendance.deleted', 0)
+    //         ->orderBy('studinfo.lastname', 'asc')
+    //         ->get();
+
+    //     // return $attendance;
+    //     // dd($attendance);
+
+    //     $schoolyear = DB::table('sy')
+    //         ->where('id', $syid)
+    //         ->first();
+
+    //     $sections = DB::table('college_sections')
+    //         // ->where('id', $sec->sectionID)
+    //         ->where('id', $sectionid)
+    //         ->where('deleted', 0)
+    //         ->select('sectionDesc')
+    //         ->first();
+            
+			
+    //     $gradelvlid = DB::table('college_sections')
+    //         // ->where('id', $sec->sectionID)
+    //         ->where('id', $sectionid)
+    //         ->where('deleted', 0)
+    //         ->select(
+    //             'yearID'
+    //         )
+    //         ->first();
+
+    //     $gradelvl = DB::table('gradelevel')
+    //         ->where('id', $gradelvlid->yearID)
+    //         ->where('deleted', 0)
+    //         ->select('levelname', 'acadprogid')
+    //         ->first();
+
+
+    //     $schoolinfo = DB::table('schoolinfo')
+    //         ->first();
+
+    //     $pdf = PDF::loadView('superadmin.pages.printable.collegeattendance-pdf', compact('enrollstudents', 'attendance', 'sections', 'schoolinfo', 'gradelvl', 'semid', 'schoolyear', 'months'))->setPaper('legal', 'landscape');
+        
+    //     $pdf->getDomPDF()->set_option("enable_php", true)->set_option("DOMPDF_ENABLE_CSS_FLOAT", true);
+
+    //     return $pdf->stream();
+    // }
 
     public function clgattndcGenerateExcel($syid, $subjectid, $sectionid ,$semid, $arraymonth){
 
@@ -924,7 +1063,7 @@ class ClgCollegeAttendanceController extends Controller
             )
             ->where('college_enrolledstud.syid', $syid)
             ->where('college_enrolledstud.sectionID', $sectionid)
-            ->whereIn('college_enrolledstud.studstatus', [1,2,4])
+            // ->whereIn('college_enrolledstud.studstatus', [1,2,4])
             ->orderBy('lastname', 'asc')
             ->get();
 
@@ -1370,4 +1509,147 @@ class ClgCollegeAttendanceController extends Controller
         }
 
     }
+
+
+    public function collegeattendancestore(Request $request)
+    {
+        $data = $request->input('data');
+        
+        foreach ($data as $entry) {
+            $studentId = $entry['studentId'];
+            $attendance = $entry['attendance'];
+
+            $monthId = $entry['monthid'];
+            $yearId = $entry['yearid'];
+
+            DB::table('college_attendance')->updateOrInsert(
+                [
+                    'studid' => $studentId, 
+                    'syid' => $request->input('syid'), 
+                    'semid' => $request->input('semid'),
+                    'subjectid' => $request->input('subjectid'),
+                    'sectionid' => $request->input('sectionid'),
+                    'monthid' => $monthId,
+                    'yearid' => $yearId
+                ],
+                $attendance
+            );
+        }
+
+        return response()->json(['success' => true, 'message' => 'Attendance data stored successfully']);
+    }
+
+
+    public function collegeattendancefetch(Request $request)
+    {
+        // Retrieve request data
+        $syid = $request->input('syid');
+        $semid = $request->input('semid');
+        $subjectid = $request->input('subjectid');
+        $sectionid = $request->input('sectionid');
+        $monthid = $request->input('monthid');
+        $yearid = $request->input('yearid');
+
+        // Fetch attendance data from the database and group by student ID to prevent duplicates
+        $attendanceRecords = DB::table('college_attendance')
+            ->where('syid', $syid)
+            ->where('semid', $semid)
+            ->where('subjectid', $subjectid)
+            ->where('sectionid', $sectionid)
+            ->where('monthid', $monthid)
+            ->where('yearid', $yearid)
+            ->groupBy('studid') // Group by student ID
+            ->get();
+
+        // Process attendance data to include state and color
+        $attendanceData = $attendanceRecords->map(function ($record) {
+            $data = (array) $record; // Convert object to array
+
+            // Add color mappings based on the state
+            foreach (range(1, 31) as $day) {
+                $dayKey = 'day' . $day;
+                $state = $data[$dayKey] ?? null;
+
+                if ($state === 1) {
+                    $data[$dayKey . '_color'] = 'bg-success'; // Green
+                    $data[$dayKey . '_text'] = 'Present';
+                } elseif ($state === 0) {
+                    $data[$dayKey . '_color'] = 'bg-danger'; // Red
+                    $data[$dayKey . '_text'] = 'Absent';
+                } elseif ($state === 2) {
+                    $data[$dayKey . '_color'] = 'bg-warning'; // Yellow
+                    $data[$dayKey . '_text'] = 'Late';
+                } else {
+                    $data[$dayKey . '_color'] = ''; // Default color
+                    $data[$dayKey . '_text'] = ''; // Default text
+                }
+            }
+
+            return $data;
+        });
+
+        return response()->json($attendanceData);
+    }
+
+
+    public function absentremarkstore(Request $request)
+    {
+
+        $absent_remarks = Db::table('college_absent_remarks')
+        ->insert([
+            'studid' => $request->get('studid'),
+            'syid' => $request->get('syid'),
+            'semid' => $request->get('semid'),
+            'subjectid' => $request->get('subjectid'),
+            'sectionid' => $request->get('sectionid'),
+            'day' => $request->get('day'),
+            'monthid' => $request->get('monthid'),
+            'yearid' => $request->get('yearid'),
+            'remarks' => $request->get('remarks'),
+            'createdby' => auth()->user()->id,
+            'createddatetime' => now()
+        ]);
+
+        return response()->json([
+            'status' => 1,
+            'message' => 'Attendance Remarks Created Successfully'
+        ]);
+
+    }
+
+    public function absentremarkfetch(Request $request)
+    {
+
+
+        $absent_remarks = DB::table('college_absent_remarks')
+
+                    ->join('studinfo', 'college_absent_remarks.studid', '=', 'studinfo.sid')
+                    ->where('college_absent_remarks.studid',$request->get('studid'))
+                    ->where('college_absent_remarks.syid',$request->get('syid'))
+                    ->where('college_absent_remarks.semid',$request->get('semid'))
+                    ->where('college_absent_remarks.subjectid',$request->get('subjectid'))
+                    ->where('college_absent_remarks.sectionid',$request->get('sectionid'))
+                    ->select(
+                          'college_absent_remarks.id',
+                          'college_absent_remarks.monthid',
+                          'college_absent_remarks.day',
+                          'college_absent_remarks.yearid',
+                          'college_absent_remarks.remarks'
+                    )
+                    ->get();
+
+        return response()->json([
+            'absent_remarks' => $absent_remarks
+        ]);
+
+    }
+
+
+
+   
+
+
+
+ 
+
 }

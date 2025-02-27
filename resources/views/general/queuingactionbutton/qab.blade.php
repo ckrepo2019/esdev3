@@ -534,17 +534,18 @@
                         type:'GET',
                         url: '{{ route("on.load") }}',
                         success:function(data) {
-
+                            console.log(data);
+                            
                             if(data[0].status == 401){
 
-                                Swal.fire({
-                                    type: data[0].code,
-                                    title:  data[0].message,
-                                    toast: true,
-                                    position: 'top-end',
-                                    showConfirmButton: false,
-                                    timer: 3000,
-                                });
+                                // Swal.fire({
+                                //     type: data[0].code,
+                                //     title:  data[0].message,
+                                //     toast: true,
+                                //     position: 'top-end',
+                                //     showConfirmButton: false,
+                                //     timer: 3000,
+                                // });
 
                                 isSetupEmpty = true;
 

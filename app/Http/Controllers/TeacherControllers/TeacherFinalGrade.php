@@ -407,6 +407,12 @@ class TeacherFinalGrade extends \App\Http\Controllers\Controller
         $quarter = $request->get('quarter');
         $subjid = $request->get('subjid');
 
+        if(isset($request->activesem)){
+            $semid = DB::table('semester')->where('isactive',1)->first()->id;
+        }
+
+        // return $request->all();
+
         if($levelid == 14 || $levelid == 15){
 
             $strand = array();

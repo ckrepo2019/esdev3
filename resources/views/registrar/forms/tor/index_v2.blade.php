@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="{{ asset('plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}">
 @endsection
+
 @section('content')
     <style>
         .select2-container .select2-selection--single {
@@ -33,6 +34,10 @@
     <!-- DataTables -->
 
     <section class="content-header">
+        @php
+              $sy = DB::table('sy')->orderBy('sydesc', 'desc')->get();
+              $semester = DB::table('semester')->orderBy('id', 'asc')->get();
+        @endphp
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
@@ -93,25 +98,56 @@
             </table>
         </div>
     </div>
-    <div class="card shadow" style="border: none !important; box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;"
-        id="card-record-result">
-        <div class="card-header">
-            <div class="row">
-                <div class="col-md-4">
-                    <button class="btn btn-default" id="btn-back"><i class="fa fa-arrow-left"></i> Back</button>
-                    <button class="btn btn-default" id="btn-reload"><i class="fa fa-sync"></i> Reload Results</button>
-                </div>
-                <div class="col-md-8 text-right">
-                    <h3 id="h3-studentname" class="text-right text-bold"></h3>
+    <div class="row"  id="card-record-result">
+        <div class="card shadow col-md-3 mr-4" style="max-height: 500px">
+            <div class="card-header" id="picture_append">
+                <img id="studentPhoto" src="{{ asset('avatar/S(F) 1.png') }}" alt="Student Photo"
+                                class="card-img-top"
+                                style="height: 240px; object-fit: cover; object-position: center; border-radius: 10%; padding:10px">
+            </div>
+            <div class="card-body">
+                <table class="table table-sm" style="font-size:12px">
+                    <tr>
+                        <th>ID Number</th>
+                        <td id="studentIdNumber"></td>
+                    </tr>
+                    <tr>
+                        <th>Level</th>
+                        <td id="studentLevel"></td>
+                    </tr>
+                    <tr>
+                        <th>Course</th>
+                        <td id="studentCourse"></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="card-footer">
+                <div class="text-center">
+                    <button id="updateCourse" class="btn btn-primary btn-sm">Update Profile Picture</button>
                 </div>
             </div>
         </div>
-        <div class="card-body">
-            <div id="div-result">
+        <div class="card shadow col-md-8" style="border: none !important; box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-md-4">
+                        <button class="btn btn-default" id="btn-back"><i class="fa fa-arrow-left"></i> Back</button>
+                        <button class="btn btn-default" id="btn-reload"><i class="fa fa-sync"></i> Reload Results</button>
+                    </div>
+                    <div class="col-md-8 text-right">
+                        <button type="button" class="btn btn-success btn-sm ml-1" id="credSubjects"><i class="fa fa-file-pdf"></i> View Credited Subject</button>
+                        <button type="button" class="btn btn-primary btn-sm ml-1" id="btn-exporttopdf">Print</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="div-result">
 
+                </div>
             </div>
         </div>
     </div>
+    
 
     <div class="modal fade" id="modal-adddata" aria-hidden="true" style="display: none;">
         <div class="modal-dialog">
@@ -196,6 +232,28 @@
         </div>
         <!-- /.modal-dialog -->
     </div>
+    <div class="modal fade" id="creditedSubjects" aria-labelledby="creditedSubjects" aria-hidden="true"
+    data-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content" style="height: 680px!important;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="">Credited Subjects</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span></button>
+            </div>
+            <div class="modal-body" style="overflow-y: scroll">
+                <hr>
+                <div id="credited_table">
+                    <div class="no_credit text-center">
+
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 @section('footerjavascript')
     <script src="{{ asset('plugins/datatables/jquery.dataTables.min.js') }}"></script>
@@ -228,6 +286,8 @@
             var studid;
             var studname;
             $('#card-record-result').hide()
+
+           
 
 
             var onerror_url = @json(asset('dist/img/download.png'));
@@ -297,7 +357,12 @@
                             'targets': 2,
                             'orderable': false,
                             'createdCell': function(td, cellData, rowData, row, col) {
-                                $(td)[0].innerHTML = rowData.levelname
+                                if (rowData.levelid >= 22) {
+                                    $(td)[0].innerHTML = rowData.courseabrv + ' - ' + rowData
+                                        .levelname
+                                } else {
+                                    $(td)[0].innerHTML = rowData.levelname
+                                }
                                 $(td).addClass('align-middle')
                             }
                         },
@@ -337,6 +402,8 @@
                         studid: $(this).attr('data-id')
                     },
                     success: function(data) {
+                        // console.log(data);
+
                         $('#div-result').empty()
                         $('#h3-studentname').text(studname)
                         $('#div-result').append(data)
@@ -440,7 +507,14 @@
                                 toastr.success('Updated successfully!', 'Update record')
                                 $('#btn-close-updaterecord').click();
                                 $('#modal-updaterecord').find('input,select').val('')
-                                $('#btn-generate').click()
+                                console.log('UPDATING...');
+                                $('#btn-generate').trigger('click')
+                                $('#btn-reload').click()
+
+                                $('body').removeClass('modal-open');
+
+                                $('.modal-backdrop').removeClass('show')
+                                $('.modal-backdrop').remove()
                             } else {
                                 toastr.warning('The same form already exists!',
                                     'Add new record')
@@ -726,6 +800,7 @@
 
             function getsubjects(torid, semid, sydesc, courseid, studentid) {
 
+
                 $.ajax({
                     url: '{{ route('torgetsubjects') }}',
                     type: 'GET',
@@ -866,11 +941,16 @@
                 $(this).closest('tr').remove()
             })
             $(document).on('click', '.btn-adddata-save', function() {
+                console.log('ADDIING DATA');
                 var thisrow = $(this).closest('tr');
-                if (thisrow.find('select-subjdesc').length == 0) {
-                    if ($(this).closest('tr').find('.input-subjdesc').val().replace(/^\s+|\s+$/g, "")
-                        .length > 0 && $(this).closest('tr').find('.input-subjgrade').val().replace(
-                            /^\s+|\s+$/g, "").length > 0) {
+                if (thisrow.find('.select-subjdesc').length == 0) {
+                    var subjDescVal = thisrow.find('.input-subjdesc').val();
+                    var subjGradeVal = thisrow.find('.input-subjgrade').val();
+
+                    if (subjDescVal && subjGradeVal &&
+                        subjDescVal.replace(/^\s+|\s+$/g, "").length > 0 &&
+                        subjGradeVal.replace(/^\s+|\s+$/g, "").length > 0) {
+
                         var thisbutton = $(this);
                         var subjcode = $(this).closest('tr').find('.input-subjcode').val();
                         var subjunit = $(this).closest('tr').find('.input-subjunit').val();
@@ -893,8 +973,6 @@
                                 subjcredit: subjcredit
                             },
                             success: function(data) {
-                                console.log('DATAS...', data);
-
                                 if (data == 0) {
                                     toastr.warning('The same form already exists!',
                                         'Add new data')
@@ -910,29 +988,6 @@
                                         '"><i class="fa fa-trash text-danger"></i></button>'
                                     )
                                     thisbutton.remove()
-                                    // $('#btn-reload').click()
-                                    $('#tbody-subj').append(
-                                        `<tr>
-                                            <td class="p-0"><input type="text" class="form-control input-subjcode" placeholder="Code" value="${data.subjcode}" disabled/></td>
-                                            <td class="p-0"><input type="number" class="form-control input-subjunit" placeholder="Units" value="${data.subjunit}" disabled/></td>
-                                            <td class="p-0"><input type="text" class="form-control input-subjdesc" placeholder="Description" value="${data.subjdesc}" disabled/></td>
-                                            <td class="p-0"><input type="number" class="form-control input-subjgrade" placeholder="Grade" value="${data.subjgrade}" disabled/></td>
-                                            <td class="p-0"><input type="number" class="form-control input-subjcredit" placeholder="Credit" value="${data.subjcredit}" disabled/></td>
-                                            <td class="p-0 text-right">
-                                                <button type="button" class="btn btn-default btn-sm btn-editdata" data-subjgradeid="${data.id}">
-                                                    <i class="fa fa-edit text-warning"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-default btn-sm btn-editdata-save" data-subjgradeid="${data.id}" disabled>
-                                                    <i class="fa fa-share text-success"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-default btn-sm btn-delete-subjdata" data-subjgradeid="${data.id}" disabled>
-                                                    <i class="fa fa-trash text-danger"></i>
-                                                </button>
-                                            </td>
-                                        </tr>`
-                                    );
-
-
                                 }
                             }
                         })
@@ -942,8 +997,8 @@
                         toastr.warning('Please fill in required fields!', 'Add new data')
                     }
                 } else {
-                    if (thisrow.closest('tr').find('.input-subjgrade').val().replace(/^\s+|\s+$/g, "")
-                        .length > 0) {
+                    if (thisrow.closest('tr').find('.input-subjgrade').val() && thisrow.closest('tr').find(
+                            '.input-subjgrade').val().replace(/^\s+|\s+$/g, "").length > 0) {
                         var thisbutton = $(this);
                         var subjcode = $(this).closest('tr').find('.input-subjcode').val();
                         var subjunit = $(this).closest('tr').find('.input-subjunit').val();

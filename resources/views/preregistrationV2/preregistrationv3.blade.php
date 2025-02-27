@@ -69,8 +69,8 @@
         }
 
         /* #prevBtn {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        background-color: #bbbbbb;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      } */
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            background-color: #bbbbbb;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          } */
 
         /* Make circles that indicate the steps of the form: */
         .step {
@@ -113,13 +113,33 @@
 
 
         /* input[required]:not(:valid),
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      select[required]:not(:valid) {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            border: 2px solid red;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      } */
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          select[required]:not(:valid) {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                border: 2px solid red;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          } */
     </style>
 @endsection
 
 @section('content')
+    @php
+        $courses1 = DB::table('college_courses')
+            ->join('college_colleges', function ($join) {
+                $join->on('college_courses.collegeid', '=', 'college_colleges.id');
+                $join->where('college_colleges.acadprogid', 6);
+                $join->where('college_colleges.deleted', 0);
+            })
+            ->where('college_courses.deleted', 0)
+            ->select('college_courses.*')
+            ->get();
+        $courses2 = DB::table('college_courses')
+            ->join('college_colleges', function ($join) {
+                $join->on('college_courses.collegeid', '=', 'college_colleges.id');
+                $join->where('college_colleges.acadprogid', 8);
+                $join->where('college_colleges.deleted', 0);
+            })
+            ->where('college_courses.deleted', 0)
+            ->select('college_courses.*')
+            ->get();
+    @endphp
 
     <div class="modal fade overlay w-100" id="modalAlert" style="display: none;" aria-hidden="true" data-backdrop="static"
         data-keyboard="false">
@@ -244,11 +264,11 @@
         @csrf
         <div class="card">
             <div class="card-header" style="font-size: 17px; color: #000000">
-                STUDENT APPLICATION FORM 
+                STUDENT APPLICATION FORM
                 @if (DB::table('schoolinfo')->first()->admission == 1)
-                <a class="btn btn-primary shadow btn-sm ml-auto" href="/admission/prereg"
-                    target="_blank">Admission Prereg <i class="fa fa-arrow-right" aria-hidden="true"></i> 
-                </a>
+                    <a class="btn btn-primary shadow btn-sm ml-auto" href="/admission/prereg" target="_blank">Admission
+                        Prereg <i class="fa fa-arrow-right" aria-hidden="true"></i>
+                    </a>
                 @endif
             </div>
             <div class="card-body p-0" style="min-height: 400px">
@@ -260,17 +280,17 @@
                         <br>
                         <div class="row">
                             @if (DB::table('schoolinfo')->first()->admission == 1)
-                            <div class="col-md-12">
-                                <div class="form-group">
-                                    <label for=""> <strong>Pooling Code</strong></label> <span
-                                        class="text-danger mr-1"> <em>
-                                            (This
-                                            is only
-                                            Applicable
-                                            for Exam Passer with Pooling Number.)</em></span>
-                                    <input class="form-control" id="input_poolingnumber" placeholder=" Enter Code">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for=""> <strong>Pooling Code</strong></label> <span
+                                            class="text-danger mr-1"> <em>
+                                                (This
+                                                is only
+                                                Applicable
+                                                for Exam Passer with Pooling Number.)</em></span>
+                                        <input class="form-control" id="input_poolingnumber" placeholder=" Enter Code">
+                                    </div>
                                 </div>
-                            </div>
                             @endif
                             <div class="col-md-12">
                                 @php
@@ -392,10 +412,6 @@
                                     <div class="form-group course-formgroup" id="course-formgroup" hidden>
                                         <label><b>Course</b></label>
                                         <select name="courseid" id="courseid" class="form-control select2">
-                                            <option value="">SELECT COURSE</option>
-                                            @foreach (DB::table('college_courses')->where('deleted', '0')->get() as $item)
-                                                <option value="{{ $item->id }}">{{ $item->courseDesc }}</option>
-                                            @endforeach
                                         </select>
                                         <span class="invalid-feedback" role="alert">
                                             <strong id="gradeLevelError">Course is required.</strong>
@@ -460,11 +476,18 @@
                                     <label><b>Middle Name <span class="text-danger"><span></b></label>
                                     <input onkeyup="this.value = this.value.toUpperCase();" class="form-control namef"
                                         placeholder="Middle name" id="middle-name" data-name="Middle Name"
-                                        name="middle_name">
-                                    <span class="invalid-feedback" role="alert">
+                                        name="middle_name" style="margin-bottom: 5px;">
+                                    {{-- <span class="invalid-feedback" role="alert">
                                         <strong>Middle Name is required</strong>
-                                    </span>
+                                    </span> --}}
+                                    <div class="icheck-primary d-inline">
+                                        <input class="form-control" type="checkbox" id="nomiddlename"
+                                            name="nomiddlename" value="1" style="transform: scale(0.9);">
+                                        <label for="nomiddlename" style="font-size: 14px;">I don't have a middle
+                                            name</label>
+                                    </div>
                                 </div>
+
                                 <div class="form-group col-md-4">
                                     <label><b>Last Name <span class="text-danger">*<span></b></label>
                                     <input onkeyup="this.value = this.value.toUpperCase();" class="form-control namef"
@@ -657,60 +680,62 @@
                                             <tr>
                                                 <th class="p-1 align-middle pl-1">
                                                     Father <span class="text-danger">*</span></th>
-                                                <td class="p-1"><input class="form-control form-control-sm-form "
-                                                        id="input_father_fname_new" name="ffname" autocomplete="off">
-                                                </td>
-                                                <td class="p-1"><input class="form-control form-control-sm-form "
-                                                        id="input_father_mname_new" name="fmname" autocomplete="off">
-                                                </td>
-                                                <td class="p-1"><input class="form-control form-control-sm-form "
-                                                        id="input_father_lname_new" name="flname" autocomplete="off">
-                                                </td>
-                                                <td class="p-1"><input class="form-control form-control-sm-form "
-                                                        id="input_father_sname_new" name="fsuffix" autocomplete="off">
-                                                </td>
-                                                <td class="p-1"><input class="form-control form-control-sm-form "
+                                                <td class="p-1"><input class="form-control form-control-sm-form"
+                                                        id="input_father_fname_new" name="ffname" autocomplete="off"
+                                                        onkeyup="this.value = this.value.toUpperCase();"></td>
+                                                <td class="p-1"><input class="form-control form-control-sm-form"
+                                                        id="input_father_mname_new" name="fmname" autocomplete="off"
+                                                        onkeyup="this.value = this.value.toUpperCase();"></td>
+                                                <td class="p-1"><input class="form-control form-control-sm-form"
+                                                        id="input_father_lname_new" name="flname" autocomplete="off"
+                                                        onkeyup="this.value = this.value.toUpperCase();"></td>
+                                                <td class="p-1"><input class="form-control form-control-sm-form"
+                                                        id="input_father_sname_new" name="fsuffix" autocomplete="off"
+                                                        onkeyup="this.value = this.value.toUpperCase();"></td>
+                                                <td class="p-1"><input class="form-control form-control-sm-form"
                                                         id="input_father_contact_new" name="fcontactno"
                                                         placeholder="09XX-XXXX-XXXX" autocomplete="off"></td>
                                                 <td class="p-1" hidden></td>
                                                 <td class="p-1" hidden></td>
-                                                <td class="p-1"><input class="form-control form-control-sm-form "
+                                                <td class="p-1"><input class="form-control form-control-sm-form"
                                                         id="fha" name="fha" autocomplete="off"
-                                                        placeholder="Father Home Address"></td>
+                                                        placeholder="Father Home Address"
+                                                        onkeyup="this.value = this.value.toUpperCase();"></td>
                                             </tr>
                                             <tr>
                                                 <th class="p-1 align-middle pl-1">Mother<span class="text-danger">*</span>
                                                 </th>
-                                                <td class="p-1"><input class="form-control form-control-sm-form "
-                                                        id="input_mother_fname_new" name="mfname" autocomplete="off">
-                                                </td>
-                                                <td class="p-1"><input class="form-control form-control-sm-form "
-                                                        id="input_mother_mname_new" name="mmname" autocomplete="off">
-                                                </td>
-                                                <td class="p-1"><input class="form-control form-control-sm-form "
-                                                        id="input_mother_lname_new" name="mlname" autocomplete="off">
-                                                </td>
-                                                <td class="p-1"><input class="form-control form-control-sm-form "
-                                                        id="input_mother_sname_new" name="msuffix" autocomplete="off">
-                                                </td>
-                                                <td class="p-1"><input class="form-control form-control-sm-form "
+                                                <td class="p-1"><input class="form-control form-control-sm-form"
+                                                        id="input_mother_fname_new" name="mfname" autocomplete="off"
+                                                        onkeyup="this.value = this.value.toUpperCase();"></td>
+                                                <td class="p-1"><input class="form-control form-control-sm-form"
+                                                        id="input_mother_mname_new" name="mmname" autocomplete="off"
+                                                        onkeyup="this.value = this.value.toUpperCase();"></td>
+                                                <td class="p-1"><input class="form-control form-control-sm-form"
+                                                        id="input_mother_lname_new" name="mlname" autocomplete="off"
+                                                        onkeyup="this.value = this.value.toUpperCase();"></td>
+                                                <td class="p-1"><input class="form-control form-control-sm-form"
+                                                        id="input_mother_sname_new" name="msuffix" autocomplete="off"
+                                                        onkeyup="this.value = this.value.toUpperCase();"></td>
+                                                <td class="p-1"><input class="form-control form-control-sm-form"
                                                         id="input_mother_contact_new" name="mcontactno"
                                                         placeholder="09XX-XXXX-XXXX" autocomplete="off"></td>
                                                 <td class="p-1" hidden></td>
                                                 <td class="p-1" hidden></td>
-                                                <td class="p-1"><input class="form-control form-control-sm-form "
+                                                <td class="p-1"><input class="form-control form-control-sm-form"
                                                         id="mha" name="mha" autocomplete="off"
-                                                        placeholder="Mother Home Address"></td>
+                                                        placeholder="Mother Home Address"
+                                                        onkeyup="this.value = this.value.toUpperCase();"></td>
                                             </tr>
                                             <tr>
                                                 <th class="p-1 align-middle pl-1" colspan="1"
                                                     style="font-size:7pt !important">Mother Maiden Name <span
                                                         class="text-danger">*</span></th>
                                                 <td class="p-1" colspan="3"><input
-                                                        class="form-control form-control-sm-form "
+                                                        class="form-control form-control-sm-form"
                                                         id="input_mothermaidename_new" name="maidenname"
-                                                        autocomplete="off"></td>
-
+                                                        autocomplete="off"
+                                                        onkeyup="this.value = this.value.toUpperCase();"></td>
                                                 <td class="p-1" colspan="2"></td>
                                                 <td class="p-1" hidden></td>
                                                 <td class="p-1" hidden></td>
@@ -719,29 +744,31 @@
                                             <tr>
                                                 <th class="p-1 align-middle pl-1">Guardian <span
                                                         class="text-danger">*</span></th>
-                                                <td class="p-1"><input class="form-control form-control-sm-form "
-                                                        id="input_guardian_fname_new" name="gfname" autocomplete="off">
-                                                </td>
-                                                <td class="p-1"><input class="form-control form-control-sm-form "
-                                                        id="input_guardian_mname_new" name="gmname" autocomplete="off">
-                                                </td>
-                                                <td class="p-1"><input class="form-control form-control-sm-form "
-                                                        id="input_guardian_lname_new" name="glname" autocomplete="off">
-                                                </td>
-                                                <td class="p-1"><input class="form-control form-control-sm-form "
-                                                        id="input_guardian_sname_new" name="gsuffix" autocomplete="off">
-                                                </td>
-                                                <td class="p-1"><input class="form-control form-control-sm-form "
+                                                <td class="p-1"><input class="form-control form-control-sm-form"
+                                                        id="input_guardian_fname_new" name="gfname" autocomplete="off"
+                                                        onkeyup="this.value = this.value.toUpperCase();"></td>
+                                                <td class="p-1"><input class="form-control form-control-sm-form"
+                                                        id="input_guardian_mname_new" name="gmname" autocomplete="off"
+                                                        onkeyup="this.value = this.value.toUpperCase();"></td>
+                                                <td class="p-1"><input class="form-control form-control-sm-form"
+                                                        id="input_guardian_lname_new" name="glname" autocomplete="off"
+                                                        onkeyup="this.value = this.value.toUpperCase();"></td>
+                                                <td class="p-1"><input class="form-control form-control-sm-form"
+                                                        id="input_guardian_sname_new" name="gsuffix" autocomplete="off"
+                                                        onkeyup="this.value = this.value.toUpperCase();"></td>
+                                                <td class="p-1"><input class="form-control form-control-sm-form"
                                                         id="input_guardian_contact_new" name="gcontactno"
                                                         placeholder="09XX-XXXX-XXXX" autocomplete="off"></td>
                                                 <td class="p-1" hidden></td>
                                                 <td class="p-1" hidden></td>
-                                                <td class="p-1"><input class="form-control form-control-sm-form "
+                                                <td class="p-1"><input class="form-control form-control-sm-form"
                                                         id="gha" name="gha" autocomplete="off"
-                                                        placeholder="Guardian Home Address"></td>
+                                                        placeholder="Guardian Home Address"
+                                                        onkeyup="this.value = this.value.toUpperCase();"></td>
                                             </tr>
                                         </tbody>
                                     </table>
+
                                 </div>
                             </div>
 
@@ -906,7 +933,8 @@
                                 <div class="col-md-12 form-group mb-2">
                                     <label class="mb-1"><b> Name of School Last Attended </b></label>
                                     <input type="text" class="form-control" name="lastschoolatt" id="last_school_att"
-                                        placeholder="Name of School Last Attended">
+                                        placeholder="Name of School Last Attended"
+                                        onkeyup="this.value = this.value.toUpperCase();">
                                 </div>
                             </div>
                             <div class="row">
@@ -937,7 +965,8 @@
                                     </label>
                                     <input type="text" class="form-control form-control-sm-form" name="cmaosla"
                                         id="last_school_add"
-                                        placeholder="Complete Mailing Address of School last Attended">
+                                        placeholder="Complete Mailing Address of School last Attended"
+                                        onkeyup="this.value = this.value.toUpperCase();">
                                 </div>
                             </div>
 
@@ -1102,7 +1131,8 @@
                                 </div>
                                 <div class="col-md-3 form-group">
                                     <label class="mb-1">1st Dose Date <span class="text-danger">*<span></label>
-                                    <input type="date" id="dose_date_1st" name="dose_date_1st" class="form-control">
+                                    <input type="date" id="dose_date_1st" name="dose_date_1st"
+                                        class="form-control">
                                     <span class="invalid-feedback" role="alert">
                                         <strong id="doseDate1stError">1st Dose Date number is required</strong>
                                     </span>
@@ -1115,7 +1145,8 @@
                                 </div>
                                 <div class="col-md-3 form-group">
                                     <label class="mb-1">2nd Dose Date</label>
-                                    <input type="date" id="dose_date_2nd" name="dose_date_2nd" class="form-control">
+                                    <input type="date" id="dose_date_2nd" name="dose_date_2nd"
+                                        class="form-control">
                                 </div>
                             </div>
                             <div class="row vaccineform" hidden>
@@ -1285,9 +1316,62 @@
     <script src="{{ asset('plugins/inputmask/min/jquery.inputmask.bundle.min.js') }}"></script>
     <script src="{{ asset('plugins/select2/js/select2.full.min.js') }}"></script>
 
+    <script>
+        $(document).ready(function() {
+            $("#pssy").inputmask({
+                mask: "9999-9999"
+            });
+            $("#gssy").inputmask({
+                mask: "9999-9999"
+            });
+            $("#jhssy").inputmask({
+                mask: "9999-9999"
+            });
+            $("#shssy").inputmask({
+                mask: "9999-9999"
+            });
+            $("#collegesy").inputmask({
+                mask: "9999-9999"
+            });
+        });
+    </script>
 
     <script>
         $(document).ready(function() {
+
+            $('#gradelevelid').on('change', function() {
+                var val = $(this).val();
+                console.log(val, 'wewew')
+                if (val >= 17 && val <= 21) {
+                    $("#courseid").empty()
+                    $("#courseid").append(`
+                        <option value="">SELECT COURSE</option>
+                        @foreach ($courses1 as $item)
+                            <option value="{{ $item->id }}">{{ $item->courseDesc }}</option>
+                        @endforeach
+                    `)
+                } else if (val >= 22 && val <= 26) {
+                    $("#courseid").empty()
+                    $("#courseid").append(`
+                        <option value="">SELECT COURSE</option>
+                        @foreach ($courses2 as $item)
+                            <option value="{{ $item->id }}">{{ $item->courseDesc }}</option>
+                        @endforeach
+                    `)
+                }
+
+            })
+
+            $('#nomiddlename').on('change', function() {
+                var isChecked = $(this).prop('checked');
+                $('#middle-name').prop('disabled',
+                    isChecked); // Disable when checked, enable when unchecked
+                if (isChecked) {
+                    $('#middle-name').val(''); // Clear the input if the checkbox is checked
+                }
+            });
+
+
             $("#input_father_contact_new").inputmask({
                 mask: "9999-999-9999"
             });
@@ -1432,6 +1516,7 @@
 
 
             function isFacebookApp() {
+                // amef
                 var ua = navigator.userAgent || navigator.vendor || window.opera;
                 return (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1);
             }
@@ -1556,7 +1641,14 @@
 
             $(document).on('input', 'input[name="first_name"] , input[name="last_name"]', function() {
                 if ($('#studtype').val() == 1 || $('#studtype').val() == 2) {
+                    $('#studtype').removeClass('is-invalid')
                     student_information()
+                } else {
+                    $('#studtype').addClass('is-invalid')
+                    Toast.fire({
+                        type: 'warning',
+                        title: 'Please Select Pre-Registration Type'
+                    })
                 }
             })
 
@@ -1871,7 +1963,7 @@
                 $(this).val(value);
 
                 if (value.length < 6) {
-                    $('#input_poolingnumber').removeClass('is-valid is-invalid');
+                    $('#input_poolingnumber').addClass('is-invalid');
                     get_enrollment_setup2()
                 } else if (value.length == 6) {
                     $.ajax({
@@ -1881,47 +1973,78 @@
                             code: value
                         },
                         success: function(data) {
-                            console.log('studinfo...', data);
+                            var studdata = data.data
+                            // console.log('studinfo...', data);
                             Toast.fire({
                                 type: data.status,
                                 title: data.message
                             })
-                            if ((data.status == 'success' && data.data.final_assign_course &&
-                                    data.data.acadprog_id == 6) || (data.status == 'success' &&
-                                    data.data.final_assign_course && data.data.acadprog_id == 5
-                                ) || (data.status == 'success' && !data.data
-                                    .final_assign_course && data.data.acadprog_id >= 2 && data
-                                    .data.acadprog_id <= 4 && data.data.status == 2)) {
-                                var student = data.data;
-                                $('#input_poolingnumber').removeClass('is-invalid').addClass(
-                                    'is-valid');
 
-                                fetchEnrollmentList(student.acadprog_id, student.gradelevel_id,
-                                    student);
+                            if (data.status == 'success' && studdata.final_assign_course &&
+                                studdata.status == 2) {
+                                console.log('studinfo...', studdata.fname);
 
-                            } else {
-                                if ((!data.data.final_assign_course && data.data.acadprog_id ==
-                                        6) || !data.data.final_assign_course && data.data
-                                    .acadprog_id == 5) {
-                                    Toast.fire({
-                                        type: 'warning',
-                                        title: 'No Course or Strand Assigned. Please contact your Guidance!'
-                                    })
-                                } else if (!data.data.final_assign_course && data.data.status ==
-                                    1 && data.data.acadprog_id >= 2 && data.data.acadprog_id <=
-                                    4) {
-                                    Toast.fire({
-                                        type: 'warning',
-                                        title: 'No Course or Strand Assigned. Please contact your Guidance!'
-                                    })
+                                if (studdata.acadprog_id == 6 || studdata.acadprog_id == 5) {
+                                    $('#input_poolingnumber').removeClass('is-invalid')
+                                        .addClass('is-valid');
+                                    fetchEnrollmentList(studdata.acadprog_id, studdata
+                                        .gradelevel_id, studdata);
                                 }
+                            } else if (data.status == 'success' && !studdata
+                                .final_assign_course && studdata.status == 2) {
+                                if (studdata.acadprog_id >= 2 || studdata.acadprog_id <= 4) {
+                                    $('#input_poolingnumber').removeClass('is-invalid')
+                                        .addClass('is-valid');
+                                    fetchEnrollmentList(studdata.acadprog_id, studdata
+                                        .gradelevel_id, studdata);
+                                }
+                            } else {
+                                Toast.fire({
+                                    type: data.status,
+                                    title: data.message
+                                })
                                 $('#input_poolingnumber').removeClass('is-valid').addClass(
                                     'is-invalid');
                             }
+
+
+
+                            // if ((data.status == 'success' && data.data.final_assign_course &&
+                            //         data.data.acadprog_id == 6) || (data.status == 'success' &&
+                            //         data.data.final_assign_course && data.data.acadprog_id == 5
+                            //     ) || (data.status == 'success' && !data.data
+                            //         .final_assign_course && data.data.acadprog_id >= 2 && data
+                            //         .data.acadprog_id <= 4 && data.data.status == 2)) {
+                            //     var student = data.data;
+                            //     $('#input_poolingnumber').removeClass('is-invalid').addClass(
+                            //         'is-valid');
+
+                            //     fetchEnrollmentList(student.acadprog_id, student.gradelevel_id,
+                            //         student);
+
+                            // } else {
+                            //     if ((!data.data.final_assign_course && data.data.acadprog_id ==
+                            //             6) || !data.data.final_assign_course && data.data
+                            //         .acadprog_id == 5) {
+                            //         Toast.fire({
+                            //             type: 'warning',
+                            //             title: 'No Course or Strand Assigned. Please contact your Guidance!'
+                            //         })
+                            //     } else if (!data.data.final_assign_course && data.data.status ==
+                            //         1 && data.data.acadprog_id >= 2 && data.data.acadprog_id <=
+                            //         4) {
+                            //         Toast.fire({
+                            //             type: 'warning',
+                            //             title: 'No Course or Strand Assigned. Please contact your Guidance!'
+                            //         })
+                            //     }
+                            //     $('#input_poolingnumber').removeClass('is-valid').addClass(
+                            //         'is-invalid');
+                            // }
                         }
                     })
                 } else {
-                    $('#input_poolingnumber').removeClass('is-valid is-invalid');
+                    $('#input_poolingnumber').addClass('is-invalid');
                     get_enrollment_setup2()
                 }
             })
@@ -2060,12 +2183,13 @@
 
                                         if (student.prereg_status == null || student
                                             .prereg_status == '' ||
-                                            student.prereg_status == 'New Student') {
+                                            student.prereg_status == 'New Student' || student
+                                            .prereg_status == 'Continuing Student') {
                                             $('#studtype').val(1).change();
                                         } else if (student.prereg_status == 'Transferee') {
                                             $('#studtype').val(2).change();
                                         } else {
-                                            $('#studtype').val(0).change();
+                                            $('#studtype').val(1).change();
                                         }
 
                                         $('#studtype').prop('disabled', true);
@@ -2101,6 +2225,10 @@
                     $('.course-formgroup').removeAttr('hidden')
                     $('#courseid').attr('required', 'required')
                     $('#schedVal').val('')
+                } else if (parseInt($('#gradelevelid').val()) >= 22) {
+                    $('.course-formgroup').removeAttr('hidden')
+                    $('#courseid').attr('required', 'required')
+                    $('#schedVal').val('')
                 } else {
                     $('#studstrand').removeAttr('required')
                     $('#strand-formgroup').attr('hidden', 'hidden')
@@ -2116,7 +2244,8 @@
             }
 
             $(document).on('change', '#studtype', function() {
-
+                //studhere
+                // $('#first-name').val('')
                 $('#gradelevelid').val('').change()
                 $('#studstrand').removeAttr('required')
                 $('#strand-formgroup').attr('hidden', 'hidden')
@@ -2421,6 +2550,7 @@
         }
 
         $(document).on('click', '#btn_submit', function(e) {
+            $(this).prop('disabled', true)
             // console.log($('#studtype').val());
             // return
             e.preventDefault()
@@ -2607,16 +2737,28 @@
                 valid_data = false;
             }
 
-            if ($('#contact_number').val() == '' || $('#contact_number').val() == null) {
-                $('#contact_number').addClass('is-invalid')
+            var contactNumber = $('#contact_number').val().replace(/[-_\s]/g, '');
+            console.log(contactNumber);
+
+
+            if (!contactNumber) {
+                $('#contact_number').addClass('is-invalid');
                 Toast.fire({
                     type: 'error',
                     title: 'Contact Number is Required!'
-                })
-                valid_data = false
+                });
+                valid_data = false;
+            } else if (contactNumber.length !== 11) {
+                $('#contact_number').addClass('is-invalid');
+                Toast.fire({
+                    type: 'error',
+                    title: 'Contact Number length must be 11!'
+                });
+                valid_data = false;
             } else {
-                $('#contact_number').removeClass('is-invalid')
+                $('#contact_number').removeClass('is-invalid');
             }
+
 
             // if ($('#father_name').val() == '' || $('#father_name').val() == null) {
             //     $('#father_name').addClass('is-invalid')
@@ -2801,17 +2943,41 @@
                         $('#fha').removeClass('is-invalid')
                     }
 
-                    if ($('#input_father_contact_new').val() == '' || $('#input_father_contact_new').val() ==
-                        null) {
-                        $('#input_father_contact_new').addClass('is-invalid')
+
+                    var fcontactNumber = $('#input_father_contact_new').val().replace(/[-_\s]/g, '');
+                    console.log(fcontactNumber);
+
+                    if (!fcontactNumber) {
+                        $('#input_father_contact_new').addClass('is-invalid');
                         Toast.fire({
                             type: 'error',
                             title: 'Father\'s contact no. is Required!'
-                        })
-                        valid_data = false
+                        });
+                        valid_data = false;
+                    } else if (fcontactNumber.length !== 11) {
+                        $('#input_father_contact_new').addClass('is-invalid');
+                        Toast.fire({
+                            type: 'error',
+                            title: 'Father\'s contact no. length must be 11!'
+                        });
+                        valid_data = false;
                     } else {
-                        $('#input_father_contact_new').removeClass('is-invalid')
+                        $('#input_father_contact_new').removeClass('is-invalid');
                     }
+
+                    // if ($('#input_father_contact_new').val() == '' || $('#input_father_contact_new').val() ==
+                    //     null) {
+                    //     $('#input_father_contact_new').addClass('is-invalid')
+                    //     Toast.fire({
+                    //         type: 'error',
+                    //         title: 'Father\'s contact no. is Required!'
+                    //     })
+                    //     valid_data = false
+                    // } else {
+
+                    //     if()
+                    //     $('#input_father_contact_new').removeClass('is-invalid')
+                    // }
 
 
 
@@ -2890,17 +3056,38 @@
                         $('#mha').removeClass('is-invalid')
                     }
 
-                    if ($('#input_mother_contact_new').val() == '' || $('#input_mother_contact_new').val() ==
-                        null) {
-                        $('#input_mother_contact_new').addClass('is-invalid')
+                    var mcontactNumber = $('#input_mother_contact_new').val().replace(/[-_\s]/g, '');
+                    console.log(mcontactNumber);
+
+                    if (!mcontactNumber) {
+                        $('#input_mother_contact_new').addClass('is-invalid');
                         Toast.fire({
                             type: 'error',
                             title: 'Mother\'s contact no. is Required!'
-                        })
-                        valid_data = false
+                        });
+                        valid_data = false;
+                    } else if (mcontactNumber.length !== 11) {
+                        $('#input_mother_contact_new').addClass('is-invalid');
+                        Toast.fire({
+                            type: 'error',
+                            title: 'Mother\'s contact no. length must be 11!'
+                        });
+                        valid_data = false;
                     } else {
-                        $('#input_mother_contact_new').removeClass('is-invalid')
+                        $('#input_mother_contact_new').removeClass('is-invalid');
                     }
+
+                    // if ($('#input_mother_contact_new').val() == '' || $('#input_mother_contact_new').val() ==
+                    //     null) {
+                    //     $('#input_mother_contact_new').addClass('is-invalid')
+                    //     Toast.fire({
+                    //         type: 'error',
+                    //         title: 'Mother\'s contact no. is Required!'
+                    //     })
+                    //     valid_data = false
+                    // } else {
+                    //     $('#input_mother_contact_new').removeClass('is-invalid')
+                    // }
 
                     // Mainden Name
                     if ($('#input_mothermaidename_new').val() == '' || $('#input_mothermaidename_new').val() ==
@@ -3142,6 +3329,8 @@
 
             if (valid_data) {
                 $('#regForm').submit()
+            } else {
+                $(this).prop('disabled', false)
             }
         })
 

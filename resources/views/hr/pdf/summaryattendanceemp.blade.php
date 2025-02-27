@@ -187,13 +187,7 @@
                     @endif
                 </td> --}}
             <td style="text-align: center;">
-                @if ($summarylog->timeinam == $summarylog->timeoutpm)
-                    @if ($summarylog->timeinpm != null)
-                        {{ date('h:i:s', strtotime($summarylog->timeinpm)) }}
-                    @endif
-                @else
-                    {{ date('h:i:s', strtotime($summarylog->timeinam)) }}
-                @endif
+                {{ $summarylog->timeinam }}
             </td>
             <td style="text-align: center;">
                 {{-- {{$summarylog->timeoutpm}} --}}

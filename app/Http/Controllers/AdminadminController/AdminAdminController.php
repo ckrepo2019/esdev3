@@ -613,6 +613,8 @@ class AdminAdminController extends \App\Http\Controllers\Controller
             ->orderBy('sortid','asc')
             ->get();
 
+        $enrolled = 0;
+        $withdrawn = 0;
         $droppedout = 0;
         $transferredin = 0;
         $transferredout = 0;
@@ -698,6 +700,8 @@ class AdminAdminController extends \App\Http\Controllers\Controller
                         $section->total = collect($enrollees)->where('sectionid', $section->id)->count();
                     }
                 }
+                $enrolled += collect($enrollees)->where('studstatus',1)->count();
+                $withdrawn += collect($enrollees)->where('studstatus',6)->count();
                 $droppedout += collect($enrollees)->where('studstatus',3)->count();
                 $transferredin += collect($enrollees)->where('studstatus',4)->count();
                 $transferredout += collect($enrollees)->where('studstatus',5)->count();
@@ -714,7 +718,9 @@ class AdminAdminController extends \App\Http\Controllers\Controller
             ->with('droppedout', $droppedout)
             ->with('transferredin', $transferredin)
             ->with('transferredout', $transferredout)
-                ->with('gradelevels', $gradelevels);
+            ->with('gradelevels', $gradelevels)
+            ->with('gradelevels', $enrolled)
+            ->with('gradelevels', $withdrawn);
         }
         elseif($request->get('action') == 'getteachingloadsresults')
         {

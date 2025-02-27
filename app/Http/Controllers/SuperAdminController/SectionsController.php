@@ -929,7 +929,7 @@ class SectionsController extends \App\Http\Controllers\Controller
             $gradelevel = DB::table('gradelevel')
                               ->where('deleted',0)
                               ->whereIn('acadprogid',$acadprog_list)
-                              ->whereNotIn('acadprogid',[6,7])
+                              ->whereNotIn('acadprogid',[6,7,8])
                               ->orderBy('sortid')
                               ->select(
                                     'id',

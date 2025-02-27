@@ -61,6 +61,28 @@
 @endsection
 
 @section('content')
+
+@php
+$courses1 = DB::table('college_courses')
+            ->join('college_colleges', function($join){
+                $join->on('college_courses.collegeid', '=', 'college_colleges.id');
+                $join->where('college_colleges.acadprogid', 6);
+                $join->where('college_colleges.deleted', 0);
+            })
+            ->where('college_courses.deleted', 0)
+            ->select('college_courses.id as id', 'college_courses.courseabrv')
+            ->get();
+$courses2 =  DB::table('college_courses')
+            ->join('college_colleges', function($join){
+                $join->on('college_courses.collegeid', '=', 'college_colleges.id');
+                $join->where('college_colleges.acadprogid', 8);
+                $join->where('college_colleges.deleted', 0);
+            })
+            ->where('college_courses.deleted', 0)
+            ->select('college_courses.id as id', 'college_courses.courseabrv')
+            ->get();
+@endphp
+
     <!-- MODAL ADD CATEGORY SETUP -->
     <div class="modal fade" id="modalAddCategory" tabindex="-1" role="dialog" aria-labelledby="addModalLabel"
         aria-hidden="true">
@@ -308,10 +330,10 @@
                                             </div>
                                         </div>
                                         <select class="form-control" id="select-course" style="width: 100%;">
-                                            @foreach (DB::table('college_courses')->where('deleted', 0)->get() as $item)
+                                            {{-- @foreach (DB::table('college_courses')->where('deleted', 0)->get() as $item)
                                                 <option value="{{ $item->id }}">{{ $item->courseabrv }}
                                                 </option>
-                                            @endforeach
+                                            @endforeach --}}
                                         </select>
                                         <span class="invalid-feedback" role="alert">
                                             <strong>Course is required!</strong>
@@ -406,7 +428,24 @@
 
         $(document).ready(function() {
 
-
+            $('#acadprog').on('change', function() {
+                if($('#acadprog').val() == 6) {
+                    $('#select-course').empty()
+                    $('#select-course').append(`
+                        @foreach($courses1 as $course)
+                            <option value="{{ $course->id }}">{{ $course->courseabrv }}</option>
+                        @endforeach
+                    `)
+                }else if($('#acadprog').val() == 8) {
+                    $('#select-course').empty()
+                    $('#select-course').append(`
+                        @foreach($courses2 as $course)
+                            <option value="{{ $course->id }}">{{ $course->courseabrv }}</option>
+                        @endforeach
+                    `)
+                }
+                
+            })
             $('#allCourse').on('click', function() {
                 if ($('#allCourse').is(':checked')) {
                     $('#select-course option').prop('selected', true);
@@ -452,7 +491,7 @@
                         $('#select-course').val("").change();
                         $('.strand-wrapper').prop('hidden', false);
                         $('#course-wrapper').prop('hidden', true);
-                    } else if (id == 6) {
+                    } else if (id == 6 || id == 8) {
                         $('.strand-wrapper').prop('hidden', true);
                         $('#course-wrapper').prop('hidden', false);
                         $('#select-strand').val("").change();
@@ -876,7 +915,7 @@
                     }
                 }
 
-                if ($('#acadprog').val() == 6) {
+                if ($('#acadprog').val() == 6 || $('#acadprog').val() == 8) {
                     if (!$('#select-course').val().length > 0) {
                         isvalid = false
                         $('#select-course').addClass('is-invalid');

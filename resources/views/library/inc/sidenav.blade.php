@@ -1,12 +1,26 @@
 <ul class="nav-main">
     <div class="content content-full text-center">
         <div class="my-3">
+            @php
+                // $url = app()->environment('local') ? 'http://es_ldcu.ck/' : secure('http://es_ldcu.ck/');
+                // $picurl = DB::table('teacher')
+                //     ->where('userid', auth()->user()->id)
+                //     ->value('picurl');
+                // $domain = $url . $picurl;
+                // $isvalid = $picurl ? $domain : asset('/media/avatars/avatar0.jpg');
+
+                $picurl = DB::table('teacher')
+                    ->where('userid', auth()->user()->id)
+                    ->value('picurl');
+                // $domain = $url . $picurl;
+                $picurl = $picurl ? $picurl : '/media/avatars/avatar0.jpg';
+            @endphp
             <img class="img-avatar img-avatar-thumb" src="{{ $picurl }}" alt="profile"
                 style="object-fit: cover; height:100px; width: 100px;">
 
         </div>
         <h1 class="h5 text-white mb-0">{{ strtoupper(auth()->user()->name) }}</h1>
-        <span class="text-white-75">{{ DB::table('usertype')->where('id', auth()->user()->type)->value('utype') }}</span>
+        <span class="text-white-75"> LIBRARIAN</span>
     </div>
 
     <li class="nav-main-item">
@@ -16,13 +30,7 @@
             <span class="nav-main-link-name">Home</span>
         </a>
     </li>
-    {{-- <li class="nav-main-item">
-        <a class="nav-main-link{{ request()->is('/library/view/profile') ? ' active' : '' }}"
-            href="/library/view/profile">
-            <i class="nav-main-link-icon far fa-user"></i>
-            <span class="nav-main-link-name">Profile</span>
-        </a>
-    </li> --}}
+
     <li class="nav-main-item">
         <a class="nav-main-link{{ request()->is('library/view/profile') ? ' active' : '' }}"
             href="/library/view/profile">

@@ -25,15 +25,15 @@ class StudentInformation extends Controller
         
     }
 
-
+    
 
     public static function upload_student_id_picture(Request $request){
 
         $studid = $request->get('studid');
         $sid = $request->get('sid');
         return StudentProccess::upload_student_pic($studid,$sid,$request);
-
-
     }
+
+
     
 }

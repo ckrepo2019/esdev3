@@ -5,6 +5,7 @@ namespace App\Http\Controllers\StudentControllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use DB;
+use App\Http\Controllers\NotificationController\NotificationController;
 
 class ScholarshipController extends Controller
 {
@@ -49,13 +50,7 @@ class ScholarshipController extends Controller
             }
 
         }
-
-
         return $data;
-
-
-
-
     }
 
 
@@ -115,6 +110,53 @@ class ScholarshipController extends Controller
                     'createddatetime' => now()
 
                 ]);
+
+
+
+            if ($applicationid > 0) {
+                // Retrieve users with specific conditions
+                $users = DB::table('users')
+                    ->where('deleted', 0)
+                    ->where(function ($query) {
+                        $query->where('type', 4)
+                            ->orWhere('type', 15);
+                    })
+                    ->select('id', 'type') // Fetch only the necessary columns
+                    ->get();
+
+                // Retrieve faspriv data excluding existing user ids
+                $users2 = DB::table('faspriv')
+                    ->where('deleted', 0)
+                    ->where(function ($query) {
+                        $query->where('usertype', 4)
+                            ->orWhere('usertype', 15);
+                    })
+                    ->select('userid as id', 'usertype as type') // Align column names with $users
+                    ->get();
+
+                // Combine both collections
+                $allUsers = $users->merge($users2); // Merge $users and $users2 into a single collection
+
+                // Iterate over all users and send notifications
+                foreach ($allUsers as $user) {
+                    NotificationController::sendNotification(
+                        'Scholarship Request',
+                        sprintf(
+                            "New Scholarship Request from %s",
+                            auth()->user()->name
+                        ),
+                        $user->id, // Pass receiver_id
+                        'notification',
+                        'Request',
+                        '/finance/scholarship',
+                        null,
+                        $user->type
+                    );
+                }
+            }
+
+
+
         } else {
 
 
@@ -158,6 +200,7 @@ class ScholarshipController extends Controller
 
 
         }
+
 
         $remarks = json_decode($request->get('remarks'));
 

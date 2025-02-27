@@ -732,18 +732,14 @@ enrollmentasof_female --}}
                         <?php } ?>
                     </td>
                     <td id="pam_total">
-                        <?php try{ ?> 
-                            {{number_format(($pam_male+$pam_female)/2,2)}}
-                        <?php }catch(\Exception $e){ ?>
-                            @if($averagemale == 0 && $averagefemale > 0)
-                            {{$averagefemale}}
-                            @elseif($averagemale > 0 && $averagefemale == 0)
-                            {{$averagemale}}
-                            @else
-                            {{number_format(($ada_total/($registered_total)*100),2) }}
-                            @endif
-                            <!--{{number_format(($pammale+$pamfemale)/2,2)}}-->
-                        <?php } ?>
+                        @php
+                        $avedailytotal = number_format($avedailyatt_male,2) + number_format($avedailyatt_female,2);
+                        $averagetotal = number_format($avedailytotal * count($activedays),2);
+                        $enrollmentschooldays = $enrollmentasof_total * count($activedays);
+                        $averagetotals = number_format(($averagetotal/$enrollmentschooldays)*100,2);
+                        @endphp
+                        {{$averagetotals}}
+
                     </td>
                 </tr>
                 <tr>

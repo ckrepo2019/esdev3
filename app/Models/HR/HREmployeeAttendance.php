@@ -6,20 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 use DB;
 use DateTime;
 use DateInterval;
+use Carbon\Carbon;
+
 class HREmployeeAttendance extends Model
 {
-    public static function getattendance($date,$employee)
-    {
+    public static function getattendance($date,$employee, $employeeleavesappr=null, $holidaydates=null)
+    {   
         date_default_timezone_set('Asia/Manila');
-        
-        // $taphistory = DB::table('taphistory')
-        //     ->where('tdate', $date)
-        //     ->where('studid', $employee->id)
-        //     ->where('utype', '!=','7')
-        //     ->orderBy('ttime')
-        //     ->where('deleted','0')
-        //     ->get();
-
             
         $taphistory = DB::table('taphistory')
             ->where('tdate', $date)
@@ -44,6 +37,19 @@ class HREmployeeAttendance extends Model
             ->orderBy('ttime','asc')
             ->get();
 
+        $customtimesched = Db::table('employee_customtimesched')
+                ->where('employeeid', $employee->id)
+                ->first();
+        
+        if(!$customtimesched){
+            $customtimesched = (object)array(
+                'amin'      => '08:00:00',
+                'amout'      => '12:00:00',
+                'pmin'      => '13:00:00',
+                'pmout'      => '17:00:00',
+            );
+        }
+
         if(count($hr_attendance)>0)
         {
             foreach($hr_attendance as $hratt)
@@ -53,231 +59,180 @@ class HREmployeeAttendance extends Model
         }
 
 
-        $logs = collect();
-        $logs = $logs->merge($taphistory);
-        $logs = $logs->merge($hr_attendance);
-        $logs = $logs->sortBy('ttime');
-        $logs = $logs->unique('ttime');
+        $attrecords = collect();
+        $attrecords = $attrecords->merge($taphistory);
+        $attrecords = $attrecords->merge($hr_attendance);
+        $attrecords = $attrecords->sortBy('ttime');
+        $attrecords = $attrecords->unique('ttime');
         $status = 1;
-
+        
+        $logs = $attrecords;
+        
         $lastactivity = '';
-        if(count($logs) == 0)
-        {
-            
-            $detailamin     = '00:00:00';
-            $detailamout    = '00:00:00';
-            $detailpmin     = '00:00:00';
-            $detailpmout    = '00:00:00';
+        $tapamtimein = null;
+        $tapamtimeout = null;
+        $tappmtimein = null;
+        $tappmtimeout = null;
+        
+        $amtimein = '00:00:00';
+        $amtimeout = '00:00:00';
+        $pmtimein = '00:00:00';
+        $pmtimeout = '00:00:00';
 
-            // $status         = 0;
+        $daysabsent = 0;
 
-        }elseif(count($logs) == 1){
-            
-            if(date('A', strtotime($logs[0]->ttime)) == 'AM')
-            {
-                $lastactivity = 'AM IN';
-                $detailamin     = $logs[0]->ttime;
-                $detailamout    = '00:00:00';
-                $detailpmin     = '00:00:00';
-                $detailpmout    = '00:00:00';
-            }else{
-                $lastactivity = 'PM IN';
-                $detailamin     = '00:00:00';
-                $detailamout    = '00:00:00';
-                $detailpmin     = date('h:i:s',strtotime($logs[0]->ttime));
-                $detailpmout    = '00:00:00';
+        $leavesapplied = collect($employeeleavesappr)->where('ldate', $date)->first();
+        $holidays = collect($holidaydates)->where('date', $date)->first();
+
+
+        if(count($attrecords) == 0){
+            if ($leavesapplied && $leavesapplied->halfday == 1) {
+                $tapamtimein = $customtimesched->amin;
+                $tapamtimeout = $customtimesched->amout;
+            } else if($leavesapplied && $leavesapplied->halfday == 2) {
+                $tappmtimein = $customtimesched->pmin;
+                $tappmtimeout = $customtimesched->pmout;
+            } else if($leavesapplied && $leavesapplied->halfday == 0) {
+                $tapamtimein = $customtimesched->amin;
+                $tapamtimeout = $customtimesched->amout;
+                $tappmtimein = $customtimesched->pmin;
+                $tappmtimeout = $customtimesched->pmout;
+            } else if($holidays){
+                $tapamtimein = $customtimesched->amin;
+                $tapamtimeout = $customtimesched->amout;
+                $tappmtimein = $customtimesched->pmin;
+                $tappmtimeout = $customtimesched->pmout;
+            } else {
+                $daysabsent += 1;
             }
-
-            // $status         = 1;
+        } else {
+            $amintap = collect($attrecords)->where('ttime','<', $customtimesched->amout)->where('deleted', 0)->first();
             
-        }else{
-            
-            $customtimesched = Db::table('employee_customtimesched')
-                ->where('employeeid', $employee->id)
-                ->first();
-            if(!$customtimesched){
-
-                DB::table('employee_customtimesched')
-                    ->insert([
-                        'amin'          =>  '08:00:00',
-                        'amout'         =>  '12:00:00',
-                        'pmin'          =>  '13:00:00',
-                        'pmout'         =>  '17:00:00',
-                        'employeeid'    =>  $employee->id,
-                        // 'createdby'     =>  auth()->user()->id,
-                        'createdon'     =>  date('Y-m-d H:i:s')
-                    ]);
-                
-                $customtimesched = Db::table('employee_customtimesched')
-                    ->where('employeeid', $employee->id)
-                    ->first();
-
-            }else{
-                if($customtimesched->amin == "00:00:00")
-                {
-                    DB::table('employee_customtimesched')
-                        ->where('employeeid', $employee->id)
-                        ->where('deleted', 0)
-                        ->update([
-                                'amin'      => '08:00:00'
-                            ]);
+            if ($leavesapplied && $leavesapplied->halfday == 1) {
+                $tapamtimein = $customtimesched->amin;
+            } else if($holidays) {
+                $tapamtimein = $customtimesched->amin;
+            } else {
+                if ($amintap) {
+                    $tapamtimein = $amintap->ttime;
+                } else {
+                    $tapamtimein = null;
                 }
-                if($customtimesched->amout == "00:00:00")
-                {
-                    DB::table('employee_customtimesched')
-                        ->where('employeeid', $employee->id)
-                        ->where('deleted', 0)
-                        ->update([
-                                'amout'      => '12:00:00'
-                            ]);
-                }
-                if($customtimesched->pmin == "00:00:00")
-                {
-                    DB::table('employee_customtimesched')
-                        ->where('employeeid', $employee->id)
-                        ->where('deleted', 0)
-                        ->update([
-                                'pmin'      => '13:00:00'
-                            ]);
-                }
-                if($customtimesched->pmout == "00:00:00")
-                {
-                    DB::table('employee_customtimesched')
-                        ->where('employeeid', $employee->id)
-                        ->where('deleted', 0)
-                        ->update([
-                                'pmout'      => '17:00:00'
-                            ]);
-                }
-                if(strtolower(date('A', strtotime($customtimesched->pmin))) == 'am')
-                {
-                    $customtimesched->pmin = date('H:i:s',strtotime($customtimesched->pmin.' PM'));
-                }
-                
-                if(strtolower(date('A', strtotime($customtimesched->pmout))) == 'am')
-                {
-                    $customtimesched->pmout = date('H:i:s',strtotime($customtimesched->pmout.' PM'));
-                }
-            }
-            // return collect($customtimesched);
-            
-            // $custom_amin = $customtimesched->amin;
-            // $custom_amout = $customtimesched->amout;
-
-            $detailamintimes   = collect($logs->where('ttime','<',$customtimesched->amout)->where('tapstate','IN'))->values()->sortby('ttime');
-            
-            if(count($detailamintimes) == 0)
-            {
-
-                $detailamin     =   "00:00:00";
-
-            }else{
-                
-                $lastactivity = 'AM IN';
-                $detailamin     = date('h:i:s', strtotime(collect($detailamintimes)->sortBy('ttime')->first()->ttime));
-                
-                $key            = $logs->search(function($item) use($detailamintimes){
-                                    return $item->id == collect($detailamintimes)->first()->id;
-                                });
-                                
-                $logs->pull($key);
             }
             
             
-            // $detailamin =  reset($taphistory)[0]->ttime;
-            // unset($taphistory[0]);
-            // $taphistory = collect($taphistory)->values();
-            
-            $detailamouttimes   = collect($logs->where('ttime','<=',$customtimesched->pmin)->where('tapstate','OUT'))->values()->sortby('ttime');
-            
-            // $detailamouttimes   = collect($taphistory->whereBetween('ttime',[$customtimesched->amout,$customtimesched->pmin])->where('tapstate','OUT'))->values()->sortby('ttime');
+            $amouttap = collect($attrecords)->where('ttime','>', $customtimesched->amin)->where('ttime','<=', $customtimesched->amout)->where('ttime', '!=', $tapamtimein)->where('deleted', 0)->last();
+            // if wala siya nag tapout or tap less than or equal sa iyang customtime sched amout
+            $amouttap2 = collect($attrecords)->where('ttime','>', $customtimesched->amout)->where('ttime', '<', $customtimesched->pmin)->where('deleted', 0)->first();
 
-            if(count($detailamouttimes) == 0)
-            {
-
-                $detailamout    =   "00:00:00";
-
-            }else{
-                $lastactivity = 'AM OUT';
-                
-                $detailamout        = date('h:i:s',strtotime(collect($detailamouttimes)->last()->ttime));
-                
-                if(count($logs)>0)
-                {   
-                    foreach($logs as $removekey => $removevalue)
-                    {
-                        if($removevalue->ttime <= $detailamout)
-                        {
-                            unset($logs[$removekey]);
-                        }
-                        
+            if ($leavesapplied && $leavesapplied->halfday == 1) {
+                $tapamtimeout = $customtimesched->amout;
+            } else if($holidays) {
+                $tapamtimeout = $customtimesched->amout;
+            } else {
+                if (!$amouttap) {
+                    if ($amouttap2 && $tapamtimein != null) {
+                        $tapamtimeout = $amouttap2->ttime;
+                    } else {
+                        $tapamtimeout = null;
                     }
-
-
+                } else {
+                    if ($amouttap) {
+                        $tapamtimeout = $amouttap->ttime;
+                    } else {
+                        $tapamtimeout = null;
+                    }
                 }
-                
             }
-            // return $detailamout;
+
+            $pmintapcount = collect($attrecords)->where('ttime','>', $customtimesched->amout)->where('deleted', 0)->count();
+            $pmintap = collect($attrecords)->where('ttime','>', $customtimesched->amout)->where('ttime','<', $customtimesched->pmout)->where('ttime', '!=', $tapamtimeout)->where('deleted', 0)->first();
+            // possible the result of $pmintap kay isa ra kabook so it means maglibog kong out ba or in sa pm pero kong wala siyay amout og pmin as is 
             
-            $detailpmouttimes    = collect($logs->where('ttime','>',$customtimesched->pmin)->where('tapstate','OUT'))->values()->sortBy('ttime');
-
-            if(count($detailpmouttimes) == 0)
-            {
-
-                $detailpmout     =   "00:00:00";
-
-            }else{
-                $lastactivity = 'PM OUT';
-                // $detailpmout     = date('h:i:s', strtotime(collect($detailpmouttimes)->sortBy('ttime')->last()->ttime));
-                $detailpmout     = collect($detailpmouttimes)->sortBy('ttime')->last()->ttime;
+            if ($leavesapplied && $leavesapplied->halfday == 2) {
+                $tappmtimein = $customtimesched->pmin;
+            } else if($holidays) {
+                $tappmtimein = $customtimesched->pmin;
+            } else {
+                if ($pmintap) {
+                    if ($tapamtimein != null && $tapamtimeout == null && $pmintapcount == 1) {
+                        $tappmtimein = null;
+                    } else {
+                        $tappmtimein = $pmintap->ttime;
+                    }
+                } else {
+                    $tappmtimein = null;
+                }
             }
-            $detailpmintimes    = collect($logs->where('tapstate','IN')->where('ttime','>=',$detailamout)->where('ttime','<=',$detailpmout))->values()->sortBy('ttime');
             
-            if(count($detailpmintimes) == 0)
-            {
-
-                $detailpmin     =   "00:00:00";
-
-            }else{
-                $lastactivity = 'PM IN';
-                
-                $detailpmin     = date('h:i:s', strtotime(collect($detailpmintimes)->sortBy('ttime')->first()->ttime));
-                
-                $key            = $logs->search(function($item) use($detailpmintimes){
-                                    return $item->id == collect($detailpmintimes)->first()->id;
-                                });
-
-                $logs->pull($key);
+            
+            $pmouttap = collect($attrecords)->where('ttime','>', $customtimesched->pmin)->where('ttime', '!=', $tappmtimein)->where('deleted', 0)->last();
+            if ($leavesapplied && $leavesapplied->halfday == 2) {
+                $tappmtimeout = $customtimesched->pmout;
+            } else if($holidays) {
+                $tappmtimeout = $customtimesched->pmout;
+            } else {
+                if ($pmouttap) {
+                    $tappmtimeout = $pmouttap->ttime;
+                } else {
+                    $tappmtimeout = null;
+                }
             }
-            $detailpmout     = date('h:i:s', strtotime($detailpmout));
-
+            
         }
-        // return $detailpmin;
-        // return $date.' '.$detailamin;
-        // if(date('Y-m-d H:i:s') < date('Y-m-d H:i:s',strtotime($date.' '.$detailamin.' AM')))
-        // {
-        //     $detailamin = '00:00:00';
-        // }
-        // if(date('Y-m-d H:i:s') < date('Y-m-d H:i:s',strtotime($date.' '.$detailamin.' AM')))
-        // {
-        //     $detailamin = '00:00:00';
-        // }
+            
+            $checkifexists = DB::table('hr_attendanceremarks')
+                ->where('tdate',$date)
+                ->where('employeeid', $employee->id)
+                ->where('deleted','0')
+                ->first();
 
-        // if(collect($logs)->count() > 0)
-        // {
-        //     $lastactivity = collect($logs)->last()->tapstate;
-        // }
+            $remarks = '';
+            if($checkifexists)
+            {
+                $remarks = $checkifexists->remarks;
+            }
+            if(count($attrecords) > 0)
+            {
+                $status = 1;
+            }else{
+                $status = 2;
+            }
+            // this is to convert times is sayu ra kaayu ex. 6 am nag in so dapat kong unsa ang ting in like 8am dapat, mao to dapat ma assume na 8 am jud lisod 
+            if ($tapamtimein != null && $tapamtimein < $customtimesched->amin) {
+                $amtimein = $customtimesched->amin;
+            } else {
+                $amtimein = $tapamtimein;
+            }
+            if ($tapamtimeout != null && $tapamtimeout > $customtimesched->amout) {
+                $amtimeout = $customtimesched->amout;
+            } else {
+                $amtimeout = $tapamtimeout;
+            }      
+            if ($tappmtimein != null && $tappmtimein < $customtimesched->pmin) {
+                $pmtimein = $customtimesched->pmin;
+            } else {
+                $pmtimein = $tappmtimein;
+            }      
+            if ($tappmtimeout != null && $tappmtimeout > $customtimesched->pmout) {
+                $pmtimeout = $customtimesched->pmout;
+            } else {
+                $pmtimeout = $tappmtimeout;
+            }      
+
         return (object)array(
-            'amin'  => $detailamin,
-            'amout' => $detailamout,
-            'pmin'  => $detailpmin,
-            'pmout' => $detailpmout,
+            'amin'  => $tapamtimein,
+            'amout' => $tapamtimeout,
+            'pmin'  => $tappmtimein,
+            'pmout' => $tappmtimeout,
             'customamin'  => $customtimesched->amin ?? '08:00:00',
             'customamout' => $customtimesched->amout ?? '12:00:00',
             'custompmin'  => $customtimesched->pmin ?? '13:00:00',
             'custompmout' => $customtimesched->pmout ?? '17:00:00',
             'lastactivity' => $lastactivity,
-            'status' => $status
+            'status' => $status,
+            'holiday' => $holidays,
+            'leavesapplied' => $leavesapplied,
         );
     }
     public static function payrollattendancev2($date,$employee,$hourlyrate,$basicsalaryinfo)
@@ -463,14 +418,11 @@ class HREmployeeAttendance extends Model
             
             
             $detailpmintimes    = collect($logs->where('tapstate','IN'))->values()->sortBy('ttime');
-            // return $taphistory;
-			// return $detailpmintimes;
             if(count($detailpmintimes) == 0)
             {
 				$detailamout    =   "12:00:00";
 				$detailpmin    =   "13:00:00";
                 // $detailamout    =   "00:00:00"; edited sept 5 2023
-				//return $detailamout;
             }else{
                 
                 $detailpmin     = date('H:i:s', strtotime(collect($detailpmintimes)->sortBy('ttime')->first()->ttime));
@@ -865,8 +817,6 @@ class HREmployeeAttendance extends Model
                         
                         if($basicsalaryinfo->shiftid == 0 || $basicsalaryinfo->shiftid == 1)
                         {
-                            // return date('H:i:s');
-                            // return $logintimeamout;
                                 if($logintimeamout == null)
                                 { 
                                     if($customtimeamout<=date('H:i:s')){
@@ -876,7 +826,6 @@ class HREmployeeAttendance extends Model
                                     }
                                 }else{ 
                                     $lateundertimeam =  strtotime($customtimeamout) - strtotime($logintimeamout);
-                                    // return $lateundertime/60;
                                 }
                                 if($lateundertimeam>0)
                                 {
@@ -885,8 +834,6 @@ class HREmployeeAttendance extends Model
                                 }
                                                  
                         }
-                        // return $logintimepmout;
-                        
                         if($basicsalaryinfo->shiftid == 0 || $basicsalaryinfo->shiftid == 2)
                         {
                             if($logintimepmout == null)
@@ -899,13 +846,7 @@ class HREmployeeAttendance extends Model
                                 }
                             }else{ 
                                 $lateundertimepm =  strtotime($customtimepmout) - strtotime($logintimepmout);
-                                // return $logintimepmout;
-                            }   
-                            
-                            // if($lateundertime>0 && $customtimepmout<=date('H:i:s'))
-                            // {
-                            //     $undertimepmout+=$lateundertime/60;
-                            // }  
+                            }  
                             if($lateundertimepm>0)
                             {
                                 $undertimepmout+=($lateundertimepm/60);
@@ -917,80 +858,13 @@ class HREmployeeAttendance extends Model
             } else {
                 $hoursperday = 0;
             }
-
-           
-            
-          
         }
-        // if($date == '2021-11-15')
-        // {
-        //     return $latepmin;
-        // }
-        // $customtimeamin = '08:00';
-        // $customtimeamout = '12:00';
-        // $customtimepmin = '13:00';
-        // $customtimepmout = '17:00';
-        // $logintimeamin = $attendance->amin;
-        // $logintimeamout = $attendance->amout;
-        // $logintimepmin = $attendance->pmin;
-        // $logintimepmout = $attendance->pmout;
-        // return $logintimepmin;
-        // return $customlateamount;
-        // $lateamin = ($lateamin )-$customlateallowance;
-        // $latepmin = ($latepmin)-$customlateallowance;
-        // if($latedeductionamount>0)
-        // {
-            $lateminutes = ($lateamin + $latepmin);
-        // }
-        // return $later
-        
-        // if($lateminutes>0)
-        // {
-        //     if(count($deductioncomputation)>0)
-        //     {
-        //         $minutes = $lateminutes;
-        //         // return $customlateamount;
-        //         if($deductioncomputation[0]->deductfromrate == 1){
-                    
-        //             for($x= 1; $minutes >= $customlateduration; $x++)
-        //             {
-        //                 // return 'ad';
-        //                 $minutes = $minutes-$customlateduration;
-        //                 // return $customlateamount;
-        //                 $latedeductionamount+=$customlateamount;
-        //             }
-    
-        //         }else{
-        //             for($x= 1; $minutes >= $customlateduration; $x++)
-        //             {
-        //                 // return 'ad';
-        //                 $minutes = $minutes-$customlateduration;
-        //                 // return $customlateamount;
-        //                 $latedeductionamount+=$customlateamount;
-        //             }
-        //             // if($minutes>=$customlateduration)
-        //             // {
-        //             //     $latedeductionamount+=$customlateamount;
-        //             // }
-        //             // $minutes = $minutes-$customlateduration;
-        //         }
-                
-        //     }
-        //     // return $customlateamount;
-        // }else{
-        //     $lateminutes = 0;
-        // }
-        // return $latedeductionamount;
-        // $presentminutes=($hoursperday*60) - ($lateminutes+$undertimeamout+$undertimepmout);
+
+        $lateminutes = ($lateamin + $latepmin);
         
         $presentminutes=($hoursperday*60);
         $hoursrendered = ($presentminutes-$lateminutes)/60;
-        // return 300/60;
-        // if($date == '2023-05-05')
-        // {
-        //     return $undertimeminutes;
-
-        // }
+   
         if ($basicsalaryinfo) {
             $presentdaysamount=($hoursperday*$basicsalaryinfo->amount);
 
@@ -1022,14 +896,15 @@ class HREmployeeAttendance extends Model
             'brackets'   => $timebrackets
         );
     }
-    public static function gethours($days,$employeeid){
+    public static function gethours($days,$employeeid, $employeeleavesappr=null, $holidaydates=null){
+
         $customworkinghours = 0;
-        
         $attendanceb = DB::table('employee_basicsalaryinfo')
-            ->select('attendancebased')
+            // ->select('attendancebased')
             ->where('employeeid', $employeeid)
             ->where('deleted','0')
             ->first();
+        
         if ($attendanceb) {
             if ($attendanceb->attendancebased == 1) {
                 $customtimesched = DB::table('employee_customtimesched')
@@ -1042,8 +917,6 @@ class HREmployeeAttendance extends Model
         } else {
             $customtimesched = [];
         }
-        
-       
         
         if(!$customtimesched)
         {
@@ -1068,7 +941,6 @@ class HREmployeeAttendance extends Model
 			$customtimesched->pmout = '17:00:00';
 		}
 
-        // return $customtimesched->pmin;
         $customtimeamin = strtotime($customtimesched->amin);
         $customtimeamout = strtotime($customtimesched->amout);
         $customdifferenceam = round(abs($customtimeamout - $customtimeamin) / 3600,2);
@@ -1079,20 +951,17 @@ class HREmployeeAttendance extends Model
         
         $customworkinghours += $customdifferenceam;
         $customworkinghours += $customdifferencepm;
-        
-        // $totalworkinghours = 0;
-        // $totallate = 0;
-        // $totalundertime = 0;
         $daysabsent = 0;
         
         $data = array();
         foreach($days as $day)
         {
-            // return $day;
+            $leavesapplied = collect($employeeleavesappr)->where('ldate', $day)->first();
+            $holidays = collect($holidaydates)->where('date', $day)->first();
+                
             $attrecords = collect();
 
             $atttap = DB::table('taphistory')
-                // ->select('tdate','ttime','tapstate')
                 ->where('studid', $employeeid)
                 ->where('deleted', 0)
                 ->where('tdate', $day)
@@ -1100,7 +969,6 @@ class HREmployeeAttendance extends Model
                 ->get();
             
             $atthr = DB::table('hr_attendance')
-                // ->select('tdate','ttime','tapstate')
                 ->where('studid', $employeeid)
                 ->where('deleted', 0)
                 ->where('tdate', $day)
@@ -1126,13 +994,8 @@ class HREmployeeAttendance extends Model
             }
             $attrecords = $attrecords->sortBy('ttime');
             $attrecords = $attrecords->values();
-            
-            // if($day == '2022-04-30')
-            // {
-                // return $attrecords;
-            // }
+           
             $dailytotalworkinghours = 0;
-            $dailytotalworkinghoursflexi = 0;
             $latehours = 0;
             $undertimehours = 0;
             $lateamhours = 0;
@@ -1144,245 +1007,20 @@ class HREmployeeAttendance extends Model
             $tappmtimein = null;
             $tappmtimeout = null;
             
-            if(count($attrecords) == 0)
-            {
-                
-                $daysabsent += 1;
-            }else{
+            $amtimein = '00:00:00';
+            $amtimeout = '00:00:00';
+            $pmtimein = '00:00:00';
+            $pmtimeout = '00:00:00';
 
-                if(collect($attrecords)->where('ttime','<', $customtimesched->amout)->where('tapstate','IN')->first())
-                {
-                    $tapamtimein = collect($attrecords)->where('ttime','<', $customtimesched->amout)->where('tapstate','IN')->first()->ttime;
-                }else{
-                    // $tapamtimein = $customtimesched->amin;
-                }
+            $lateam = 0;
+            $latepm = 0;
+            $undertimeam = 0;
+            $undertimepm = 0;
 
-                if(collect($attrecords)->where('ttime','<', $customtimesched->pmin)->where('ttime','>',$tapamtimein)->where('tapstate','OUT')->first())
-                {
-					
-                    $tapamtimeout = collect($attrecords)->where('ttime','<', $customtimesched->pmin)->where('ttime','>',$tapamtimein)->where('tapstate','OUT')->first()->ttime;
+            $amtotalminutes = 0;
+            $pmtotalminutes = 0;
+            $appliedleave = 0;
 
-                }else{
-                    // $tapamtimeout = '12:00:00';
-                    $tapamtimeout = $customtimesched->amout;
-                }
-
-                if(collect($attrecords)->where('ttime','>', $customtimesched->amout)->where('ttime','<', $customtimesched->pmout)->where('ttime','>',$tapamtimeout)->where('tapstate','IN')->first())
-                {
-                    $tappmtimein = collect($attrecords)->where('ttime','>', $customtimesched->amout)->where('ttime','>',$tapamtimeout)->where('tapstate','IN')->first()->ttime;
-
-                }else{
-                    // if($day == '2021-11-15')
-                    // {
-                    //     return 'asdad';
-                    // }
-                    $tappmtimein = $customtimesched->pmin;
-					// $tappmtimein = '13:00:00';
-                }
-
-                if(collect($attrecords)->where('ttime','>', $customtimesched->pmin)->where('tapstate','OUT')->last())
-                {
-                    $tappmtimeout = collect($attrecords)->where('ttime','>', $customtimesched->pmin)->where('tapstate','OUT')->last()->ttime;
-                }else{
-                    // $tappmtimeout = $customtimesched->pmout;
-                }
-                if($tapamtimein>0)
-                {
-                    //$difftapamtimein = strtotime($tapamtimein);
-                    //if($tapamtimeout == null)
-                    //{
-                        //$difftapamtimeout = strtotime($customtimesched->amout);
-                    //}else{
-						//$customschedout =  $customtimesched->amout;
-						//$customschedoutTimestamp = strtotime($customschedout);
-						//$difftapamtimeouttap = strtotime($tapamtimeout);
-						//return $tapamtimeout;
-						//return $difftapamtimeout;
-						//if ($difftapamtimeouttap < $customschedoutTimestamp) {
-							// Calculate the difference between $customschedout and $difftapamtimeout
-							//$difftapamtimeout = $difftapamtimeouttap; // Convert to hours
-						//} else {
-							// Maintain 4 hours
-							//$difftapamtimeout = $customschedoutTimestamp;
-						//}
-                    //} 
-                    //$differenceam = round(abs($difftapamtimeout - $difftapamtimein) / 3600,2);
-                    //$dailytotalworkinghours += $differenceam;
-					
-					$difftapamtimein = new DateTime($tapamtimein);
-					
-                    if($tapamtimeout == null)
-                    {
-                        $difftapamtimeout = new DateTime($customtimesched->amout);
-                    }else{
-						$customschedout =  new DateTime($customtimesched->amout);
-						$difftapamtimeouttap = new DateTime($tapamtimeout);
-						if ($difftapamtimeouttap < $customschedout) {
-							$difftapamtimeout = $difftapamtimeouttap;
-                            $difftapamtimeoutflexi = $difftapamtimeouttap;
-						} else {
-							$difftapamtimeout = $customschedout;
-                            $difftapamtimeoutflexi = $customschedout;
-						}
-                        
-                    } 
-                    $differenceam = $difftapamtimein->diff($difftapamtimeout);
-                    $differenceamflexi = $difftapamtimein->diff($difftapamtimeoutflexi);
-
-					$hours = $differenceam->h;
-					$minutes = $differenceam->i;
-					$totalHoursam = $hours + ($minutes / 60);
-
-                    //flexi
-                    $hoursflexi = $differenceamflexi->h;
-					$minutesflexi = $differenceamflexi->i;
-					$totalHoursamflexi = $hoursflexi + ($minutesflexi / 60);
-
-                    $dailytotalworkinghours += $totalHoursam;
-                    $dailytotalworkinghoursflexi = $totalHoursamflexi;
-					// return $dailytotalworkinghours;
-                }
-                if($tappmtimein>0)
-                {
-                    //$difftappmtimeintap = strtotime($tappmtimein);
-					//$customschedpmin =  $customtimesched->pmin;
-					//$customschedpminTimestamp = strtotime($customschedpmin);
-					//return $tappmtimein;
-					//return $customtimesched->pmin;
-					//if($difftappmtimeintap < $customschedpminTimestamp){
-						//$difftappmtimein = $customschedpminTimestamp;
-					//} else {
-						//$difftappmtimein = $difftappmtimeintap;
-					//}
-					
-                    //if($tapamtimeout == null)
-                    //{
-                        //$difftappmtimeout = strtotime($customtimesched->pmout);
-                    //}else{
-                        //$difftappmtimeout = strtotime($tappmtimeout);
-                    //}
-                    //$differencepm = round(abs($difftappmtimeout - $difftappmtimein) / 3600,2);
-                    //$dailytotalworkinghours += $differencepm;
-					
-					$difftappmtimeintap = new DateTime($tappmtimein);
-					$customschedpmin =  $customtimesched->pmin;
-					$customschedpminTimestamp = new DateTime($customschedpmin);
-					
-					//return $customschedpminTimestamp;
-					if($difftappmtimeintap > $customschedpminTimestamp){
-						$difftappmtimein = $difftappmtimeintap;
-					} else {
-						$difftappmtimein = $customschedpminTimestamp;
-					}
-					$difftappmtimeoutflexi = null;
-					// return $tapamtimeout;
-                    if($tapamtimeout == null)
-                    {
-                        $difftappmtimeout = new DateTime($customtimesched->pmout);
-                    }else{
-                        if (!$tappmtimeout) {
-                            $difftappmtimeouttap = new DateTime($tappmtimeout);
-                            $difftappmtimeouttap->setTime(0, 0, 0); // Set time to midnight
-                        } else {
-                            $difftappmtimeouttap = new DateTime($tappmtimeout);
-                        }
-						$customtimepmout = new DateTime($customtimesched->pmout);
-						if($difftappmtimeouttap > $customtimepmout){
-							$difftappmtimeout = $customtimepmout;
-                            $difftappmtimeoutflexi = $difftappmtimeouttap;
-						} else {
-							$difftappmtimeout = $difftappmtimeouttap;
-                            $difftappmtimeoutflexi = $difftappmtimeouttap;
-						}
-                        
-                    }
-					
-                    
-
-                    $differencepm = $difftappmtimein->diff($difftappmtimeout);
-					$differencepmflexi = null;
-					
-					
-					// return collect($difftappmtimeoutflexi);
-                    if ($difftappmtimein instanceof DateTime && $difftappmtimeoutflexi instanceof DateTime) {
-						$differencepmflexi = $difftappmtimein->diff($difftappmtimeoutflexi);
-					}
-					// return collect($differencepmflexi);
-					$hours = $differencepm->h;
-					$minutes = $differencepm->i;
-					
-					$totalHourspmflexi = 0;
-					if (!$tappmtimeout) {
-                        $totalHourspm = 0;
-                    } else {
-                        $totalHourspm = $hours + ($minutes / 60);
-                    }
-					if($differencepmflexi != null){
-						//flexi
-						$hoursflexi = $differencepmflexi->h;
-						$minutesflexi = $differencepmflexi->i;
-						$totalHourspmflexi = $hoursflexi + ($minutesflexi / 60);
-					}
-					
-                  
-
-					// return $hoursflexi;
-                    $dailytotalworkinghours += $totalHourspm;
-					$dailytotalworkinghoursflexi += $totalHourspmflexi;
-
-					// return $dailytotalworkinghours;
-					
-                }
-        
-                // return $dailytotalworkinghours;
-                
-
-                // $latehours = 0;
-
-                if($customtimesched->amin < $tapamtimein)
-                {                    
-                    $basetimeinam = strtotime($customtimesched->amin);
-                    $intimeam = strtotime($tapamtimein);
-                    $differencelateam = round(abs($intimeam - $basetimeinam) / 3600,2);
-                    $latehours += $differencelateam;
-                    $lateamhours += $differencelateam;
-					
-					
-					
-                }
-				//return $customtimesched->pmin;
-                if($customtimesched->pmin < $tappmtimein)
-                {                    
-                    $basetimeinpm = strtotime($customtimesched->pmin);
-                    $intimepm = strtotime($tappmtimein);
-                    $differencelatepm = round(abs($intimepm - $basetimeinpm) / 3600,2);
-                    $latehours += $differencelatepm;
-                    $latepmhours += $differencelatepm;
-					// return $latepmhours;
-				
-                }
-				
-                // $undertimehours = 0;
-
-                if($customtimesched->amout > $tapamtimeout && $tapamtimeout != null)
-                {                    
-                    $outtimeam = strtotime($tapamtimeout);
-                    $basetimeoutam = strtotime($customtimesched->amout);
-                    $differenceundertimeam = round(abs($basetimeoutam - $outtimeam) / 3600,2);
-                    $undertimehours += $differenceundertimeam;
-                    $undertimeamhours += $differenceundertimeam;
-                }
-
-                if($customtimesched->pmout > $tappmtimeout && $tappmtimeout != null)
-                {                    
-                    $outtimeam = strtotime($tappmtimeout);
-                    $basetimeoutpm = strtotime($customtimesched->pmout);
-                    $differenceundertimepm = round(abs($basetimeoutpm - $outtimeam) / 3600,2);
-                    $undertimehours += $differenceundertimepm;
-                    $undertimepmhours += $differenceundertimepm;
-                }
-            }
-            
             $checkifexists = DB::table('hr_attendanceremarks')
                 ->where('tdate',$day)
                 ->where('employeeid', $employeeid)
@@ -1402,99 +1040,263 @@ class HREmployeeAttendance extends Model
             }
 
             
-            $customlateallowance    = 0;
-            
-            $getlatedeductionsetup = Db::table('deduction_tardinesssetup')
-            ->where('status','1')
-            ->first();
-            
-            $departmentid = DB::table('teacher')
-            ->select(
-                'hr_departments.id as departmentid'
-                )
-            ->leftJoin('employee_personalinfo','teacher.id','employee_personalinfo.employeeid')
-            ->leftJoin('civilstatus','employee_personalinfo.maritalstatusid','civilstatus.civilstatus')
-            ->leftJoin('usertype','teacher.usertypeid','=','usertype.id')
-            ->leftJoin('hr_departments','teacher.schooldeptid','hr_departments.id')
-            ->where('teacher.id', $employeeid)
-            ->first()->departmentid;
-
-            if($getlatedeductionsetup)
+            if(count($attrecords) == 0)
             {
-                if(strtolower($getlatedeductionsetup->type) == 'custom'){
-                        
-                    $deductiontardinessapplication = Db::table('deduction_tardinessapplication')
-                        ->where('departmentid',$departmentid)
-                        ->where('deleted','0')
-                        ->get();
-                        
-                    if(count($deductiontardinessapplication) == 0)
-                    {
-                        $deductioncomputation = Db::table('deduction_tardinessdetail')
-                            ->where('all',1)
-                            ->where('deleted','0')
-                            ->get();
-
-                        // $deductiontardinessapplication = Db::table('deduction_tardinessapplication')
-                        //     ->where('all',1)
-                        //     ->where('deleted','0')
-                        //     ->get();
-
-
-                    }else{
-                        
-                        $deductioncomputation = Db::table('deduction_tardinessdetail')
-                            ->where('id',$deductiontardinessapplication[0]->tardinessdetailid)
-                            ->where('deleted','0')
-                            ->get();
+                if ($leavesapplied && $leavesapplied->halfday == 1) {
+                    $tapamtimein = $customtimesched->amin;
+                    $tapamtimeout = $customtimesched->amout;
+                    $appliedleave = 1;
+                    $status = 1;
+                } else if($leavesapplied && $leavesapplied->halfday == 2) {
+                    $tappmtimein = $customtimesched->pmin;
+                    $tappmtimeout = $customtimesched->pmout;
+                    $appliedleave = 1;
+                    $status = 1;
+                } else if($leavesapplied && $leavesapplied->halfday == 0) {
+                    $tapamtimein = $customtimesched->amin;
+                    $tapamtimeout = $customtimesched->amout;
+                    $tappmtimein = $customtimesched->pmin;
+                    $tappmtimeout = $customtimesched->pmout;
+                    $appliedleave = 1;
+                    $status = 1;
+                } else if($holidays) {
+                    $tapamtimein = $customtimesched->amin;
+                    $tapamtimeout = $customtimesched->amout;
+                    $tappmtimein = $customtimesched->pmin;
+                    $tappmtimeout = $customtimesched->pmout;
+                    $status = 1;
+                } else {
+                    $daysabsent += 1;
+                }
+            } else {
+                $amintap = collect($attrecords)->where('ttime','<', $customtimesched->amout)->where('deleted', 0)->first();
+                
+                if ($leavesapplied && $leavesapplied->halfday == 1) {
+                    $tapamtimein = $customtimesched->amin;
+                } else if($holidays) {
+                    $tapamtimein = $customtimesched->amin;
+                } else {
+                    if ($amintap) {
+                        $tapamtimein = $amintap->ttime;
+                    } else {
+                        $tapamtimein = null;
                     }
-                    
+                }
+                
+                
+                $amouttap = collect($attrecords)->where('ttime','>', $customtimesched->amin)->where('ttime','<=', $customtimesched->amout)->where('ttime', '!=', $tapamtimein)->where('deleted', 0)->last();
+                // if wala siya nag tapout or tap less than or equal sa iyang customtime sched amout
+                $amouttap2 = collect($attrecords)->where('ttime','>', $customtimesched->amout)->where('ttime', '<', $customtimesched->pmin)->where('deleted', 0)->first();
+
+                if ($leavesapplied && $leavesapplied->halfday == 1) {
+                    $tapamtimeout = $customtimesched->amout;
+                } else if($holidays) {
+                    $tapamtimeout = $customtimesched->amout;
+                } else {
+                    if (!$amouttap) {
+                        if ($amouttap2 && $tapamtimein != null) {
+                            $tapamtimeout = $amouttap2->ttime;
+                        } else {
+                            $tapamtimeout = null;
+                        }
+                    } else {
+                        if ($amouttap) {
+                            $tapamtimeout = $amouttap->ttime;
+                        } else {
+                            $tapamtimeout = null;
+                        }
+                    }
+                }
+
+                $pmintapcount = collect($attrecords)->where('ttime','>', $customtimesched->amout)->where('deleted', 0)->count();
+                $pmintap = collect($attrecords)->where('ttime','>', $customtimesched->amout)->where('ttime','<', $customtimesched->pmout)->where('ttime', '!=', $tapamtimeout)->where('deleted', 0)->first();
+                // possible the result of $pmintap kay isa ra kabook so it means maglibog kong out ba or in sa pm pero kong wala siyay amout og pmin as is 
+                
+                if ($leavesapplied && $leavesapplied->halfday == 2) {
+                    $tappmtimein = $customtimesched->pmin;
+                } else if($holidays) {
+                    $tappmtimein = $customtimesched->pmin;
+                } else {
+                    if ($pmintap) {
+                        if ($tapamtimein != null && $tapamtimeout == null && $pmintapcount == 1) {
+                            $tappmtimein = null;
+                        } else {
+                            $tappmtimein = $pmintap->ttime;
+                        }
+                    } else {
+                        $tappmtimein = null;
+                    }
+                }
+                
+                
+                $pmouttap = collect($attrecords)->where('ttime','>', $customtimesched->pmin)->where('ttime', '!=', $tappmtimein)->where('deleted', 0)->last();
+                if ($leavesapplied && $leavesapplied->halfday == 2) {
+                    $tappmtimeout = $customtimesched->pmout;
+                } else if($holidays) {
+                    $tappmtimeout = $customtimesched->pmout;
+                } else {
+                    if ($pmouttap) {
+                        $tappmtimeout = $pmouttap->ttime;
+                    } else {
+                        $tappmtimeout = null;
+                    }
+                }
+                
+            }
+
+            // this is to convert times is sayu ra kaayu ex. 6 am nag in so dapat kong unsa ang ting in like 8am dapat, mao to dapat ma assume na 8 am jud lisod 
+            if ($tapamtimein != null && $tapamtimein < $customtimesched->amin) {
+                $amtimein = $customtimesched->amin;
+            } else {
+                $amtimein = $tapamtimein;
+            }
+            if ($tapamtimeout != null && $tapamtimeout > $customtimesched->amout) {
+                $amtimeout = $customtimesched->amout;
+            } else {
+                $amtimeout = $tapamtimeout;
+            }      
+            if ($tappmtimein != null && $tappmtimein < $customtimesched->pmin) {
+                $pmtimein = $customtimesched->pmin;
+            } else {
+                $pmtimein = $tappmtimein;
+            }      
+            if ($tappmtimeout != null && $tappmtimeout > $customtimesched->pmout) {
+                $pmtimeout = $customtimesched->pmout;
+            } else {
+                $pmtimeout = $tappmtimeout;
+            }      
+
+            if ($amtimein && $amtimein > $customtimesched->amin) {
+                $amtimein = Carbon::createFromFormat('H:i:s', $amtimein); 
+                $baseTime = Carbon::createFromFormat('H:i:s', $customtimesched->amin);
+                $lateam = $amtimein->diffInMinutes($baseTime);
+            }
+
+            if (($amtimein == null && $amtimeout == null) && ($pmtimein != null || $pmtimeout != null)) {
+                $lateam = Carbon::createFromFormat('H:i:s', $customtimesched->amin)->diffInMinutes(Carbon::createFromFormat('H:i:s', $customtimesched->amout));
+            }
+            
+            if ($amtimeout && $amtimeout < $customtimesched->amout) {
+                $amtimeout = Carbon::createFromFormat('H:i:s', $amtimeout); 
+                $baseTime = Carbon::createFromFormat('H:i:s', $customtimesched->amout);
+                $undertimeam = $baseTime->diffInMinutes($amtimeout);
+            }
+
+            if ($pmtimein && $pmtimein > $customtimesched->pmin) {
+                $pmtimein = Carbon::createFromFormat('H:i:s', $pmtimein); 
+                $baseTime = Carbon::createFromFormat('H:i:s', $customtimesched->pmin);
+                $latepm = $pmtimein->diffInMinutes($baseTime);
+            }
+            
+            if ($pmtimeout && $pmtimeout < $customtimesched->pmout) {
+                $pmtimeout = Carbon::createFromFormat('H:i:s', $pmtimeout); 
+                $baseTime = Carbon::createFromFormat('H:i:s', $customtimesched->pmout);
+                $undertimepm = $baseTime->diffInMinutes($pmtimeout);
+            }
+
+            if (($pmtimein == null && $pmtimeout == null) && ($amtimein != null || $amtimeout != null)) {
+                $undertimepm = Carbon::createFromFormat('H:i:s', $customtimesched->pmin)->diffInMinutes(Carbon::createFromFormat('H:i:s', $customtimesched->pmout));
+            }
+           
+            // If there's no AM timeout and both AM time-in and PM time-in are present, set $amtimeout to the scheduled amout
+            if (!$amtimeout) {
+                if ($amtimein != null || $pmtimein != null) {
+                    $amtimeout = $customtimesched->amout; // Set to custom amout if both time-ins are present
+                } 
+            }
+
+            // If there's no PM time-in and both AM time-in and PM timeout are present, set $pmtimein to the scheduled pmin
+            if (!$pmtimein) {
+                if ($amtimein !== null && $pmtimeout !== null) {
+                    $pmtimein = Carbon::parse($customtimesched->pmin); // Set to custom pmin if AM time-in and PM timeout are present
+                } 
+            }
+
+            // get am total hours
+            if ($amtimein) {
+                // Tan-awon kung ang $amtimein mas sayo pa sa custom schedule nga amin ug i-adjust kung kinahanglan
+                if ($amtimein < Carbon::parse($customtimesched->amin)) {
+                    $amtimein = Carbon::parse($customtimesched->amin); // Use parse for flexible parsing
+                } else {
+                    $amtimein = Carbon::parse($amtimein); // Parse to ensure it's a Carbon object
+                }
+            
+                // Tan-awon kung naa ba'y $amtimeout ug i-adjust kung mas ulahi pa sa custom schedule nga amout
+                if ($amtimeout) {
+                    if ($amtimeout > Carbon::parse($customtimesched->amout)) {
+                        $amtimeout = Carbon::parse($customtimesched->amout); // Parse to ensure it's a Carbon object
+                    } else {
+                        $amtimeout = Carbon::parse($amtimeout); // Parse the timeout string
+                    }
+                } 
+                // Kung walay timeout pero naa'y PM time-in, gamiton ang custom schedule nga amout isip timeout
+                else if (!$amtimeout && $pmtimein != null) {
+                    $amtimeout = Carbon::parse($customtimesched->amout); // Parse for a safe conversion
+                }
+                
+                // Kwentahon ang total nga minuto nga kalahi-an sa $amtimein ug $amtimeout
+                $amtotalminutes = $amtimein->diffInMinutes($amtimeout);
+            }
+            
+            // get pm total hours
+            if ($pmtimeout) {
+                if ($pmtimeout >  Carbon::parse($customtimesched->pmout)) {
+                    $pmtimeout = Carbon::parse($customtimesched->pmout); // Parse to ensure it's a Carbon object
+                } else {
+                    $pmtimeout = Carbon::parse($pmtimeout); // Parse the timeout string
+                }
+
+                if ($pmtimein) {
+                    if ($pmtimein < Carbon::parse($customtimesched->pmin)) {
+                        $pmtimein = Carbon::parse($customtimesched->pmin); // Parse to ensure it's a Carbon object
+                    } else {
+                        $pmtimein = Carbon::parse($pmtimein); // Parse the timeout string
+                    }
+                } else if (!$pmtimein && $amtimeout != null || $amtimein != null) {
+                    $pmtimein = Carbon::parse($customtimesched->pmin);
+                }
+
+                if ($pmtimein && $pmtimeout) {
+                    $pmtotalminutes = $pmtimein->diffInMinutes($pmtimeout);
+                } else {
+                    // Handle case where either time-in or time-out is missing
+                    $pmtotalminutes = 0;
                 }
             }
-			
-			// return $dailytotalworkinghours;
-            $timeinam = collect($attrecords)->where('tapstate','IN')->first()->ttime ?? '';
-            $timeoutam = collect($attrecords)
-                        ->where('ttime','<=',$customtimesched->pmin)
-                        ->where('tapstate','OUT')
-                        ->last()->ttime ?? '12:00:00';
-                        // ->last()->ttime ?? $customtimesched->amout;
-                        
-            $timeinpm = collect($attrecords)
-                        ->where('ttime','>=',$customtimesched->amout)
-                        ->where('ttime','<=',$customtimesched->pmout)
-                        ->where('tapstate','IN')
-                        // ->first()->ttime ?? '14:00:00';
-                        ->first()->ttime ?? $customtimesched->pmin;
-            $timeoutpm = collect($attrecords)->where('ttime','>',$timeinpm)->where('ttime','>',$timeoutam)->where('tapstate','OUT')->last()->ttime ?? '';
+            
             array_push($data, (object) array(
                 'date'              => $day,
                 'daystring'         => date('M d', strtotime($day)),
                 'day'              => date('l', strtotime($day)),
                 'dayint'              => date('d', strtotime($day)),
-                'lateamhours'              => $lateamhours,
-                'latepmhours'              => $latepmhours,
-                'undertimeamhours'              => $undertimeamhours,
-                'undertimepmhours'              => $undertimepmhours,
+                'lateamhours'              => $lateam,
+                'latepmhours'              => $latepm,
+                'undertimeamhours'              => $undertimeam,
+                'undertimepmhours'              => $undertimepm,
                 'amtimein'              => $tapamtimein,
                 'amtimeout'              => $tapamtimeout,
                 'pmtimein'              => $tappmtimein,
                 'pmtimeout'              => $tappmtimeout,
-                'timeinam'              => $timeinam,
-                'timeoutam'              => $timeoutam,
-                'timeinpm'              => $timeinpm,
-                'timeoutpm'              => $timeoutpm,
+                'timeinam'              => $tapamtimein,
+                'timeoutam'              => $tapamtimeout,
+                'timeinpm'              => $tappmtimein,
+                'timeoutpm'              => $tappmtimeout,
                 'amin'              => $tapamtimein,
                 'amout'              => $tapamtimeout,
                 'pmin'              => $tappmtimein,
                 'pmout'              => $tappmtimeout,
-                // 'totalworkinghours' => ($dailytotalworkinghours > 0) ? floor($dailytotalworkinghours * 100) / 100 : 0,
-                'totalworkinghours' => $dailytotalworkinghours ?? 0,
-                'totalworkinghoursflexi' => $dailytotalworkinghoursflexi ?? 0,
-                'latehours'         => $latehours,
-                'undertimehours'    => $undertimehours,
+                'amtotalminutes'        => $amtotalminutes,
+                'pmtotalminutes'        => $pmtotalminutes,
+                'totalworkinghours' => $amtotalminutes + $pmtotalminutes,
+                'totalworkinghoursflexi' => 0,
+                'customworkinghours' => $customworkinghours,
+                'latehours'         => $lateam + $latepm,
+                'undertimehours'    => $undertimeam + $undertimepm,
                 'logs'    => $attrecords,
                 'remarks'    => $remarks,
+                'holiday' => $holidays,
+                'leavesapplied' => $leavesapplied,
+                'appliedleave' => $appliedleave,
                 'status'    => $status
             ));
         }

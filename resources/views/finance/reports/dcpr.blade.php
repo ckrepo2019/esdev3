@@ -2,10 +2,10 @@
 
 @section('content')
   {{-- <style type="text/css">
-    .table thead th  { 
-                position: sticky !important; left: 0 !important; 
+    .table thead th  {
+                position: sticky !important; left: 0 !important;
                 width: 150px !important;
-                background-color: #fff !important; 
+                background-color: #fff !important;
                 outline: 2px solid #fff !important;
                 outline-offset: -1px !important;
             }
@@ -15,7 +15,7 @@
       <div class="row mb-2">
         <div class="col-sm-6">
           <!-- <h1>Finance</h1> -->
-          
+
         </div>
         <div class="col-sm-6">
           <ol class="breadcrumb float-sm-right">
@@ -48,7 +48,7 @@
             <div class="col-md-3">
                 <div class="form-group clearfix mt-2">
                     <div class="icheck-primary d-inline">
-                        
+
                         <input type="radio" id="dcpr_filterdate" name="r1" checked="">
                         <label for="dcpr_filterdate">
                             Date
@@ -71,13 +71,13 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header bg-primary">
-                        
+
                     </div>
                     <div class="card-body">
                         <div id="main_table" class="table-responsive p-0">
                             <table class="table table-striped table-sm text-sm" style="table-layout: fixed;">
                                 <thead class="bg-gray-dark" id="dcpr_header">
-                                    
+
                                 </thead>
                                 <tbody id="dcpr_list">
                                 </tbody>
@@ -86,7 +86,7 @@
                         </div>
                     </div>
                 </div>
-            </div>          
+            </div>
         </div>
   	</div>
   </section>
@@ -162,7 +162,7 @@
                 </div>
               </div>
 
-              
+
             </div>
             <!-- /.card-body -->
             <!-- /.card-footer -->
@@ -374,7 +374,7 @@
 @endsection
 
 @section('js')
-    
+
     <style>
         .loader{
             width: 100px;
@@ -432,9 +432,9 @@
             }
         }
     </style>
-  
+
   <script type="text/javascript">
-    
+
     $(document).ready(function(){
         var searchVal = $('#txtsearchitem').val();
         // searchitems();
@@ -466,8 +466,8 @@
             {
                 var type = 'or';
             }
-			
-			if(date != '')
+
+			if((date != '' && type == 'date') || type == 'or')
 			{
 				$('#modal-overlay').modal('show');
 				$.ajax({
@@ -489,7 +489,7 @@
 							$('#modal-overlay').modal('hide');
 						}, 1000)
 					}
-				});    
+				});
 			}
 			else
 			{
@@ -526,10 +526,32 @@
             {
                 var type = 'or';
             }
-			
-			if(date != '')
+
+			if((date != '' && type == 'date') || type == 'or')
 			{
-				window.open("/finance/reports/dcpr_export?dcpr_date="+dcpr_date+"&orfrom="+orfrom+"&orto="+orto+"&type="+type);
+                console.log($('#dcpr_list tr').length)
+                if($('#dcpr_list tr').length > 1)
+                {
+				    window.open("/finance/reports/dcpr_export?dcpr_date="+dcpr_date+"&orfrom="+orfrom+"&orto="+orto+"&type="+type);
+                }
+                else{
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true,
+                        didOpen: (toast) => {
+                            toast.addEventListener('mouseenter', Swal.stopTimer)
+                            toast.addEventListener('mouseleave', Swal.resumeTimer)
+                        }
+                    })
+
+                    Toast.fire({
+                        type: 'error',
+                        title: 'No data found.'
+                    })
+                }
 			}
 			else
 			{
@@ -551,7 +573,7 @@
 				})
 			}
 
-            
+
         });
 
         $(document).on('click', '#dcpr_filterdate', function(){
@@ -567,5 +589,5 @@
     });
 
   </script>
-  
+
 @endsection

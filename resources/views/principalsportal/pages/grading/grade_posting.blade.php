@@ -52,7 +52,7 @@
     $all_acad = array();
 
     foreach( $acadprogid as $item){
-        if($item->acadprogid != 6){
+        if($item->acadprogid != 6 &&  $item->acadprogid != 8){
             array_push($all_acad,$item->acadprogid);
         }
     }

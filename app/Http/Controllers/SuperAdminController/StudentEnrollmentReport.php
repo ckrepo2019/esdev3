@@ -157,11 +157,13 @@ class StudentEnrollmentReport extends \App\Http\Controllers\Controller
 
             if($datatype == 2){
                   $gradelevel = DB::table('gradelevel')
+                                    ->where('deleted', 0)
                                     ->whereIn('acadprogid',$acad)
                                     ->select(
                                           'id',
                                           'levelname'
                                     )
+                                    ->orderBy('sortid', 'ASC')
                                     ->get();
             }
                              

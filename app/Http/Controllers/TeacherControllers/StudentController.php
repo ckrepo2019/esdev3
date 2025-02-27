@@ -975,6 +975,7 @@ class StudentController extends \App\Http\Controllers\Controller
     }
     public function bysubjectgetstudents(Request $request)
     {
+        // return $request->all();
         // if($request->ajax())
         // {
             //return $request->all();
@@ -1036,8 +1037,26 @@ class StudentController extends \App\Http\Controllers\Controller
                             ->groupBy('enrolledstud.studid')
                             ->distinct()
                             ->get();
+
+                // added by clyde - special subject students
+                $specialstud = DB::table('student_specsubj')
+                ->where('student_specsubj.syid',$syid)
+                ->where('student_specsubj.semid',$semid)
+                ->where('student_specsubj.sectionid',$sectionid)
+                ->where('student_specsubj.deleted',0)
+                ->join('enrolledstud','student_specsubj.studid','=','enrolledstud.studid')
+                ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                ->leftJoin('modeoflearning','studinfo.mol','=','modeoflearning.id')
+                ->leftJoin('studentstatus','enrolledstud.studstatus','=','studentstatus.id')
+                ->select('studinfo.*','studentstatus.description','modeoflearning.description as moldesc')
+                ->get();
             }
-                
+
+            if(count($specialstud) > 0){
+                $students = $students->merge($specialstud);
+            }
+
+            // dd($students) ;
 
             $students = collect($students)->unique('id')->values();
             if(count($students)>0)

@@ -79,7 +79,7 @@ class SchoolDaysController extends \App\Http\Controllers\Controller
                   $gradelevel = DB::table('gradelevel')
                               ->where('deleted',0)
                               ->whereIn('acadprogid',$acad)
-                              ->where('gradelevel.acadprogid','!=',6)
+                              ->whereNotIn('gradelevel.acadprogid',[6,8])
                               ->orderBy('sortid')
                               ->select(
                                     'gradelevel.levelname as text',
@@ -92,7 +92,7 @@ class SchoolDaysController extends \App\Http\Controllers\Controller
       
                   $gradelevel = DB::table('gradelevel')
                               ->where('deleted',0)
-                              ->where('gradelevel.acadprogid','!=',6)
+                              ->whereNotIn('gradelevel.acadprogid',[6,8])
                               ->whereIn('gradelevel.acadprogid',$acad)
                               ->orderBy('sortid')
                               ->select(
@@ -103,7 +103,7 @@ class SchoolDaysController extends \App\Http\Controllers\Controller
                               ->get(); 
             }
 
-
+            
             return $gradelevel;
 
       }

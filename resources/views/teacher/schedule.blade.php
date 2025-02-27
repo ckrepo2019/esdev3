@@ -124,9 +124,10 @@
                                                       <table class="table table-sm table-striped mb-0 table-bordered"  width="100%">
                                                             <thead>
                                                                   <tr>
-                                                                        <th width="25%" class="pl-2 pr-2">Time</th>
+                                                                        <th width="20%" class="pl-2 pr-2">Time</th>
                                                                         <th width="25%">Section</th>
-                                                                        <th width="50%">Subject</th>
+                                                                        <th width="40%">Subject</th>
+                                                                        <th width="15%">Room</th>
                                                                   </tr>
                                                             </thead>
                                                             <tbody  id="table_1"></tbody>
@@ -153,8 +154,9 @@
                                                 <thead>
                                                       <tr>
                                                               <th width="15%">Section</th>
-                                                              <th width="45%">Subject</th>
+                                                              <th width="40%">Subject</th>
                                                               <th width="35%" >Time & Day</th>
+                                                              <th width="10%">Room</th>
                                                       </tr>
                                                 </thead>
                                           </table>
@@ -231,7 +233,6 @@
                         var today = $('#filter_day').val()
                         var day_sched = []
                         var temp_sched = all_sched
-
                         if($('#term').val() != ""){
                               if($('#term').val() == "Whole Sem"){
                                     temp_sched = all_sched.filter(x=>x.schedotherclass == null)
@@ -239,6 +240,7 @@
                                     temp_sched = all_sched.filter(x=>x.schedotherclass == $('#term').val())
                               }
                         }
+                        console.log(all_sched);
 
 
                         $.each(temp_sched,function(a,b){
@@ -259,8 +261,13 @@
                               $.each(day_sched,function(a,b){
 
                                     var schedotherclass = b.schedotherclass != null ? b.schedotherclass : 'Whole Semester'
-                                    
-                                    $('#table_1').append('<tr><td class="pl-2 pr-2 align-middle"><a class="mb-0">'+b.schedule[0].start+'<br>'+b.schedule[0].end+'</a></td><td>'+'<a class="mb-0">'+b.sectionDesc+'</a><p class="text-muted mb-0" style="font-size:.7rem">'+b.levelname.replace('COLLEGE','')+'</p>'+'</td><td>'+'<a class="mb-0">'+b.subjdesc+'</a><p class="text-muted mb-0" style="font-size:.7rem">'+b.subjcode+'</p>'+'</td></tr>')
+                                    var room_name = ''
+                                    if (b.schedule[0].roomname == null) {
+                                          room_name = ''
+                                    } else {
+                                          room_name = b.schedule[0].roomname
+                                    }
+                                    $('#table_1').append('<tr><td class="pl-2 pr-2 align-middle"><a class="mb-0">'+b.schedule[0].start+'<br>'+b.schedule[0].end+'</a></td><td>'+'<a class="mb-0">'+b.sectionDesc+'</a><p class="text-muted mb-0" style="font-size:.7rem">'+b.levelname.replace('COLLEGE','')+'</p>'+'</td><td>'+'<a class="mb-0">'+b.subjdesc+'</a><p class="text-muted mb-0" style="font-size:.7rem">'+b.subjcode+'</p>'+'</td><td>'+'<a class="mb-0">'+room_name+'</a>'+'</td></tr>')
                               })
                         }
                   }
@@ -268,7 +275,7 @@
                   function datatable_1(){
 
                         var temp_sched = all_sched
-                      
+                        console.log(all_sched,'d');
                         $("#sched_holder").DataTable({
                               destroy: true,
                               data:all_sched,
@@ -277,6 +284,7 @@
                               columns: [
                                                 { "data": "sortid" },
                                                 { "data": "search" },
+                                                { "data": null },
                                                 { "data": null },
                                           ],
                               columnDefs: [
@@ -360,6 +368,21 @@
                                                             $(td)[0].innerHTML =  text
                                                             $(td).addClass('align-middle')
                                                             $(td).addClass('p-0')
+                                                      }
+                                                },
+                                                {
+                                                      'targets': 3,
+                                                      'orderable': true, 
+                                                      'createdCell':  function (td, cellData, rowData, row, col) {
+                                                            var room_name = ''
+                                                            if (rowData.schedule[0].roomname == null) {
+                                                                  room_name = ''
+                                                            } else {
+                                                                  room_name = rowData.schedule[0].roomname
+                                                            }
+                                                            var text = '<p class="text-muted mb-0" style="font-size:.7rem">'+room_name+'</p>';
+                                                            $(td)[0].innerHTML =  text
+                                                            $(td).addClass('align-middle')
                                                       }
                                                 },
                                           ]

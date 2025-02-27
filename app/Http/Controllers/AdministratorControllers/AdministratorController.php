@@ -81,6 +81,7 @@ class AdministratorController extends \App\Http\Controllers\Controller
     {
         try {
             DB::table('schoolinfo')->update([
+                'schoolemail' => $request->get('schoolemail'),
                 'schoolid' => $request->get('schoolid'),
                 'schoolname' => $request->get('schoolname'),
                 'divisiontext' => $request->get('division'),
@@ -121,6 +122,7 @@ class AdministratorController extends \App\Http\Controllers\Controller
                 ]
             );
         } catch (\Exception $e) {
+            return $e->getMessage();
             return self::store_error($e);
         }
     }
@@ -170,44 +172,44 @@ class AdministratorController extends \App\Http\Controllers\Controller
     public static function adminuploadlogo($schoollogoimage, Request $request)
     {
         $urlFolder = str_replace(['http://', 'https://'], '', $request->root());
-    
+
         $publicPath = public_path('schoollogo/');
         $cloudPath = dirname(base_path(), 1) . '/' . $urlFolder . '/schoollogo/';
-    
+
         // Ensure the directories exist
         if (!File::exists($publicPath)) {
             File::makeDirectory($publicPath, 0777, true, true);
         }
-    
+
         if (!File::exists($cloudPath)) {
             File::makeDirectory($cloudPath, 0777, true, true);
         }
-    
+
         $file = $schoollogoimage;
         $extension = $file->getClientOriginalExtension();
         $fileName = 'schoollogo.' . $extension;
         $destinationPath = $publicPath . $fileName;
         $cloudDestinationPath = $cloudPath . $fileName;
-    
+
         // Check if the image already exists and delete it
         if (File::exists($destinationPath)) {
             File::delete($destinationPath);
         }
-    
+
         if (File::exists($cloudDestinationPath)) {
             File::delete($cloudDestinationPath);
         }
-    
+
         // Resize and save the new image
         $img = Image::make($file->path());
         $img->resize(500, 500, function ($constraint) {
             $constraint->aspectRatio();
         })->resizeCanvas(500, 500, 'center')->save($destinationPath);
-    
+
         $img->resize(500, 500, function ($constraint) {
             $constraint->aspectRatio();
         })->resizeCanvas(500, 500, 'center')->save($cloudDestinationPath);
-    
+
         // Update the database record
         DB::table('schoolinfo')
             ->update([

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use DB;
 use Session;
 use PDF;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class StudentLoading extends \App\Http\Controllers\Controller
 {
@@ -32,7 +33,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
             $pdf = PDF::loadView('superadmin.pages.college.schedlistpdf', compact('schedlist', 'schoolinfo', 'syinfo', 'seminfo'))->setPaper('legal');
             $pdf->getDomPDF()->set_option("enable_php", true)->set_option("DOMPDF_ENABLE_CSS_FLOAT", true);
             return $pdf->stream();
-
       }
 
       public static function getActiveEnrollmentSetup(Request $request)
@@ -61,7 +61,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
             }
 
             return $activeEnrollmentSetup;
-
       }
 
       // public static function enroll_colleges(Request $request){
@@ -145,7 +144,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
 
 
                   return $courses;
-
             } else if (Session::get('currentPortal') == 14) {
 
                   $teacher = DB::table('teacher')
@@ -173,7 +171,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
                         ->get();
 
                   return $courses;
-
             } else {
                   $courses = DB::table('college_courses')
                         ->where('deleted', 0)
@@ -186,7 +183,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
                         ->get();
 
                   return $courses;
-
             }
       }
 
@@ -297,8 +293,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
                   ],
                   "count_filtered" => $college_classched_count
             ]);
-
-
       }
 
 
@@ -328,7 +322,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
                               'schedid'
                         )
                         ->get();
-
             }
 
             if ($filterroom != null && $filterroom != "") {
@@ -346,7 +339,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
                               'college_scheddetail.headerID as schedid'
                         )
                         ->get();
-
             }
 
             $college_classched = DB::table('college_classsched')
@@ -356,7 +348,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
                   })
                   ->join('users', function ($join) {
                         $join->on('college_classsched.createdby', '=', 'users.id');
-
                   })
                   ->leftJoin('teacher', function ($join) {
                         $join->on('college_classsched.teacherID', '=', 'teacher.id');
@@ -365,11 +356,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
                   ->join('college_sections', function ($join) use ($filterclasstype) {
                         $join->on('college_classsched.sectionID', '=', 'college_sections.id');
                         $join->where('college_sections.deleted', 0);
-
-                        if ($filterclasstype != null && $filterclasstype != "") {
-                              $join->where('college_sections.section_specification', $filterclasstype);
-                        }
-
                   })
                   ->leftJoin('college_schedgroup', function ($join) {
                         $join->on('college_classsched.schedgroup', '=', 'college_schedgroup.id');
@@ -443,6 +429,7 @@ class StudentLoading extends \App\Http\Controllers\Controller
                         'tid'
                   )
                   ->get();
+
 
             $college_classched_count = DB::table('college_classsched')
                   ->join('college_prospectus', function ($join) {
@@ -606,7 +593,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
                               'schedstatus',
                               'schedid'
                         )->get();
-
             }
 
             foreach ($college_classched as $item) {
@@ -618,7 +604,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
                         } else {
                               $item->selected = 0;
                         }
-
                   }
             }
 
@@ -710,11 +695,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
                         ]
                   );
             }
-
-
-
-
-
       }
 
       public static function courses(Request $request)
@@ -745,7 +725,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
                               'college_courses.courseabrv'
                         )
                         ->get();
-
             } else if (Session::get('currentPortal') == 14) {
 
                   $teacher = DB::table('teacher')
@@ -887,188 +866,161 @@ class StudentLoading extends \App\Http\Controllers\Controller
                               'data' => 'Updated Successfully'
                         ]
                   );
-
             } catch (\Exception $e) {
                   return $e;
                   return self::store_error($e);
             }
-
-
-
       }
 
 
 
 
       public static function students(Request $request)
-      {
-            $syid = $request->get('syid');
-            $semid = $request->get('semid');
-            
-            if (Session::get('currentPortal') == 16) {
+{
+    $syid = $request->get('syid');
+    $semid = $request->get('semid');
 
-                  $teacher = DB::table('teacher')
-                        ->where('userid', auth()->user()->id)
-                        ->first();
+    if (Session::get('currentPortal') == 16) {
+        $teacher = DB::table('teacher')
+            ->where('userid', auth()->user()->id)
+            ->first();
 
-                  // $courses = DB::table('teacher')
-                  //               ->where('courseChairman',$teacher->id)
-                  //               ->where('deleted',0)
-                  //               ->select('id','courseDesc')
-                  //               ->get();
+        $courses = DB::table('teacherprogramhead')
+            ->where('teacherprogramhead.deleted', 0)
+            ->where('teacherprogramhead.syid', $syid)
+            ->where('teacherid', $teacher->id)
+            ->join('college_courses', function ($join) {
+                $join->on('teacherprogramhead.courseid', '=', 'college_courses.id')
+                    ->where('college_courses.deleted', 0);
+            })
+            ->select('college_courses.id')
+            ->get();
 
-                  $courses = DB::table('teacherprogramhead')
-                        ->where('teacherprogramhead.deleted', 0)
-                        ->where('teacherprogramhead.syid', $syid)
-                        // ->where('teacherprogramhead.semid',$semid)
-                        ->where('teacherid', $teacher->id)
-                        ->join('college_courses', function ($join) {
-                              $join->on('teacherprogramhead.courseid', '=', 'college_courses.id');
-                              $join->where('college_courses.deleted', 0);
-                        })
-                        ->select(
-                              'college_courses.*'
-                        )
-                        ->get();
-                              
-                  $temp_course = array();
+        $temp_course = $courses->pluck('id')->toArray();
 
-                  foreach ($courses as $item) {
-                        array_push($temp_course, $item->id);
-                  }
+        if (empty($temp_course)) {
+            return [];
+        }
+    } else if (Session::get('currentPortal') == 14) {
+        $teacher = DB::table('teacher')
+            ->where('userid', auth()->user()->id)
+            ->first();
 
-                  if (count($temp_course) == 0) {
-                        return array();
-                  }
+        $courses = DB::table('teacherdean')
+            ->where('teacherdean.deleted', 0)
+            ->where('teacherdean.syid', $syid)
+            ->where('teacherid', $teacher->id)
+            ->join('college_colleges', function ($join) {
+                $join->on('teacherdean.collegeid', '=', 'college_colleges.id')
+                    ->where('college_colleges.deleted', 0);
+            })
+            ->join('college_courses', function ($join) {
+                $join->on('college_colleges.id', '=', 'college_courses.collegeid')
+                    ->where('college_courses.deleted', 0);
+            })
+            ->select('college_courses.id')
+            ->get();
 
-            } else if (Session::get('currentPortal') == 14) {
+        $temp_course = $courses->pluck('id')->toArray();
 
-                  $teacher = DB::table('teacher')
-                        ->where('userid', auth()->user()->id)
-                        ->first();
+        if (empty($temp_course)) {
+            return [];
+        }
+    } else {
+        $temp_course = [];
+    }
 
-                  // $courses = DB::table('college_colleges')
-                  //                   ->join('college_courses',function($join){
-                  //                         $join->on('college_colleges.id','=','college_courses.collegeid');
-                  //                         $join->where('college_courses.deleted',0);
-                  //                   })
-                  //                   ->where('dean',$teacher->id)
-                  //                   ->where('college_colleges.deleted',0)
-                  //                   ->select('college_courses.*')
-                  //                   ->get();
+    $students = DB::table('college_enrolledstud')
+        ->join('gradelevel', function ($join) {
+            $join->on('college_enrolledstud.yearLevel', '=', 'gradelevel.id')
+                ->where('gradelevel.deleted', 0)
+                ->whereIn('gradelevel.id', [15, 17, 18, 19, 20, 21]);
+        })
+        ->leftJoin('college_courses', function ($join) {
+            $join->on('college_enrolledstud.courseid', '=', 'college_courses.id')
+                ->where('college_courses.deleted', 0);
+        })
+        ->leftJoin('college_colleges', function ($join) {
+            $join->on('college_courses.collegeid', '=', 'college_colleges.id')
+                ->where('college_colleges.deleted', 0);
+        })
+        ->leftJoin('studentstatus', function ($join) {
+            $join->on('college_enrolledstud.studstatus', '=', 'studentstatus.id');
+        })
+        ->leftJoin('college_sections', function ($join) {
+            $join->on('college_enrolledstud.sectionID', '=', 'college_sections.id')
+                ->where('college_sections.deleted', 0);
+        })
+        ->leftJoin('studinfo', function ($join) {
+            $join->on('college_enrolledstud.studid', '=', 'studinfo.id')
+                ->where('studinfo.deleted', 0)
+                ->where('studinfo.studisactive', 1);
+        })
+        ->when($request->input('syid'), function ($query, $syid) {
+            $query->where('college_enrolledstud.syid', $syid);
+        })
+        ->when($request->input('semid'), function ($query, $semid) {
+            $query->where('college_enrolledstud.semid', $semid);
+        })
+        ->when($request->input('course'), function ($query, $course) {
+            $query->where('college_enrolledstud.courseid', $course);
+        })
+        ->when($request->input('gravelevel'), function ($query, $gradelevel) {
+            $query->where('college_enrolledstud.yearLevel', $gradelevel);
+        })
+        ->when(Session::get('currentPortal') == 16 || Session::get('currentPortal') == 14, function ($query) use ($temp_course) {
+            $query->where(function ($q) use ($temp_course) {
+                $q->whereIn('college_enrolledstud.courseid', $temp_course)
+                    ->orWhereNull('college_enrolledstud.courseid')
+                    ->orWhere('college_enrolledstud.courseid', 0);
+            });
+        })
+        ->select(
+            'college_enrolledstud.sectionid',
+            'college_sections.sectionDesc',
+            'college_enrolledstud.yearLevel',
+            'college_enrolledstud.id',
+            'studinfo.lastname',
+            'studinfo.firstname',
+            'studinfo.middlename',
+            'studinfo.contactno',
+            'studinfo.sid',
+            'studinfo.suffix',
+            'college_courses.courseDesc',
+            'college_courses.courseabrv',
+            'college_colleges.collegeDesc',
+            'gradelevel.levelname',
+            'studentstatus.description as studstatus',
+            'studinfo.gender',
+            'studinfo.ismothernum',
+            'studinfo.isfathernum',
+            'studinfo.isguardannum',
+            'studinfo.fcontactno',
+            'studinfo.mcontactno',
+            'studinfo.gcontactno'
+        )
+        ->groupBy('college_enrolledstud.id')  // Group by student id to avoid duplication
+        ->get();
 
-                  $courses = DB::table('teacherdean')
-                        ->where('teacherdean.deleted', 0)
-                        ->where('teacherdean.syid', $syid)
-                        //->where('teacherdean.semid',$semid)
-                        ->where('teacherid', $teacher->id)
-                        ->join('college_colleges', function ($join) {
-                              $join->on('teacherdean.collegeid', '=', 'college_colleges.id');
-                              $join->where('college_colleges.deleted', 0);
-                        })
-                        ->join('college_courses', function ($join) {
-                              $join->on('college_colleges.id', '=', 'college_courses.collegeid');
-                              $join->where('college_courses.deleted', 0);
-                        })
-                        ->select(
-                              'college_courses.*'
-                        )
-                        ->get();
-                              
-                  $temp_course = array();
-
-                  foreach ($courses as $item) {
-                        array_push($temp_course, $item->id);
-                  }
-
-                  if (count($temp_course) == 0) {
-                        return array();
-                  }
-
-            } else {
-                  $courses = DB::table('college_courses')
-                        ->where('deleted', 0)
-                        ->select(
-                              'college_courses.id',
-                              'college_courses.courseDesc',
-                              'college_courses.courseabrv'
-                        )
-                        ->get();
+    foreach ($students as $item) {
+        $middlename = explode(" ", $item->middlename);
+        $temp_middle = '';
+        if ($middlename != null) {
+            foreach ($middlename as $middlename_item) {
+                if (strlen($middlename_item) > 0) {
+                    $temp_middle .= $middlename_item[0] . '.';
+                }
             }
+        }
+        $item->student = $item->lastname . ', ' . $item->firstname . ' ' . $item->suffix . ' ' . $temp_middle;
+        $item->text = $item->sid . ' - ' . $item->student;
+    }
 
-            $students = DB::table('studinfo')
-                  ->join('gradelevel', function ($join) {
-                        $join->on('studinfo.levelid', '=', 'gradelevel.id');
-                        $join->where('gradelevel.deleted', 0);
-                        $join->whereIn('gradelevel.id', [17, 18, 19, 20, 21]);
-                  })
-                  ->leftJoin('college_courses', function ($join) {
-                        $join->on('studinfo.courseid', '=', 'college_courses.id');
-                        $join->where('college_courses.deleted', 0);
-                  })
-                  ->leftJoin('college_colleges', function ($join) {
-                        $join->on('college_courses.collegeid', '=', 'college_colleges.id');
-                        $join->where('college_courses.deleted', 0);
-                  })
-                  ->leftJoin('studentstatus', function ($join) {
-                        $join->on('studinfo.studstatus', '=', 'studentstatus.id');
-                  })
-                  ->where('studinfo.deleted', 0)
-                  ->where('studinfo.studisactive', 1);
-
-            if (Session::get('currentPortal') == 16 || Session::get('currentPortal') == 14) {
-                  $students = $students->where(function ($query) use ($temp_course) {
-                        $query->whereIn('courseid', $temp_course);
-                        $query->orWhere('courseid', 0);
-                        $query->orWhere('courseid', null);
-                  });
-            }
+    return $students;
+}
 
 
-            $students = $students->select(
-                  'sectionid',
-                  'studinfo.levelid',
-                  'studinfo.id',
-                  'lastname',
-                  'firstname',
-                  'middlename',
-                  'contactno',
-                  'sid',
-                  'suffix',
-                  'courseDesc',
-                  'courseabrv',
-                  'collegeDesc',
-                  'levelname',
-                  'description',
-                  'courseid',
-                  'ismothernum',
-                  'isfathernum',
-                  'isguardannum',
-                  'fcontactno',
-                  'mcontactno',
-                  'gcontactno',
-                  'studstatus'
-            )
-                  ->get();
-            
-            foreach ($students as $item) {
 
-                  $middlename = explode(" ", $item->middlename);
-                  $temp_middle = '';
-                  if ($middlename != null) {
-                        foreach ($middlename as $middlename_item) {
-                              if (strlen($middlename_item) > 0) {
-                                    $temp_middle .= $middlename_item[0] . '.';
-                              }
-                        }
-                  }
-                  $item->student = $item->lastname . ', ' . $item->firstname . ' ' . $item->suffix . ' ' . $temp_middle;
-                  $item->text = $item->sid . ' - ' . $item->student;
-            }
-
-            return $students;
-
-      }
 
 
       public static function unload_all(Request $request)
@@ -1090,8 +1042,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
                         'data' => 'Removed Successfully'
                   ]
             );
-
-
       }
 
 
@@ -1187,7 +1137,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
                                     'createdby' => auth()->user()->id,
                                     'createddatetime' => \Carbon\Carbon::now('Asia/Manila')
                               ]);
-
                   } else {
 
 
@@ -1214,7 +1163,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
                                     'createdby' => auth()->user()->id,
                                     'createddatetime' => \Carbon\Carbon::now('Asia/Manila')
                               ]);
-
                   }
 
                   $check = DB::table('college_enrolledstud')
@@ -1249,7 +1197,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
                                           'data' => 'Schedule Deleted!'
                                     ]
                               );
-
                         } else {
 
                               $sched_info = DB::table('college_classsched')
@@ -1283,9 +1230,7 @@ class StudentLoading extends \App\Http\Controllers\Controller
                                           'data' => 'Subject marked as dropped'
                                     ]
                               );
-
                         }
-
                   }
 
                   return array(
@@ -1294,11 +1239,9 @@ class StudentLoading extends \App\Http\Controllers\Controller
                               'data' => 'Removed Successfully'
                         ]
                   );
-
             } catch (\Exception $e) {
                   return self::store_error($e);
             }
-
       }
 
 
@@ -1322,7 +1265,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
                         'data' => 'Added Successfully'
                   ]
             );
-
       }
 
       public static function get_sectioninfo($sectionid)
@@ -1372,6 +1314,7 @@ class StudentLoading extends \App\Http\Controllers\Controller
             );
       }
 
+
       public static function add_shedule_ajax(Request $request)
       {
 
@@ -1381,7 +1324,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
             $semid = $request->get('semid');
 
             return self::add_shedule($schedid, $studid, $syid, $semid, $request);
-
       }
 
       public static function add_shedule(
@@ -1442,7 +1384,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
                                     ]
                               );
                         }
-
                   }
 
                   $loaded_count = DB::table('college_studsched')
@@ -1636,7 +1577,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
                                     'createdby' => auth()->user()->id,
                                     'createddatetime' => \Carbon\Carbon::now('Asia/Manila')
                               ]);
-
                   } else {
 
                         $dataid = DB::table('college_studsched')
@@ -1696,7 +1636,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
                                                 'createdby' => auth()->user()->id,
                                                 'createddatetime' => \Carbon\Carbon::now('Asia/Manila')
                                           ]);
-
                               } catch (\Exception $e) {
                                     return $e;
                               }
@@ -1745,12 +1684,10 @@ class StudentLoading extends \App\Http\Controllers\Controller
                               'data' => 'Added Successfully',
                         ]
                   );
-
             } catch (\Exception $e) {
                   return $e;
                   return self::store_error($e);
             }
-
       }
 
       public static function set_section(Request $request)
@@ -1826,12 +1763,10 @@ class StudentLoading extends \App\Http\Controllers\Controller
                               'data' => 'Marked as student section',
                         ]
                   );
-
             } catch (\Exception $e) {
                   return $e;
                   return self::store_error($e);
             }
-
       }
 
 
@@ -1858,8 +1793,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
 
 
             return $sections;
-
-
       }
 
       public static function availablesched_plot_ajax(Request $request)
@@ -1895,13 +1828,10 @@ class StudentLoading extends \App\Http\Controllers\Controller
                         ->get();
 
                   return $subjects;
-
             } catch (\Exception $e) {
 
                   return self::store_error($e);
-
             }
-
       }
 
       public static function all_subjects(Request $request)
@@ -1918,13 +1848,10 @@ class StudentLoading extends \App\Http\Controllers\Controller
                         ->get();
 
                   return $subjects;
-
             } catch (\Exception $e) {
 
                   return self::store_error($e);
-
             }
-
       }
 
 
@@ -1945,7 +1872,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
                               if ($subjid != null) {
                                     $join->where('college_prospectus.subjectID', $subjid);
                               }
-
                         })
                         ->join('college_sections', function ($join) {
                               $join->on('college_classsched.sectionID', '=', 'college_sections.id');
@@ -2069,11 +1995,8 @@ class StudentLoading extends \App\Http\Controllers\Controller
 
 
                               $sched_count += 1;
-
                         }
                         $item->schedule = $sched_list;
-
-
                   }
 
                   return array(
@@ -2083,12 +2006,10 @@ class StudentLoading extends \App\Http\Controllers\Controller
                               'info' => $subjects
                         ]
                   );
-
             } catch (\Exception $e) {
                   return $e;
                   return self::store_error($e);
             }
-
       }
 
       public static function collegestudentsched_plot_ajax(Request $request)
@@ -2209,18 +2130,174 @@ class StudentLoading extends \App\Http\Controllers\Controller
             return view('superadmin.pages.student.collegestudentschedplot')->with('schedule', $schedule[0]->info);
       }
 
-      public static function collegestudentsched_plot($studid = null, $syid = null, $semid = null, $all = false)
+      // public static function collegestudentsched_plot($studid = null, $syid = null, $semid = null, $all = false)
+      // {
+
+      //       try {
+
+      //             $subjects = DB::table('college_loadsubject')
+      //                   ->join('college_classsched', function ($join) use ($syid, $semid) {
+      //                         $join->on('college_loadsubject.schedid', '=', 'college_classsched.id');
+      //                         $join->where('college_classsched.deleted', 0);
+      //                         $join->where('college_classsched.syid', $syid);
+      //                         $join->where('college_classsched.semesterID', $semid);
+      //                   })
+      //                   ->join('college_prospectus', function ($join) {
+      //                         $join->on('college_classsched.subjectID', '=', 'college_prospectus.id');
+      //                         $join->where('college_prospectus.deleted', 0);
+      //                   })
+      //                   ->join('college_sections', function ($join) {
+      //                         $join->on('college_classsched.sectionID', '=', 'college_sections.id');
+      //                         $join->where('college_sections.deleted', 0);
+      //                   });
+
+      //             // if (!$all) {
+      //             //       $subjects = $subjects->where('college_studsched.schedstatus', '!=', 'DROPPED');
+      //             // }
+
+      //             $subjects = $subjects->where('college_loadsubject.deleted', 0)
+      //                   ->where('college_loadsubject.studid', $studid)
+      //                   ->select(
+      //                         'lecunits',
+      //                         'labunits',
+      //                         'college_prospectus.subjectID as main_subjid',
+      //                         'college_classsched.*',
+      //                         'schedid',
+      //                         'subjDesc',
+      //                         'subjCode',
+      //                         'sectionDesc',
+      //                         'schedstatus'
+      //                   )
+      //                   ->get();
+
+      //             // return $subjects;
+
+      //             foreach ($subjects as $item) {
+
+      //                   $item->units = $item->lecunits + $item->labunits;
+
+      //                   $sched = DB::table('college_scheddetail')
+      //                         ->where('college_scheddetail.headerid', $item->id)
+      //                         ->where('college_scheddetail.deleted', 0)
+      //                         ->leftJoin('rooms', function ($join) {
+      //                               $join->on('college_scheddetail.roomid', '=', 'rooms.id');
+      //                               $join->where('rooms.deleted', 0);
+      //                         })
+      //                         ->join('days', function ($join) {
+      //                               $join->on('college_scheddetail.day', '=', 'days.id');
+      //                         })
+      //                         ->select(
+      //                               'day',
+      //                               'roomid',
+      //                               'college_scheddetail.id as detailid',
+      //                               'roomname',
+      //                               'stime',
+      //                               'etime',
+      //                               'days.description',
+      //                               'schedotherclass'
+      //                         )
+      //                         ->get();
+
+      //                   $item->teacher = null;
+      //                   $item->teacherid = null;
+
+      //                   if (isset($item->teacherID)) {
+      //                         $temp_teacher = DB::table('teacher')
+      //                               ->where('id', $item->teacherID)
+      //                               ->first();
+      //                         $item->teacher = $temp_teacher->firstname . ' ' . $temp_teacher->middlename . ' ' . $temp_teacher->lastname;
+      //                         $item->teacherid = $temp_teacher->tid;
+      //                   }
+
+
+
+      //                   foreach ($sched as $sched_item) {
+      //                         $sched_item->time = \Carbon\Carbon::createFromTimeString($sched_item->stime)->isoFormat('hh:mm A') . ' - ' . \Carbon\Carbon::createFromTimeString($sched_item->etime)->isoFormat('hh:mm A');
+      //                   }
+
+      //                   $starting = collect($sched)->groupBy('time');
+
+      //                   $sched_list = array();
+      //                   $sched_count = 1;
+
+      //                   foreach ($starting as $sched_item) {
+
+      //                         $dayString = '';
+      //                         $days = array();
+      //                         $schedstat = '';
+
+      //                         foreach ($sched_item as $new_item) {
+      //                               $start = \Carbon\Carbon::createFromTimeString($new_item->stime)->isoFormat('hh:mm A');
+      //                               $end = \Carbon\Carbon::createFromTimeString($new_item->etime)->isoFormat('hh:mm A');
+      //                               $dayString .= substr($new_item->description, 0, 3) . ' / ';
+      //                               $detailid = $new_item->detailid;
+      //                               $roomname = $new_item->roomname;
+      //                               $roomid = $new_item->roomid;
+      //                               $time = $new_item->time;
+      //                               // $schedstat =  $item->schedstatus;
+      //                               $schedotherclass = $new_item->schedotherclass;
+      //                               array_push($days, $new_item->day);
+      //                         }
+
+      //                         $dayString = substr($dayString, 0, -2);
+
+      //                         array_push($sched_list, (object) [
+      //                               'day' => $dayString,
+      //                               'start' => $start,
+      //                               'end' => $end,
+      //                               'roomid',
+      //                               'detailid' => $detailid,
+      //                               'roomname' => $roomname,
+      //                               'roomid' => $roomid,
+      //                               // 'teacher'=>$teacher,
+      //                               // 'tid'=>$tid,
+      //                               // 'teacherid'=>$teacherid,
+      //                               'sched_count' => $sched_count,
+      //                               // 'schedstat'=>$schedstat,
+      //                               'time' => $time,
+      //                               'days' => $days,
+      //                               'classification' => $schedotherclass
+      //                         ]);
+
+
+      //                         $sched_count += 1;
+      //                   }
+      //                   $item->schedule = $sched_list;
+      //             }
+
+      //             return array(
+      //                   (object) [
+      //                         'status' => 1,
+      //                         'data' => 'Successfull.',
+      //                         'info' => $subjects
+      //                   ]
+      //             );
+      //       } catch (\Exception $e) {
+      //             return self::store_error($e);
+      //       }
+      // }
+      
+      // , $all = false
+      public static function collegestudentsched_plot($studid = null, $syid = null, $semid = null)
       {
+            // try {
 
-            try {
-
-                  $subjects = DB::table('college_studsched')
+                  $subjects = DB::table('college_loadsubject')
                         ->join('college_classsched', function ($join) use ($syid, $semid) {
-                              $join->on('college_studsched.schedid', '=', 'college_classsched.id');
-                              $join->where('college_classsched.deleted', 0);
-                              $join->where('college_classsched.syid', $syid);
-                              $join->where('college_classsched.semesterID', $semid);
+                              $join->on('college_loadsubject.schedid', '=', 'college_classsched.id')
+                                   ->where('college_classsched.deleted', 0)
+                                   ->where('college_classsched.syid', $syid)
+                                   ->where('college_classsched.semesterID', $semid);
                         })
+                        // ->join('college_instructor',  function ($join) use ($syid, $semid) {
+                        //       $join->on('college_classsched.id', '=', 'college_instructor.classschedid')
+                        //       ->where('college_classsched.deleted', 0)
+                        //            ->where('college_classsched.syid', $syid)
+                        //            ->where('college_classsched.semesterID', $semid);
+                        // })
+                        // ->join('teacher', function($join){
+                        //       $join->on('college_instructor.teacherid', '=', 'teacher.id');
+                        // })
                         ->join('college_prospectus', function ($join) {
                               $join->on('college_classsched.subjectID', '=', 'college_prospectus.id');
                               $join->where('college_prospectus.deleted', 0);
@@ -2228,122 +2305,205 @@ class StudentLoading extends \App\Http\Controllers\Controller
                         ->join('college_sections', function ($join) {
                               $join->on('college_classsched.sectionID', '=', 'college_sections.id');
                               $join->where('college_sections.deleted', 0);
-                        });
+                        })
 
-                  if (!$all) {
-                        $subjects = $subjects->where('college_studsched.schedstatus', '!=', 'DROPPED');
-                  }
+                        ->join('college_enrolledstud',function($join){
+                              $join->on('college_loadsubject.studid','=','college_enrolledstud.studid');
+                              $join->where('college_enrolledstud.deleted',0);
+                          })
 
-                  $subjects = $subjects->where('college_studsched.deleted', 0)
-                        ->where('college_studsched.studid', $studid)
-                        ->select(
-                              'lecunits',
-                              'labunits',
-                              'college_prospectus.subjectID as main_subjid',
-                              'college_classsched.*',
-                              'schedid',
-                              'subjDesc',
-                              'subjCode',
-                              'sectionDesc',
-                              'schedstatus'
-                        )
-                        ->get();
+                          ->join('studinfo',function($join){
+                              $join->on('college_enrolledstud.studid','=','studinfo.id');
+                              $join->where('studinfo.deleted',0);
+                          })
 
-                  foreach ($subjects as $item) {
+                        //   ->join('college_studentprospectus',function($join){
+                        //       $join->on('studinfo.sid','=','college_studentprospectus.studid');
+                        //       $join->where('studinfo.deleted',0);
+                        //   })
 
-                        $item->units = $item->lecunits + $item->labunits;
+                        ->join('gradelevel',function($join){
+                              $join->on('college_enrolledstud.yearLevel','=','gradelevel.id');
+                              $join->where('gradelevel.deleted',0);
+                          });
 
-                        $sched = DB::table('college_scheddetail')
-                              ->where('college_scheddetail.headerid', $item->id)
-                              ->where('college_scheddetail.deleted', 0)
-                              ->leftJoin('rooms', function ($join) {
-                                    $join->on('college_scheddetail.roomid', '=', 'rooms.id');
-                                    $join->where('rooms.deleted', 0);
-                              })
-                              ->join('days', function ($join) {
-                                    $join->on('college_scheddetail.day', '=', 'days.id');
-                              })
-                              ->select(
-                                    'day',
-                                    'roomid',
-                                    'college_scheddetail.id as detailid',
-                                    'roomname',
-                                    'stime',
-                                    'etime',
-                                    'days.description',
-                                    'schedotherclass'
-                              )
-                              ->get();
+                  // if (!$all) {
+                  //       $subjects = $subjects->where('college_studsched.schedstatus', '!=', 'DROPPED');
+                  // }
 
-                        $item->teacher = null;
-                        $item->teacherid = null;
+                  $subjects = $subjects->where('college_loadsubject.deleted', 0)
+                  // ->join('college_instructor',  function ($join) use ($syid, $semid) {
+                  //       $join->on('college_classsched.id', '=', 'college_instructor.classschedid')
+                  //       ->where('college_classsched.deleted', 0)
+                  //             ->where('college_classsched.syid', $syid)
+                  //             ->where('college_classsched.semesterID', $semid);
+                  // })
+                  // ->join('college_instructor',function ($join){
+                  //       $join->on('college_classsched.id','=','college_instructor.classschedid');
+                  //   })
+                  // ->join('college_scheddetail','college_classsched.id','=','college_scheddetail.headerID')
+                  // ->join('days','college_scheddetail.day','=','days.id')
+                  // ->join('rooms','college_scheddetail.roomID','=','rooms.id')
+                  // ->join('teacher', function($join){
+                  //       $join->on('college_instructor.teacherid', '=', 'teacher.id')
+                  //       ->where('teacher.deleted', 0);
+                  // })
+                  ->leftJoin('college_scheddetail',function($join){
+                        $join->on('college_classsched.id','=','college_scheddetail.headerid');
+                        $join->where('college_scheddetail.deleted',0);
+                    })
+                    ->leftJoin('days',function($join){
+                        $join->on('college_scheddetail.day','=','days.id');
+                    })
+                    ->join('college_instructor',function ($join){
+                        $join->on('college_classsched.id','=','college_instructor.classschedid');
+                    })
+                    ->leftJoin('teacher',function($join){
+                        $join->on('college_instructor.teacherID','=','teacher.id');
+                    })
+                    ->leftJoin('rooms',function($join){
+                        $join->on('college_scheddetail.roomid','=','rooms.id');
+                        $join->where('rooms.deleted',0);
+                    })
+                  ->where('college_loadsubject.studid', $studid)
+                  ->select(
+                        'lecunits',
+                        'labunits',
+                        'college_prospectus.id as subjectID',
+                        'college_classsched.id',
+                        // 'college_studentprospectus.studid as studid',
+                        'college_classsched.syID',
+                        'college_classsched.sectionID',
+                        'college_classsched.semesterID',
+                        DB::raw("CONCAT(teacher.lastname, ' ', teacher.firstname) as teacher"),
+                        'college_prospectus.subjDesc',
+                        'college_prospectus.subjCode',
+                        'college_prospectus.credunits as units',
+                        'college_sections.sectionDesc',
+                        'college_scheddetail.schedotherclass as classification',
+                        'college_enrolledstud.yearLevel',
+                        'rooms.roomname',
+                        DB::raw("GROUP_CONCAT(DISTINCT SUBSTRING(days.description, 1, 3) ORDER BY days.id ASC SEPARATOR ' / ') as dayname"),
+                        DB::raw("DATE_FORMAT(college_scheddetail.stime, '%h:%i %p') as start"),
+                        DB::raw("DATE_FORMAT(college_scheddetail.etime, '%h:%i %p') as end"),
+                        DB::raw("GROUP_CONCAT(DISTINCT days.id ORDER BY days.id ASC SEPARATOR ', ') as days"),
+                        DB::raw("CONCAT(DATE_FORMAT(college_scheddetail.stime, '%h:%i %p'), ' - ', DATE_FORMAT(college_scheddetail.etime, '%h:%i %p')) AS schedtime"),
 
-                        if (isset($item->teacherID)) {
-                              $temp_teacher = DB::table('teacher')
-                                    ->where('id', $item->teacherID)
-                                    ->first();
-                              $item->teacher = $temp_teacher->firstname . ' ' . $temp_teacher->middlename . ' ' . $temp_teacher->lastname;
-                              $item->teacherid = $temp_teacher->tid;
-                        }
+                  )
+                  ->groupBy('college_classsched.id')
+                  ->get();
+                  $subjects = collect($subjects)->sortBy('subjCode')->values();
+                        // return $subjects;
+
+                  // foreach ($subjects as $item) {
+
+                  //       $item->units = $item->lecunits + $item->labunits;
+
+                  //       $sched = DB::table('college_scheddetail')
+                  //             ->where('college_scheddetail.headerid', $item->id)
+                  //             ->where('college_scheddetail.deleted', 0)
+                  //             ->leftJoin('rooms', function ($join) {
+                  //                   $join->on('college_scheddetail.roomid', '=', 'rooms.id');
+                  //                   $join->where('rooms.deleted', 0);
+                  //             })
+                  //             ->join('days', function ($join) {
+                  //                   $join->on('college_scheddetail.day', '=', 'days.id');
+                  //             })
+                  //             ->select(
+                  //                   'day',
+                  //                   'roomid',
+                  //                   'college_scheddetail.id as detailid',
+                  //                   'roomname',
+                  //                   'stime',
+                  //                   'etime',
+                  //                   'days.description',
+                  //                   'schedotherclass'
+                  //             )
+                  //             ->get();
+
+                  //       // $item->teacher = null;
+                  //       // // $item->teacherid = null;
+                  //       // if (isset($item->teacherID)) {
+                  //       //       $temp_teacher = DB::table('college_instructor')
+                  //       //             ->join('teacher', 'college_instructor.teacherid', '=', 'teacher.id')
+                  //       //             ->where('college_instructor.classschedid', $item->id)
+                  //       //             ->select('teacher.*') // Select all columns from teacher table
+                  //       //             ->first();
+                                   
+                  //       //       $item->teacher = $temp_teacher->firstname . ' ' . $temp_teacher->middlename . ' ' . $temp_teacher->lastname;
+                  //       //       // $item->teacherid = $temp_teacher->teacherid;
+                  //       //       // $item->teacherid = $temp_teacher->tid;
+                  //       //       // return $temp_teacher;  
+                  //       // }
+
+                        
+
+
+                  //       // if (isset($item->teacherID)) {
+                  //       //       $temp_teacher = DB::table('teacher')
+                  //       //             ->where('id', $item->teacherID)
+                  //       //             ->first();
+                  //       //       $item->teacher = $temp_teacher->firstname . ' ' . $temp_teacher->middlename . ' ' . $temp_teacher->lastname;
+                  //       //       $item->teacherid = $temp_teacher->tid;
+                  //       // }
 
 
 
-                        foreach ($sched as $sched_item) {
-                              $sched_item->time = \Carbon\Carbon::createFromTimeString($sched_item->stime)->isoFormat('hh:mm A') . ' - ' . \Carbon\Carbon::createFromTimeString($sched_item->etime)->isoFormat('hh:mm A');
-                        }
+                  //       foreach ($sched as $sched_item) {
+                  //             $sched_item->time = \Carbon\Carbon::createFromTimeString($sched_item->stime)->isoFormat('hh:mm A') . ' - ' . \Carbon\Carbon::createFromTimeString($sched_item->etime)->isoFormat('hh:mm A');
+                  //       }
 
-                        $starting = collect($sched)->groupBy('time');
+                  //       $starting = collect($sched)->groupBy('time');
 
-                        $sched_list = array();
-                        $sched_count = 1;
+                  //       $sched_list = array();
+                  //       $sched_count = 1;
 
-                        foreach ($starting as $sched_item) {
+                  //       foreach ($starting as $sched_item) {
 
-                              $dayString = '';
-                              $days = array();
-                              $schedstat = '';
+                  //             $dayString = '';
+                  //             $days = array();
+                  //             $schedstat = '';
 
-                              foreach ($sched_item as $new_item) {
-                                    $start = \Carbon\Carbon::createFromTimeString($new_item->stime)->isoFormat('hh:mm A');
-                                    $end = \Carbon\Carbon::createFromTimeString($new_item->etime)->isoFormat('hh:mm A');
-                                    $dayString .= substr($new_item->description, 0, 3) . ' / ';
-                                    $detailid = $new_item->detailid;
-                                    $roomname = $new_item->roomname;
-                                    $roomid = $new_item->roomid;
-                                    $time = $new_item->time;
-                                    // $schedstat =  $item->schedstatus;
-                                    $schedotherclass = $new_item->schedotherclass;
-                                    array_push($days, $new_item->day);
-                              }
+                  //             foreach ($sched_item as $new_item) {
+                  //                   $start = \Carbon\Carbon::createFromTimeString($new_item->stime)->isoFormat('hh:mm A');
+                  //                   $end = \Carbon\Carbon::createFromTimeString($new_item->etime)->isoFormat('hh:mm A');
+                  //                   $dayString .= substr($new_item->description, 0, 3) . ' / ';
+                  //                   $detailid = $new_item->detailid;
+                  //                   $roomname = $new_item->roomname;
+                  //                   $roomid = $new_item->roomid;
+                  //                   $time = $new_item->time;
+                  //                   // $schedstat =  $item->schedstatus;
+                  //                   $schedotherclass = $new_item->schedotherclass;
+                  //                   array_push($days, $new_item->day);
+                  //             }
 
-                              $dayString = substr($dayString, 0, -2);
+                  //             $dayString = substr($dayString, 0, -2);
 
-                              array_push($sched_list, (object) [
-                                    'day' => $dayString,
-                                    'start' => $start,
-                                    'end' => $end,
-                                    'roomid',
-                                    'detailid' => $detailid,
-                                    'roomname' => $roomname,
-                                    'roomid' => $roomid,
-                                    // 'teacher'=>$teacher,
-                                    // 'tid'=>$tid,
-                                    // 'teacherid'=>$teacherid,
-                                    'sched_count' => $sched_count,
-                                    // 'schedstat'=>$schedstat,
-                                    'time' => $time,
-                                    'days' => $days,
-                                    'classification' => $schedotherclass
-                              ]);
-
-
-                              $sched_count += 1;
-
-                        }
-                        $item->schedule = $sched_list;
+                  //             array_push($sched_list, (object) [
+                  //                   'day' => $dayString,
+                  //                   'start' => $start,
+                  //                   'end' => $end,
+                  //                   'roomid',
+                  //                   // 'detailid' => $detailid,
+                  //                   'roomname' => $roomname,
+                  //                   'roomid' => $roomid,
+                  //                   // 'teacher'=>$teacher,
+                  //                   // 'tid'=>$tid,
+                  //                   // 'teacherid'=>$teacherid,
+                  //                   'sched_count' => $sched_count,
+                  //                   // 'schedstat'=>$schedstat,
+                  //                   'time' => $time,
+                  //                   'days' => $days,
+                  //                   'classification' => $schedotherclass
+                  //             ]);
 
 
-                  }
+                  //             $sched_count += 1;
+                  //       }
+                  //       $item->schedule = $sched_list;
+                  // }
+
+
 
                   return array(
                         (object) [
@@ -2352,13 +2512,155 @@ class StudentLoading extends \App\Http\Controllers\Controller
                               'info' => $subjects
                         ]
                   );
-
-            } catch (\Exception $e) {
-                  return self::store_error($e);
-            }
-
-
+            // } catch (\Exception $e) {
+            //       return self::store_error($e);
+            // }
       }
+
+      // public static function collegestudentsched_plot($studid = null, $syid = null, $semid = null, $all = false)
+      // {
+
+      //       try {
+
+      //             $subjects = DB::table('college_studsched')
+      //                   ->join('college_classsched', function ($join) use ($syid, $semid) {
+      //                         $join->on('college_studsched.schedid', '=', 'college_classsched.id');
+      //                         $join->where('college_classsched.deleted', 0);
+      //                         $join->where('college_classsched.syid', $syid);
+      //                         $join->where('college_classsched.semesterID', $semid);
+      //                   })
+      //                   ->join('college_prospectus', function ($join) {
+      //                         $join->on('college_classsched.subjectID', '=', 'college_prospectus.id');
+      //                         $join->where('college_prospectus.deleted', 0);
+      //                   })
+      //                   ->join('college_sections', function ($join) {
+      //                         $join->on('college_classsched.sectionID', '=', 'college_sections.id');
+      //                         $join->where('college_sections.deleted', 0);
+      //                   });
+
+      //             if (!$all) {
+      //                   $subjects = $subjects->where('college_studsched.schedstatus', '!=', 'DROPPED');
+      //             }
+
+      //             $subjects = $subjects->where('college_studsched.deleted', 0)
+      //                   ->where('college_studsched.studid', $studid)
+      //                   ->select(
+      //                         'lecunits',
+      //                         'labunits',
+      //                         'college_prospectus.subjectID as main_subjid',
+      //                         'college_classsched.*',
+      //                         'schedid',
+      //                         'subjDesc',
+      //                         'subjCode',
+      //                         'sectionDesc',
+      //                         'schedstatus'
+      //                   )
+      //                   ->get();
+
+      //             foreach ($subjects as $item) {
+
+      //                   $item->units = $item->lecunits + $item->labunits;
+
+      //                   $sched = DB::table('college_scheddetail')
+      //                         ->where('college_scheddetail.headerid', $item->id)
+      //                         ->where('college_scheddetail.deleted', 0)
+      //                         ->leftJoin('rooms', function ($join) {
+      //                               $join->on('college_scheddetail.roomid', '=', 'rooms.id');
+      //                               $join->where('rooms.deleted', 0);
+      //                         })
+      //                         ->join('days', function ($join) {
+      //                               $join->on('college_scheddetail.day', '=', 'days.id');
+      //                         })
+      //                         ->select(
+      //                               'day',
+      //                               'roomid',
+      //                               'college_scheddetail.id as detailid',
+      //                               'roomname',
+      //                               'stime',
+      //                               'etime',
+      //                               'days.description',
+      //                               'schedotherclass'
+      //                         )
+      //                         ->get();
+
+      //                   $item->teacher = null;
+      //                   $item->teacherid = null;
+
+      //                   if (isset($item->teacherID)) {
+      //                         $temp_teacher = DB::table('teacher')
+      //                               ->where('id', $item->teacherID)
+      //                               ->first();
+      //                         $item->teacher = $temp_teacher->firstname . ' ' . $temp_teacher->middlename . ' ' . $temp_teacher->lastname;
+      //                         $item->teacherid = $temp_teacher->tid;
+      //                   }
+
+
+
+      //                   foreach ($sched as $sched_item) {
+      //                         $sched_item->time = \Carbon\Carbon::createFromTimeString($sched_item->stime)->isoFormat('hh:mm A') . ' - ' . \Carbon\Carbon::createFromTimeString($sched_item->etime)->isoFormat('hh:mm A');
+      //                   }
+
+      //                   $starting = collect($sched)->groupBy('time');
+
+      //                   $sched_list = array();
+      //                   $sched_count = 1;
+
+      //                   foreach ($starting as $sched_item) {
+
+      //                         $dayString = '';
+      //                         $days = array();
+      //                         $schedstat = '';
+
+      //                         foreach ($sched_item as $new_item) {
+      //                               $start = \Carbon\Carbon::createFromTimeString($new_item->stime)->isoFormat('hh:mm A');
+      //                               $end = \Carbon\Carbon::createFromTimeString($new_item->etime)->isoFormat('hh:mm A');
+      //                               $dayString .= substr($new_item->description, 0, 3) . ' / ';
+      //                               $detailid = $new_item->detailid;
+      //                               $roomname = $new_item->roomname;
+      //                               $roomid = $new_item->roomid;
+      //                               $time = $new_item->time;
+      //                               // $schedstat =  $item->schedstatus;
+      //                               $schedotherclass = $new_item->schedotherclass;
+      //                               array_push($days, $new_item->day);
+      //                         }
+
+      //                         $dayString = substr($dayString, 0, -2);
+
+      //                         array_push($sched_list, (object) [
+      //                               'day' => $dayString,
+      //                               'start' => $start,
+      //                               'end' => $end,
+      //                               'roomid',
+      //                               'detailid' => $detailid,
+      //                               'roomname' => $roomname,
+      //                               'roomid' => $roomid,
+      //                               // 'teacher'=>$teacher,
+      //                               // 'tid'=>$tid,
+      //                               // 'teacherid'=>$teacherid,
+      //                               'sched_count' => $sched_count,
+      //                               // 'schedstat'=>$schedstat,
+      //                               'time' => $time,
+      //                               'days' => $days,
+      //                               'classification' => $schedotherclass
+      //                         ]);
+
+
+      //                         $sched_count += 1;
+      //                   }
+      //                   $item->schedule = $sched_list;
+      //             }
+
+      //             return array(
+      //                   (object) [
+      //                         'status' => 1,
+      //                         'data' => 'Successfull.',
+      //                         'info' => $subjects
+      //                   ]
+      //             );
+      //       } catch (\Exception $e) {
+      //             return self::store_error($e);
+      //       }
+      // }
 
       public static function logs($syid = null)
       {
@@ -2436,7 +2738,7 @@ class StudentLoading extends \App\Http\Controllers\Controller
                   ->get();
 
             $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
-            $spreadsheet = $reader->load("ENROLLMENT LIST.xlsx");
+            $spreadsheet = $reader->load("ENROLLMENT-LIST.xlsx");
 
             $schoolinfo = DB::table('schoolinfo')->first();
             $semester = DB::table('semester')->where('id', $semid)->first();
@@ -2457,11 +2759,12 @@ class StudentLoading extends \App\Http\Controllers\Controller
                         $sheet->setTitle($course_item->courseabrv);
                         $sheet->setCellValue('C7', $course_item->courseDesc);
 
-                        $semesterText = $semester->semester . ', SHOOL YEAR ' . $sy->sydesc . '';
+
+
+                        $semesterText = $semester->semester . ', SHOOL YEAR &U' . $sy->sydesc . '&U';
 
                         $sheet->setCellValue('A1', $schoolinfo->schoolname);
-                        $sheet->setCellValue('A1', $schoolinfo->address);
-                        $sheet->setCellValue('A5', $semesterText);
+                        $sheet->setCellValue('A2', $schoolinfo->address);
 
                         $course = $course_item->id;
 
@@ -2582,7 +2885,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
                               $sheet->getStyle('G' . $row_count)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
                               $row_count += 1;
                               $student_count += 1;
-
                         }
 
                         for ($x = $row_count + 6; $x <= 4999; $x++) {
@@ -2618,18 +2920,14 @@ class StudentLoading extends \App\Http\Controllers\Controller
 
                         $sheet->getHeaderFooter()->setOddFooter('&L&9  Prepared by: CHRISTOPHER D. SALICANAN, Encoder ' . ' &C&9 Verified Correct: ' . $dean . ', Dean ' . '&R&9 MERLIE S. SABUELO, Registrar ');
                         $sheet_count += 1;
-
                   } catch (\Exception $e) {
-
                   }
-
-
             }
 
-            for ($x = 7; $x >= $sheet_count; $x--) {
-                  $spreadsheet->removeSheetByIndex($x);
+            // for ($x = 7; $x >= $sheet_count; $x--) {
+            //       $spreadsheet->removeSheetByIndex($x);
 
-            }
+            // }
 
 
             $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, "Xlsx");
@@ -2638,7 +2936,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
             header('Content-Disposition: attachment; filename="ENROLLMENT.xlsx"');
             $writer->save("php://output");
             exit();
-
       }
 
       public static function pre_enrolled(Request $request)
@@ -2668,7 +2965,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
                   if (count($temp_course) == 0) {
                         return array();
                   }
-
             } else if (auth()->user()->type == 14) {
 
                   $teacher = DB::table('teacher')
@@ -2694,7 +2990,6 @@ class StudentLoading extends \App\Http\Controllers\Controller
                   if (count($temp_course) == 0) {
                         return array();
                   }
-
             }
 
             // $students = DB::table('student_pregistration')
@@ -2794,6 +3089,4 @@ class StudentLoading extends \App\Http\Controllers\Controller
             // return $students = $temp_students;
 
       }
-
-
 }

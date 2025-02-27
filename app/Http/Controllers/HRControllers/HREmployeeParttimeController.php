@@ -39,7 +39,9 @@ class HREmployeeParttimeController extends Controller
             ->leftJoin('schedulecodingdetails', 'schedulecoding.id', '=', 'schedulecodingdetails.headerid')
             ->leftJoin('college_subjects', 'schedulecoding.subjid', '=', 'college_subjects.id')
             ->where('schedulecoding.syid', $sy->id)
-            ->where('schedulecoding.semid', $semester->id)
+            ->when(isset($semester) && isset($semester->id), function($query) use ($semester) {
+               return $query->where('schedulecoding.semid', $semester->id) ;
+            })
             // ->where('schedulecoding.teacherid',  77)
             ->where('schedulecoding.deleted', '0')
             ->where('schedulecodingdetails.deleted', '0')
@@ -188,7 +190,7 @@ class HREmployeeParttimeController extends Controller
             ->where('schedulecoding.syid', $syid)
             ->where('schedulecoding.semid', $semid)
             ->where('schedulecoding.deleted', '0')
-            ->where('schedulecoding.teacherid', '!=', null)
+            // ->where('schedulecoding.teacherid', '!=', null)
             ->where('schedulecodingdetails.deleted', '0')
             ->get();
 

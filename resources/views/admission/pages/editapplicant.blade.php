@@ -56,12 +56,18 @@
             background-color: #007bff;
             border-color: #007bff;
         }
+
+        html {
+            font-family: 16px !important;
+        }
     </style>
 @endsection
 
 @section('content')
     {{-- <div class="content-header">
     </div> --}}
+
+
 
     <div class="content mt-4">
         <div class="container-fluid">
@@ -103,6 +109,7 @@
                                     <div class="form-group col-md-3">
                                         <label class="mb-1">Suffix</label>
                                         <select class="form-control" id="suffix" name="suffix" style="width: 100%;">
+                                            <option value="" {{$student->suffix == '' ? 'selected' : '' }}> Suffix</option>
                                             <option value="Jr." {{ $student->suffix == 'Jr.' ? 'selected' : '' }}>Jr.
                                             </option>
                                             <option value="II" {{ $student->suffix == 'II' ? 'selected' : '' }}>II
@@ -237,11 +244,11 @@
                                         <select class="form-control" id="select-course" name="course_id"
                                             style="width: 100%;" required>
                                             <option value="">Select Course</option>
-                                            @foreach (DB::table('college_courses')->where('deleted', 0)->get() as $item)
+                                            {{-- @foreach (DB::table('college_courses')->where('deleted', 0)->get() as $item)
                                                 <option value="{{ $item->id }}"
                                                     {{ $student->course_id == $item->id ? 'selected' : '' }}>
                                                     {{ $item->courseDesc }}</option>
-                                            @endforeach
+                                            @endforeach --}}
                                         </select>
                                         <span class="invalid-feedback" role="alert">
                                             <strong>Desired Course is required!</strong>
@@ -337,6 +344,7 @@
         var student = {!! json_encode($student) !!};
         $(document).ready(function() {
             console.log(student);
+            
             acadOnChange()
             // initCalendar()
             $('#select-exam').select2({
@@ -405,6 +413,17 @@
                 e.preventDefault(); // Prevent the default form submission
                 var isvalid = true;
 
+                if ($('#acadprog').val() == 6 || $('#acadprog').val() == 8) {
+                    $('#select-course').attr('required', true);
+                    $('#select-strand').attr('required', false);
+                } else if ($('#acadprog').val() == 5) {
+                    $('#select-strand').attr('required', true);
+                    $('#select-course').attr('required', false);
+                } else {
+                    $('#select-course').attr('required', false);
+                    $('#select-strand').attr('required', false);
+                }
+
                 // Iterate through each required input field
                 $('#regForm').find('input[required], select[required]').each(function() {
                     var $this = $(this);
@@ -435,7 +454,7 @@
                             $btn.prop('disabled',
                                 false); // Re-enable the button after the request is finished
                             if (response.status == "success") {
-                                $('#regForm')[0].reset();
+                                // $('#regForm')[0].reset();
                             }
                             console.log(response);
                             notify(response.status, response.message);
@@ -489,8 +508,52 @@
             console.log(id);
             $('#course-wrapper').prop('hidden', true);
             if (id > 0) {
-                if (id == 6) {
+                if (id == 6 || id == 8) {
                     $('#course-wrapper').prop('hidden', false);
+                    if(id == 6) {
+                        $('#select-course').empty()
+                        $('#select-course').append(`
+                            @php
+                                $courses = DB::table('college_courses')
+                                ->join('college_colleges', function($join){
+                                    $join->on('college_courses.collegeid', '=', 'college_colleges.id');
+                                    $join->where('college_colleges.acadprogid', 6);
+                                    $join->where('college_colleges.deleted', 0);
+                                })
+                                ->where('college_courses.deleted', 0)
+                                ->select('college_courses.id as id', 'college_courses.courseabrv' , 'college_courses.courseDesc')
+                                ->get();
+                            @endphp
+
+                            <option value="">Select Course</option>
+                            @foreach($courses as $course)
+                               <option value="{{ $item->id }}"
+                                                    {{ $student->course_id == $course->id ? 'selected' : '' }}>
+                                                    {{ $course->courseDesc }}</option>
+                            @endforeach
+                        `)
+                    }else if(id == 8) {
+                        $('#select-course').empty()
+                        $('#select-course').append(`
+                            @php
+                                $courses = DB::table('college_courses')
+                                ->join('college_colleges', function($join){
+                                    $join->on('college_courses.collegeid', '=', 'college_colleges.id');
+                                    $join->where('college_colleges.acadprogid', 8);
+                                    $join->where('college_colleges.deleted', 0);
+                                })
+                                ->where('college_courses.deleted', 0)
+                                ->select('college_courses.id as id', 'college_courses.courseabrv' , 'college_courses.courseDesc')
+                                ->get();
+                            @endphp
+                            <option value="">Select Course</option>
+                            @foreach($courses as $course)
+                               <option value="{{ $course->id }}"
+                                                    {{ $student->course_id == $course->id ? 'selected' : '' }}>
+                                                    {{ $course->courseDesc }}</option>
+                            @endforeach
+                        `)
+                    }
                     console.log('Selected acadprog ' + id + ' is college');
                 } else {
                     $('#select-course').val("").change();

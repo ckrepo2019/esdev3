@@ -28,6 +28,10 @@
         if (isset($check_refid->refid)) {
             if ($check_refid->refid == 27) {
                 $extend = 'academiccoor.layouts.app2';
+            } elseif ($check_refid->refid == 35) {
+                $extend = 'tesda.layouts.app2';
+            } elseif ($check_refid->refid == 36) {
+                $extend = 'tesda_trainer.layouts.app2';
             }
         } else {
             $extend = 'general.defaultportal.layouts.app';
@@ -677,6 +681,7 @@
     <script src="{{ asset('plugins/jquery/jquery.min.js') }}"></script>
     <script src="{{ asset('plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ asset('plugins/fullcalendar-v5-11-3/main.js') }}"></script>
+    <script src="{{ asset('plugins/moment/moment.min.js') }}"></script>
     <script src="{{ asset('plugins/select2/js/select2.min.js') }}"></script>
     <script src="{{ asset('plugins/datatables/jquery.dataTables.js') }}"></script>
     <script src="{{ asset('plugins/datatables-bs4/js/dataTables.bootstrap4.js') }}"></script>
@@ -979,35 +984,41 @@
 
                     var title;
 
+                    console.log(data[0].start, data[0].end);
+
                     // para ma format ang star date (ex. Feb 1)
-                    var range1 = calendar.formatDate(start, {
+                    var range1 = calendar.formatDate(data[0].start, {
                         month: 'short',
                         day: 'numeric',
 
                     });
 
                     // para ma format ang end date (ex. Feb 1)
-                    var range2 = calendar.formatDate(end, {
+                    var range2 = calendar.formatDate(data[0].end, {
                         month: 'short',
                         day: 'numeric',
                     });
 
+
+                    console.log(range1, range2);
+
+
                     // para ma format ang star time (ex. 12:30pm)
-                    var hoursStart = calendar.formatDate(start, {
+                    var hoursStart = calendar.formatDate(data[0].start, {
                         hour: '2-digit',
                         minute: '2-digit',
 
                     });
 
                     // para ma format ang end time (ex. 12:30pm)
-                    var hoursEnd = calendar.formatDate(end, {
+                    var hoursEnd = calendar.formatDate(data[0].end, {
                         hour: '2-digit',
                         minute: '2-digit',
 
                     });
 
                     // para ma format ang year (ex. 2023)
-                    var year = calendar.formatDate(start, {
+                    var year = calendar.formatDate(data[0].start, {
                         year: 'numeric'
                     });
 
@@ -1015,7 +1026,7 @@
 
                         //Pag equal ang range1 and range2 pasabot whole day ang event
                         // Display ang date (ex. Febuary 1, 2023)
-                        title = calendar.formatDate(end, {
+                        title = calendar.formatDate(data[0].start, {
                             month: 'short',
                             year: 'numeric',
                             day: 'numeric',
@@ -1410,7 +1421,6 @@
                     $('#addEvent').modal();
 
                     $.ajax({
-
                         url: '{{ route('get.event') }}',
                         type: "GET",
                         data: {
@@ -1419,23 +1429,25 @@
                         success: function(data) {
                             console.log(data, 'this is for update');
 
-                            $('#addEventLabel').text("Edit Event")
-                            $('#act_desc').val(data[0]['title'])
-                            $('#act_venue').val(data[0]['venue'])
-                            $('.add_event').addClass('update')
-                            $('.eventtimedate').addClass('hidden')
-                            $('.update').removeClass('add_event')
-                            $('.update').text("Save")
-                            $('.update').val(data[0]['id'])
+                            $('#addEventLabel').text("Edit Event");
+                            $('#act_desc').val(data[0]['title']);
+                            $('#act_venue').val(data[0]['venue']);
+                            $('.add_event').addClass('update');
+                            $('.eventtimedate').addClass('hidden');
+                            $('.update').removeClass('add_event');
+                            $('.update').text("Save");
+                            $('.update').val(data[0]['id']);
+
+                            // Set stime and etime to #timepick
+                            if (data[0]['stime'] && data[0]['etime']) {
+                                var timeRange = data[0]['stime'] + ' - ' + data[0]['etime'];
+                                $('#timepick').val(timeRange);
+                            }
 
                             if (data[0]['type'] == 1) {
-
-
                                 $('#person_involved').val(1).trigger('change');
 
                                 if (data[0]['acadprogid'] == 6) {
-
-
                                     var arrayCourseid = data[0]['courseid'].split(' ');
                                     var arrayCollegeid = data[0]['collegeid'].split(' ');
 
@@ -1445,57 +1457,35 @@
                                     temp_gradelevelid = data[0]['gradelevelid'];
 
                                     $('#courses').val(arrayCourseid).trigger('change');
-
                                     $('#colleges').val(arrayCollegeid).trigger('change');
-
-
                                 } else {
-
-
                                     $('#acad_prog').val(data[0]['acadprogid']).trigger(
                                         'change');
-
                                     temp_gradelevelid = data[0]['gradelevelid'];
-
-                                    // $('#grade_level').val(data[0]['gradelevelid']).trigger('change');
-
                                 }
 
                                 if (data[0]['isnoclass'] == 1) {
-
                                     $('#isNoClass').prop('checked', true);
-
                                 } else {
-
                                     $('#isNoClass').prop('checked', false);
-
                                 }
-
-
                             } else if (data[0]['type'] == 2) {
-
                                 $('#person_involved').val(2).trigger('change');
 
                                 faculty_g.forEach(element => {
-
                                     if (data[0]['involve'] == element.text) {
-
                                         $('#faculty').val(element.id).trigger('change');
                                     }
-
                                 });
-
                             } else {
-
                                 $('#person_involved').val(3).trigger('change');
-
                             }
 
                             $('#holiday').val(data[0]['holiday']).trigger('change');
-
                         }
                     });
-                })
+                });
+
 
                 //The actual update function
                 $(document).on('click', '.update', function() {
@@ -2605,23 +2595,16 @@
                     endTime: '19:00', // an end time (6pm in this example)
                 },
 
-                select: function(info) { //Pag mag add ug new event
-
-                    console.log(info);
+                select: function(info) {
+                    console.log(info, 'selected');
                     var start = info.startStr;
 
-                    var end = info.endStr.split("-");
-                    var endDay = new Date(info.endStr);
-                    var startDay = new Date(start);
+                    // Adjust end date by subtracting one day
+                    var end = new Date(info.endStr);
+                    end.setDate(end.getDate() - 1); // Subtract 1 day to get the correct end date
 
-                    endDay = endDay.getDate() <= 9 ? "0" + endDay.getDate() : endDay.getDate();
-
-
-                    if (info.start == info.end) {
-                        end = end[0] + "-" + end[1] + "-" + endDay + "T23:59:00";
-                    } else {
-                        end = info.endStr;
-                    }
+                    // Format the adjusted end date as a string
+                    var endStr = end.toISOString().split("T")[0];
 
                     var id = info.id;
 
@@ -2630,7 +2613,7 @@
                         minute: '2-digit',
                     });
 
-                    var hoursEnd = calendar.formatDate(end, {
+                    var hoursEnd = calendar.formatDate(endStr, {
                         hour: '2-digit',
                         minute: '2-digit',
                     });
@@ -2641,18 +2624,21 @@
                         day: 'numeric',
                     });
 
-                    dateEnd = calendar.formatDate(end, {
+                    dateEnd = calendar.formatDate(endStr, {
                         month: 'short',
                         year: 'numeric',
                         day: 'numeric',
                     });
 
-                    $('#addEventLabel').text("Add Event")
-                    $('#act_desc').val("")
-                    $('#act_venue').val("")
-                    $('.update').addClass('add_event')
-                    $('.add_event').removeClass('update')
-                    $('.add_event').text("Add")
+                    console.log(dateStart);
+                    console.log(dateEnd, 'd');
+
+                    $('#addEventLabel').text("Add Event");
+                    $('#act_desc').val("");
+                    $('#act_venue').val("");
+                    $('.update').addClass('add_event');
+                    $('.add_event').removeClass('update');
+                    $('.add_event').text("Add");
                     $('#person_involved').val(0).trigger('change');
                     $('#acad_prog').val(0).trigger('change');
                     $('#grade_level').val(0).trigger('change');
@@ -2662,27 +2648,19 @@
                     $('#faculty').val(0).trigger('change');
                     $('#holiday').val(0).trigger('change');
                     $('.eventtimedate').removeClass('hidden');
-                    $('.eventtimedate').removeClass('hidden');
 
                     if (dateStart == dateEnd) {
-
                         $('#datetimeDate').val(dateStart);
-
                     } else {
                         $('#datetimeDate').val(dateStart + " - " + dateEnd);
-
                     }
 
                     $('#datetimeTime').val(hoursStart + "-" + hoursEnd);
 
-
-                    // $(".addEvent-modal-content").load(location.href + " .addEvent-modal-content");
                     $('#addEvent').modal('toggle');
 
                     $('#start').val(start);
-                    $('#end').val(end);
-
-
+                    $('#end').val(endStr);
                 },
                 eventDrop: function(info) { //Pag mag click sa drag and drop
 

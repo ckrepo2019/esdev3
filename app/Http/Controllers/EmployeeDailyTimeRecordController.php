@@ -345,7 +345,11 @@ class EmployeeDailyTimeRecordController extends Controller
 
             $extends = "ctportal.layouts.app2";
 
-        }else{
+        }elseif($refid == 35){
+            $extends = "tesda.layouts.app2";
+        }
+        
+        else{
 
             $extends = "general.defaultportal.layouts.app";
 

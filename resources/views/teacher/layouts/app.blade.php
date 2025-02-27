@@ -4,14 +4,17 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-15">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     @php
         $schoolinfo = DB::table('schoolinfo')->first();
     @endphp
 
+
     <script src="{{ asset('plugins/jquery/jquery.min.js') }}"></script>
     <link href="{{ asset('assets/css/gijgo.min.css') }}" rel="stylesheet" />
     <link rel="stylesheet" href="{{ asset('plugins/fontawesome-free/css/all.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css') }}">
+    <link rel="stylesheet"
+        href="{{ asset('plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/icheck-bootstrap/icheck-bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/jqvmap/jqvmap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('dist/css/adminlte.min.css') }}">
@@ -29,12 +32,16 @@
     <link rel="stylesheet" href="{{ asset('plugins/dropzone/min/dropzone.min.css') }}">
     <!-- Ekko Lightbox -->
     <link rel="stylesheet" href="{{ asset('plugins/ekko-lightbox/ekko-lightbox.css') }}">
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
+
+
+
 
     @if (db::table('schoolinfo')->first()->abbreviation == 'LDCU')
         <script type="module">
             import Chatbot from "https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js"
             Chatbot.init({
-                chatflowid: "96eb264f-2549-4790-81b6-d8ea0e95103b",
+                chatflowid: "5241173b-92e5-4c87-971f-2a0a92716d4c",
                 apiHost: "https://flowisechatbot-nxra.onrender.com",
                 chatflowConfig: {
                     // topK: 2
@@ -91,7 +98,7 @@
                             sendMessageSound: true,
                             // sendSoundLocation: "send_message.mp3", // If this is not used, the default sound effect will be played if sendSoundMessage is true.
                             receiveMessageSound: true,
-                            // receiveSoundLocation: "receive_message.mp3", // If this is not used, the default sound effect will be played if receiveSoundMessage is true. 
+                            // receiveSoundLocation: "receive_message.mp3", // If this is not used, the default sound effect will be played if receiveSoundMessage is true.
                         },
                         feedback: {
                             color: '#303235',
@@ -106,7 +113,6 @@
                 }
             })
         </script>
-        
     @endif
 
     <style>
@@ -378,7 +384,7 @@
         body {
             overflow-y: scroll;
         }
-        
+
     } */
         @media (max-width: 991.98px) {
             .sidebar-mobile-open .app-sidebar .app-sidebar__inner ul .widget-content-left a {
@@ -466,7 +472,7 @@
     <script src="{{ asset('plugins/chart.js/Chart.min.js') }}"></script>
     <script src="{{ asset('dist/js/demo.js') }}"></script>
     <script src="{{ asset('dist/js/pages/dashboard3.js') }}"></script>
-    <script src="{{ asset('plugins/pace-progress/pace.min.js') }}"></script>
+    <script src="{{ asset('plugins/pace-progress/pace.js') }}"></script>
     <script src="{{ asset('plugins/sweetalert2/sweetalert2.all.min.js') }}"></script>
     <script src="{{ asset('plugins/datatables/jquery.dataTables.js') }}"></script>
     <script src="{{ asset('plugins/datatables-bs4/js/dataTables.bootstrap4.js') }}"></script>
@@ -483,6 +489,7 @@
     <script src="{{ asset('plugins/ekko-lightbox/ekko-lightbox.min.js') }}"></script>
     <!-- Filterizr-->
     <script src="{{ asset('plugins/filterizr/jquery.filterizr.min.js') }}"></script>
+
     @yield('footerjavascript')
 
     @yield('footerscripts')
@@ -491,7 +498,72 @@
     @yield('footjs')
 
     <script>
+        function getAllMessages2() {
+
+            return $.ajax({
+                type: "GET",
+                data: {
+                    header: 1,
+                },
+                url: "/hr/settings/notification/getAllMessages",
+            });
+        }
+
+        function getAllMessages3() {
+
+            return $.ajax({
+                type: "GET",
+                data: {
+                    header2: 1,
+                },
+                url: "/hr/settings/notification/getAllMessages",
+            });
+        }
+
+        function renderAllMessages2() {
+
+            getAllMessages2().then(function(data) {
+
+
+                var renderHtml = data.length > 0 ? data.map(entry => {
+                    return ` <a class="media" href="/hr/settings/notification/index?id=${entry.data_id}">
+                            <img src="/${entry.picurl ? entry.picurl : 'dist/img/download.png'}"  alt="User Avatar" onerror="this.onerror = null; this.src='{{ asset('dist/img/download.png') }}'"  class="img-size-50 img-circle mr-3">
+                            <div class="media-body">
+                                <h3 class="dropdown-item-title">
+                                ${entry.name}
+                                <span class="float-right text-sm text-warning"><i class="fas fa-star"></i></span>
+                                </h3>
+                                <p class="text-sm">
+                                ${entry.additionalmessage.length > 50 ? entry.additionalmessage.substring(0, 50) + '...' : entry.additionalmessage}
+                                </p>
+                                <p class="text-sm text-muted"><i class="far fa-clock mr-1"></i>${entry.time_ago}</p>
+                            </div>
+                        </a>
+                        <div class="dropdown-divider"></div>`;
+
+                }).join('') : `<div class="text-center"><p class="text-muted">No message found</p></div>`;
+                $('#notification_holder').prepend(renderHtml);
+
+
+
+
+            })
+
+
+            getAllMessages3().then(function(data) {
+
+                var count = data.length;
+                $('#notification_count').text(count);
+
+            })
+
+        }
+
+
+
         $(document).ready(function() {
+
+            renderAllMessages2();
 
 
             $(document).on('click', '#logout', function() {
@@ -586,4 +658,8 @@
         })
     </script>
 
+
+    @include('websockets.realtimenotification')
 </body>
+
+</html>

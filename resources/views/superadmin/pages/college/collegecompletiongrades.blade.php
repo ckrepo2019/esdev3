@@ -22,7 +22,7 @@ if(auth()->user()->type == 16){
 <link rel="stylesheet" href="{{ asset('plugins/datatables-fixedcolumns/css/fixedColumns.bootstrap4.css') }}">
 <link rel="stylesheet" href="{{asset('plugins/icheck-bootstrap/icheck-bootstrap.min.css')}}">
 <link rel="stylesheet" href="{{ asset('plugins/daterangepicker/daterangepicker.css') }}">
-<link rel="stylesheet" type="text/css" href="{{ asset('plugins/datetimepicker/jquery.datetimepicker.min.css') }}">
+{{-- <link rel="stylesheet" type="text/css" href="{{ asset('plugins/datetimepicker/jquery.datetimepicker.min.css') }}"> --}}
 <style>
       /* .select2-selection{
           height: calc(2.25rem + 2px) !important;
@@ -194,7 +194,8 @@ if(count($gradepriv) == 0){
                   <div class="row">
                         <div class="col-md-12  form-group">
                               <label for="" class="mb-1"><span id="term_input_label"></span> Grades Deadline</label>
-                              <input type="text" class="form-control select2 form-control-sm" id="input_inputperiod">
+                              {{-- <input type="text" class="form-control select2 form-control-sm" id="input_inputperiod"> --}}
+                              <input type="datetime-local" class="form-control form-control-sm" id="input_inputperiod">
                         </div>
                   </div> 
                   <div class="row">
@@ -564,7 +565,7 @@ if(count($gradepriv) == 0){
 <script src="{{asset('plugins/datatables-fixedcolumns/js/dataTables.fixedColumns.js') }}"></script>
 {{-- <script src="{{asset('plugins/daterangepicker/daterangepicker.js') }}"></script> --}}
 {{-- <script src="jquery.datetimepicker.js"></script> --}}
-<script src="{{asset('plugins/datetimepicker/jquery.datetimepicker.full.min.js') }}"></script>
+{{-- <script src="{{asset('plugins/datetimepicker/jquery.datetimepicker.full.min.js') }}"></script> --}}
 
 <script>
       var gradepriv = @json($gradepriv)
@@ -575,9 +576,9 @@ if(count($gradepriv) == 0){
 
       var gradesetup = [];
 
-      $('#input_inputperiod').datetimepicker({
-            format:'M d, Y H:i',
-      });
+      // $('#input_inputperiod').datetimepicker({
+      //       format:'M d, Y H:i',
+      // });
 
       function getgradesetup(){
             $.ajax({
@@ -1553,7 +1554,6 @@ if(count($gradepriv) == 0){
             temp_subjects = data[0].subjects
             temp_grades = data[0].grades
             temp_dates = data[0].dates
-
             $('#subject_holder').empty()
 
             var disprelim = 0
@@ -1592,11 +1592,11 @@ if(count($gradepriv) == 0){
 
                   $.each(temp_subjects,function(a,b){
                         count += 1;
+                        
                         display_grades_table(b,temp_grades,count,temp_studinfo,temp_dates)
                   })
 
             }else if($('#filter_teacher').val() != null && $('#filter_teacher').val() != ""){
-
                   count = 0
                   var d_subjects = temp_subjects
 
@@ -1610,7 +1610,6 @@ if(count($gradepriv) == 0){
                         temp_studname = b.studname
                         temp_studid =  b.studid
                         temp_course = b.courseid
-                     
                         $.each(d_subjects.filter(x=>x.studid == b.studid),function(c,d){
                               count += 1;
                               display_grades_table(d,temp_grades,count,b,temp_dates)
@@ -1628,7 +1627,6 @@ if(count($gradepriv) == 0){
 
 
       function display_grades_table(b,temp_grades,count,studinfo,temp_dates){
-
             var disprelim = 0
             var dismidterm = 0
             var disprefi = 0
@@ -1664,9 +1662,9 @@ if(count($gradepriv) == 0){
             var input_grade_class_final = 'input_grades'
             var input_grade_class_prefi = 'input_grades'
             var input_grade_class_prelim = 'input_grades'
-            
-            var stud_grade = temp_grades.filter(x=>x.studid == b.studid && x.prospectusID == b.id)
-           
+            console.log(b,'b')
+            var stud_grade = temp_grades.filter(x=>x.sid == b.sid && x.prospectusID == b.id)
+            console.log(temp_grades,'stud_grade')
             if(stud_grade.length > 0){
 
                   var grade_dates = temp_dates.filter(x=>x.headerid == stud_grade[0].id )
@@ -1783,29 +1781,29 @@ if(count($gradepriv) == 0){
             
             if($('.filter_showdates').prop('checked')){
 
-                        text += '<td  data-studid="'+b.studid+'" data-section="'+sectionid+'" class="'+input_grade_class_prelim+' text-center grade_td term_holder" data-term="1" data-pid="'+b.id+'"  data-course="'+temp_course+'" data-section="'+b.sectionid+'" data-stat="'+prelimstat+'">'+prelimgrades+'</td>'
+                        text += '<td data-schedid="'+b.schedid+'"  data-studid="'+b.sid+'" data-section="'+sectionid+'" class="'+input_grade_class_prelim+' text-center grade_td term_holder" data-term="1" data-pid="'+b.id+'"  data-course="'+temp_course+'" data-section="'+b.sectionid+'" data-stat="'+prelimstat+'">'+prelimgrades+'</td>'
 
-                        text += '<td  data-studid="'+b.studid+'"  data-section="'+sectionid+'" class="'+input_grade_class_midterm+' text-center grade_td term_holder" data-term="2" data-pid="'+b.id+'"  data-course="'+temp_course+'" data-section="'+b.sectionid+'" data-stat="'+midstat+'">'+midgrades+'</td>'
+                        text += '<td data-schedid="'+b.schedid+'"  data-studid="'+b.sid+'"  data-section="'+sectionid+'" class="'+input_grade_class_midterm+' text-center grade_td term_holder" data-term="2" data-pid="'+b.id+'"  data-course="'+temp_course+'" data-section="'+b.sectionid+'" data-stat="'+midstat+'">'+midgrades+'</td>'
 
-                        text += '<td  data-studid="'+b.studid+'"  data-section="'+sectionid+'" class="'+input_grade_class_prefi+' text-center grade_td term_holder" data-term="3" data-pid="'+b.id+'"  data-course="'+temp_course+'" data-section="'+b.sectionid+'" data-stat="'+prefistat+'">'+prefigrades+'</td>'
+                        text += '<td data-schedid="'+b.schedid+'"  data-studid="'+b.sid+'"  data-section="'+sectionid+'" class="'+input_grade_class_prefi+' text-center grade_td term_holder" data-term="3" data-pid="'+b.id+'"  data-course="'+temp_course+'" data-section="'+b.sectionid+'" data-stat="'+prefistat+'">'+prefigrades+'</td>'
 
-                        text += '<td  data-studid="'+b.studid+'"  data-section="'+sectionid+'" class="'+input_grade_class_final+'  text-center grade_td term_holder" data-term="4" data-pid="'+b.id+'"  data-course="'+temp_course+'" data-section="'+b.sectionid+'" data-stat="'+finalstat+'">'+finalgrades+'</td>'
+                        text += '<td data-schedid="'+b.schedid+'"  data-studid="'+b.sid+'"  data-section="'+sectionid+'" class="'+input_grade_class_final+'  text-center grade_td term_holder" data-term="4" data-pid="'+b.id+'"  data-course="'+temp_course+'" data-section="'+b.sectionid+'" data-stat="'+finalstat+'">'+finalgrades+'</td>'
 
             }else{
                   if(disprelim == 1){
-                        text += '<td  data-studid="'+b.studid+'" data-section="'+sectionid+'" class="'+input_grade_class_prelim+' text-center grade_td term_holder" data-term="1" data-pid="'+b.id+'"  data-course="'+temp_course+'" data-section="'+b.sectionid+'" data-stat="'+prelimstat+'">'+prelimgrades+'</td>'
+                        text += '<td data-schedid="'+b.schedid+'"  data-studid="'+b.sid+'" data-section="'+sectionid+'" class="'+input_grade_class_prelim+' text-center grade_td term_holder" data-term="1" data-pid="'+b.id+'"  data-course="'+temp_course+'" data-section="'+b.sectionid+'" data-stat="'+prelimstat+'">'+prelimgrades+'</td>'
                   }
 
                   if(dismidterm == 1){
-                        text += '<td  data-studid="'+b.studid+'"  data-section="'+sectionid+'" class="'+input_grade_class_midterm+' text-center grade_td term_holder" data-term="2" data-pid="'+b.id+'"  data-course="'+temp_course+'" data-section="'+b.sectionid+'" data-stat="'+midstat+'">'+midgrades+'</td>'
+                        text += '<td data-schedid="'+b.schedid+'"  data-studid="'+b.sid+'"  data-section="'+sectionid+'" class="'+input_grade_class_midterm+' text-center grade_td term_holder" data-term="2" data-pid="'+b.id+'"  data-course="'+temp_course+'" data-section="'+b.sectionid+'" data-stat="'+midstat+'">'+midgrades+'</td>'
                   }
 
                   if(disprefi == 1){
-                        text += '<td  data-studid="'+b.studid+'"  data-section="'+sectionid+'" class="'+input_grade_class_prefi+' text-center grade_td term_holder" data-term="3" data-pid="'+b.id+'"  data-course="'+temp_course+'" data-section="'+b.sectionid+'" data-stat="'+prefistat+'">'+prefigrades+'</td>'
+                        text += '<td data-schedid="'+b.schedid+'"  data-studid="'+b.sid+'"  data-section="'+sectionid+'" class="'+input_grade_class_prefi+' text-center grade_td term_holder" data-term="3" data-pid="'+b.id+'"  data-course="'+temp_course+'" data-section="'+b.sectionid+'" data-stat="'+prefistat+'">'+prefigrades+'</td>'
                   }
 
                   if(disfinal == 1){
-                        text += '<td  data-studid="'+b.studid+'"  data-section="'+sectionid+'" class="'+input_grade_class_final+'  text-center grade_td term_holder" data-term="4" data-pid="'+b.id+'"  data-course="'+temp_course+'" data-section="'+b.sectionid+'" data-stat="'+finalstat+'">'+finalgrades+'</td>'
+                        text += '<td data-schedid="'+b.schedid+'"  data-studid="'+b.sid+'"  data-section="'+sectionid+'" class="'+input_grade_class_final+'  text-center grade_td term_holder" data-term="4" data-pid="'+b.id+'"  data-course="'+temp_course+'" data-section="'+b.sectionid+'" data-stat="'+finalstat+'">'+finalgrades+'</td>'
                   }
             }
                   
@@ -1814,9 +1812,9 @@ if(count($gradepriv) == 0){
             
 
             
-            text += '<th  data-studid="'+b.studid+'" data-section="'+sectionid+'" class="'+input_grade_other+' term_holder text-center" data-term="5" data-pid="'+b.id+'"  data-course="'+temp_course+'" data-section="'+b.sectionid+'" data-stat="'+finalstat+'">'+fg+'</th>'
+            text += '<th data-schedid="'+b.schedid+'"  data-studid="'+b.sid+'" data-section="'+sectionid+'" class="'+input_grade_other+' term_holder text-center" data-term="5" data-pid="'+b.id+'"  data-course="'+temp_course+'" data-section="'+b.sectionid+'" data-stat="'+finalstat+'">'+fg+'</th>'
 
-            text += '<th  data-studid="'+b.studid+'"  data-section="'+sectionid+'" class="'+input_grade_other+' term_holder text-center" data-term="6" data-pid="'+b.id+'"  data-course="'+temp_course+'" data-section="'+b.sectionid+'" data-stat="'+finalstat+'">'+fgremarks+'</th>'
+            text += '<th data-schedid="'+b.schedid+'"  data-studid="'+b.sid+'"  data-section="'+sectionid+'" class="'+input_grade_other+' term_holder text-center" data-term="6" data-pid="'+b.id+'"  data-course="'+temp_course+'" data-section="'+b.sectionid+'" data-stat="'+finalstat+'">'+fgremarks+'</th>'
 
             text += '</tr>'
 
@@ -2407,6 +2405,7 @@ if(count($gradepriv) == 0){
                   var pid = $(this).attr('data-pid')
                   var termgrade = $(this).text()
                   var td = $(this)
+                  var schedid = $(this).attr('data-schedid')
                   $.ajax({
                         type:'POST',
                         url: '/college/teacher/student/grades/save',
@@ -2418,6 +2417,7 @@ if(count($gradepriv) == 0){
                               termgrade:termgrade,
                               studid:studid,
                               courseid:courseid,
+                              schedid:schedid,
                               pid:pid,
                         },
                         success:function(data) {
@@ -2451,6 +2451,7 @@ if(count($gradepriv) == 0){
                   var pid = $(this).attr('data-pid')
                   var termgrade = $(this).text()
                   var td = $(this)
+                  var schedid = $(this).attr('data-schedid')
                   $.ajax({
                         type:'POST',
                         url: '/college/teacher/student/grades/save',
@@ -2462,6 +2463,7 @@ if(count($gradepriv) == 0){
                               termgrade:termgrade,
                               studid:studid,
                               courseid:courseid,
+                              schedid:schedid,
                               pid:pid,
                         },
                         success:function(data) {
@@ -2493,6 +2495,7 @@ if(count($gradepriv) == 0){
                   var pid = $(this).attr('data-pid')
                   var termgrade = $(this).text()
                   var td = $(this)
+                  var schedid = $(this).attr('data-schedid')
                   $.ajax({
                         type:'POST',
                         url: '/college/teacher/student/grades/save',
@@ -2504,6 +2507,7 @@ if(count($gradepriv) == 0){
                               termgrade:termgrade,
                               studid:studid,
                               courseid:courseid,
+                              schedid:schedid,
                               pid:pid,
                         },
                         success:function(data) {
@@ -2535,6 +2539,7 @@ if(count($gradepriv) == 0){
                   var pid = $(this).attr('data-pid')
                   var termgrade = $(this).text()
                   var td = $(this)
+                  var schedid = $(this).attr('data-schedid')
                   $.ajax({
                         type:'POST',
                         url: '/college/teacher/student/grades/save',
@@ -2546,6 +2551,7 @@ if(count($gradepriv) == 0){
                               termgrade:termgrade,
                               studid:studid,
                               courseid:courseid,
+                              schedid:schedid,
                               pid:pid,
                         },
                         success:function(data) {
@@ -2577,6 +2583,7 @@ if(count($gradepriv) == 0){
                   var pid = $(this).attr('data-pid')
                   var termgrade = $(this).text()
                   var td = $(this)
+                  var schedid = $(this).attr('data-schedid')
                   $.ajax({
                         type:'POST',
                         url: '/college/teacher/student/grades/save',
@@ -2588,6 +2595,7 @@ if(count($gradepriv) == 0){
                               termgrade:termgrade,
                               studid:studid,
                               courseid:courseid,
+                              schedid:schedid,
                               pid:pid,
                         },
                         success:function(data) {
@@ -2627,6 +2635,7 @@ if(count($gradepriv) == 0){
                   var pid = $(this).attr('data-pid')
                   var termgrade = $(this).text()
                   var td = $(this)
+                  var schedid = $(this).attr('data-schedid')
                   $.ajax({
                         type:'POST',
                         url: '/college/teacher/student/grades/save',
@@ -2639,6 +2648,7 @@ if(count($gradepriv) == 0){
                               studid:studid,
                               courseid:courseid,
                               pid:pid,
+                              schedid:schedid,
                         },
                         success:function(data) {
                               $(td).removeClass('updated')

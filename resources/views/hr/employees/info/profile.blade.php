@@ -631,7 +631,7 @@
 						</div>
 					</div>
 					<div class="col-md-5"></div>
-					<div class="col-md-4 text-right" style="display: inline-grid;">
+					<div class="col-md-4 text-right" style="display: inline-grid;" hidden>
 						<b style="font-size: 18px;"><label class="form-check-label">Half Day Saturday</label></b>
 						<div class="form-group mb-0 text-right" style="" id="">
 							<div class="form-check pr-3">

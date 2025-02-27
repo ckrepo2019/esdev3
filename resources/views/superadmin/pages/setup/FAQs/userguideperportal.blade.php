@@ -27,6 +27,9 @@ if(Session::get('currentPortal') == 3){
         if($check_refid->refid == 27){
                 $extend = 'academiccoor.layouts.app2';
         }
+        else if($check_refid->refid == 36){
+                $extend = 'tesda_trainer.layouts.app2';
+        }
     }else{
         $extend = 'general.defaultportal.layouts.app';
     }

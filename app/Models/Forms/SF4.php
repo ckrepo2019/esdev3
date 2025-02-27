@@ -32,7 +32,6 @@ class SF4 extends Model
                         ->orderBy('sortid')
                         ->get();
 
-
         foreach($sections as $item){
             if($item->acadprogid == 5){
                 $item->registered = self::sh_count($year, $month, $item->sectionid , [1,2,4], $syid);
@@ -65,6 +64,7 @@ class SF4 extends Model
                
             }
         }
+        // dd($sections);
 
         return $sections;
     }
@@ -307,7 +307,7 @@ class SF4 extends Model
         }
 
 
-        if( $registered->total != 0){
+        if( $registered->total != 0  && $getsection->countdates > 0 && $getsection->registeredmale > 0 &&$getsection->registeredfemale > 0 ){
 
             
             $ptm_m = number_format((( number_format($getsection->presentmale/$getsection->countdates,2))/$getsection->registeredmale)*100,2);

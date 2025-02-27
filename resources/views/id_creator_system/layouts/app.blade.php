@@ -324,6 +324,8 @@
     </script> --}}
     @yield('footerjavascript')
 
+    @include('websockets.realtimenotification')
+
 </body>
 
 </html>

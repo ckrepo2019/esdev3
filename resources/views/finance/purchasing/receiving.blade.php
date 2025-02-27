@@ -1,9 +1,9 @@
 @php
 
-    
+
     $check_refid = DB::table('usertype')->where('id',Session::get('currentPortal'))->select('refid','resourcepath')->first();
 
-    if(Session::get('currentPortal') == 14){    
+    if(Session::get('currentPortal') == 14){
       $extend = 'deanportal.layouts.app2';
     }else if(Session::get('currentPortal') == 3){
         $extend = 'registrar.layouts.app';
@@ -45,7 +45,7 @@
         }elseif($check_refid->refid ==  33){
           $extend = 'inventory.layouts.app2';
         }elseif($check_refid->refid ==  19){
-          $extend = 'finance.layouts.app';      
+          $extend = 'finance.layouts.app';
         }
         else{
           $extend = 'general.defaultportal.layouts.app';
@@ -59,7 +59,7 @@
 
 @extends($extend)
 @section('content')
-  
+
   <section class="content">
     <div class="row">
       {{-- <h1 class="m-0 text-dark">Purchase Order</h1> --}}
@@ -115,7 +115,7 @@
                       </div> --}}
                   </div>
               </div>
-  
+
             </div>
             <div class="row">
               <div class="col-md-12" id="main_table" style="overflow: auto">
@@ -145,7 +145,7 @@
 @endsection
 
 @section('modal')
-  
+
 <!-- Modal When Create Button is click -->
 <div class="modal fade show" id="modal_addreceiving" style="display: none">
   <div class="modal-dialog modal-xl">
@@ -154,14 +154,14 @@
           <div class="row">
               <div class="col-md-8">
                 <div class="row">
-                  
+
                   <div class="col-sm-5 col-md-12">
-                    <h4><span id="r_suppliername">CK PUBLISHING | PO-00000001 | CASH</span> 
+                    <h4><span id="r_suppliername">CK PUBLISHING | PO-00000001 | CASH</span>
                       <badge class="badge badge-primary text-sm" style="margin-top: 2px;"><i class="fas fa-edit"></i> Override</badge>
                     </h4>
                   </div>
                   {{-- <div class="col-md-4"></div> --}}
-                  
+
                 </div>
                 <div class="row form-group">
                   <div class="col-md-12 table-responsive" style="height: 14.66em">
@@ -189,8 +189,8 @@
                           <td class="text-center align-middle r_treceived">2,400.00</td>
                           <td><button class="btn btn-danger btn-sm text-sm"><i class="far fa-trash-alt"></i></button></td>
                         </tr>
-                        
-                        
+
+
                       </tbody>
                       <tfoot>
                         <tr>
@@ -222,7 +222,7 @@
                             <button id="r_addje" class="btn btn-dark btn-sm text-sm text-right text-light"><i class="fas fa-plus"></i> Add Entries</button>
                           </div>
                         </div>
-                        
+
                       </div>
                       <div class="card-body" style="height: 14em">
                         <div class="row">
@@ -292,9 +292,9 @@
                       </div>
                     </div>
                   </div> --}}
-                  
+
                   {{-- card for payments --}}
-                  
+
 
                   <div class="row form-group" style="margin-top: 2em">
                     <div class="col-md-9">
@@ -306,7 +306,7 @@
                       <input id="r_terms" type="number" class="form-control form-control-sm">
                     </div>
                   </div>
-                  
+
                   <div class="row form-group">
                     <div class="col-md-6">
                       <label for="">Invoice Date</label>
@@ -353,7 +353,7 @@
                                   <tr>
                                     <td class="p-0">5/27/2023 <span class="text-primary" style="cursor: pointer;" data-toggle="tooltip" title="Edit Date"><i class="far fa-edit"></i></span></td>
                                     <td class="text-right p-0">0.00</td>
-                                    
+
                                   </tr>
                                 </tbody>
                                 <tfoot>
@@ -383,13 +383,13 @@
           <div class="col-md-6 text-right">
             <div id="div_posted" class="row" style="display: none">
               <div class="col-md-8">
-                <button class="btn btn-success btn-block" id="btn_posted" disabled><i class="fas fa-check-circle"></i> POSTED</button>    
+                <button class="btn btn-success btn-block" id="btn_posted" disabled><i class="fas fa-check-circle"></i> POSTED</button>
               </div>
               <div id="div_print" class="col-md-4" style="display: none">
-                <button class="btn btn-primary btn-block" id="btn_print" ><i class="fas fa-print"></i> Print</button>    
+                <button class="btn btn-primary btn-block" id="btn_print" ><i class="fas fa-print"></i> Print</button>
               </div>
             </div>
-            
+
             {{-- <button class="btn btn-danger" id="btn_delete"><i class="fas fa-trash"></i> Delete</button> --}}
             <button class="btn btn-success" id="btn_post"><i class="fas fa-thumbtack"></i> Post</button>
             <button class="btn btn-primary" id="btn_saveitems" po-id="0" r-id="0"><i class="fas fa-save"></i> Save</button>
@@ -437,7 +437,7 @@
                 </div>
               </div>
             </div>
-                
+
           </div>
           <div class="modal-footer">
             <div class="col-md-6">
@@ -469,7 +469,7 @@
                   <input id="r_payduedate" type="date" class="form-control" placeholder="">
                 </div>
             </div>
-                
+
           </div>
           <div class="modal-footer">
             <div class="col-md-6 text-right">
@@ -478,7 +478,7 @@
             <div class="col-md-6">
               <button class="btn btn-primary" id="btn-addsubjcom"><i class="fas fa-plus"></i> Save</button>
             </div>
-            
+
           </div>
       </div>
   </div>
@@ -495,9 +495,9 @@
 @endsection
 
 @section('js')
-  
+
   <script type="text/javascript">
-    
+
     $(document).ready(function(){
       $('.select2').select2({
             theme: 'bootstrap4'
@@ -508,7 +508,7 @@
       $('.check_monthly').prop('checked',false)
       $('.check_yearly').prop('checked',false)
       $('.breakdowndatacontainer').attr('hidden','hidden')
-      
+
       $('#method_monthly').hide()
       $('#method_yearly').hide()
 
@@ -521,15 +521,15 @@
   </script>
 
   <script type="text/javascript">
-    
+
     $(document).ready(function(){
-      // decalarations variables 
-      
+      // decalarations variables
+
 
       // calling functions
       // purchase_orders()
       // items_datatable()
-      
+
       // ------------------ events --------------------------
       // Checkbox Payment Method
 
@@ -568,31 +568,31 @@
           }
         }
       });
-      
+
       // add months plus icon
       var count = 0; // initialize click count variable
       $(document).on('click', '#icon_addmonth', function(){
           $('.breakdowndatacontainer').removeAttr('hidden','hidden')
           var itemstotal = parseInt($('#items_total').val())
           count++; // increment click count
-          
+
           $('#monthscount').text(count);
           $('#yearcount').text(0);
           var tmonth = (itemstotal / count)
 
           var tally = $("<tr><td id='tmonth' class='p-0 list-group-item' style='border-top: none!important; border-right: none!important; border-left: none!important'><u><b>"+ tmonth +"</b></u></td></tr>");
-          
+
           $("#breakdowndata").append(tally);
       })
-      
+
       $(document).on('click', '#icon_addyear', function(){
           $('.breakdowndatacontainer').removeAttr('hidden','hidden')
           var itemstotal = parseInt($('#items_total').val())
           count++; // increment click count
-          
+
           $('#yearcount').text(count);
           $('#monthscount').text(0);
-          
+
       })
       // Add year plus icon
 
@@ -616,7 +616,7 @@
       $(document).on('click', '#btn_create_payable', function(){
         $('#modal_addpayable').modal('show')
       })
-      
+
       // click Add Item
       $(document).on('click', '#btn_additem', function(){
         $('#modal-additems').modal('show')
@@ -645,7 +645,7 @@
 
             console.log(data)
             $('#rr_list tr').empty()
-            $.each(data, function (index, val) { 
+            $.each(data, function (index, val) {
               if(val.remarks == null)
               {
                 var remarks = ''
@@ -666,7 +666,7 @@
                   <td>`+remarks+`</td>
                 </tr>
               `)
-              
+
             });
           }
         });
@@ -718,7 +718,7 @@
               $('#btn_post').hide()
             }
             else{
-              $('#btn_post').show() 
+              $('#btn_post').show()
             }
 
             if(data.invoicedate == '')
@@ -728,7 +728,7 @@
               $('#r_invoicedate').val(invdate)
             }
             else{
-              $('#r_invoicedate').val(data.invoicedate)  
+              $('#r_invoicedate').val(data.invoicedate)
             }
 
             if(data.datedelivered == '')
@@ -738,17 +738,24 @@
               $('#r_datedelivered').val(deldate)
             }
             else{
-              $('#r_datedelivered').val(data.datedelivered)  
+              $('#r_datedelivered').val(data.datedelivered)
             }
 
-            
-            $('#r_terms').val(data.terms)
-            
-            
+            if(data.terms == '' || data.terms == null)
+            {
+                $('#r_terms').val(1)
+            }
+            else{
+                $('#r_terms').val(data.terms)
+            }
+
+
+
+
 
             $('#r_itemlist').empty()
 
-            $.each(data.items, function (index, val) { 
+            $.each(data.items, function (index, val) {
               total += parseFloat(val.totalamount)
 
               // console.log(val.totalamount)
@@ -795,7 +802,7 @@
 
               // if(parseFloat(totalpayment) > 0)
               // {
-                
+
               // }
               // else{
               //   payment = 0
@@ -836,7 +843,7 @@
             $('#r_totalpaid').text(parseFloat(totalpaid, 10).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString())
             $('#r_totalamount').text(parseFloat(totalamount, 10).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString())
             $('#r_totalbalance').text(parseFloat(totalbalance, 10).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString())
-            
+
             $('#je_accounts').empty()
 
             $.each(data.je, function(index, val) {
@@ -869,7 +876,7 @@
                   <td>
                     <button class="btn btn-danger btn-sm mt-1 je_delete">
                       <i class="far fa-trash-alt"></i>
-                    </button> 
+                    </button>
                   </td>
                 </tr>
               `)
@@ -889,12 +896,12 @@
             }
 
 
-            $('#modal_addreceiving').modal('show');    
+            $('#modal_addreceiving').modal('show');
           }
-        });  
+        });
       })
 
-      
+
 
       $(document).on('change', '.r_qty', function(){
         var qty = $(this).val()
@@ -904,7 +911,7 @@
         {
           qty = 0
         }
-        
+
         var totalamount = parseFloat(amount) * parseFloat(qty)
         var totalreceived = 0;
         $(this).closest('tr').find('.r_treceived').text(parseFloat(totalamount, 10).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString())
@@ -914,7 +921,7 @@
           totalreceived += parseFloat(receivedamount)
 
           console.log(totalreceived)
-          
+
         })
 
         $('#r_receivedtotal').text(parseFloat(totalreceived, 10).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString())
@@ -926,7 +933,7 @@
 
         if(term != '' && term != null && term != 0)
         {
-          
+
           Swal.fire({
             title: 'Create A/P Schedule?',
             text: "Existing A/P Schedule will be replaced.",
@@ -957,8 +964,8 @@
               var curamount = totalreceived
               var totalbalance = 0;
 
-                
-              
+
+
               for (var count = 1; count <= term; count++)
               {
                 var incrementedDate = currentDate.add(1, 'month')
@@ -986,9 +993,9 @@
                 $('#r_termlist').append(`
                   <tr data-id="0">
                     <td class="due">
-                      `+incrementedDate.format('MM/DD/YYYY')+` 
+                      `+incrementedDate.format('MM/DD/YYYY')+`
                       </td>
-                    <td class="text-right termamount">`+parseFloat(amount, 10).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString()+`</td>  
+                    <td class="text-right termamount">`+parseFloat(amount, 10).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString()+`</td>
                     <td class="text-right termpayment">`+"0.00"+`</td>
                     <td class="text-right termbalance">`+parseFloat(amount, 10).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString()+`</td>
                   </tr>
@@ -1005,8 +1012,8 @@
               )
             }
 
-            
-            
+
+
           })
         }
         else{
@@ -1025,7 +1032,7 @@
           Toast.fire({
             type: 'error',
             title: 'Please input the desired term'
-          }) 
+          })
         }
       })
 
@@ -1154,7 +1161,7 @@
       });
 
       var acc_coa = '';
-      
+
       getcoa()
 
       function getcoa()
@@ -1204,10 +1211,10 @@
               <td>
                 <button class="btn btn-primary btn-sm mt-1 je_button">
                   <i class="fas fa-download"></i>
-                </button> 
+                </button>
                 <button class="btn btn-danger btn-sm mt-1 je_delete">
                   <i class="far fa-trash-alt"></i>
-                </button> 
+                </button>
               </td>
             </tr>
           `)
@@ -1229,13 +1236,13 @@
               <td>
                 <button class="btn btn-primary btn-sm mt-1 je_button">
                   <i class="fas fa-download"></i>
-                </button> 
+                </button>
                 <button class="btn btn-danger btn-sm mt-1 je_delete">
                   <i class="far fa-trash-alt"></i>
-                </button> 
+                </button>
               </td>
             </tr>
-          `) 
+          `)
         }
 
         $('.select2').select2({
@@ -1270,8 +1277,8 @@
         })
 
         $('#r_credittotal').text(parseFloat(trcredittotal, 10).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString())
-        
-        
+
+
       }
 
       $(document).on('click', '#r_addje', function(){
@@ -1287,7 +1294,7 @@
         $(this).closest('tr').find('td.je_input').remove()
         $(this).closest('tr').find('.debit').remove()
         $(this).closest('tr').find('.credit').remove()
-        
+
         $(this).closest('tr').find('td.je_acc').text(account)
         $(this).closest('tr').find('td.je_acc').attr('coa-id', glid)
         $(this).closest('tr').find('td.je_debit').text(debit)
@@ -1337,7 +1344,7 @@
         var poid = $('#btn_saveitems').attr('po-id')
 
         setTimeout(() => {
-          
+
         }, 1500);
           Swal.fire({
             title: 'Post Receivable?',
@@ -1370,7 +1377,7 @@
                       'success'
                     )
                   }
-                })            
+                })
               }, 1500);
             }
           })
@@ -1427,6 +1434,15 @@
         loadpurchasing()
       })
 
+      $(document).on('change', '#r_terms', function(){
+        if($(this).val() <= 0)
+        {
+            $(this).val(1)
+        }
+      })
+
+
+
       // $.ajax({
       //   type: "GET",
       //   url: "{{route('receiving_save')}}",
@@ -1439,7 +1455,7 @@
 
       //   }
       // })
-      
+
 
 
       // ----------- load data ajax functions ------------------------
@@ -1448,10 +1464,10 @@
       // ------------- datatable functions --------------------------
 
       // -------------- others function ------------------------------
-    
+
 
     });
 
   </script>
-  
+
 @endsection

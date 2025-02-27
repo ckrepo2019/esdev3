@@ -1034,7 +1034,6 @@ class ReportsSHSController extends Controller
     }
     function form5b(Request $request)
     {
-        
         if($request->has('syid'))
         {
             $sy = DB::table('sy')
@@ -1636,6 +1635,49 @@ class ReportsSHSController extends Controller
     
                 // return $pdf->stream('School Form 5B.pdf');
             }else{
+                $principal = Db::table('teacher')
+                    ->select(
+                        'teacher.title',
+                        'teacher.firstname',
+                        'teacher.middlename',
+                        'teacher.lastname',
+                        'teacher.suffix'
+                        )
+                    ->where('usertypeid','2')
+                    ->first();
+                        
+                $principalname ='';
+                if($principal)
+                {
+                    if($principal->title!=null)
+                    {
+                        $principalname.=$principal->title.' ';
+                    }
+                    if($principal->firstname!=null)
+                    {
+                        $principalname.=$principal->firstname.' ';
+                    }
+                    if($principal->middlename!=null)
+                    {
+                        $principalname.=$principal->middlename[0].'. ';
+                    }
+                    if($principal->lastname!=null)
+                    {
+                        $principalname.=$principal->lastname.' ';
+                    }
+                    if($principal->suffix!=null)
+                    {
+                        $principalname.=$principal->suffix.' ';
+                    }
+            
+                }
+
+                if($getTeacherName){
+                    $teachername = $getTeacherName->firstname . ' ' . $getTeacherName->middlename . ' ' . $getTeacherName->lastname . ($getTeacherName->suffix ? ' ' . $getTeacherName->suffix : '');
+                } else {
+                    $teachername = '';
+                }
+                
                 $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load(base_path().'/public/excelformats/schoolform5b.xlsx');
                 $sheet = $spreadsheet->getActiveSheet();
                 $borderstyle = [
@@ -1646,7 +1688,7 @@ class ReportsSHSController extends Controller
                         ),
                     ]
                 ];
-                
+            
                 $sheet->setCellValue('E3', $getSchoolInfo->schoolname);
                 $sheet->setCellValue('Q3', $getSchoolInfo->schoolid);
                 $sheet->setCellValue('T3', $getSchoolInfo->district ?? DB::table('schoolinfo')->first()->districttext);
@@ -1669,21 +1711,21 @@ class ReportsSHSController extends Controller
                 $principaldesc = 'Signature of School Head over Printed Name';
                 $divrep = ''; 
                 $divrepdesc = 'Signature of Division Representative over Printed Name';
-                if(count($signatoriesv2)>0)
-                {
-                    foreach($signatoriesv2 as $eachsignatory)
-                    {
-                        if(strpos(strtolower($eachsignatory->description), 'principal') !== false || strpos(strtolower($eachsignatory->description), 'school head') !== false){
-                            $principal = $eachsignatory->name;
-                            $principaldesc = $eachsignatory->description;
-                        }
-                        if(strpos(strtolower($eachsignatory->description), 'division') !== false || strpos(strtolower($eachsignatory->description), 'representative') !== false){
-                            $divrep = $eachsignatory->name;
-                            $divrepdesc = $eachsignatory->description;
-                        }
+                // if(count($signatoriesv2)>0)
+                // {
+                //     foreach($signatoriesv2 as $eachsignatory)
+                //     {
+                //         if(strpos(strtolower($eachsignatory->description), 'principal') !== false || strpos(strtolower($eachsignatory->description), 'school head') !== false){
+                //             $principal = $eachsignatory->name;
+                //             $principaldesc = $eachsignatory->description;
+                //         }
+                //         if(strpos(strtolower($eachsignatory->description), 'division') !== false || strpos(strtolower($eachsignatory->description), 'representative') !== false){
+                //             $divrep = $eachsignatory->name;
+                //             $divrepdesc = $eachsignatory->description;
+                //         }
                         
-                    }
-                }
+                //     }
+                // }
                 $sheet->setCellValue('W56', $principal);
                 // $sheet->setCellValue('W55', $principaldesc);
                 $sheet->setCellValue('W62', $divrep);
@@ -1810,6 +1852,8 @@ class ReportsSHSController extends Controller
                 $sheet->setCellValue('X25', $completemale+$overstayingmale);
                 $sheet->setCellValue('Y25', $completefemale+$overstayingfemale);
                 $sheet->setCellValue('Z25', $completemale+$completefemale+$overstayingmale+$overstayingfemale);
+
+                $sheet->setCellValue('W47', $teachername);
 
 
                 // $sheet->setCellValue('R16', $firstmaleincomplete);

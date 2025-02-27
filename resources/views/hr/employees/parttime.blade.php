@@ -244,7 +244,17 @@ $refid = DB::table('usertype')
 <script src="{{asset('plugins/moment/moment.min.js') }}"></script>
 
 <script>
+    
+    let sy = {!! json_encode($sy) !!};
+    let sem = {!! json_encode($semester) !!};
+
+   
+
     $(document).ready(function(){
+        var syid =  sy && sy.id ? sy.id : 0
+        var semid = sem && sem.id ? sem.id : 0
+        console.log(syid, semid);
+        
         $('#assigning_type').select2()
         
         $('#daterange').daterangepicker({
@@ -257,8 +267,7 @@ $refid = DB::table('usertype')
         });
 
         // variable calls
-        var syid = @json($sy->id);
-        var semid = @json($semester->id);
+       
         
         var all_sched = [];
         var employee_list = [];

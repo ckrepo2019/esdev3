@@ -60,6 +60,27 @@
 @endsection
 
 @section('content')
+
+@php
+$courses1 = DB::table('college_courses')
+            ->join('college_colleges', function($join){
+                $join->on('college_courses.collegeid', '=', 'college_colleges.id');
+                $join->where('college_colleges.acadprogid', 6);
+                $join->where('college_colleges.deleted', 0);
+            })
+            ->where('college_courses.deleted', 0)
+            ->select('college_courses.id as id', 'college_courses.courseabrv')
+            ->get();
+$courses2 =  DB::table('college_courses')
+            ->join('college_colleges', function($join){
+                $join->on('college_courses.collegeid', '=', 'college_colleges.id');
+                $join->where('college_colleges.acadprogid', 8);
+                $join->where('college_colleges.deleted', 0);
+            })
+            ->where('college_courses.deleted', 0)
+            ->select('college_courses.id as id', 'college_courses.courseabrv')
+            ->get();
+@endphp
     <div class="content-header">
     </div>
 
@@ -87,7 +108,7 @@
                                                 class="text-danger">*</span></label>
                                         <select class="form-control" id="preregistrationType" name="prereg_status"
                                             style="width: 100%;">
-                                            <option value="Continuing Student">CONTINUING STUDENT</option>
+                                            {{-- <option value="Continuing Student">CONTINUING STUDENT</option> --}}
                                             <option value="New Student" selected>NEW STUDENT</option>
                                             <option value="Transferee">TRANSFEREE</option>
                                         </select>
@@ -254,10 +275,9 @@
                                         <label class="mb-1"> Desired Course <span class="text-danger">*</span> </label>
                                         <select class="form-control" id="select-course" name="course_id"
                                             style="width: 100%;" required>
-                                            <option value="">Select Course</option>
-                                            @foreach (DB::table('college_courses')->where('deleted', 0)->get() as $item)
+                                            {{-- @foreach (DB::table('college_courses')->where('deleted', 0)->get() as $item)
                                                 <option value="{{ $item->id }}">{{ $item->courseDesc }}</option>
-                                            @endforeach
+                                            @endforeach --}}
                                         </select>
                                         <span class="invalid-feedback" role="alert">
                                             <strong>Desired Course is required!</strong>
@@ -364,7 +384,26 @@
     <script>
         $(document).ready(function() {
             initCalendar()
-
+            
+            $('#acadprog').on('change', function() {
+                if($(this).val() == 6) {
+                    $('#select-course').empty()
+                    $('#select-course').append(`
+                        <option value="">Select Course</option>
+                        @foreach($courses1 as $course)
+                            <option value="{{ $course->id }}">{{ $course->courseabrv }}</option>
+                        @endforeach
+                    `)
+                }else if($(this).val() == 8) {
+                    $('#select-course').empty()
+                    $('#select-course').append(`
+                        <option value="">Select Course</option>
+                        @foreach($courses2 as $course)
+                            <option value="{{ $course->id }}">{{ $course->courseabrv }}</option>
+                        @endforeach
+                    `)
+                }
+            })
             $('#preregStatus').text($('#preregistrationType').val())
 
             $('#preregistrationType').select2({
@@ -429,7 +468,7 @@
                 console.log(id);
                 $('#course-wrapper').prop('hidden', true);
                 if (id > 0) {
-                    if (id == 6) {
+                    if (id == 6 || id == 8) {
                         $('#course-wrapper').prop('hidden', false);
                         $('#strand-wrapper').prop('hidden', true);
                         console.log('Selected acadprog ' + id + ' is college');
@@ -497,7 +536,7 @@
                 e.preventDefault(); // Prevent the default form submission
                 var isvalid = true;
 
-                if ($('#acadprog').val() == 6) {
+                if ($('#acadprog').val() == 6 || $('#acadprog').val() == 8) {
                     $('#select-course').attr('required', true);
                     $('#select-strand').attr('required', false);
                 } else if ($('#acadprog').val() == 5) {
@@ -599,7 +638,6 @@
                 },
                 url: '{{ route('filter.examsetup') }}',
                 success: function(data) {
-                    console.log(data);
                     $('#select-exam').empty()
                     $('#select-exam').select2({
                         data: data,

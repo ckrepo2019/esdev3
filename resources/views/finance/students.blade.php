@@ -10,7 +10,11 @@
             <div class="col-md-2">
                 <select id="level" class="select2 filters" style="width: 100%;">
                     @foreach(db::table('gradelevel')->where('deleted', 0)->orderBy('sortid')->get() as $level)
-                        <option value="{{$level->id}}">{{$level->levelname}}</option>
+                        @if($level->id > 21)
+                        <option value="{{$level->id}}">HE - {{$level->levelname}}</option>
+                        @else
+                            <option value="{{$level->id}}">{{$level->levelname}}</option>
+                        @endif
                     @endforeach
                 </select>
             </div>

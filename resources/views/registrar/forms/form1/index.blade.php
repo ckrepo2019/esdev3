@@ -193,6 +193,8 @@
                         acadprogid       :  '{{$acadprogid}}'
                 },
                 success:function(data) {
+                    console.log('HELLLO');
+                    
                     $('#container-filter').empty()
                     $('#container-filter').append(data)
                     $(".swal2-container").remove();

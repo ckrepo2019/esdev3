@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use DB;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Controllers\NotificationController\NotificationController;
 
 class TrackingController extends Controller
 {
@@ -124,6 +125,19 @@ class TrackingController extends Controller
                 'created_at' => now('Asia/Manila'),
                 'updated_at' => now('Asia/Manila'),
             ]);
+
+            if (count($document_signee) > 0) {
+                foreach ($document_signee as $signee) {
+                    NotificationController::sendNotification(
+                        'Document Tracking',
+                        'You have been assigned to Document Tracking ' . $request->document_name,
+                        $signee,
+                        'notification',
+                        'pending',
+                        '/documenttracking'
+                    );
+                }
+            }
 
         }
 
@@ -283,6 +297,57 @@ class TrackingController extends Controller
 
     }
 
+    public function updateDocument(Request $request)
+    {
+        $document_signee = json_decode($request->input('document_signee'), true);
+        $existingSignee = DB::table('document_signee')
+            ->where('document_tracking_id', $request->id)
+            ->whereNotIn('userid', $document_signee)
+            ->where('deleted', 0)
+            ->get();
+
+        foreach ($existingSignee as $signee) {
+            DB::table('document_signee')
+                ->where('id', $signee->id)
+                ->update([
+                    'deleted' => 1,
+                    'updated_at' => now('Asia/Manila'),
+                ]);
+        }
+
+        foreach ($document_signee as $signee) {
+            $teacher = DB::table('teacher')->where('userid', $signee)->first();
+            $existingSignee = DB::table('document_signee')
+                ->where('document_tracking_id', $request->id)
+                ->where('userid', $signee)
+                ->where('deleted', 0)
+                ->first();
+
+            if ($existingSignee) {
+                DB::table('document_signee')
+                    ->where('document_tracking_id', $request->id)
+                    ->where('userid', $signee)
+                    ->where('deleted', 0)
+                    ->update([
+                        'status' => 'Pending',
+                        'name' => $teacher->lastname . ',' . $teacher->firstname . $teacher->middlename,
+                        'updated_at' => now('Asia/Manila'),
+                    ]);
+            } else {
+                DB::table('document_signee')
+                    ->insert([
+                        'document_tracking_id' => $request->id,
+                        'userid' => $signee,
+                        'status' => 'Pending',
+                        'name' => $teacher->lastname . ',' . $teacher->firstname . $teacher->middlename,
+                        'created_at' => now('Asia/Manila'),
+                        'updated_at' => now('Asia/Manila'),
+                    ]);
+            }
+        }
+
+    }
+
     public function receiveDocument(Request $request)
     {
         $currentSignee = DB::table('document_tracking_history')
@@ -329,6 +394,23 @@ class TrackingController extends Controller
                 'status' => 'Onhand',
                 'remarks' => 'sample remarks',
             ]);
+
+        $doc = DB::table('document_tracking')
+            ->where('id', $request->trackingid)
+            ->first();
+        NotificationController::sendNotification(
+            'Document Tracking',
+            sprintf(
+                "The %s was received by %s.",
+                $doc->document_name,
+                auth()->user()->name
+            ),
+            $doc->document_issuedby,
+            'notification',
+            'Onhand',
+            '/documenttracking'
+        );
+
 
         return response()->json([
             'status' => 'success',
@@ -383,6 +465,10 @@ class TrackingController extends Controller
                 'remarks' => 'sample remarks',
             ]);
 
+        $doc = DB::table('document_tracking')
+            ->where('id', $request->trackingid)
+            ->first();
+
         $next_signee = DB::table('document_signee')
             ->where('document_tracking_id', $request->trackingid)
             // ->where('status', null)
@@ -391,6 +477,12 @@ class TrackingController extends Controller
 
         if ($next_signee) {
             if ($request->forwardedto) {
+
+                $nexname = DB::table('document_signee')
+                    ->where('document_tracking_id', $request->trackingid)
+                    ->where('userid', $request->forwardedto)
+                    ->value('name');
+
                 $resultid = DB::table('document_tracking_history')->insertGetId([
                     'document_tracking_id' => $request->trackingid,
                     'forwarded_by' => auth()->user()->id,
@@ -401,10 +493,38 @@ class TrackingController extends Controller
                 ]);
 
                 if ($resultid) {
+
+                    NotificationController::sendNotification(
+                        'Document Tracking',
+                        sprintf(
+                            "The %s was forwarded to you by %s.",
+                            $doc->document_name,
+                            auth()->user()->name
+                        ),
+                        $request->forwardedto,
+                        'notification',
+                        'Forwarded',
+                        '/documenttracking'
+                    );
+
+                    NotificationController::sendNotification(
+                        'Document Tracking',
+                        sprintf(
+                            "The %s was forwarded by %s to %s.",
+                            $doc->document_name,
+                            auth()->user()->name,
+                            $nexname
+                        ),
+                        $doc->document_issuedby,
+                        'notification',
+                        'Forwarded',
+                        '/documenttracking'
+                    );
+
                     return response()->json([
                         'status' => 'success',
                         'message' => 'Document Successfully Signed and Forwarded to:',
-                        'next_signee' => $next_signee->name
+                        'next_signee' => $nexname
                     ], 200);
                 }
             } else {
@@ -419,6 +539,34 @@ class TrackingController extends Controller
                 ]);
 
                 if ($resultid) {
+
+                    NotificationController::sendNotification(
+                        'Document Tracking',
+                        sprintf(
+                            "The %s was forwarded to you by %s.",
+                            $doc->document_name,
+                            auth()->user()->name
+                        ),
+                        $next_signee->userid,
+                        'notification',
+                        'Forwarded',
+                        '/documenttracking'
+                    );
+
+                    NotificationController::sendNotification(
+                        'Document Tracking',
+                        sprintf(
+                            "The %s was forwarded by %s to %s.",
+                            $doc->document_name,
+                            auth()->user()->name,
+                            $next_signee->name
+                        ),
+                        $doc->document_issuedby,
+                        'notification',
+                        'Forwarded',
+                        '/documenttracking'
+                    );
+
                     return response()->json([
                         'status' => 'success',
                         'message' => 'Document Successfully Signed and Forwarded to:',
@@ -426,6 +574,7 @@ class TrackingController extends Controller
                     ], 200);
                 }
             }
+
 
         } else {
             $rejectedSignee = DB::table('document_signee')
@@ -439,6 +588,20 @@ class TrackingController extends Controller
                     ->update([
                         'document_status' => 'close'
                     ]);
+
+
+                NotificationController::sendNotification(
+                    'Document Tracking',
+                    sprintf(
+                        "The %s was closed by %s.",
+                        $doc->document_name,
+                        auth()->user()->name,
+                    ),
+                    $doc->document_issuedby,
+                    'notification',
+                    'Closed',
+                    '/documenttracking'
+                );
 
                 return response()->json([
                     'status' => 'info',
@@ -545,6 +708,24 @@ class TrackingController extends Controller
                 'remarks' => $request->remarks,
             ]);
 
+
+        $doc = DB::table('document_tracking')
+            ->where('id', $request->trackingid)
+            ->first();
+
+        NotificationController::sendNotification(
+            'Document Tracking',
+            sprintf(
+                "The %s was rejected by %s.",
+                $doc->document_name,
+                auth()->user()->name
+            ),
+            $doc->document_issuedby,
+            'notification',
+            'Rejected',
+            '/documenttracking'
+        );
+
         if ($request->forwardedto) {
 
             $signeeNext = DB::table('document_tracking_history')
@@ -582,6 +763,8 @@ class TrackingController extends Controller
                 'updated_at' => now('Asia/Manila'),
             ]);
 
+
+
             if ($resultid) {
                 // Retrieve the next signee's name based on the forwardedto and trackingid
                 $nextSignee = DB::table('document_signee')
@@ -591,6 +774,34 @@ class TrackingController extends Controller
 
                 if ($nextSignee) {
                     // If the next signee's name is found, return a success response
+
+                    NotificationController::sendNotification(
+                        'Document Tracking',
+                        sprintf(
+                            "The %s was forwarded to you by %s.",
+                            $doc->document_name,
+                            auth()->user()->name,
+                        ),
+                        $nextSignee,
+                        'notification',
+                        'Forwarded',
+                        '/documenttracking'
+                    );
+
+                    NotificationController::sendNotification(
+                        'Document Tracking',
+                        sprintf(
+                            "The %s was forwarded to %s by %s.",
+                            $doc->document_name,
+                            $nextSignee,
+                            auth()->user()->name,
+                        ),
+                        $doc->document_issuedby,
+                        'notification',
+                        'Forwarded',
+                        '/documenttracking'
+                    );
+
                     return response()->json([
                         'status' => 'success',
                         'message' => 'Document has been Rejected and is Forwarded to:',

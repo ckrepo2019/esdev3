@@ -38,17 +38,20 @@ class CollegeTeacherGradeMonitoringController extends \App\Http\Controllers\Cont
     
             if($schedid != null){
                 $subjects = $subjects->where('college_classsched.id',$schedid);
-            }
+            }                       
     
             if($teacherid != null){
-                $subjects = $subjects->where('college_classsched.teacherid',$teacherid);
+                $subjects = $subjects
+                              ->join('college_instructor', 'college_classsched.id', '=', 'college_instructor.classschedid')
+                              ->where('college_instructor.teacherID',$teacherid);
             }
                     
     
             $subjects = $subjects
-                            ->where('college_classsched.syid',$syid)
+                            ->where('college_classsched.syID',$syid)
                             ->where('college_classsched.semesterID',$semid)
                             ->where('college_classsched.deleted',0)
+                            ->distinct('college_prospectus.id')
                             ->select(
                                 'college_prospectus.subjectID',
                                 'levelname',
@@ -60,8 +63,10 @@ class CollegeTeacherGradeMonitoringController extends \App\Http\Controllers\Cont
                                 'lecunits',
                                 'sectionDesc',
                                 'college_classsched.id as schedid',
+                                'college_classsched.teacherID as teacherid',
                                 'college_prospectus.id as pid',
-                                'college_classsched.sectionID'
+                                'college_classsched.sectionID',
+                                'college_classsched.syID as syid'
                             );
     
             if(strtoupper($schoolinfo->abbreviation) == 'SPCT' || strtoupper($schoolinfo->abbreviation) == 'GBBC' ){
@@ -103,7 +108,6 @@ class CollegeTeacherGradeMonitoringController extends \App\Http\Controllers\Cont
 
             $subjects = self::subjects($syid,$semid,$teacherid);
 
-            // return $subjects;
             foreach($subjects as $item){
                   
     
@@ -123,7 +127,7 @@ class CollegeTeacherGradeMonitoringController extends \App\Http\Controllers\Cont
 				   $item->inc = false;
 
                   if(count($grade_status) > 0){
-                        if( collect($grade_status)->whereNull('prelemstatus')->count() > 0 || collect($grade_status)->whereNull('midtermstatus')->count() > 0 || collect($grade_status)->whereNull('prefistatus')->count() > 0 || collect($grade_status)->whereNull('finalstatus')->count() > 0  ){
+                        if( collect($grade_status)->whereNull('prelemstatus')->count() > 0 && collect($grade_status)->whereNull('midtermstatus')->count() > 0 && collect($grade_status)->whereNull('prefistatus')->count() > 0 && collect($grade_status)->whereNull('finalstatus')->count() > 0  ){
                               $item->uns = true;
                         }
                         if(collect($grade_status)->where('prelemstatus',1)->count() > 0 || collect($grade_status)->where('midtermstatus',1)->count() > 0 || collect($grade_status)->where('prefistatus',1)->count() > 0 || collect($grade_status)->where('finalstatus',1)->count() > 0){
@@ -186,20 +190,20 @@ class CollegeTeacherGradeMonitoringController extends \App\Http\Controllers\Cont
                                     $join->where('college_classsched.semesterID',$semid);
                                     $join->where('college_classsched.id',$schedid);
                               })
-                              ->join('college_studsched',function($join) use($syid,$semid){
-                                    $join->on('college_classsched.id','=','college_studsched.schedid');
-                                    $join->where('college_studsched.deleted',0);
-                                    $join->where('college_studsched.schedstatus','!=','DROPPED');
-                              })
+                              ->join('college_loadsubject', 'college_classsched.id', '=', 'college_loadsubject.schedid')
                               ->join('college_enrolledstud',function($join) use($syid,$semid){
-                                    $join->on('college_studsched.studid','=','college_enrolledstud.studid');
+                                    $join->on('college_loadsubject.studid','=','college_enrolledstud.studid');
                                     $join->where('college_enrolledstud.deleted',0);
                                     $join->whereIn('college_enrolledstud.studstatus',[1,2,4]);
                                     $join->where('college_enrolledstud.syid',$syid);
                                     $join->where('college_enrolledstud.semid',$semid);
                               })
+                              ->join('studinfo',function($join){
+                                    $join->on('college_enrolledstud.studid','=','studinfo.id');
+                                    $join->where('studinfo.deleted',0);
+                              })
                               ->join('college_studentprospectus',function($join) use($syid,$semid,$p_array){
-                                    $join->on('college_enrolledstud.studid','=','college_studentprospectus.studid');
+                                    $join->on('studinfo.sid','=','college_studentprospectus.studid');
                                     $join->where('college_studentprospectus.deleted',0);
                                     $join->where('college_studentprospectus.syid',$syid);
                                     $join->whereIn('college_studentprospectus.prospectusID',$p_array);
@@ -248,13 +252,9 @@ class CollegeTeacherGradeMonitoringController extends \App\Http\Controllers\Cont
                                     $join->where('college_classsched.id',$schedid);
                                     $join->where('college_classsched.semesterID',$semid);
                               })
-                              ->join('college_studsched',function($join) use($syid,$semid){
-                                    $join->on('college_classsched.id','=','college_studsched.schedid');
-                                    $join->where('college_studsched.deleted',0);
-                                    $join->where('college_studsched.schedstatus','!=','DROPPED');
-                              })
+                              ->join('college_loadsubject', 'college_classsched.id', '=', 'college_loadsubject.schedid')
                               ->join('college_enrolledstud',function($join) use($syid,$semid){
-                                    $join->on('college_studsched.studid','=','college_enrolledstud.studid');
+                                    $join->on('college_loadsubject.studid','=','college_enrolledstud.studid');
                                     $join->where('college_enrolledstud.deleted',0);
                                     $join->whereIn('college_enrolledstud.studstatus',[1,2,4]);
                                     $join->where('college_enrolledstud.syid',$syid);
@@ -262,7 +262,7 @@ class CollegeTeacherGradeMonitoringController extends \App\Http\Controllers\Cont
                               })
                               ->join('studinfo',function($join){
                                     $join->on('college_enrolledstud.studid','=','studinfo.id');
-                                    $join->where('college_enrolledstud.deleted',0);
+                                    $join->where('studinfo.deleted',0);
                               })
                               ->join('college_courses',function($join){
                                     $join->on('college_enrolledstud.courseid','=','college_courses.id');
@@ -302,20 +302,23 @@ class CollegeTeacherGradeMonitoringController extends \App\Http\Controllers\Cont
                                           $join->where('college_classsched.syid',$syid);
                                           $join->where('college_classsched.semesterID',$semid);
                                     })
-                                    ->join('college_studsched',function($join) use($syid,$semid){
-                                          $join->on('college_classsched.id','=','college_studsched.schedid');
-                                          $join->where('college_studsched.deleted',0);
-                                         $join->where('college_studsched.schedstatus','!=','DROPPED');
+                                    ->join('college_loadsubject', function($join){
+                                          $join->on('college_classsched.id', '=', 'college_loadsubject.schedid');
+                                          $join->where('college_loadsubject.deleted',0);
                                     })
                                     ->join('college_enrolledstud',function($join) use($syid,$semid){
-                                          $join->on('college_studsched.studid','=','college_enrolledstud.studid');
+                                          $join->on('college_loadsubject.studid','=','college_enrolledstud.studid');
                                           $join->where('college_enrolledstud.deleted',0);
                                           $join->whereIn('college_enrolledstud.studstatus',[1,2,4]);
                                           $join->where('college_enrolledstud.syid',$syid);
                                           $join->where('college_enrolledstud.semid',$semid);
                                     })
-                                    ->leftJoin('college_studentprospectus',function($join) use($syid,$semid,$p_array){
-                                          $join->on('college_enrolledstud.studid','=','college_studentprospectus.studid');
+                                    ->join('studinfo',function($join){
+                                          $join->on('college_enrolledstud.studid','=','studinfo.id');
+                                          $join->where('studinfo.deleted',0);
+                                    })
+                                    ->join('college_studentprospectus',function($join) use($syid,$semid,$p_array){
+                                          $join->on('studinfo.sid','=','college_studentprospectus.studid');
                                           $join->where('college_studentprospectus.deleted',0);
                                           $join->where('college_studentprospectus.syid',$syid);
                                           $join->whereIn('college_studentprospectus.prospectusID',$p_array);
@@ -382,11 +385,11 @@ class CollegeTeacherGradeMonitoringController extends \App\Http\Controllers\Cont
                               ->where('teacherdean.syid',$syid)
                               //->where('teacherdean.semid',$semid)
                               ->where('teacherid',$teacher->id)
-                              ->join('college_colleges',function($join){
+                              ->leftjoin('college_colleges',function($join){
                                     $join->on('teacherdean.collegeid','=','college_colleges.id');
                                     $join->where('college_colleges.deleted',0);
                               })
-                              ->join('college_courses',function($join){
+                              ->leftjoin('college_courses',function($join){
                                     $join->on('college_colleges.id','=','college_courses.collegeid');
                                     $join->where('college_courses.deleted',0);
                               })
@@ -414,17 +417,16 @@ class CollegeTeacherGradeMonitoringController extends \App\Http\Controllers\Cont
             foreach($courseID as $item){
                   array_push($array_course,$item->id);
             }
-
             $teachers = DB::table('college_prospectus')
-                              ->join('college_classsched',function($join) use($syid,$semid){
+                              ->leftjoin('college_classsched',function($join) use($syid,$semid){
                                     $join->on('college_prospectus.id','=','college_classsched.subjectID');
                                     $join->where('college_classsched.syid',$syid);
-                                    $join->whereNotNull('college_classsched.teacherID');
                                     $join->where('college_classsched.semesterID',$semid);
                                     $join->where('college_classsched.deleted',0);
                               })
+                              ->join('college_instructor', 'college_classsched.id', '=', 'college_instructor.classschedid')
                               ->join('teacher',function($join) use($syid,$semid){
-                                    $join->on('college_classsched.teacherid','=','teacher.id');
+                                    $join->on('college_instructor.teacherid','=','teacher.id');
                                     $join->where('teacher.deleted',0);
                               })
                               ->select(

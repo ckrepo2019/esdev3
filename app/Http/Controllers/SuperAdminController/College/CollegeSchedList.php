@@ -313,6 +313,7 @@ class CollegeSchedList extends \App\Http\Controllers\Controller
                         'schedotherclass'
                   )
                   ->get();
+
             $syid = $schedinfo->syID;
             $semid = $schedinfo->semesterID;
 
@@ -913,6 +914,7 @@ class CollegeSchedList extends \App\Http\Controllers\Controller
       //no conflict detection
       public static function updatesched(Request $request)
       {
+
             $room = $request->get('room');
             $days = $request->get('days');
             $schedotherclas = $request->get('schedotherclas');
@@ -925,6 +927,7 @@ class CollegeSchedList extends \App\Http\Controllers\Controller
             $schedid = $request->get('schedid');
             $tobe_updated = $request->get('tobe_updated');
             $conflict_info = array();
+
             $check_creator = DB::table('college_classsched')
                   ->where('id', $schedid)
                   ->first();
@@ -944,8 +947,10 @@ class CollegeSchedList extends \App\Http\Controllers\Controller
                         ->where('deleted', 0)
                         ->where('schedid', $schedid)
                         ->get();
+
                   if (count($section) > 0) {
                         $conflict_info_section = self::checksectionconflict($request, $section);
+
                         $conflict_info_section = $conflict_info_section;
 
                         if (count($conflict_info_section) > 0) {
@@ -1294,7 +1299,7 @@ class CollegeSchedList extends \App\Http\Controllers\Controller
                         return array(
                               (object) [
                                     'status' => 0,
-                                    'message' => 'You cant delete this item because you are not the creator!',
+                                    'data' => 'Unable to process!',
                               ]
                         );
                   }

@@ -63,10 +63,10 @@
                                 </select>
                     </div>
 
-                    {{-- <div class="col-md-5">
+                    <div class="col-md-5">
                         <label>&nbsp;</label>
                         <button type="button" class="btn btn-dark btn-block" id="Experiences"><i class="fa fa-plus"></i> Experiences</button>
-                    </div> --}}
+                    </div>
             </div>
 
         </div>
@@ -200,36 +200,74 @@
             </div>
             </div>
         </section>
-    <div class="modal fade" id="modal-addexperience">
-    <div class="modal-dialog">
-        <div class="modal-content">
-        <div class="modal-header">
-            <h4 class="modal-title">Add Option</h4>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div class="row">
-                <div class="col-md-12">
+
+    <div class="modal fade" id="modal_experience">
+        <div class="modal-dialog">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Experiences</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="p-1">
+                    <button class="btn btn-sm btn-primary" id="btn_addexperience" data-toggle="modal" data-target="#modal-addexperience">Add Experiences</button>
+                </div>
+                <div class="p-1">
                     <small class="badge badge-danger">Question: Please Check if You Have Experienced Any of the Following:</small>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    <label>Option</label><br/>
-                    <input type="text" class="form-control" placeholder="Add option" id="input-addoption"/>
+                <div class="p-1">
+                    <table class="table table-sm table-striped  table-bordered table-responsive-sm w-100" id="table_experience">
+                        <thead>
+                            <tr>
+                                <th>Option</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
                 </div>
             </div>
+            
+            <div class="modal-footer justify-content-between">
+            </div>
+            </div>
+            <!-- /.modal-content -->
         </div>
-        <div class="modal-footer justify-content-between">
-            <button type="button" class="btn btn-default" data-dismiss="modal" id="btn-closeexperience">Close</button>
-            <button type="button" class="btn btn-primary" id="btn-addoption">Add</button>
-        </div>
-        </div>
-        <!-- /.modal-content -->
+        <!-- /.modal-dialog -->
     </div>
-    <!-- /.modal-dialog -->
+    <div class="modal fade" id="modal-addexperience">
+        <div class="modal-dialog">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Add Option</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <label>Option</label><br/>
+                        <input type="text" class="form-control" placeholder="Add option" id="input-addoption"/>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-default" data-dismiss="modal" id="btn-closeexperience">Close</button>
+                <button type="button" class="btn btn-success" id="btn-updateoption" hidden>Update</button>
+                <button type="button" class="btn btn-primary" id="btn-addoption">Add</button>
+            </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
     </div>
     @endsection
     @section('footerjavascript')
@@ -435,8 +473,8 @@
 
 
             $('#Experiences').on('click', function(){
-                $('#modal-addexperience').modal('show')
-
+                $('#modal_experience').modal('show')
+                get_options();
 
             })
 
@@ -466,6 +504,7 @@
                     $('#btn-closeexperience').click();
 
                     }
+                    get_options();
                 }
             })
 
@@ -714,7 +753,124 @@
             //             })
             //         }
             //     })
-            // })
+            // }
+            
+
+            function experience_datatable(data){
+                console.log(data);
+                $('#table_experience').DataTable({
+                    destroy: true,
+                    data:data,
+                    paging: false,
+                    searching: false,
+                    order: false,
+                    columns:[
+                        { data : 'description' },
+                        { data : null},
+  
+                    ],
+                    columnDefs: [
+                        {
+                                targets: 0,
+                                orderable: false,
+                                createdCell: function(td, cellData, rowData) {
+
+                                    $(td).html(`<p  class="section_link mb-0 ">${rowData.description}</p>`)
+                                    .addClass('align-middle fw-900')
+                                    .css('vertical-align', 'middle');
+
+                                }
+                        },
+                        {
+                                targets: 1,
+                                orderable: false,
+                                createdCell: function(td, cellData, rowData) {
+                                    $(td).html(`<a href="javascript:void(0)" class="section_link mb-0" style="white-space: nowrap" data-id="">
+                                        <button class="btn btn-sm btn-primary edit_option" id="edit_option"  data-description="${rowData.description}" data-toggle="modal" data-target="#modal-addexperience" data-id="${rowData.id}"><i class="fas fa-edit"></i></button>
+                                        <button class="btn btn-sm btn-danger delete_option" id="delete_option"  data-id="${rowData.id}"><i class="fas fa-trash"></i></button></a>`)
+                                    .addClass('align-middle text-center')
+                                    .css('vertical-align', 'middle');
+
+                                }
+                        },
+                        
+                    ]
+                })
+            }
+
+            function get_options(){
+                $.ajax({
+                    url:'/clinic/medicalhistory/experiences/get',
+                    type:'GET',
+                    dataType: 'json',
+                    success:function(data) {
+                        console.log(data);
+                        experience_datatable(data);
+                    }
+                })
+            }
+            function show_modal(update){
+                if(update == 1){
+                    $('#btn-updateoption').removeAttr('hidden');
+                    $('#btn-addoption').attr('hidden', 'hidden');
+                }else{
+                    $('#btn-addoption').removeAttr('hidden');
+                    $('#btn-updateoption').attr('hidden', 'hidden');
+                }
+            }
+            var update;
+
+            $(document).on('click', '#btn_addexperience', function(){
+                update = 0;
+                show_modal(update)
+            })
+            var exid
+            $(document).on('click', '.edit_option', function(){
+                exid = $(this).attr('data-id');
+                var desc = $(this).attr('data-description');
+                $('#input-addoption').val(desc);
+                update = 1;
+                show_modal(update)
+                
+            })
+
+            $(document).on('click', '#btn-updateoption', function(){
+                var option = $('#input-addoption').val();
+                $.ajax({
+                    type:'get',
+                    url: '/clinic/medicalhistory/experiences/update',
+                    data:{
+                        id : exid,
+                        option : option
+                    },
+                    success:function(data){
+                        get_options();
+                        Toast.fire({
+                            type: 'success',
+                            title: 'Succesfully Updated',
+                        })
+                        $('#modal-addexperience').modal('hide')
+                    }
+                })
+            })
+
+            $(document).on('click', '.delete_option', function(){
+                var id = $(this).attr('data-id');
+                $.ajax({
+                    type:'get',
+                    url: '/clinic/medicalhistory/experiences/delete',
+                    data:{
+                        id : id
+                    },
+                    success:function(data){
+                        get_options();
+                        Toast.fire({
+                            type: 'success',
+                            title: 'Succesfully Deleted',
+                        })
+                    }
+                })
+            })
         })
     </script>
 @endsection

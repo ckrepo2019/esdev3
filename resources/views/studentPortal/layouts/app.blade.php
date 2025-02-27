@@ -32,82 +32,81 @@
      <script src="{{ asset('calendar/packages/timegrid/main.js') }}" ></script>
 
     @if (db::table('schoolinfo')->first()->abbreviation == 'LDCU')
-        <script type="module">
-            
-            import Chatbot from "https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js"
-            Chatbot.init({
-                chatflowid: "f9b627f6-4856-4223-a5ea-0a216e0bd866",
-                apiHost: "https://flowisechatbot-nxra.onrender.com",
-                chatflowConfig: {
-                    // topK: 2
+    <script type="module">
+        import Chatbot from "https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js"
+        Chatbot.init({
+            chatflowid: "c58e7c2d-4d0a-4d53-861a-814c5853436f",
+            apiHost: "https://flowisechatbot-nxra.onrender.com",
+            chatflowConfig: {
+                // topK: 2
+            },
+            theme: {
+                button: {
+                    backgroundColor: "#EC0C8C",
+                    right: 20,
+                    bottom: 20,
+                    size: 48, // small | medium | large | number
+                    dragAndDrop: true,
+                    iconColor: "white",
+                    customIconSrc: "https://raw.githubusercontent.com/itsnothyun/CK-Resources/main/bot2.png",
                 },
-                theme: {
-                    button: {
+                tooltip: {
+                    showTooltip: false,
+                    tooltipMessage: 'Hi There! 👋 How can I help you today?',
+                    tooltipBackgroundColor: '#EC0C8C',
+                    tooltipTextColor: 'white',
+                    tooltipFontSize: 16,
+                },
+                chatWindow: {
+                    showTitle: true,
+                    title: 'CK Bot',
+                    titleAvatarSrc: 'https://raw.githubusercontent.com/itsnothyun/CK-Resources/main/Logo%20Designs.png',
+                    showAgentMessages: true,
+                    welcomeMessage: 'Hello! This is CK Bot, How can I help you?',
+                    errorMessage: 'This is a custom error message',
+                    backgroundColor: "#ffffff",
+                    height: 700,
+                    width: 400,
+                    fontSize: 16,
+                    poweredByTextColor: "#303235",
+                    botMessage: {
+                        backgroundColor: "#f7f8ff",
+                        textColor: "#303235",
+                        showAvatar: true,
+                        avatarSrc: "https://raw.githubusercontent.com/itsnothyun/CK-Resources/main/bot3.png",
+                    },
+                    userMessage: {
                         backgroundColor: "#EC0C8C",
-                        right: 20,
-                        bottom: 20,
-                        size: 48, // small | medium | large | number
-                        dragAndDrop: true,
-                        iconColor: "white",
-                        customIconSrc: "https://raw.githubusercontent.com/itsnothyun/CK-Resources/main/bot2.png",
+                        textColor: "#ffffff",
+                        showAvatar: true,
+                        avatarSrc: "https://raw.githubusercontent.com/zahidkhawaja/langchain-chat-nextjs/main/public/usericon.png",
                     },
-                    tooltip: {
-                        showTooltip: false,
-                        tooltipMessage: 'Hi There! 👋 How can I help you today?',
-                        tooltipBackgroundColor: '#EC0C8C',
-                        tooltipTextColor: 'white',
-                        tooltipFontSize: 16,
+                    textInput: {
+                        placeholder: 'Type your question',
+                        backgroundColor: '#ffffff',
+                        textColor: '#303235',
+                        sendButtonColor: '#EC0C8C',
+                        maxChars: 50,
+                        maxCharsWarningMessage: 'You exceeded the characters limit. Please input less than 50 characters.',
+                        autoFocus: true, // If not used, autofocus is disabled on mobile and enabled on desktop. true enables it on both, false disables it on both.
+                        sendMessageSound: true,
+                        // sendSoundLocation: "send_message.mp3", // If this is not used, the default sound effect will be played if sendSoundMessage is true.
+                        receiveMessageSound: true,
+                        // receiveSoundLocation: "receive_message.mp3", // If this is not used, the default sound effect will be played if receiveSoundMessage is true. 
                     },
-                    chatWindow: {
-                        showTitle: true,
-                        title: 'CK Bot',
-                        titleAvatarSrc: 'https://raw.githubusercontent.com/itsnothyun/CK-Resources/main/Logo%20Designs.png',
-                        showAgentMessages: true,
-                        welcomeMessage: 'Hello! This is CK Bot, How can I help you?',
-                        errorMessage: 'This is a custom error message',
-                        backgroundColor: "#ffffff",
-                        height: 700,
-                        width: 400,
-                        fontSize: 16,
-                        poweredByTextColor: "#303235",
-                        botMessage: {
-                            backgroundColor: "#f7f8ff",
-                            textColor: "#303235",
-                            showAvatar: true,
-                            avatarSrc: "https://raw.githubusercontent.com/itsnothyun/CK-Resources/main/bot3.png",
-                        },
-                        userMessage: {
-                            backgroundColor: "#EC0C8C",
-                            textColor: "#ffffff",
-                            showAvatar: true,
-                            avatarSrc: "https://raw.githubusercontent.com/zahidkhawaja/langchain-chat-nextjs/main/public/usericon.png",
-                        },
-                        textInput: {
-                            placeholder: 'Type your question',
-                            backgroundColor: '#ffffff',
-                            textColor: '#303235',
-                            sendButtonColor: '#EC0C8C',
-                            maxChars: 50,
-                            maxCharsWarningMessage: 'You exceeded the characters limit. Please input less than 50 characters.',
-                            autoFocus: true, // If not used, autofocus is disabled on mobile and enabled on desktop. true enables it on both, false disables it on both.
-                            sendMessageSound: true,
-                            // sendSoundLocation: "send_message.mp3", // If this is not used, the default sound effect will be played if sendSoundMessage is true.
-                            receiveMessageSound: true,
-                            // receiveSoundLocation: "receive_message.mp3", // If this is not used, the default sound effect will be played if receiveSoundMessage is true. 
-                        },
-                        feedback: {
-                            color: '#303235',
-                        },
-                        footer: {
-                            textColor: '#303235',
-                            text: 'Powered by',
-                            company: 'Flowise',
-                            companyLink: 'https://flowiseai.com',
-                        }
+                    feedback: {
+                        color: '#303235',
+                    },
+                    footer: {
+                        textColor: '#303235',
+                        text: 'Powered by',
+                        company: 'Flowise',
+                        companyLink: 'https://flowiseai.com',
                     }
                 }
-            })
-        </script>
+            }
+        })
+    </script>
     @endif
 
 

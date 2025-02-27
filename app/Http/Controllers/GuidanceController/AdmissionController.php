@@ -137,6 +137,19 @@ class AdmissionController extends \App\Http\Controllers\Controller
         ]);
     }
 
+    public function endExam(Request $request)
+    {
+        DB::table('guidance_examdate')->where('id', $request->id)->update(['status' => 1]);
+
+        return response()->json(['status' => 'success', 'message' => 'Exam has been ended']);
+    }
+    public function startExam(Request $request)
+    {
+        DB::table('guidance_examdate')->where('id', $request->id)->update(['status' => 0]);
+
+        return response()->json(['status' => 'success', 'message' => 'Exam Restarted']);
+    }
+
     public function applicant_view(Request $request)
     {
         $page_desc = '';
@@ -307,13 +320,13 @@ class AdmissionController extends \App\Http\Controllers\Controller
         // Determine the exam date status
         if ($examdate->status == 1) {
             $result->examdate_stat = 'expired';
-            $result->examdateStat = 'Exam date has passed (' . $carbonExamDate->diffForHumans($now) . ').';
-        } elseif ($examdate->status == 0 && $hoursDifference <= 24) {
-            $result->examdate_stat = 'ongoing';
-            $result->examdateStat = 'Exam date is ongoing (' . $carbonExamDate->format('h:i A') . ').';
-        } else {
+            $result->examdateStat = 'Exam date has closed (' . $carbonExamDate->diffForHumans($now) . ').';
+        } elseif ($carbonExamDate->isFuture()) {
             $result->examdate_stat = 'soon';
             $result->examdateStat = 'Exam date has not yet started (' . $carbonExamDate->diffForHumans($now) . ').';
+        } else {
+            $result->examdate_stat = 'ongoing';
+            $result->examdateStat = 'Exam date is ongoing (Today at ' . $carbonExamDate->format('h:i A') . ').';
         }
 
         // Ensure your $result object is properly defined
@@ -393,6 +406,7 @@ class AdmissionController extends \App\Http\Controllers\Controller
     {
         $courses = DB::table('college_courses')->where('deleted', 0)->get()->toArray();
         $students = $this->processStudentTestResults(0, null);
+        // return $students;
         // Sort the array of objects based on the 'totalScore' property in descending order
         usort($students, function ($a, $b) {
             return $b->totalScore <=> $a->totalScore;
@@ -635,14 +649,14 @@ class AdmissionController extends \App\Http\Controllers\Controller
             ->join('guidance_examdate', 'admission_student_information.examdate_id', '=', 'guidance_examdate.id')
             ->leftJoin('college_courses', function ($join) {
                 $join->on('admission_student_information.course_id', '=', 'college_courses.id')
-                    ->where('acadprog_id', 6);
+                    ->whereIn('acadprog_id', [6,8]);
             })
             ->leftJoin('sh_strand', function ($join) {
                 $join->on('admission_student_information.strand_id', '=', 'sh_strand.id')
                     ->where('acadprog_id', 5);
             })
             ->leftJoin('college_courses AS final_courseabrv', function ($join) {
-                $join->on('admission_student_information.final_assign_course', '=', 'final_courseabrv.id')->where('acadprog_id', 6);
+                $join->on('admission_student_information.final_assign_course', '=', 'final_courseabrv.id')->whereIn('acadprog_id', [6,8]);
 
             })
             ->leftJoin('sh_strand AS final_strand', function ($join) {
@@ -665,7 +679,7 @@ class AdmissionController extends \App\Http\Controllers\Controller
             ->orderBy('admission_student_information.status', 'asc')
             ->get();
 
-        // dd($students);
+        // return $students;
 
         foreach ($students as $student) {
             $student->passallrequired = true;
@@ -753,25 +767,28 @@ class AdmissionController extends \App\Http\Controllers\Controller
                 $student->subjects = $subjects;
                 $student->setupAverage = $mySetup->average;
 
+                $student->fitted_course_id = '';
+                $student->fitted_courseAbrv = '';
+                $student->fitted_courseDesc = '';
+
                 if (($student->hasRequiredSubj && $student->passallrequired)) {
                     $student->passedOverall = true;
 
                     if ($student->acadprog_id == 5) {
                         $fitted_course = DB::table('sh_strand')->where('id', $student->strand_id)->first();
-                        $student->fitted_course_id = $fitted_course->id;
-                        $student->fitted_courseAbrv = $fitted_course->strandcode;
-                        $student->fitted_courseDesc = $fitted_course->strandname;
-                    } else if ($student->acadprog_id = 6) {
-                        $fitted_course = DB::table('college_courses')->where('id', $student->course_id)->first();
-                        $student->fitted_course_id = $fitted_course->id;
-                        $student->fitted_courseAbrv = $fitted_course->courseabrv;
-                        $student->fitted_courseDesc = $fitted_course->courseDesc;
-                    }
-
-
-                    if ($student->acadprog_id == 5) {
+                        if ($fitted_course) {
+                            $student->fitted_course_id = $fitted_course->id;
+                            $student->fitted_courseAbrv = $fitted_course->strandcode;
+                            $student->fitted_courseDesc = $fitted_course->strandname;
+                        }
                         $student->recommendedcourse[] = DB::table('sh_strand')->where('id', $student->strand_id)->first();
-                    } elseif ($student->acadprog_id == 6) {
+                    } else if ($student->acadprog_id == 6 || $student->acadprog_id == 8) {
+                        $fitted_course = DB::table('college_courses')->where('id', $student->course_id)->first();
+                        if ($fitted_course) {
+                            $student->fitted_course_id = $fitted_course->id;
+                            $student->fitted_courseAbrv = $fitted_course->courseabrv;
+                            $student->fitted_courseDesc = $fitted_course->courseDesc;
+                        }
                         $setupArr = DB::table('guidance_passing_rate')->where('id', $student->exam_setup_id)->where('deleted', 0)->get();
                         if (count($setupArr) > 0) {
                             foreach ($setupArr as $set) {
@@ -790,28 +807,29 @@ class AdmissionController extends \App\Http\Controllers\Controller
                             }
                         }
                     }
-
 
                 } else if (!$student->hasRequiredSubj && floatval($avg) >= floatval($mySetup->average)) {
                     $student->passedOverall = true;
 
                     if ($student->acadprog_id == 5) {
                         $fitted_course = DB::table('sh_strand')->where('id', $student->strand_id)->first();
-                        $student->fitted_course_id = $fitted_course->id;
-                        $student->fitted_courseAbrv = $fitted_course->strandcode;
-                        $student->fitted_courseDesc = $fitted_course->strandname;
-                    } else if ($student->acadprog_id == 6) {
-                        $fitted_course = DB::table('college_courses')->where('id', $student->course_id)->first();
-                        $student->fitted_course_id = $fitted_course->id;
-                        $student->fitted_courseAbrv = $fitted_course->courseabrv;
-                        $student->fitted_courseDesc = $fitted_course->courseDesc;
-                    }
+                        if ($fitted_course) {
+                            $student->fitted_course_id = $fitted_course->id;
+                            $student->fitted_courseAbrv = $fitted_course->strandcode;
+                            $student->fitted_courseDesc = $fitted_course->strandname;
+                        }
 
-
-
-                    if ($student->acadprog_id == 5) {
                         $student->recommendedcourse[] = DB::table('sh_strand')->where('id', $student->strand_id)->first();
-                    } elseif ($student->acadprog_id == 6) {
+
+                    } else if ($student->acadprog_id == 6 || $student->acadprog_id == 8) {
+                        $fitted_course = DB::table('college_courses')->where('id', $student->course_id)->first();
+
+                        if ($fitted_course) {
+                            $student->fitted_course_id = $fitted_course->id;
+                            $student->fitted_courseAbrv = $fitted_course->courseabrv;
+                            $student->fitted_courseDesc = $fitted_course->courseDesc;
+                        }
+
                         $setupArr = DB::table('guidance_passing_rate')->where('id', $student->exam_setup_id)->where('deleted', 0)->get();
                         if (count($setupArr) > 0) {
                             foreach ($setupArr as $set) {
@@ -831,52 +849,55 @@ class AdmissionController extends \App\Http\Controllers\Controller
                         }
                     }
 
-
                 } else {
                     $student->passedOverall = false;
                     if ($student->fitted_course_id) {
                         if ($student->acadprog_id == 5) {
                             $mycourse = DB::table('sh_strand')->where('id', $student->fitted_course_id)->first();
-                            $student->fitted_courseAbrv = $mycourse->strandcode;
-                            $student->fitted_courseDesc = $mycourse->strandname;
-                        } else if ($student->acadprog_id == 6) {
+                            if ($mycourse) {
+                                $student->fitted_course_id = $mycourse->id;
+                                $student->fitted_courseAbrv = $mycourse->strandcode;
+                                $student->fitted_courseDesc = $mycourse->strandname;
+                            }
+                        } else if ($student->acadprog_id == 6 || $student->acadprog_id == 8) {
                             $mycourse = DB::table('college_courses')->where('id', $student->fitted_course_id)->first();
-                            $student->fitted_courseAbrv = $mycourse->courseabrv;
-                            $student->fitted_courseDesc = $mycourse->courseDesc;
+                            if ($mycourse) {
+                                $student->fitted_course_id = $mycourse->id;
+                                $student->fitted_courseAbrv = $mycourse->courseabrv;
+                                $student->fitted_courseDesc = $mycourse->courseDesc;
+                            }
+
+                            $setupArr = DB::table('guidance_passing_rate')->where('id', '!=', $student->exam_setup_id)->where('deleted', 0)->get();
+                            if (count($setupArr) > 0) {
+                                foreach ($setupArr as $set) {
+
+                                    $subjects = DB::table('guidance_test_category')
+                                        ->where('guidance_test_category.category_deleted', 0)
+                                        ->where('guidance_test_category.passing_rate_setup_id', $set->id)
+                                        ->where('required', 1)
+                                        ->count();
+
+                                    if ($subjects == 0) {
+                                        $crsDataArr = explode(',', $set->courses);
+                                        foreach ($crsDataArr as $courseId) {
+                                            $data = DB::table('college_courses')->where('id', $courseId)->first();
+                                            $student->recommendedcourse[] = $data;
+                                        }
+                                    }
+
+
+                                }
+                            }
                         }
                     } else {
+                        $student->fitted_course_id = '';
                         $student->fitted_courseAbrv = '';
                         $student->fitted_courseDesc = '';
                     }
-
-                    if ($student->acadprog_id == 6) {
-                        $setupArr = DB::table('guidance_passing_rate')->where('id', '!=', $student->exam_setup_id)->where('deleted', 0)->get();
-                        if (count($setupArr) > 0) {
-                            foreach ($setupArr as $set) {
-
-                                $subjects = DB::table('guidance_test_category')
-                                    ->where('guidance_test_category.category_deleted', 0)
-                                    ->where('guidance_test_category.passing_rate_setup_id', $set->id)
-                                    ->where('required', 1)
-                                    ->count();
-
-                                if ($subjects == 0) {
-                                    $crsDataArr = explode(',', $set->courses);
-                                    foreach ($crsDataArr as $courseId) {
-                                        $data = DB::table('college_courses')->where('id', $courseId)->first();
-                                        $student->recommendedcourse[] = $data;
-                                    }
-                                }
-
-
-                            }
-                        }
-                    }
-
                 }
 
                 $student->alternateCourse = [];
-                if (count($alternateCourseArr) > 0 && $student->acadprog_id == 6) {
+                if (count($alternateCourseArr) > 0 && ($student->acadprog_id == 6 || $student->acadprog_id == 8)) {
 
                     foreach ($alternateCourseArr as $item) {
                         $data = DB::table('college_courses')->where('id', $item)->first();
@@ -1210,11 +1231,13 @@ class AdmissionController extends \App\Http\Controllers\Controller
             ->leftJoin('sh_strand', 'admission_student_information.strand_id', '=', 'sh_strand.id')
             ->select(
                 'sh_strand.strandname',
+                'sh_strand.strandcode',
                 'final_course.courseabrv AS final_courseabrv',
                 'final_course.courseDesc AS final_courseDesc',
                 'admission_student_information.*',
                 'college_courses.courseDesc',
-                'fitted_courses.courseDesc AS fitted_course',
+                'college_courses.courseabrv',
+                'fitted_courses.courseabrv AS fitted_course',
                 'gradelevel.levelname',
                 DB::raw('CONCAT(admission_student_information.lname, " ", admission_student_information.fname) AS studname'),
                 DB::raw('DATE_FORMAT(admission_student_information.created_at, "%M %e, %Y") as formatted_created_at'),
@@ -1385,6 +1408,30 @@ class AdmissionController extends \App\Http\Controllers\Controller
         }
     }
 
+    // public function compute_average($id)
+    // {
+    //     $total = 0;
+    //     $data = DB::table('guidance_test_category')
+    //         ->where('passing_rate_setup_id', $id)
+    //         ->where('category_deleted', 0)
+    //         ->get();
+
+    //     foreach ($data as $key => $value) {
+    //         $total = $total + $value->category_percent;
+    //     }
+
+    //     $average = $total / count($data);
+
+    //     // dd($data, $average);
+
+    //     DB::table('guidance_passing_rate')
+    //         ->where('id', $id)
+    //         ->update([
+    //             'average' => $average
+    //         ]);
+
+    // }
+
     public function compute_average($id)
     {
         $total = 0;
@@ -1393,21 +1440,25 @@ class AdmissionController extends \App\Http\Controllers\Controller
             ->where('category_deleted', 0)
             ->get();
 
-        foreach ($data as $key => $value) {
-            $total = $total + $value->category_percent;
+        $count = count($data);
+
+        if ($count > 0) {
+            foreach ($data as $key => $value) {
+                $total += $value->category_percent;
+            }
+
+            $average = $total / $count;
+        } else {
+            $average = 0; // or handle the case differently if needed
         }
-
-        $average = $total / count($data);
-
-        // dd($data, $average);
 
         DB::table('guidance_passing_rate')
             ->where('id', $id)
             ->update([
                 'average' => $average
             ]);
-
     }
+
 
     public function update_instruction(Request $request)
     {
@@ -1646,6 +1697,7 @@ class AdmissionController extends \App\Http\Controllers\Controller
         ];
 
         $isDuplicate = DB::table('guidance_test_category')
+            ->where('category_deleted', 0)
             ->where('passing_rate_setup_id', $request->input('exam_setup_id'))
             ->where(DB::raw('LOWER(category_name)'), strtolower($request->input('category_name')))
             ->exists();
@@ -1710,7 +1762,18 @@ class AdmissionController extends \App\Http\Controllers\Controller
             ->where('id', $request->id)
             ->first();
 
-        return response()->json($result);
+        if ($result) {
+            return response()->json([
+                'status' => 'success',
+                'result' => $result
+            ]);
+        } else {
+            return response()->json([
+                'status' => 'error',
+                'result' => null
+            ]);
+        }
+
     }
     public function update_category(Request $request)
     {
@@ -2082,7 +2145,8 @@ class AdmissionController extends \App\Http\Controllers\Controller
         $exams = DB::table('guidance_examdate')
             ->where('acadprog', $request->id)
             ->where('deleted', 0)
-            ->where('examinationdate', '>=', Carbon::now()->format('Y-m-d H:i:s'))
+            ->whereIn('status', [0, null])
+            // ->where('examinationdate', '>=', Carbon::now()->format('Y-m-d H:i:s'))
             ->when($request->filled('examid'), function ($query) use ($request) {
                 return $query->where('guidance_examdate.examid', $request->examid);
             })
@@ -2214,7 +2278,9 @@ class AdmissionController extends \App\Http\Controllers\Controller
         }
 
         // Check if the student exists
-        $student = DB::table('admission_student_information')->where('id', $request->id)->first();
+        $student = DB::table('admission_student_information')
+            ->where('deleted', 0)
+            ->where('id', $request->id)->first();
 
         if (!$student) {
             return response()->json(['status' => 'error', 'message' => 'Student not found'], 404);
@@ -2455,10 +2521,10 @@ class AdmissionController extends \App\Http\Controllers\Controller
 
         if ($stud->acadprog_id == 6) {
             $data = DB::table('college_courses')->where('id', $stud->final_assign_course)->where('deleted', 0)->first();
-            $assignCourse = $data->courseDesc;
+            $assignCourse = $data->courseabrv;
         } else if ($stud->acadprog_id == 5) {
             $data = DB::table('sh_strand')->where('id', $stud->final_assign_course)->where('deleted', 0)->first();
-            $assignCourse = $data->strandname;
+            $assignCourse = $data->strandcode;
         } else if ($stud->acadprog_id <= 4 && $stud->acadprog_id >= 2) {
             $data = DB::table('gradelevel')->where('id', $stud->gradelevel_id)->where('deleted', 0)->first();
             $assignCourse = $data->levelname;
@@ -2466,23 +2532,35 @@ class AdmissionController extends \App\Http\Controllers\Controller
             $assignCourse = 'TECH-VOC';
         }
 
+        $abbrv = DB::table('schoolinfo')->first()->abbreviation;
 
-
-        $message = "Congratulations, " . ucfirst($stud->lname) . " " . ucfirst(substr($stud->fname, 0, 1)) . ". " . ucfirst(substr($stud->mname, 0, 1)) . "! You are now eligible to enroll for " . $assignCourse . ". Please use your pooling number " . $stud->poolingnumber . " for preregistration. From LDCU.";
+        $message = "Congrats! " . ucfirst($stud->lname) . ", " . ucfirst(substr($stud->fname, 0, 1)) . ". " . ucfirst(substr($stud->mname, 0, 1)) . "." . " You are now eligible to Enroll for " . $assignCourse . ". Use this Pooling number " . $stud->poolingnumber . " for Preregistration. From " . $abbrv . ".";
 
         $phone = preg_replace('/^0/', '', $stud->contact_number);
-        $phone = '+63' . $phone;
+        $phone = '+63' . str_replace('-', '', $phone);
 
 
 
-        DB::table('tapbunker')->insert([
-            'smsstatus' => 0,
+        $inserted = DB::table('tapbunker')->insert([
+            'smsstatus' => 1,
             'message' => $message,
             'receiver' => $phone,
-            'createddatetime' => now()
+            'createddatetime' => now('Asia/Manila')
         ]);
 
-        return response()->json(['status' => "success", "message" => "Student Accepted Successfully!"]);
+        if ($inserted) {
+            return response()->json([
+                'status' => "success",
+                "message" => "Student Accepted Successfully!",
+                'studmsg' => $message
+            ]);
+        } else {
+            return response()->json([
+                'status' => "error",
+                "message" => "Something went wrong. Pls try again!",
+            ]);
+        }
+
 
     }
 
@@ -2493,7 +2571,7 @@ class AdmissionController extends \App\Http\Controllers\Controller
             ->where('id', $request->id)
             ->update([
                 'status' => 3,
-                'deleted' => 1,
+                // 'deleted' => 1,
             ]);
 
         return response()->json(['status' => "success", "message" => "Student Declined Successfully!"]);
@@ -2687,7 +2765,9 @@ class AdmissionController extends \App\Http\Controllers\Controller
 
     public function verify_pooling(Request $request)
     {
-        $data = DB::table('admission_student_information')->where('poolingnumber', $request->code)->first();
+        $data = DB::table('admission_student_information')
+            ->where('deleted', 0)
+            ->where('poolingnumber', $request->code)->first();
         if (!$data) {
             return response()->json([
                 'message' => 'Invalid Code',

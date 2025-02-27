@@ -398,7 +398,7 @@
           ->first();
       @endphp
       <div>
-        
+
       </div>
 
       <table style="width: 100%;" cellpadding = 0 cellspacing = 0>
@@ -424,14 +424,39 @@
             <b>Date:</b> {{date_format(date_create($disbursement->transdate), 'M d, Y')}}
           </td>
         </tr> --}}
+
+        @php
+            $companyname = '';
+            $address = '';
+            if($disbursement->disburseto == 'supplier')
+            {
+                $companyname = $supplier->companyname;
+                $address = $supplier->address;
+            }
+            elseif($disbursement->disburseto == 'employee')
+            {
+                $employee = db::table('teacher')
+                    ->where('id', $disbursement->employeeid)
+                    ->first();
+
+                if($employee)
+                {
+                    $companyname = $employee->lastname . ', ' . $employee->firstname . ' ' . $employee->middlename;
+                }
+            }
+            else{
+                $companyname = $disbursement->othname;
+            }
+
+        @endphp
       <br><br>
       <table style="width: 100%; font-size: 12;" cellpadding = 0 cellspacing = 0>
         <tr>
-          <td>Pay to: <span class="text-bold">{{$supplier->companyname}}</span></td>
-          <td style="text-align: right;;">No.: <span class="text-bold">{{$disbursement->refnum}}</span></b></td>
+          <td>Pay to: <span class="text-bold">{{$companyname}}</span></td>
+          <td style="text-align: right;;">Voucher No.: <span class="text-bold">{{$disbursement->voucherno}}</span></b></td>
         </tr>
         <tr>
-          <td>Address: {{$supplier->address}}</td>
+          <td>Address: {{$address}}</td>
           <td class="text-right">Date: <b>{{date_format(date_create($disbursement->transdate), 'm/d/Y')}}</td>
         </tr>
         <tr>
@@ -443,45 +468,94 @@
       </table>
 
 
-        
-      
+
+
       <br><br>
 
 
       <div class="" style="margin-left: 0em">
-        <table cellspacing="0" cellpadding="0" class="table" style="width: 100%">
-          <thead>
-            <tr>
-              <th class="text-center" style="width: 10px;">#</th>
-              <th class="" style="text-align: left;">Description</th>
-              <th class="text-center">Amount</th>
-              {{-- <th class="text-center">TOTAL</th> --}}
-            </tr>
-          </thead>
-          <tbody>
-            @php
-              $count = 1;
-              $total = 0;
-            @endphp
-            @foreach($detail as $d)
-              <tr>
-                <td class="text-center">{{$count}}</td>
-                <td>{{$d->refnum}}</td>
-                <td class="text-right">{{number_format($d->payment, 2)}}</td>
-              </tr>
-              @php
-                $count += 1;
-                $total += $d->payment;
-              @endphp
-            @endforeach
-            <tr>
-              <td style="border-top: 1px solid; border-bottom: 2px solid" class="text-center"></td>
-              <td class="text-right text-bold" style="border-top: 1px solid; border-bottom: 2px solid">TOTAL:</td>
-              <td class="text-right text-bold" style="border-top: 1px solid; border-bottom: 2px solid">{{number_format($total, 2)}}</td>
-            </tr>
-            
-          </tbody>
-        </table>
+        @if(count($items) > 0)
+            <table cellspacing="0" cellpadding="0" class="table" style="width: 100%">
+                <thead>
+                    <tr>
+                    <th class="" style="text-align: left;">Particulars</th>
+                    <th class="text-center">Amount</th>
+                    <th class="text-center">QTY</th>
+                    <th class="text-center">Total</th>
+
+
+                    </tr>
+                </thead>
+                <tbody>
+                    @php
+                    $total = 0;
+                    @endphp
+                    @foreach($items as $item)
+                    <tr>
+                        <td>{{$item->itemname}}</td>
+                        <td style="text-align: right">{{number_format($item->amount, 2)}}</td>
+                        <td style="text-align: center">{{($item->qty)}}</td>
+                        <td style="text-align: right">{{number_format($item->totalamount, 2)}}</td>
+                    </tr>
+                    @php
+                        $total += $item->totalamount;
+                    @endphp
+                    @endforeach
+                    <tr>
+                    <td colspan="3" class="text-right text-bold" style="border-top: 1px solid; border-bottom: 2px solid">TOTAL:</td>
+                    <td class="text-right text-bold" style="border-top: 1px solid; border-bottom: 2px solid">{{number_format($total, 2)}}</td>
+                    </tr>
+
+                </tbody>
+            </table>
+        @else
+            @if($disbursement->source == 'po')
+
+                @php
+                    $items = db::table('purchasing_details')
+                        ->select(db::raw('description AS itemname, purchasing_details.amount, purchasing_details.qty, totalamount'))
+                        ->join('items', 'purchasing_details.itemid', '=', 'items.id')
+                        ->where('purchasing_details.deleted', 0)
+                        ->where('headerid', $disbursement->poid)
+                        ->get();
+                @endphp
+
+                <table cellspacing="0" cellpadding="0" class="table" style="width: 100%">
+                    <thead>
+                        <tr>
+                        <th class="" style="text-align: left;">Particulars</th>
+                        <th class="text-center">Amount</th>
+                        <th class="text-center">QTY</th>
+                        <th class="text-center">Total</th>
+
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @php
+                            $total = 0;
+                        @endphp
+                        @foreach($items as $item)
+                            <tr>
+                                <td>{{$item->itemname}}</td>
+                                <td style="text-align: right">{{number_format($item->amount, 2)}}</td>
+                                <td style="text-align: center">{{($item->qty)}}</td>
+                                <td style="text-align: right">{{number_format($item->totalamount, 2)}}</td>
+                            </tr>
+                            @php
+                                $total += $item->totalamount;
+                            @endphp
+                        @endforeach
+                        <tr>
+                            <td colspan="3" class="text-right text-bold" style="border-top: 1px solid; border-bottom: 2px solid">TOTAL:</td>
+                            <td class="text-right text-bold" style="border-top: 1px solid; border-bottom: 2px solid">{{number_format($total, 2)}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+
+            @endif
+        @endif
         <br>
         <span style="font-weight: bold; font-size: 10;">General Ledger</span><br><br>
         <table cellspacing="0" cellpadding="0" class="table" style="width: 100%">
@@ -514,7 +588,7 @@
               <td class="text-right text-bold" style="border-top: 1px solid; border-bottom: 2px solid">{{number_format($debittotal, 2)}}</td>
               <td class="text-right text-bold" style="border-top: 1px solid; border-bottom: 2px solid">{{number_format($credittotal, 2)}}</td>
             </tr>
-            
+
           </tbody>
         </table>
 
@@ -595,11 +669,11 @@
             </tr> --}}
         </table>
 
-        
+
       </div>
 
-    
-    
-        
+
+
+
   </body>
 </html>

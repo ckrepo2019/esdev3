@@ -33,7 +33,7 @@ class DiscountController extends Controller
         $setup = db::table('discounts')
             ->where('deleted', 0)
             ->get();
-        
+
         return $setup;
     }
 
@@ -75,7 +75,7 @@ class DiscountController extends Controller
         $setup = db::table('discounts')
             ->where('id', $dataid)
             ->first();
-        
+
         if($setup)
         {
             return collect($setup);
@@ -93,7 +93,7 @@ class DiscountController extends Controller
             ->where('particulars', $particulars)
             ->where('id', '!=', $dataid)
             ->first();
-        
+
         if($check)
         {
             return 'exist';
@@ -118,13 +118,27 @@ class DiscountController extends Controller
     {
         $dataid = $request->get('dataid');
 
-        db::table('discounts')
-            ->where('id', $dataid)
-            ->update([
-                'deleted' => 1,
-                'deleteddatetime' => FinanceModel::getServerDateTime(),
-                'deletedby' => auth()->user()->id
-            ]);
+        $checkdiscount = db::table('studdiscounts')
+            ->where('discountid', $dataid)
+            ->where('deleted', 0)
+            ->first();
+
+
+        if($checkdiscount)
+        {
+            return 'exist';
+        }
+        else{
+            db::table('discounts')
+                ->where('id', $dataid)
+                ->update([
+                    'deleted' => 1,
+                    'deleteddatetime' => FinanceModel::getServerDateTime(),
+                    'deletedby' => auth()->user()->id
+                ]);
+
+            return 'done';
+        }
     }
 
     public function discount_getstudents(Request $request)
@@ -183,7 +197,7 @@ class DiscountController extends Controller
             })
 			->groupBy('studid')
             ->get();
-        
+
         $college_enrolledstud = db::table('college_enrolledstud')
             ->select(db::raw('CONCAT(lastname, ", ", firstname, " - ", levelname) AS text, studid as id'))
             ->join('studinfo', 'college_enrolledstud.studid', '=', 'studinfo.id')
@@ -193,7 +207,7 @@ class DiscountController extends Controller
             ->where('college_enrolledstud.syid', $syid)
             ->where('college_enrolledstud.semid', $semid)
             ->get();
-			
+
         $students = collect();
 
         $students = $students->merge($enrolledstud);
@@ -203,10 +217,10 @@ class DiscountController extends Controller
 
         return $students->sortBy('text')->values();
         // return $students->values()->all();
-        
+
 
         // $students = $studentssort();
-        
+
         // return $students;
     }
 
@@ -239,7 +253,7 @@ class DiscountController extends Controller
                         }
                     }
                 }
-                elseif($stud->levelid >=  17 && $stud->levelid <= 21)
+                elseif($stud->levelid >=  17 && $stud->levelid <= 25)
                 {
                     $q->where('semid', $semid);
                 }
@@ -317,7 +331,7 @@ class DiscountController extends Controller
 
         return $discounts;
     }
-	
+
     public function discount_post(Request $request)
     {
         $studid = $request->get('studid');
@@ -338,7 +352,7 @@ class DiscountController extends Controller
             ->where('studid', $studid)
             ->where('deleted', 0)
             ->first();
-        
+
         if($einfo)
         {
             $levelid = $einfo->levelid;
@@ -405,7 +419,7 @@ class DiscountController extends Controller
             else{
                 $percent = 0;
             }
-            
+
             // echo 'studid: ' . $studid .'<br>';
             // echo 'discountid ' . $discountid .'<br>';
             // echo 'syid ' . $syid <br>;
@@ -413,7 +427,7 @@ class DiscountController extends Controller
             // echo 'classid ' . $info['classid'] .'<br>';
             // echo 'discount ' . $discount .'<br>';
             // echo 'percent ' . $percent .'<br>';
-            // echo 'discamount ' . $info['discountamount'] .'<br> <br>'; 
+            // echo 'discamount ' . $info['discountamount'] .'<br> <br>';
 
             $studdiscountid = DB::table('studdiscounts')
                 ->insertGetId([
@@ -431,14 +445,14 @@ class DiscountController extends Controller
                     'createdby' => auth()->user()->id,
                     'createddatetime' => FinanceModel::getServerDateTime()
                 ]);
-            
+
             FinanceUtilityModel::resetv3_generatediscounts($studid, $levelid, $syid, $semid, $studdiscountid);
         }
 
         return 'done';
-        
+
     }
-	
+
     public function discount_getdiscount(Request $request)
     {
         $syid = $request->get('syid');
@@ -447,7 +461,7 @@ class DiscountController extends Controller
         $discount_list = array();
 
         $discounts = db::table('studdiscounts')
-            ->select(db::raw('sid, lastname, firstname, middlename, discounts.percent, particulars, classid, groupid, discounts.amount as discount, 
+            ->select(db::raw('sid, lastname, firstname, middlename, discounts.percent, particulars, classid, groupid, discounts.amount as discount,
                 sum(discamount) as discamount, discounts.id, studid, studdiscounts.syid, studdiscounts.semid, studdiscounts.id as studdiscountid'))
             ->join('discounts', 'studdiscounts.discountid', '=', 'discounts.id')
             ->join('studinfo', 'studdiscounts.studid', '=', 'studinfo.id')
@@ -470,9 +484,9 @@ class DiscountController extends Controller
             })
             ->groupBy('discounts.id', 'sid')
             ->get();
-        
+
         // return $discounts;
-        
+
         foreach($discounts as $discount)
         {
             $discamount = '';
@@ -514,7 +528,7 @@ class DiscountController extends Controller
         $syid = $studdiscount->syid;
         $semid = $studdiscount->semid;
         $discountid = $studdiscount->discountid;
- 
+
         if($studdiscount->groupid != null && $studdiscount->groupid != '')
         {
             $groups = db::table('studdiscounts')
@@ -524,7 +538,7 @@ class DiscountController extends Controller
 
             $groups = collect($groups);
         }
-        
+
 
         $charges = self::charges($studid, $studdiscount->syid, $studdiscount->semid);
 
@@ -539,7 +553,7 @@ class DiscountController extends Controller
 
             if($group)
             {
-                $discountamount = $group->percent == 1 ? number_format($group->discount, 0, '.', '') . '%' : number_format($group->discount, 2);
+                $discountamount = $group->percent == 1 ? $group->discount . '%' : number_format($group->discount, 2);
                 $totaldiscount += $group->discamount;
 
                 $discountlist .= '
@@ -603,14 +617,14 @@ class DiscountController extends Controller
         $studid = $studdiscount->studid;
         $discountid = $studdiscount->discountid;
         // return $discountid;
-        
+
         if($studdiscount->groupid != null && $studdiscount->groupid != '')
         {
             $groups = db::table('studdiscounts')
                 ->where('groupid', $studdiscount->groupid)
 				->where('deleted', 0)
                 ->get();
-            
+
             foreach($groups as $group)
             {
                 $class = db::table('itemclassification')
@@ -626,7 +640,7 @@ class DiscountController extends Controller
                 else{
                     $sign = '';
                 }
-                
+
                 $classname = $class->description;
 
                 array_push($grouparray, (object)[
@@ -651,7 +665,7 @@ class DiscountController extends Controller
 
         return $data;
     }
-    
 
-    
+
+
 }

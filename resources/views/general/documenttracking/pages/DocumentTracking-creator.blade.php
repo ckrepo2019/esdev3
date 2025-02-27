@@ -1,6 +1,7 @@
 @php
     $check_refid = DB::table('usertype')
         ->where('id', Session::get('currentPortal'))
+        ->where('deleted', 0)
         ->select('refid', 'resourcepath')
         ->first();
 
@@ -32,6 +33,8 @@
         if (isset($check_refid->refid)) {
             if ($check_refid->resourcepath == null) {
                 $extend = 'general.defaultportal.layouts.app';
+            } elseif ($check_refid->refid == 26) {
+                $extend = 'hr.layouts.app';
             } elseif ($check_refid->refid == 27) {
                 $extend = 'academiccoor.layouts.app2';
             } elseif ($check_refid->refid == 22) {
@@ -46,6 +49,8 @@
                 $extend = 'clinic_doctor.index';
             } elseif ($check_refid->refid == 31) {
                 $extend = 'guidanceV2.layouts.app2';
+            } elseif ($check_refid->refid == 35) {
+                $extend = 'tesda.layouts.app2';
             } else {
                 $extend = 'general.defaultportal.layouts.app';
             }
@@ -72,7 +77,7 @@
     <style>
         body {
             /* font-family: "Roboto", sans-serif; */
-            font-family: "Poppins", sans-serif;
+            /* font-family: "Poppins", sans-serif; */
         }
 
         img {
@@ -220,8 +225,8 @@
                             class="badge badge-pill badge-warning" id="countClosedDocs">0 </span>
                     </a>
                 </li>
-                <button type="button" class="btn btn-primary btn-sm m-2 float-right" data-toggle="modal"
-                    data-target="#CreateSignatories">
+                <button type="button" class="btn btn-primary btn-sm m-2 float-right btn_create_signatory"
+                    data-toggle="modal" data-target="#CreateSignatories">
                     + Create Document Tracking
                 </button>
             </ul>
@@ -692,7 +697,8 @@
                                         data-dismiss="modal" aria-label="Close">Cancel</button>
                                 </div>
                                 <div class="col-md-6">
-                                    <button type="button" class="btn btn-primary " style="width:100%">Update</button>
+                                    <button type="button" class="btn btn-primary btn_update_docu"
+                                        style="width:100%">Update</button>
                                 </div>
 
                             </div>
@@ -786,6 +792,7 @@
     <script src="{{ asset('plugins/datatables/jquery.dataTables.min.js') }}"></script>
     <script src="{{ asset('plugins/select2/js/select2.min.js') }}"></script>
     <script>
+        $('body').addClass('sidebar-collapse')
         var Toast = Swal.mixin({
             toast: true,
             position: 'top-end',
@@ -799,7 +806,8 @@
         var dateCreated = $('#dateCreated')
         var remarks = $('#remarks')
         var viewers = $('#selectViewer')
-        var signee = $('#selectSignee')
+        var signee = $('#selectSignee');
+
 
         $(document).ready(function() {
             const currentDate = new Date().toISOString().split('T')[0];
@@ -813,6 +821,14 @@
                 $(this).addClass('activeimage')
             });
 
+            $('.btn_create_signatory').on('click', function() {
+                console.log('HELLO');
+                $('.carousel-footer').empty()
+                $('#documentName').val('')
+                $('#remarks').val('')
+                $('#selectSignee').val('').change()
+            })
+
             $('#document').on('change', function() {
                 // Get the file name
                 var fileName = $(this).val().split('\\').pop();
@@ -823,6 +839,9 @@
                 // Check if a file is selected
                 if (this.files) {
                     var files = this.files
+                    var validFileTypes = ['image/jpeg', 'image/png', 'image/gif',
+                        'image/bmp'
+                    ]; // Add more types if needed
 
                     console.log(files);
 
@@ -832,6 +851,13 @@
 
                     for (let index = 0; index < files.length; index++) {
                         const element = files[index];
+
+                        // Check if the file is an image
+                        if (!validFileTypes.includes(element.type)) {
+                            notify('warning', 'Only image type is allowed!')
+                            continue; // Skip the non-image file
+                        }
+
                         console.log(element.name)
 
                         // Create a FileReader object to read the file
@@ -1435,6 +1461,28 @@
 
         });
 
+        function updateDocument(id, signee) {
+            $.ajax({
+                type: 'POST',
+                data: {
+                    id: id,
+                    document_signee: JSON.stringify(signee)
+                },
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                url: '{{ route('update.document') }}',
+                success: function(data) {
+                    console.log(data)
+                    notify(data.status, data.message);
+                    getAllDocuments()
+                },
+                error: function(xhr, status, error) {
+                    console.log(xhr.responseJSON);
+                }
+            })
+        }
+
         function closeDocument(id) {
             Swal.fire({
                 type: 'question',
@@ -1491,7 +1539,7 @@
                 <tr class="document-row" style="cursor: pointer;" data-toggle="collapse" data-target="#collapse-${element.id}" data-id="${element.id}" >
                     <td>
                         <div data-toggle="collapse" data-target="#collapse-${element.id}" >
-                            <button class="btn btn-link"><i class="fas fa-file-pdf text-lg text-danger"></i></button>
+                            <button class="btn btn-link"><i class="fas fa-file-image text-lg text-danger"></i></button>
                         </div>
                     </td>
                     <td>
@@ -1517,8 +1565,8 @@
                     <td>
                         <div>
                             ${element.document_status === 'open' ?
-                            `<span class="rounded-badge badge p-2 badge-success">Open</span>` :
-                            `<span class="rounded-badge badge p-2 badge-danger">Closed</span>`}
+                            `<span class="rounded-badge text-success" style="font-weight: bold">Open</span>` :
+                            `<span class="rounded-badge text-danger" style="font-weight: bold">Closed</span>`}
                         </div>
                     </td>
 
@@ -1557,7 +1605,7 @@
                 <tr class="document-row" style="cursor: pointer;" data-toggle="collapse" data-target="#collapse-${element.id}${key}" >
                     <td>
                         <div>
-                            <button class="btn btn-link"><i class="fas fa-file-pdf text-lg text-danger"></i></button>
+                            <button class="btn btn-link"><i class="fas fa-file-image text-lg text-danger"></i></button>
                         </div>
                     </td>
                     <td>
@@ -1582,7 +1630,7 @@
                     </td>
                     <td>
                         <div>
-                            <span class="rounded-badge badge p-2 ${element.document_status === 'open' ? 'badge-success' : 'badge-danger'}">${element.document_status.charAt(0).toUpperCase() + element.document_status.slice(1)}</span>
+                            <span class="rounded-badge ${element.document_status === 'open' ? 'text-success' : 'text-danger'}"  style="font-weight: bold">${element.document_status.charAt(0).toUpperCase() + element.document_status.slice(1)}</span>
                         </div>
                     </td>
                     <td>
@@ -1619,7 +1667,7 @@
                 <tr class="document-row " style="cursor: pointer;" data-toggle="collapse" data-target="#collapse-${element.id}${key}close" >
                     <td>
                         <div>
-                            <button class="btn btn-link"><i class="fas fa-file-pdf text-lg text-danger"></i></button>
+                            <button class="btn btn-link"><i class="fas fa-file-image text-lg text-danger"></i></button>
                         </div>
                     </td>
                     <td>
@@ -1645,8 +1693,8 @@
                     <td>
                         <div>
                             ${element.document_status === 'open' ?
-                            `<span class="rounded-badge badge p-2 badge-success">Open</span>` :
-                            `<span class="rounded-badge badge p-2 badge-danger">Closed</span>`}
+                            `<span class="rounded-badge text-success" style="font-weight: bold">Open</span>` :
+                            `<span class="rounded-badge text-danger" style="font-weight: bold">Closed</span>`}
                         </div>
                     </td>
 

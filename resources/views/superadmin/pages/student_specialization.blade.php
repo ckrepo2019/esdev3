@@ -681,7 +681,7 @@
                   });
 
                   var printable_options = 
-                                    '<div class="btn-group ml-2">'+
+                                    '<div class="btn-group ml-md-2 ml-0 mb-md-0 mb-2">'+
                                          '<button type="button" class="btn btn-default btn-sm">Printables</button>'+
                                           '<button type="button" class="btn btn-default dropdown-toggle dropdown-icon btn-sm" data-toggle="dropdown">'+
                                           '<span class="sr-only">Toggle Dropdown</span>'+
@@ -695,7 +695,7 @@
                                     
                   var label_text = ''
                         var label_text = $($("#student_specialization_wrapper")[0].children[0])[0].children[0]
-                        $(label_text)[0].innerHTML = '<div class="row"><div class="col-md-12" ><button class="btn btn-primary btn-sm" id="assign_student" > Assign Student</button>'+printable_options+'</div></div>'
+                        $(label_text)[0].innerHTML = '<div class="d-flex flex-md-row flex-column"><button class="btn btn-primary btn-sm my-md-0 my-2" id="assign_student" > Assign Student</button>'+printable_options+'</div>'
 
 
             }

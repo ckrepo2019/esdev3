@@ -823,7 +823,7 @@ class StudentGradeEvaluation extends \App\Http\Controllers\Controller
                         $subjects = $final_subject;
                         
                         }
-                  return self::generate_grade($subjects,$grades,$studid,$syid);
+                  return self::generate_grade($subjects,$grades,$studid,$syid, $levelid);
             }
 
       }
@@ -1023,7 +1023,8 @@ class StudentGradeEvaluation extends \App\Http\Controllers\Controller
             $grade = null,
             $quarter = null,
             $lowest = null,
-            $syid = null
+            $syid = null,
+            $levelid = null
       ){
             $award = '';
 
@@ -1032,6 +1033,7 @@ class StudentGradeEvaluation extends \App\Http\Controllers\Controller
             $award_setup_all = DB::table('grades_ranking_setup')
                               ->where('deleted',0)
                               ->where('syid',$syid)
+                              ->where('syid',$levelid)
                               ->select(
                                     'id',
                                     'award',
@@ -1039,6 +1041,13 @@ class StudentGradeEvaluation extends \App\Http\Controllers\Controller
                                     'gfrom'
                               )
                               ->get();
+
+                              if(count($award_setup_all) == 0){
+                                    return response()->json([
+                                          'status' => 'warning',
+                                          'message' => 'No Setup Available'
+                                    ]);
+                              }
 
             $award_setup = collect($award_setup_all)->where('award','!=','lowest grade')->values();
             $award_setup = collect($award_setup)->where('award','!=','base grade')->values();
@@ -1166,7 +1175,7 @@ class StudentGradeEvaluation extends \App\Http\Controllers\Controller
       }
 
 
-      public static function generate_grade($subjects = [] , $grades = [], $studid = null, $syid = null){
+      public static function generate_grade($subjects = [] , $grades = [], $studid = null, $syid = null, $levelid = null){
 
             $schoolinfo = DB::table('schoolinfo')->first();
 
@@ -1552,13 +1561,13 @@ class StudentGradeEvaluation extends \App\Http\Controllers\Controller
             $q3 = $with_genave3 ? collect($subjects)->where('inSF9',1)->where('third',1)->where('subjCom',null)->avg('q3') : null;
             $q4 = $with_genave4 ? collect($subjects)->where('inSF9',1)->where('fourth',1)->where('subjCom',null)->avg('q4') : null;
 
-            $q1award = $with_genave1 ? self::check_award($q1,1,collect($subjects)->where('inSF9',1)->where('subjCom',null)->min('q1'),$syid) : null;
-            $q2award = $with_genave2 ? self::check_award($q2,2,collect($subjects)->where('inSF9',1)->where('subjCom',null)->min('q2'),$syid) : null;
-            $q3award = $with_genave3 ? self::check_award($q3,3,collect($subjects)->where('inSF9',1)->where('subjCom',null)->min('q3'),$syid) : null;
-            $q4award = $with_genave4 ? self::check_award($q4,4,collect($subjects)->where('inSF9',1)->where('subjCom',null)->min('q4'),$syid) : null;
+            $q1award = $with_genave1 ? self::check_award($q1,1,collect($subjects)->where('inSF9',1)->where('subjCom',null)->min('q1'),$syid, $levelid) : null;
+            $q2award = $with_genave2 ? self::check_award($q2,2,collect($subjects)->where('inSF9',1)->where('subjCom',null)->min('q2'),$syid, $levelid) : null;
+            $q3award = $with_genave3 ? self::check_award($q3,3,collect($subjects)->where('inSF9',1)->where('subjCom',null)->min('q3'),$syid, $levelid) : null;
+            $q4award = $with_genave4 ? self::check_award($q4,4,collect($subjects)->where('inSF9',1)->where('subjCom',null)->min('q4'),$syid, $levelid) : null;
 
             $fr = $with_finalrating ? collect($subjects)->where('subjCom',null)->where('inSF9',1)->avg('finalrating') : null;
-            $fraward = $with_finalrating ? self::check_award(number_format($fr,3),null,100,$syid) : null;
+            $fraward = $with_finalrating ? self::check_award(number_format($fr,3),null,100,$syid, $levelid) : null;
 
             $genave = (object)[
                   'subjdesc'=>'GENERAL AVERAGE',
@@ -2081,6 +2090,753 @@ class StudentGradeEvaluation extends \App\Http\Controllers\Controller
 
 
       }
-      
 
+      function college_grades_eval(Request $request){
+            $student = $request->studid;
+            $schedule = DB::table('college_loadsubject')
+                        ->join('college_enrolledstud', function($join) use ($student) {
+                              $join->on('college_loadsubject.studid', '=', 'college_enrolledstud.studid');
+                              $join->where('college_enrolledstud.studid', $student);
+                              $join->where('college_enrolledstud.deleted', 0);
+                        })
+                        ->join('studinfo', function($join) {
+                              $join->on('college_enrolledstud.studid', '=', 'studinfo.id');
+                              $join->where('studinfo.deleted', 0);
+                        })
+                        ->leftJoin('college_studentprospectus', function($join) {
+                              $join->on('studinfo.sid', '=', 'college_studentprospectus.studid')
+                                    ->on('college_loadsubject.schedid', '=', 'college_studentprospectus.schedid')
+                                    ->where('college_studentprospectus.deleted', 0);
+                        })
+                        ->join('college_classsched', function($join) {
+                              $join->on('college_loadsubject.schedid', '=', 'college_classsched.id');
+                              $join->where('college_classsched.deleted', 0);
+                        })
+                        ->join('college_prospectus', 'college_classsched.subjectID', '=', 'college_prospectus.id')
+                        ->where('college_loadsubject.deleted', 0)
+                        ->select(
+                              'college_prospectus.subjDesc',
+                              'college_prospectus.subjCode',
+                              'college_loadsubject.schedid',
+                              'college_loadsubject.syid as yearID',
+                              'college_loadsubject.semid as semID',
+                              'college_studentprospectus.*',
+                        )
+                        ->groupBy('college_loadsubject.schedid')
+                        ->get();
+            
+            return $schedule;
+      }
+      
+      function college_grades_eval_2(Request $request){
+            $student = $request->studid;
+            $syid = $request->syid;
+            $semid = $request->semid;
+            $currid = $request->curr;
+            $student_course = DB::table('studinfo')
+                        ->join('college_studentcurriculum', function($join) use ($student) {
+                              $join->on('studinfo.id', '=', 'college_studentcurriculum.studid');
+                              $join->where('college_studentcurriculum.deleted', 0);
+                        })
+                        ->where('studinfo.id', $student)
+                        ->where('studinfo.deleted', 0)
+                        ->select(
+                              'college_studentcurriculum.curriculumid',
+                              'studinfo.levelid',
+                              'studinfo.sid',
+                              'studinfo.courseid'
+                        )
+                        ->first();
+            
+
+            $student_grades_prospectus = DB::table('college_prospectus')
+                        ->leftjoin('college_classsched','college_prospectus.id','=','college_classsched.subjectID')
+                        ->leftjoin('college_studentprospectus', function($join) use ($student_course) {
+                              $join->on('college_classsched.id', '=', 'college_studentprospectus.schedid')
+                                    ->where('college_studentprospectus.studid', $student_course->sid)
+                                    ->where('college_studentprospectus.deleted', 0);
+                              $join->where('college_classsched.deleted', 0);
+                        })
+                        ->where('college_prospectus.curriculumID', $student_course->curriculumid)
+                        ->where('college_prospectus.courseid', $student_course->courseid)
+                        ->where('college_prospectus.deleted', 0)
+                        ->select(
+                              'college_prospectus.id',
+                              'college_prospectus.subjCode',
+                              'college_prospectus.subjDesc',
+                              'college_prospectus.yearID',
+                              'college_prospectus.semesterID',
+                              'college_prospectus.curriculumID',
+                              'college_prospectus.lecunits',
+                              'college_prospectus.labunits',
+                              'college_prospectus.credunits',
+                              'college_studentprospectus.id as gradesid',
+                              'college_studentprospectus.fg',
+                              'college_studentprospectus.prelemstatus',
+                              'college_studentprospectus.midtermstatus',
+                              'college_studentprospectus.prefistatus',
+                              'college_studentprospectus.finalstatus',
+                              'college_studentprospectus.remarks',
+                        )
+                        ->groupBy('college_prospectus.id')
+                        ->get()
+                        ->map(function($item) {
+                              $item->grades = (object)[
+                                    'gpa' => $item->fg
+                              ];
+                              unset($item->prelemgrade, $item->midtermgrade, $item->prefigrade, $item->finalgrade);
+                              return $item;
+                        });
+
+            $student_grades_prospectus = $student_grades_prospectus->map(function($item) {
+                  $prereq = DB::table('college_subjprereq')
+                        ->join('college_prospectus as original', function($join) use($item) {
+                              $join->on('college_subjprereq.subjID', '=', 'original.id')
+                              ->where('original.deleted', 0)
+                              ->where('original.id', $item->id);
+                        })
+                        ->join('college_prospectus as prereq', function($join) {
+                              $join->on('college_subjprereq.prereqsubjID', '=', 'prereq.id')
+                              ->where('prereq.deleted', 0);
+                        })
+                        ->where('college_subjprereq.deleted', 0)
+                        ->select(
+                              'college_subjprereq.prereqsubjID',
+                              'prereq.subjCode',
+                              'prereq.subjDesc',
+                        )
+                        ->get();
+                  $item->prereq = $prereq;
+                  return $item;
+            });
+            
+            // $student_grades_prospectus = $student_grades_prospectus->map(function($item) use ($student_course) {
+            // $item->levelid = $student_course->levelid;
+            // return $item;
+            // });
+
+            return $student_grades_prospectus;
+            
+
+      }
+      
+      function college_grades_eval_2_print(Request $request){
+            $student = $request->studid;
+            $syid = $request->syid;
+            $semid = $request->semid;
+            $currid = $request->curr;
+
+
+            $schoolinfo = DB::table('schoolinfo')->first();
+
+            $student_course = DB::table('studinfo')
+                        ->join('college_studentcurriculum', function($join) use ($student) {
+                              $join->on('studinfo.id', '=', 'college_studentcurriculum.studid');
+                              $join->where('college_studentcurriculum.deleted', 0);
+                        })
+                        ->join('gradelevel', function($join) use ($student) {
+                              $join->on('studinfo.levelid', '=', 'gradelevel.id');
+                        })
+                        ->leftjoin('college_curriculum', function($join) use ($currid) {
+                              $join->on('college_curriculum.id', '=', 'college_studentcurriculum.curriculumid');
+                        })
+                        ->where('studinfo.id', $student)
+                        ->where('studinfo.deleted', 0)
+                        ->select(
+                              'college_studentcurriculum.curriculumid',
+                              'studinfo.levelid',
+                              'studinfo.sid',
+                              'studinfo.courseid',
+                              'gradelevel.levelname',
+                              'college_curriculum.curriculumname',
+
+                        )
+                        ->first();
+
+            $course = DB::table('college_courses')
+                        ->join('college_colleges','college_courses.collegeid','=','college_colleges.id')
+                        ->where('college_courses.id',$student_course->courseid)
+                        ->select(
+                              'college_courses.id',
+                              'college_courses.courseDesc',
+                              'college_colleges.collegeDesc',
+                              'college_colleges.acadprogid'
+                        )
+                        ->first();
+            
+
+            $gradelevel = DB::table('gradelevel')
+                              ->where('acadprogid', $course->acadprogid)
+                              ->where('deleted', 0)
+                              ->select('id','levelname')
+                              ->get();
+            
+            foreach($gradelevel as $level){
+                  $level->semesters = DB::table('semester')
+                                    ->get();
+                  foreach($level->semesters as $sem){
+                        $student_grades_prospectus = DB::table('college_prospectus')
+                                    ->leftjoin('college_classsched','college_prospectus.id','=','college_classsched.subjectID')
+                                    ->leftjoin('college_studentprospectus', function($join) use ($student_course) {
+                                          $join->on('college_classsched.id', '=', 'college_studentprospectus.schedid')
+                                                ->where('college_studentprospectus.studid', $student_course->sid)
+                                                ->where('college_studentprospectus.deleted', 0);
+                                          $join->where('college_classsched.deleted', 0);
+                                    })
+                                    ->where('college_prospectus.curriculumID', $student_course->curriculumid)
+                                    ->where('college_prospectus.yearID', $level->id)
+                                    ->where('college_prospectus.semesterID', $sem->id)
+                                    ->where('college_prospectus.deleted', 0)
+                                    ->select(
+                                          'college_prospectus.id',
+                                          'college_prospectus.subjCode',
+                                          'college_prospectus.subjDesc',
+                                          'college_prospectus.yearID',
+                                          'college_prospectus.semesterID',
+                                          'college_prospectus.curriculumID',
+                                          // 'college_curriculum.curriculumname',
+                                          'college_prospectus.lecunits',
+                                          'college_prospectus.labunits',
+                                          'college_prospectus.credunits',
+                                          'college_studentprospectus.id as gradesid',
+                                          'college_studentprospectus.fg',
+                                          'college_studentprospectus.prelemstatus',
+                                          'college_studentprospectus.midtermstatus',
+                                          'college_studentprospectus.prefistatus',
+                                          'college_studentprospectus.finalstatus',
+                                          'college_studentprospectus.remarks',
+                                    )
+                                    ->groupBy('college_prospectus.id')
+                                    ->get();
+
+                                    $student_grades_prospectus = $student_grades_prospectus->map(function($item) {
+                                          $prereq = DB::table('college_subjprereq')
+                                                ->join('college_prospectus as original', function($join) use($item) {
+                                                      $join->on('college_subjprereq.subjID', '=', 'original.id')
+                                                      ->where('original.deleted', 0)
+                                                      ->where('original.id', $item->id);
+                                                })
+                                                ->join('college_prospectus as prereq', function($join) {
+                                                      $join->on('college_subjprereq.prereqsubjID', '=', 'prereq.id')
+                                                      ->where('prereq.deleted', 0);
+                                                })
+                                                ->where('college_subjprereq.deleted', 0)
+                                                ->select(
+                                                      'college_subjprereq.prereqsubjID',
+                                                      'prereq.subjCode',
+                                                      'prereq.subjDesc',
+                                                )
+                                                ->get();
+                                          $item->prereq = $prereq;
+                                          return $item;
+                                    });
+                        $sem->student_grades_prospectus = $student_grades_prospectus;
+                  }
+            }
+
+
+
+            // $student_grades_prospectus = DB::table('college_prospectus')
+            //             ->leftjoin('college_classsched','college_prospectus.id','=','college_classsched.subjectID')
+            //             ->leftjoin('college_studentprospectus', function($join) use ($student_course) {
+            //                   $join->on('college_classsched.id', '=', 'college_studentprospectus.schedid')
+            //                         ->where('college_studentprospectus.studid', $student_course->sid)
+            //                         ->where('college_studentprospectus.deleted', 0);
+            //                   $join->where('college_classsched.deleted', 0);
+            //             })
+            //             ->join('college_curriculum', function($join) use ($student_course) {
+            //                   $join->on('college_prospectus.curriculumID', '=', 'college_curriculum.id')
+            //                         ->where('college_curriculum.id', $student_course->curriculumid)
+            //                         ->where('college_curriculum.deleted', 0);
+            //             })
+            //             ->where('college_prospectus.curriculumID', $student_course->curriculumid)
+            //             ->where('college_prospectus.courseid', $student_course->courseid)
+            //             ->where('college_prospectus.deleted', 0)
+            //             ->select(
+            //                   'college_prospectus.id',
+            //                   'college_prospectus.subjCode',
+            //                   'college_prospectus.subjDesc',
+            //                   'college_prospectus.yearID',
+            //                   'college_prospectus.semesterID',
+            //                   'college_prospectus.curriculumID',
+            //                   'college_curriculum.curriculumname',
+            //                   'college_prospectus.lecunits',
+            //                   'college_prospectus.labunits',
+            //                   'college_prospectus.credunits',
+            //                   'college_studentprospectus.id as gradesid',
+            //                   'college_studentprospectus.fg',
+            //                   'college_studentprospectus.prelemstatus',
+            //                   'college_studentprospectus.midtermstatus',
+            //                   'college_studentprospectus.prefistatus',
+            //                   'college_studentprospectus.finalstatus',
+            //                   'college_studentprospectus.remarks',
+            //             )
+            //             ->distinct('college_prospectus.id')
+            //             ->get()
+            //             ->map(function($item) {
+            //                   $item->grades = (object)[
+            //                         'gpa' => $item->fg
+            //                   ];
+            //                   unset($item->prelemgrade, $item->midtermgrade, $item->prefigrade, $item->finalgrade);
+            //                   return $item;
+            //             });
+
+            // $student_grades_prospectus = $student_grades_prospectus->map(function($item) {
+            //       $prereq = DB::table('college_subjprereq')
+            //             ->join('college_prospectus as original', function($join) use($item) {
+            //                   $join->on('college_subjprereq.subjID', '=', 'original.id')
+            //                   ->where('original.deleted', 0)
+            //                   ->where('original.id', $item->id);
+            //             })
+            //             ->join('college_prospectus as prereq', function($join) {
+            //                   $join->on('college_subjprereq.prereqsubjID', '=', 'prereq.id')
+            //                   ->where('prereq.deleted', 0);
+            //             })
+            //             ->where('college_subjprereq.deleted', 0)
+            //             ->select(
+            //                   'college_subjprereq.prereqsubjID',
+            //                   'prereq.subjCode',
+            //                   'prereq.subjDesc',
+            //             )
+            //             ->get();
+            //       $item->prereq = $prereq;
+            //       return $item;
+            // });
+            
+            $studinfo = DB::table('studinfo')
+                        ->where('id', $student)
+                        ->select(
+                              'lastname',
+                              'firstname',
+                              'middlename',
+                              'dob',
+                              DB::raw("CONCAT(barangay, ', ', city, ', ', province) as full_address"),
+                              'picurl',
+                              'sid'
+                        )
+                        ->first();
+            return view('superadmin.pages.student.gradeevalprint', compact('gradelevel','schoolinfo','studinfo', 'course', 'student_course'));
+            
+
+      } 
+
+      function add_credited_subj(Request $request) {
+            $levelid = $request->level;
+            $semid = $request->sem;
+            $schoolyear = $request->schoolyear;
+            $studid = $request->studid;
+            $schoolname = $request->schoolname;
+            $schooladdress = $request->schooladdress;
+            $credsubj = $request->credsubj;
+            $headerid = $request->headerid;
+
+            if(!$headerid){
+                  $credschool = DB::table('college_credschool')
+                        ->insertGetId([
+                              'schoolname' => $schoolname,
+                              'schooladdress' => $schooladdress,
+                              'sydesc' => $schoolyear,
+                              'studid' => $studid,
+                              'createdby' => auth()->user()->id,
+                              'createddatetime' => \Carbon\Carbon::now('Asia/Manila')
+                        ]);
+            }else{
+                  $credschool = $headerid;
+            }
+            
+
+
+            foreach($credsubj as $cred){
+                  $prospectustable = DB::table('college_prospectus')
+                        ->where('id',$cred['prospectusid'])
+                        ->select(
+                              'subjDesc',
+                              'subjCode',
+                              'credunits',
+                              'lecunits',
+                              'labunits'
+                              )
+                        ->get();
+                  
+                  DB::table('college_credsubj')
+                        ->insert([
+                              'schoolID' => $credschool,
+                              'studID' => $studid,
+                              'levelID' => $levelid,
+                              'semID' => $semid,
+                              'prospectusID' => $cred['prospectusid'],
+                              'lecunits' => $prospectustable[0]->lecunits,
+                              'labunits' => $prospectustable[0]->labunits,
+                              'credunits' => $prospectustable[0]->credunits,
+                              'subjDesc' => $prospectustable[0]->subjDesc,
+                              'subjCode' => $prospectustable[0]->subjCode,
+                              'gpa' => $cred['gpa'],
+                              'createdby' => auth()->user()->id,
+                              'createddatetime' => \Carbon\Carbon::now('Asia/Manila')
+                        ]);
+            }
+
+            return $credschool;
+      }
+
+      function get_credited_subj(Request $request) {
+            $studid = $request->studid;
+
+
+            
+            $credschool = DB::table('college_credschool')
+                  ->where('studid', $studid)
+                  ->where('deleted', 0)
+                  ->select(
+                        'schoolname',
+                        'schooladdress',
+                        'sydesc',
+                        'studid',
+                        'id as headerid'
+                  )
+                  ->get();
+            
+            foreach($credschool as $school){
+                  $school->credsubj = DB::table('college_credsubj')
+                                          ->leftjoin('college_prospectus', 'college_credsubj.prospectusID', '=', 'college_prospectus.id')
+                                          ->where('college_credsubj.schoolID', $school->headerid)
+                                          ->where('college_credsubj.deleted', 0)
+                                          ->select(
+                                                'college_credsubj.prospectusID',
+                                                'college_credsubj.id',
+                                                'college_credsubj.subjDesc',
+                                                'college_credsubj.subjCode',
+                                                'college_credsubj.gpa',
+                                                'college_credsubj.levelID',
+                                                'college_credsubj.semID',
+                                                'college_credsubj.schoolID',
+                                                'college_credsubj.status',
+                                                'college_credsubj.lecunits',
+                                                'college_credsubj.labunits',
+                                                'college_credsubj.credunits',
+                                                'college_prospectus.id as prospectusid',
+
+                                          )
+                                          ->get();
+                  
+                  foreach($school->credsubj as $subj){
+                        $subj->credpreq = DB::table('college_subjprereq')
+                                          ->leftjoin('college_prospectus as original', function($join) use($subj) {
+                                                $join->on('college_subjprereq.subjID', '=', 'original.id')
+                                                ->where('original.deleted', 0)
+                                                ->where('original.id', $subj->prospectusid);
+                                          })
+                                          ->join('college_prospectus as prereq', function($join) {
+                                                $join->on('college_subjprereq.prereqsubjID', '=', 'prereq.id')
+                                                ->where('prereq.deleted', 0);
+                                          })
+                                          ->where('college_subjprereq.deleted', 0)
+                                          ->where('college_subjprereq.subjID', $subj->prospectusid)
+                                          ->select(
+                                                'college_subjprereq.prereqsubjID',
+                                                'prereq.subjCode',
+                                                'prereq.subjDesc',
+                                                'college_subjprereq.subjID',
+                                                
+                                          )
+                                          ->get();
+                  }
+            }
+
+            return $credschool;
+      }
+
+      function additional_credit(Request $request){
+            $headerid = $request->headerid;
+            $semid = $request->semid;
+            $subjCode = $request->subjCode;
+            $subjDesc = $request->subjDesc;
+            $studid = $request->studid;
+            $levelid = $request->levelid;
+            $gpa = $request->gpa;
+            $prospectusid = $request->prospectusID;
+            $credunits = $request->credunits;
+            $lecunits = $request->lecunits;
+            $labunits = $request->labunits;
+
+            DB::table('college_credsubj')
+                  ->insert([
+                        'schoolID' => $headerid,
+                        'studID' => $studid,
+                        'levelID' => $levelid,
+                        'semID' => $semid,
+                        'lecunits' => $lecunits,
+                        'labunits' => $labunits,
+                        'credunits' => $credunits,
+                        'prospectusID' => $prospectusid ,
+                        'subjDesc' => $subjDesc,
+                        'subjCode' => $subjCode,
+                        'gpa' => $gpa,
+                        'status' => 1,
+                        'createdby' => auth()->user()->id,
+                        'createddatetime' => \Carbon\Carbon::now('Asia/Manila')
+                  ]);
+      }
+
+      function delete_additional_credit(Request $request){
+            $id = $request->id;
+
+            DB::table('college_credsubj')
+                  ->where('id', $id)
+                  ->update([
+                        'deleted' => 1,
+                        'deletedby' => auth()->user()->id,
+                        'deleteddatetime' => \Carbon\Carbon::now('Asia/Manila')
+                  ]);
+      }
+      
+      function update_additional_credit(Request $request){
+            $id = $request->id;
+            $subjCode = $request->subjCode;
+            $subjDesc = $request->subjDesc;
+            $gpa = $request->gpa;
+            $prospectusid = $request->prospectusID;
+            $credunits = $request->credunits;
+            $lecunits = $request->lecunits;
+            $labunits = $request->labunits;
+
+            DB::table('college_credsubj')
+                  ->where('id', $id)
+                  ->update([
+                        'subjDesc' => $subjDesc,
+                        'subjCode' => $subjCode,
+                        'gpa' => $gpa,
+                        'lecunits' => $lecunits,
+                        'labunits' => $labunits,
+                        'credunits' => $credunits,
+                        'prospectusID' => $prospectusid,
+                        'updatedby' => auth()->user()->id,
+                        'updateddatetime' => \Carbon\Carbon::now('Asia/Manila')
+                  ]);
+      }
+
+      function get_specific_credited_subj(Request $request){
+            $id = $request->id;
+            
+            $credschool = DB::table('college_credschool')
+                  ->where('id', $id)
+                  ->where('deleted', 0)
+                  ->select(
+                        'schoolname',
+                        'schooladdress',
+                        'sydesc',
+                        'studid',
+                        'id as headerid'
+                  )
+                  ->get();
+
+            $credschool = $credschool->map(function($item) {
+                  $credsubj = DB::table('college_credsubj')
+                        ->join('college_prospectus', 'college_credsubj.prospectusID', '=', 'college_prospectus.id')
+                        ->where('college_credsubj.schoolID', $item->headerid)
+                        ->where('college_credsubj.deleted', 0)
+                        ->where('college_credsubj.status', 0)
+                        ->select(
+                              'college_credsubj.prospectusID',
+                              'college_credsubj.id',
+                              'college_credsubj.subjDesc',
+                              'college_credsubj.subjCode',
+                              'college_credsubj.gpa',
+                              'college_credsubj.levelID',
+                              'college_credsubj.semID',
+                              'college_credsubj.schoolID',
+                              'college_credsubj.status',
+                              'college_prospectus.lecunits',
+                              'college_prospectus.labunits',
+                              'college_prospectus.credunits',
+                              'college_prospectus.id as prospectusid',
+
+                        )
+                        ->get();
+                  $credsubj = $credsubj->map(function($item) {
+                        $credpreq = DB::table('college_subjprereq')
+                              ->join('college_prospectus as original', function($join) use($item) {
+                                    $join->on('college_subjprereq.subjID', '=', 'original.id')
+                                    ->where('original.deleted', 0)
+                                    ->where('original.id', $item->prospectusid);
+                              })
+                              ->join('college_prospectus as prereq', function($join) {
+                                    $join->on('college_subjprereq.prereqsubjID', '=', 'prereq.id')
+                                    ->where('prereq.deleted', 0);
+                              })
+                              ->where('college_subjprereq.deleted', 0)
+                              ->select(
+                                    'college_subjprereq.prereqsubjID',
+                                    'prereq.subjCode',
+                                    'prereq.subjDesc',
+                              )
+                              ->get();
+                        $item->credpreq = $credpreq;
+                        return $item;
+                  });
+                  $item->credsubj = $credsubj;
+                  return $item;
+            });
+            
+            return $credschool;
+      }
+
+      function update_school_credit(Request $request){
+            $id = $request->id;
+            $schoolname = $request->schoolname;
+            $schoolyear = $request->schoolyear;
+            $schooladdress = $request->schooladdress;
+
+            DB::table('college_credschool')
+                  ->where('id', $id)
+                  ->update([
+                        'schoolname' => $schoolname,
+                        'schooladdress' => $schooladdress,
+                        'sydesc' => $schoolyear,
+                        'updatedby' => auth()->user()->id,
+                        'updateddatetime' => \Carbon\Carbon::now('Asia/Manila')
+                  ]);
+      }
+
+      function update_credit(Request $request){
+            $levelid = $request->levelid;
+            $semid  = $request->semid;
+            $studid = $request->studid;
+            $headerid = $request->id;
+            $credsubj = $request->credsubj;
+            $credprospectus = [];
+            $existingsubj = array();
+
+            $creditedsubj = DB::table('college_credsubj')
+                        ->where('schoolID', $headerid)
+                        ->where('levelID', $levelid)
+                        ->where('semID', $semid)
+                        ->where('deleted', 0)
+                        ->where('status', 0)
+                        ->select('prospectusID')
+                        ->get();
+      
+            foreach($creditedsubj as $item){
+                  array_push($existingsubj,$item->prospectusID);
+            }
+
+            if($credsubj){
+                  foreach($credsubj as $item){
+                        $credprospectus[] = ['prospectusid' => $item['prospectusid'], 'gpa' => $item['gpa']];
+                  }
+      
+                  $subjToAdd = array_diff(array_column($credprospectus, 'prospectusid'),$existingsubj);
+                  
+                  $result = [];
+      
+                  foreach ($subjToAdd as $prospectusID) {
+      
+                      $gpa = array_values(array_filter($credprospectus, function($item) use ($prospectusID) {
+                          return $item['prospectusid'] == $prospectusID;
+                      }))[0]['gpa'] ?? null;
+      
+                      $result[] = ['prospectusid' => $prospectusID, 'gpa' => $gpa];
+      
+                  }
+      
+                  foreach($result as $item){
+                        $prospectustable = DB::table('college_prospectus')
+                              ->where('id',$item['prospectusid'])
+                              ->select(
+                                    'subjDesc',
+                                    'subjCode',
+                                    'credunits',
+                                    'lecunits',
+                                    'labunits'
+                                    )
+                              ->get();
+      
+                        DB::table('college_credsubj')
+                              ->insert([
+                                    'schoolID' => $headerid,
+                                    'levelID' => $levelid,
+                                    'semID' => $semid,
+                                    'prospectusID' => $item['prospectusid'],
+                                    'studID' => $studid,
+                                    'lecunits' => $prospectustable[0]->lecunits,
+                                    'labunits' => $prospectustable[0]->labunits,
+                                    'credunits' => $prospectustable[0]->credunits,
+                                    'subjDesc' => $prospectustable[0]->subjDesc,
+                                    'subjCode' => $prospectustable[0]->subjCode,
+                                    'gpa' => $item['gpa'],
+                                    'status' => 0,
+                                    'createdby' => auth()->user()->id,
+                                    'createddatetime' => \Carbon\Carbon::now('Asia/Manila')
+                              ]);
+                  }
+                  $existing = array_intersect(array_column($credprospectus, 'prospectusid'), $existingsubj);
+      
+                  $existingResult = [];
+      
+                  foreach ($existing as $prospectusID) {
+                        $gpa = array_values(array_filter($credprospectus, function($item) use ($prospectusID) {
+                              return $item['prospectusid'] == $prospectusID;
+                        }))[0]['gpa'] ?? null;
+      
+                        $existingResult[] = ['prospectusid' => $prospectusID, 'gpa' => $gpa];
+                  }
+      
+                  foreach($existingResult as $item){
+                        DB::table('college_credsubj')
+                              ->where('schoolID', $headerid)
+                              ->where('levelID', $levelid)
+                              ->where('semID', $semid)
+                              ->where('prospectusID', $item['prospectusid'])
+                              ->where('studID', $studid)
+                              ->update([
+                                    'gpa' => $item['gpa'],
+                                    'updatedby' => auth()->user()->id,
+                                    'updateddatetime' => \Carbon\Carbon::now('Asia/Manila')
+                              ]);
+                  }
+            }else{
+                  $credprospectus = [['prospectusID' => 0]];
+            }
+            
+            $subjToDelete = array_diff($existingsubj,array_column($credprospectus, 'prospectusid'));
+            $result = [];
+            foreach($subjToDelete as $item){
+                  $result[] = ['prospectusid' => $item];
+            }
+            foreach($result as $item){
+                  DB::table('college_credsubj')
+                        ->where('schoolID', $headerid)
+                        ->where('levelID', $levelid)
+                        ->where('semID', $semid)
+                        ->where('prospectusID', $item['prospectusid'])
+                        ->where('studID', $studid)
+                        ->where('status', 0)
+                        ->update([
+                              'deleted' => 1,
+                              'deletedby' => auth()->user()->id,
+                              'deleteddatetime' => \Carbon\Carbon::now('Asia/Manila')
+                        ]);
+            }
+      }
+
+      function delete_school_credit(Request $request){
+            $id = $request->id;
+
+            DB::table('college_credsubj')
+                  ->where('schoolid', $id)
+                  ->update([
+                        'deleted' => 1,
+                        'deletedby' => auth()->user()->id,
+                        'deleteddatetime' => \Carbon\Carbon::now('Asia/Manila')
+                  ]);
+
+            DB::table('college_credschool')
+                  ->where('id', $id)
+                  ->update([
+                        'deleted' => 1,
+                        'deletedby' => auth()->user()->id,
+                        'deleteddatetime' => \Carbon\Carbon::now('Asia/Manila')
+                  ]);
+
+      }
 }

@@ -78,8 +78,7 @@
                                       <b>Student ID</b> <a class="float-right" id="label_sid"></a>
                                     </li>
                               </ul>
-                            <button
-                                class="btn btn-secondary btn-block mt-2"><b>Please contact the admin to change your profile picture.</b></button>
+                              <button data-toggle="modal"  data-target="#profile-modal" class="btn btn-primary btn-block mt-2"><b>Update Student Photo</b></button>
                         </div>
                   </div>
             </div>

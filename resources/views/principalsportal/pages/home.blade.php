@@ -235,7 +235,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        
+					
 						@php
 							$activesy = DB::table('sy')
 											->where('isactive',1)
@@ -254,9 +254,9 @@
 								->select('academicprogram.*')
 								->where('deleted',0)
 								->orderBy('acadprogid')
-                                ->distinct()
 								->get();
 						@endphp
+					
 					@if(isset(Session::get('prinInfo')->id))
 						@foreach ($acadprogid as $item)
                             <tr>

@@ -47,7 +47,6 @@
 
 @section('content')
     <div class="content">
-
         {{-- MODAL ADD CIRCULATION --}}
         <div class="modal fade" id="modal-block-popin" tabindex="-1" role="dialog" aria-labelledby="modal-block-popin"
             aria-hidden="true">
@@ -97,20 +96,19 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label class="mb-1">Date Borrowed <span class="text-danger">*</span></label>
-                                        <input type="text"
+                                        <input type="date"
                                             class="js-flatpickr font-size-sm form-control form-control-alt"
                                             id="circulation_date_borrowed" name="circulation_date_borrowed"
-                                            placeholder="Y-m-d" data-date-format="Y-m-d">
+                                            placeholder="Y-m-d">
                                         <span class="invalid-feedback" role="alert">
                                             <strong>Date borrowed is required</strong>
                                         </span>
                                     </div>
                                     <div class="form-group">
                                         <label class="mb-1">Due Date <span class="text-danger">*</span></label>
-                                        <input type="text"
+                                        <input type="date"
                                             class="js-flatpickr font-size-sm form-control form-control-alt"
-                                            id="circulation_due_date" name="circulation_due_date" placeholder="Y-m-d"
-                                            data-date-format="Y-m-d">
+                                            id="circulation_due_date" name="circulation_due_date" placeholder="Y-m-d">
                                         <span class="invalid-feedback" role="alert">
                                             <strong>Due Date is required</strong>
                                         </span>
@@ -340,7 +338,7 @@
 @endsection
 
 @section('js_after')
-    <script src="{{ asset('js/plugins/select2/js/select2.full.min.js') }}"></script>
+    {{-- <script src="{{ asset('js/plugins/select2/js/select2.full.min.js') }}"></script>
     <script src="{{ asset('js/plugins/datatables/jquery.dataTables.min.js') }}"></script>
     <script src="{{ asset('js/plugins/datatables/dataTables.bootstrap4.min.js') }}"></script>
     <script src="{{ asset('js/plugins/datatables/buttons/dataTables.buttons.min.js') }}"></script>
@@ -363,7 +361,7 @@
                 'rangeslider'
             ]);
         });
-    </script>
+    </script> --}}
 
     <script>
         var jsonData = {!! json_encode($jsonData) !!};
@@ -430,7 +428,8 @@
                 var sutype = $('#borrower_utype').val();
                 if (select_borrower) {
                     console.log(select_borrower);
-                    window.location.href = `/view/borrowerdetail?id=${select_borrower}&utype=${sutype}`;
+                    window.location.href =
+                        `/library/view/borrowerdetail?id=${select_borrower}&utype=${sutype}`;
                 } else {
                     notify('error', 'No Borrower Selected!')
                 }
@@ -457,7 +456,7 @@
                             },
                             success: function(data) {
                                 notify(data[0].statusCode, data[0].message);
-                                circulations($('#select-status').val())
+                                circulations(action);
                             }
                         });
                     }
@@ -667,8 +666,11 @@
                         '{{ route('update.circulation') }}',
                     success: function(data) {
                         console.log(data);
+                        if (data[0].statusCode == 'success') {
+                            circulations(action);
+                            $('#modal-block-popin').modal('hide');
+                        }
                         notify(data[0].statusCode, data[0].message)
-                        circulations($('#select-status').val())
                     }
                 });
             });
@@ -685,7 +687,7 @@
         function onChangeStatus(value, text) {
             console.log(value);
             $('#dropdown-align-primary').text(text);
-            var newUrl = `/admin/circulation/${text.toLowerCase()}?action=${value}`;
+            var newUrl = `/library/admin/circulation/${text.toLowerCase()}?action=${value}`;
             console.log(newUrl)
 
             // Redirect to the new URL
@@ -886,7 +888,7 @@
                 data: {
                     action: str
                 },
-                url: '{{ route('books') }}',
+                url: '{{ route('lib.books') }}',
                 success: function(data) {
                     console.log(data);
                     $('#select-books').empty();
@@ -921,7 +923,7 @@
         }
 
         function load_circulation_datatable(data) {
-            console.log(data)
+            console.log('laoading_ciorculation...', data)
             var table = $('#DataTables_Table_1').DataTable({
                 autowidth: false,
                 destroy: true,

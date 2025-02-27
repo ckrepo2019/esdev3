@@ -49,13 +49,17 @@
                         </select>
                     </div>
                     <div class="col-md-2 d-block text-right">
-                        <label>&nbsp;</label><br/>
-                        <button type="button" class="btn btn-primary btn-block" id="generatebutton" disabled>Generate</button>
+                        {{-- <label>&nbsp;</label><br/>
+                        <button type="button" class="btn btn-warning btn-block" id="checktransaction">Check Transactions</button> --}}
                     </div>
                     <div class="col-md-2 d-block text-right">
                         <label>&nbsp;</label><br/>
-                        <button type="button" class="btn btn-warning btn-block" id="checktransaction">Check Transactions</button>
+                        <button type="button" class="btn btn-primary btn-block" id="generatebutton" disabled>Generate</button>
                     </div>
+                    {{-- <div class="col-md-2 d-block text-right">
+                        <label>&nbsp;</label><br/>
+                        <button type="button" class="btn btn-warning btn-block" id="checktransaction">Check Transactions</button>
+                    </div> --}}
                 </div>
             </div>
             {{-- <div class="card-footer">

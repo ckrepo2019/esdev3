@@ -97,11 +97,11 @@
               <div class="modal-body">
                  <div class="row">
                         <div class="col-md-2">
-                              {{-- <div class="row">
+                              <div class="row">
                                     <div class="col-md-12">
                                           <button class="btn btn-primary btn-sm btn-block download_ecr"><i class="fas fa-file-excel"></i> Download ECR</button>
                                     </div>
-                              </div> --}}
+                              </div>
                               <hr>
                               <div class="row mt-3" style=" font-size:14px !important" hidden>
                                     <div class="col-md-5">

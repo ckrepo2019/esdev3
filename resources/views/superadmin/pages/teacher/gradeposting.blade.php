@@ -349,6 +349,9 @@
                               <div class="row">
                                     <div class="col-md-4">
                                           <h5>Class Record</h5>
+                                    </div> 
+                                    <div class="col-md-2 " >
+                                          <button class="btn btn-warning btn-sm btn-block" style=" font-size:11px !important" id="pending_grade" disabled>Pending</button>
                                     </div>
                                     <div class="col-md-2">
                                           <button class="btn btn-primary btn-sm btn-block" style=" font-size:11px !important" id="approve_grade" disabled>Approve</button>
@@ -356,9 +359,7 @@
                                     <div class="col-md-2 for_p" hidden>
                                           <button class="btn btn-info btn-sm btn-block" style=" font-size:11px !important" id="post_grade" disabled>Post</button>
                                     </div>
-                                    <div class="col-md-2 " >
-                                          <button class="btn btn-warning btn-sm btn-block" style=" font-size:11px !important" id="pending_grade" disabled>Pending</button>
-                                    </div>
+                                   
                                     <div class="col-md-2 for_p" hidden>
                                           <button class="btn btn-danger btn-sm btn-block" style=" font-size:11px !important" id="unpost_grade" disabled>Unpost</button>
                                     </div>

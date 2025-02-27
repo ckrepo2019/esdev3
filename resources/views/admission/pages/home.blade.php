@@ -74,6 +74,7 @@
 
 @section('footerjavascript')
     <script>
+        $('body').addClass('sidebar-collapse')
         $(document).ready(function() {
             admissionGetAllResults()
         })
@@ -196,36 +197,36 @@
                         render: (data, type, row) =>
                             row.acadprog_id == 7 ?
                             `<span class="text-muted"> <strong> Not Applicable </strong> </span>
-                            <br> <span class="badge badge-secondary"> Technical Vocational </span>` : row
+                             <span class="badge badge-secondary"> Technical Vocational </span>` : row
                             .acadprog_id == 6 ?
-                            `<span> <strong> ${row.courseabrv} </strong> - ${row.courseDesc} </span>
-                            <br> <span class="badge badge-primary"> College </span>` : row
+                            `<span> ${row.courseabrv} </span>
+                             <span class="badge badge-primary"> College </span>` : row
                             .acadprog_id == 5 ?
-                            `<span> <strong> ${row.strandcode} </strong> - ${row.strandname} </span> <br> 
+                            `<span> <strong> ${row.strandcode} </strong> - ${row.strandname} </span>  
                             <span class="badge badge-danger" > SHS Strand </span>` : row.acadprog_id == 4 ?
                             `<span class="text-muted"> <strong> Not Applicable </strong> </span>
-                            <br> <span class="badge badge-secondary"> High School </span>` : row.acadprog_id == 3 ?
+                             <span class="badge badge-secondary"> High School </span>` : row.acadprog_id == 3 ?
                             `<span class="text-muted"> <strong> Not Applicable </strong> </span>
-                            <br> <span class="badge badge-secondary"> Elementary </span>` : row.acadprog_id == 2 ?
+                             <span class="badge badge-secondary"> Elementary </span>` : row.acadprog_id == 2 ?
                             `<span class="text-muted"> <strong> Not Applicable </strong> </span>
-                            <br> <span class="badge badge-secondary"> Pre-School </span>` :
+                             <span class="badge badge-secondary"> Pre-School </span>` :
                             `<span class="text-muted"> <strong> Not Applicable </strong> </span>`
                     },
                     {
                         data: 'fitted_course',
                         render: (data, type, row) =>
                             row.fitted_course_id ?
-                            `<span> <strong class="text-success"> ${row.fitted_courseAbrv} </strong> - ${row.fitted_courseDesc} </span>` :
+                            `<span> ${row.fitted_courseAbrv} </span>` :
                             `<span class="text-muted"> Not Specified </span>`
                     },
                     {
                         data: 'final_courseabrv',
                         render: (data, type, row) =>
                             row.final_courseabrv && row.acadprog_id == 6 ?
-                            `<span class="text-success font-weight-bold"> ${row.final_courseabrv} </span>` : row
-                            .final_strandcode && row.acadprog_id == 5 ?
-                            `<span class="text-success font-weight-bold"> ${row.final_strandcode} </span>` :
-                            '<span class="text-muted">Not Specified</span>'
+                            `<button type="button" class="btn btn-outline-success btn-sm" title="${row.final_courseDesc}">${row.final_courseabrv}</button>` :
+                            row.final_strandcode && row.acadprog_id == 5 ?
+                            `<button type="button" class="btn btn-outline-success btn-sm" title="${row.final_strandname}">${row.final_strandcode}</button>` :
+                            '<button type="button" class="btn btn-outline-secondary btn-sm" title="Not Specified">Not Specified</button>'
                     },
                     {
                         data: 'status',

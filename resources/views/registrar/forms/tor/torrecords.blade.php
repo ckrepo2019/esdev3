@@ -3,6 +3,10 @@
         border-radius: unset !important;
     }
 </style>
+@php
+  $sy = DB::table('sy')->orderBy('sydesc', 'desc')->get();
+  $semester = DB::table('semester')->orderBy('id', 'asc')->get();
+@endphp
 <div class="row">
     @if (strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'sbc')
         <div class="col-md-3 mb-2">
@@ -83,8 +87,8 @@
                 </div>
             </div>
         @else
-            <button type="button" class="btn btn-secondary btn-sm" id="btn-exporttopdf"><i class="fa fa-file-pdf"></i>
-                Export TOR to PDF</button>
+            {{-- <button type="button" class="btn btn-secondary btn-sm" id="btn-exporttopdf"><i class="fa fa-file-pdf"></i>
+                Export TOR to PDF</button> --}}
         @endif
 
     </div>
@@ -98,973 +102,31 @@
         $avatar = 'avatar/S(M) 1.png';
     }
 @endphp
+
 <div class="row">
+
     <div class="col-md-12">
         <div class="callout callout-info pt-0">
-            <div class="row pt-2">
-                <div class="col-md-3">
-                    @if ($getphoto)
-                        @if (file_exists(base_path() . '/public/' . $getphoto->picurl))
-                            <img src="{{ URL::asset($getphoto->picurl . '?random="' . \Carbon\Carbon::now('Asia/Manila')->isoFormat('MMDDYYHHmmss')) }}"
-                                style="width: 140px; height: 140px; margin: 0px;" draggable="false" id="image-view" />
-                        @else
-                            @if (file_exists(base_path() . '/public/' . $studentinfo->picurl))
-                                <img src="/{{ $studentinfo->picurl . '?random="' . \Carbon\Carbon::now('Asia/Manila')->isoFormat('MMDDYYHHmmss') }}"
-                                    style="width: 140px; height: 140px; margin: 0px;" draggable="false"
-                                    id="image-view" />
-                            @else
-                                <img src="{{ asset($avatar) }}" alt="student"
-                                    style="width: 140px; height: 140px; margin: 0px;" draggable="false"
-                                    id="image-view">
-                            @endif
-                        @endif
-                    @else
-                        @if (file_exists(base_path() . '/public/' . $studentinfo->picurl))
-                            <img src="/{{ $studentinfo->picurl . '?random="' . \Carbon\Carbon::now('Asia/Manila')->isoFormat('MMDDYYHHmmss') }}"
-                                style="width: 140px; height: 140px; margin: 0px;" draggable="false"
-                                id="image-view" />
-                        @else
-                            <img src="{{ asset($avatar) }}" alt="student"
-                                style="width: 140px; height: 140px; margin: 0px;" draggable="false" id="image-view">
-                        @endif
-                    @endif
-                </div>
-
-                @if (strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'hccsi')
-                    <div class="col-md-9 align-self-end">
-                        <div id="img-preview"></div>
-
-                        <div class="form-group">
-                            <label>Upload Photo</label>
-                            <div class="input-group" data-target-input="nearest">
-                                <input type="file" class="form-control" placeholder="Upload photo"
-                                    accept="image/png, image/jpeg" id="input-upload-photo" />
-                                <div class="input-group-append">
-                                    <button class="btn btn-success upload-result">Upload Image</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                @else
-                    <div class="col-md-9 text-right">
-                        <h2>{{ $studentinfo->lastname }}, {{ $studentinfo->firstname }} {{ $studentinfo->suffix }}
-                            {{ $studentinfo->middlename }}</h2>
-                        <h4>Student ID No. : {{ $studentinfo->sid }}</h4>
-                    </div>
-                @endif
-
-            </div>
-            {{-- <div class="row p-0"> --}}
-            {{-- <div class="col-md-6 p-0"><h4>Details</h4></div> --}}
-            {{-- <div class="col-md-6 text-right">
-                    <button type="button" class="btn btn-default btn-sm" id="btn-details-save"><i class="fa fa-share"></i> Save Changes</button>
-                </div> --}}
-            {{-- </div> --}}
-            @if (strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'ndsc')
-                <div class="row p-0" style="font-size: 13px !important;">
-                    <div class="col-md-2 p-0" style="vertical-align: bottom;">
-                        <label class="m-0">Address</label>
-                    </div>
-                    <div class="col-md-4 p-0">
-                        <input type="text" class="form-control form-control-sm m-0"
-                            value="{{ $details->address }}" id="input-address"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                    <div class="col-md-2 p-0" style="vertical-align: bottom;">
-                        <label class="m-0">Date Admitted</label>
-                    </div>
-                    <div class="col-md-4 p-0">
-                        <input type="text" class="form-control form-control-sm m-0"
-                            value="{{ $details->admissiondatestr }}" id="input-dateadmitted"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                </div>
-                <div class="row p-0" style="font-size: 13px !important;">
-                    <div class="col-md-2 p-0">
-                        <label class="m-0">College of</label>
-                    </div>
-                    <div class="col-md-4 p-0">
-                        <input type="text" class="form-control form-control-sm" value="{{ $details->collegeof }}"
-                            id="input-collegeof" style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                    <div class="col-md-2 p-0" style="vertical-align: bottom;">
-                        <label class="m-0">Entrance Data</label>
-                    </div>
-                    <div class="col-md-4 p-0">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->entrancedata }}" id="input-entrancedata"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                </div>
-                <div class="row p-0 mt-2" style="font-size: 13px !important;">
-                    <div class="col-md-4 p-0" style="vertical-align: bottom;">
-                        <label class="m-0">Intermediate Grades Completed At/Year:</label>
-                    </div>
-                    <div class="col-md-8 p-0">
-                        <input type="text" class="form-control form-control-sm m-0"
-                            value="{{ $details->intermediategrades }}" id="input-intermediategrades"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                </div>
-                <div class="row p-0" style="font-size: 13px !important;">
-                    <div class="col-md-4 p-0" style="vertical-align: bottom;">
-                        <label class="m-0">Secondary Grades Completed At/Year:</label>
-                    </div>
-                    <div class="col-md-8 p-0">
-                        <input type="text" class="form-control form-control-sm m-0"
-                            value="{{ $details->secondarygrades }}" id="input-secondarygrades"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                </div>
-                <div class="row p-0">
-                    <div class="col-md-12 p-0">
-                        <table class="m-0" style="width: 100%; font-size: 12px !important; table-layout: fixed;">
-                            <tr>
-                                <td style="width: 10%;vertical-align: bottom;">Remarks:</td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm"
-                                        value="{{ $details->remarks }}" id="input-remarks"
-                                        style="border: none; border-bottom: 1px solid #ddd;" />
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-            @elseif(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'gbbc')
-                <div class="row p-0" style="font-size: 11.5px !important;">
-                    <div class="col-md-2 p-0">
-                        <label>Parent or Guardian</label>
-                    </div>
-                    <div class="col-md-4 p-0">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->parentguardian }}" id="input-parentguardian"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                    <div class="col-md-2 p-0">
-                        <label>Address</label>
-                    </div>
-                    <div class="col-md-4 p-0">
-                        <input type="text" class="form-control form-control-sm" value="{{ $details->address }}"
-                            id="input-address" style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                </div>
-                <div class="row p-0">
-                    <div class="col-md-12 p-0">
-                        <table class="m-0" style="width: 100%; font-size: 11.5px !important; table-layout: fixed;">
-                            <tr>
-                                <td style="width: 15%; vertical-align: bottom;" class="p-0">Elementary Course</td>
-                                <td style="width: 20%; vertical-align: bottom;" class="p-0">
-                                    <input type="text" class="form-control form-control-sm"
-                                        value="{{ $details->elemcourse }}" id="input-elemcourse"
-                                        style="border: none; border-bottom: 1px solid #ddd;" />
-                                </td>
-                                <td style="width: 15%; vertical-align: bottom;" class="p-0 text-right">Date Completed
-                                </td>
-                                <td class="p-0" style=" vertical-align: bottom;">
-                                    <input type="date" class="form-control form-control-sm"
-                                        value="{{ $details->elemdatecomp }}" id="input-elemdatecomp"
-                                        style="border: none; border-bottom: 1px solid #ddd;" />
-                                </td>
-                                <td style="width: 10%; vertical-align: bottom;" class="p-0 text-right">School Year
-                                </td>
-                                <td class="p-0" style=" vertical-align: bottom;">
-                                    <input type="text" class="form-control form-control-sm"
-                                        value="{{ $details->elemsy }}" id="input-elemschoolyear"
-                                        style="border: none; border-bottom: 1px solid #ddd;" />
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-                <div class="row p-0">
-                    <div class="col-md-12 p-0">
-                        <table class="m-0" style="width: 100%; font-size: 11.5px !important; table-layout: fixed;">
-                            <tr>
-                                <td style="width: 15%; vertical-align: bottom;" class="p-0">Secondary Course</td>
-                                <td style="width: 20%; vertical-align: bottom;" class="p-0">
-                                    <input type="text" class="form-control form-control-sm"
-                                        value="{{ $details->secondcourse }}" id="input-secondcourse"
-                                        style="border: none; border-bottom: 1px solid #ddd;" />
-                                </td>
-                                <td style="width: 15%; vertical-align: bottom;" class="p-0 text-right">Date Completed
-                                </td>
-                                <td class="p-0" style=" vertical-align: bottom;">
-                                    <input type="date" class="form-control form-control-sm"
-                                        value="{{ $details->seconddatecomp }}" id="input-seconddatecomp"
-                                        style="border: none; border-bottom: 1px solid #ddd;" />
-                                </td>
-                                <td style="width: 10%; vertical-align: bottom;" class="p-0 text-right">School Year
-                                </td>
-                                <td class="p-0" style=" vertical-align: bottom;">
-                                    <input type="text" class="form-control form-control-sm"
-                                        value="{{ $details->secondsy }}" id="input-secondschoolyear"
-                                        style="border: none; border-bottom: 1px solid #ddd;" />
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-                <div class="row p-0">
-                    <div class="col-md-12 p-0">
-                        <table class="m-0" style="width: 100%; font-size: 11.5px !important; table-layout: fixed;">
-                            <tr>
-                                <td style="width: 15%; vertical-align: bottom;" class="p-0">Collegiate Course</td>
-                                <td style="width: 20%; vertical-align: bottom;" class="p-0">
-                                    <input type="text" class="form-control form-control-sm"
-                                        value="{{ $details->degree != null ? $details->degree : $coursename ?? '' }}"
-                                        id="input-degree" style="border: none; border-bottom: 1px solid #ddd;" />
-                                </td>
-                                <td style="width: 15%; vertical-align: bottom;" class="p-0 text-right">Major</td>
-                                <td class="p-0" style=" vertical-align: bottom;">
-                                    <input type="text" class="form-control form-control-sm"
-                                        value="{{ $details->major != null ? $details->major : $major ?? '' }}"
-                                        id="input-major" style="border: none; border-bottom: 1px solid #ddd;" />
-                                </td>
-                                <td style="width: 10%; vertical-align: bottom;" class="p-0 text-right">School Year
-                                </td>
-                                <td class="p-0" style=" vertical-align: bottom;">
-                                    <input type="text" class="form-control form-control-sm"
-                                        value="{{ $details->thirdsy }}" id="input-thirdschoolyear"
-                                        style="border: none; border-bottom: 1px solid #ddd;" />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td></td>
-                                <td>Admission Date</td>
-                                <td class="p-0" style=" vertical-align: bottom;">
-                                    <input type="date" class="form-control form-control-sm"
-                                        value="{{ $details->admissiondate }}" id="input-admissiondate"
-                                        style="border: none; border-bottom: 1px solid #ddd;" />
-                                </td>
-                                <td>Basis of Admission</td>
-                                <td class="p-0" style=" vertical-align: bottom;" colspan="2">
-                                    <input type="date" class="form-control form-control-sm"
-                                        value="{{ $details->basisofadmission }}" id="input-basisofadmission"
-                                        style="border: none; border-bottom: 1px solid #ddd;" />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td></td>
-                                <td>Special Order</td>
-                                <td class="p-0" style=" vertical-align: bottom;">
-                                    <input type="text" class="form-control form-control-sm"
-                                        value="{{ $details->specialorder }}" id="input-specialorder"
-                                        style="border: none; border-bottom: 1px solid #ddd;" />
-                                </td>
-                                <td>Graduation Date</td>
-                                <td class="p-0" style=" vertical-align: bottom;" colspan="2">
-                                    <input type="date" class="form-control form-control-sm"
-                                        value="{{ $details->graduationdate }}" id="input-graduationdate"
-                                        style="border: none; border-bottom: 1px solid #ddd;" />
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-                <div class="row p-0">
-                    <div class="col-md-12 p-0">
-                        <table class="m-0" style="width: 100%; font-size: 12px !important; table-layout: fixed;">
-                            <tr>
-                                <td style="width: 10%;vertical-align: bottom;">Remarks:</td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm"
-                                        value="{{ $details->remarks }}" id="input-remarks"
-                                        style="border: none; border-bottom: 1px solid #ddd;" />
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-            @elseif(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'sbc')
-                <div class="row p-0" style="font-size: 13px !important;">
-                    <div class="col-md-2 p-0">
-                        <label>Parent or Guardian</label>
-                    </div>
-                    <div class="col-md-10 p-0">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->parentguardian }}" id="input-parentguardian"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                    <div class="col-md-2 p-0">
-                        <label>Address</label>
-                    </div>
-                    <div class="col-md-10 p-0">
-                        <input type="text" class="form-control form-control-sm" value="{{ $details->address }}"
-                            id="input-address" style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                    <div class="col-md-2 p-0">
-                        <label>Mailing Address</label>
-                    </div>
-                    <div class="col-md-4 p-0">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->mailingaddress ?? '' }}" id="input-mailingaddress"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                    <div class="col-md-2 p-0">
-                        <label>Place of birth</label>
-                    </div>
-                    <div class="col-md-4 p-0">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $studentinfo->pob != null ? $studentinfo->pob : $details->pob }}"
-                            id="input-placeofbirth" style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                </div>
-                <div class="row p-0">
-                    <div class="col-md-12 p-0">
-                        <table class="m-0" style="width: 100%; font-size: 13px !important; table-layout: fixed;">
-                            <tr>
-                                <td style="width: 15%; vertical-align: bottom;" class="p-0">Elementary Course
-                                    Completed</td>
-                                <td style="width: 40%; vertical-align: bottom;" class="p-0">
-                                    <input type="text" class="form-control form-control-sm"
-                                        value="{{ $details->elemcourse }}" id="input-elemcourse"
-                                        style="border: none; border-bottom: 1px solid #ddd;" />
-                                </td>
-                                <td style="width: 10%; vertical-align: bottom;" class="p-0 text-right">School Year
-                                </td>
-                                <td class="p-0" style=" vertical-align: bottom;">
-                                    <input type="text" class="form-control form-control-sm"
-                                        value="{{ $details->elemsy }}" id="input-elemschoolyear"
-                                        style="border: none; border-bottom: 1px solid #ddd;" />
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-                <div class="row p-0">
-                    <div class="col-md-12 p-0">
-                        <table class="m-0" style="width: 100%; font-size: 13px !important; table-layout: fixed;">
-                            <tr>
-                                <td style="width: 15%; vertical-align: bottom;" class="p-0">Secondary Course
-                                    Completed</td>
-                                <td style="width: 40%; vertical-align: bottom;" class="p-0">
-                                    <input type="text" class="form-control form-control-sm"
-                                        value="{{ $details->secondcourse }}" id="input-secondcourse"
-                                        style="border: none; border-bottom: 1px solid #ddd;" />
-                                </td>
-                                <td style="width: 10%; vertical-align: bottom;" class="p-0 text-right">School Year
-                                </td>
-                                <td class="p-0" style=" vertical-align: bottom;">
-                                    <input type="text" class="form-control form-control-sm"
-                                        value="{{ $details->secondsy }}" id="input-secondschoolyear"
-                                        style="border: none; border-bottom: 1px solid #ddd;" />
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-                <div class="row p-0">
-                    <div class="col-md-12 p-0">
-                        <table class="m-0" style="width: 100%; font-size: 13px !important; table-layout: fixed;">
-                            <tr>
-                                <td style="width: 15%; vertical-align: bottom;" class="p-0">Degree</td>
-                                <td style="width: 40%; vertical-align: bottom;" class="p-0">
-                                    <input type="text" class="form-control form-control-sm"
-                                        value="{{ $details->degree != null ? $details->degree : $coursename ?? '' }}"
-                                        id="input-degree" style="border: none; border-bottom: 1px solid #ddd;" />
-                                </td>
-                                <td style="width: 15%; vertical-align: bottom;" class="p-0 text-right">Major</td>
-                                <td class="p-0" style=" vertical-align: bottom;">
-                                    <input type="text" class="form-control form-control-sm"
-                                        value="{{ $details->major != null ? $details->major : $major ?? '' }}"
-                                        id="input-major" style="border: none; border-bottom: 1px solid #ddd;" />
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-                <div class="row p-0">
-                    <div class="col-md-12 p-0">
-                        <table class="m-0" style="width: 100%; font-size: 13px !important; table-layout: fixed;">
-                            <tr>
-                                <td style="width: 10%;vertical-align: bottom;">Remarks:</td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm"
-                                        value="{{ $details->remarks }}" id="input-remarks"
-                                        style="border: none; border-bottom: 1px solid #ddd;" />
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-            @elseif(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'hccsi')
-                <div class="row" style="font-size: 13px;">
-                    <div class="col-md-2">Date of Birth:</div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control form-control-sm" value="{{ $details->dob }}"
-                            style="border: none; border-bottom: 1px solid #ddd;" disabled />
-                    </div>
-                    <div class="col-md-2">Sex:</div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control form-control-sm" value="{{ $details->gender }}"
-                            style="border: none; border-bottom: 1px solid #ddd;" disabled />
-                    </div>
-                </div>
-                <div class="row" style="font-size: 13px;">
-                    <div class="col-md-2">Place of Birth:</div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $studentinfo->pob != null ? $studentinfo->pob : $details->pob }}"
-                            id="input-placeofbirth" style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                    <div class="col-md-2">ACR No. (If Alien):</div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control form-control-sm" value="{{ $details->acrno }}"
-                            id="input-acrno" style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                </div>
-                <div class="row" style="font-size: 13px;">
-                    <div class="col-md-2">Citizenship:</div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->citizenship }}" id="input-citizenship"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                    <div class="col-md-2">Civil Status:</div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->civilstatus }}" id="input-civilstatus"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                </div>
-                <div class="row" style="font-size: 13px;">
-                    <div class="col-md-2">Name of Father:</div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->fathername }}"
-                            style="border: none; border-bottom: 1px solid #ddd;"disabled />
-                    </div>
-                    <div class="col-md-2">Name of Mother:</div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->mothername }}"
-                            style="border: none; border-bottom: 1px solid #ddd;"disabled />
-                    </div>
-                </div>
-                <div class="row" style="font-size: 13px;">
-                    <div class="col-md-2">Parents' Address:</div>
-                    <div class="col-md-10">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->parentaddress }}" id="input-parentaddress"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                </div>
-                <div class="row" style="font-size: 13px;">
-                    <div class="col-md-2">Name of Guardian:</div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->parentguardian }}" id="input-parentguardian"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                    <div class="col-md-3">Guardian's Address:</div>
-                    <div class="col-md-3">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->guardianaddress }}" id="input-guardianaddress"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                </div>
-                <div class="row" style="font-size: 13px;">
-                    <div class="col-md-4">Elementary Course Completed at:</div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->elemcourse }}" id="input-elemcourse"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                    <div class="col-md-2">Year:</div>
-                    <div class="col-md-2">
-                        <input type="text" class="form-control form-control-sm" value="{{ $details->elemsy }}"
-                            id="input-elemschoolyear" style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                </div>
-                {{-- <div class="row" style="font-size: 13px;">
-                    <div class="col-md-4">Intermediate Course Completed at:</div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control form-control-sm" value="{{$details->intermediatecourse}}" id="input-intermediatecourse" style="border: none; border-bottom: 1px solid #ddd;"/>
-                    </div>
-                    <div class="col-md-2">Year:</div>
-                    <div class="col-md-2">
-                        <input type="text" class="form-control form-control-sm" value="{{$details->intermediatesy}}" id="input-intermediateschoolyear" style="border: none; border-bottom: 1px solid #ddd;"/>
-                    </div>
-                </div> --}}
-                <div class="row" style="font-size: 13px;">
-                    <div class="col-md-4">Secondary Course Completed at:</div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->secondcourse }}" id="input-secondcourse"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                    <div class="col-md-2">Year:</div>
-                    <div class="col-md-2">
-                        <input type="text" class="form-control form-control-sm" value="{{ $details->secondsy }}"
-                            id="input-secondschoolyear" style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                </div>
-                <div class="row" style="font-size: 13px;">
-                    <div class="col-md-3">Basis of Admission:</div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->basisofadmission }}" id="input-basisofadmission"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                    <div class="col-md-2">Date of Admission:</div>
-                    <div class="col-md-3">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->admissiondatestr }}" id="input-dateadmitted"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                </div>
-                <div class="row" style="font-size: 13px;">
-                    <div class="col-md-2">Degree/Course:</div>
-                    <div class="col-md-10">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->degree != null ? $details->degree : $coursename ?? '' }}"
-                            id="input-degree" style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                </div>
-            @elseif(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'ccsa')
-                <div class="row">
-                    <div class="col-md-12">
-                        <table style="width: 100%; tablea-layout: fixed; font-size: 14px;">
-                            <tr>
-                                <td>Date of Birth:</td>
-                                <td></td>
-                                <td>Place of Birth:</td>
-                                <td></td>
-                                <td>Sex:</td>
-                                <td></td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-                <div class="row" style="font-size: 13px;">
-                    <div class="col-md-2">Date of Birth:</div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control form-control-sm" value="{{ $details->dob }}"
-                            style="border: none; border-bottom: 1px solid #ddd;" disabled />
-                    </div>
-                    <div class="col-md-2">Sex:</div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control form-control-sm" value="{{ $details->gender }}"
-                            style="border: none; border-bottom: 1px solid #ddd;" disabled />
-                    </div>
-                </div>
-                <div class="row" style="font-size: 13px;">
-                    <div class="col-md-2">Place of Birth:</div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $studentinfo->pob != null ? $studentinfo->pob : $details->pob }}"
-                            id="input-placeofbirth" style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                    <div class="col-md-2">ACR No. (If Alien):</div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control form-control-sm" value="{{ $details->acrno }}"
-                            id="input-acrno" style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                </div>
-                <div class="row" style="font-size: 13px;">
-                    <div class="col-md-2">Citizenship:</div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->citizenship }}" id="input-citizenship"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                    <div class="col-md-2">Civil Status:</div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->civilstatus }}" id="input-civilstatus"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                </div>
-                <div class="row" style="font-size: 13px;">
-                    <div class="col-md-2">Name of Father:</div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->fathername }}"
-                            style="border: none; border-bottom: 1px solid #ddd;"disabled />
-                    </div>
-                    <div class="col-md-2">Name of Mother:</div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->mothername }}"
-                            style="border: none; border-bottom: 1px solid #ddd;"disabled />
-                    </div>
-                </div>
-                <div class="row" style="font-size: 13px;">
-                    <div class="col-md-2">Parents' Address:</div>
-                    <div class="col-md-10">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->parentaddress }}" id="input-parentaddress"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                </div>
-                <div class="row" style="font-size: 13px;">
-                    <div class="col-md-2">Name of Guardian:</div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->parentguardian }}" id="input-parentguardian"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                    <div class="col-md-3">Guardian's Address:</div>
-                    <div class="col-md-3">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->guardianaddress }}" id="input-guardianaddress"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                </div>
-                <div class="row" style="font-size: 13px;">
-                    <div class="col-md-4">Elementary Course Completed at:</div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->elemcourse }}" id="input-elemcourse"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                    <div class="col-md-2">Year:</div>
-                    <div class="col-md-2">
-                        <input type="text" class="form-control form-control-sm" value="{{ $details->elemsy }}"
-                            id="input-elemschoolyear" style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                </div>
-                <div class="row" style="font-size: 13px;">
-                    <div class="col-md-4">Intermediate Course Completed at:</div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->intermediatecourse }}" id="input-intermediatecourse"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                    <div class="col-md-2">Year:</div>
-                    <div class="col-md-2">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->intermediatesy }}" id="input-intermediateschoolyear"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                </div>
-                <div class="row" style="font-size: 13px;">
-                    <div class="col-md-4">Secondary Course Completed at:</div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->secondcourse }}" id="input-secondcourse"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                    <div class="col-md-2">Year:</div>
-                    <div class="col-md-2">
-                        <input type="text" class="form-control form-control-sm" value="{{ $details->secondsy }}"
-                            id="input-secondschoolyear" style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                </div>
-                <div class="row" style="font-size: 13px;">
-                    <div class="col-md-3">Basis of Admission:</div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->basisofadmission }}" id="input-basisofadmission"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                    <div class="col-md-2">Date of Admission:</div>
-                    <div class="col-md-3">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->admissiondatestr }}" id="input-dateadmitted"
-                            style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                </div>
-                <div class="row" style="font-size: 13px;">
-                    <div class="col-md-2">Degree/Course:</div>
-                    <div class="col-md-10">
-                        <input type="text" class="form-control form-control-sm"
-                            value="{{ $details->degree != null ? $details->degree : $coursename ?? '' }}"
-                            id="input-degree" style="border: none; border-bottom: 1px solid #ddd;" />
-                    </div>
-                </div>
-            @elseif(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'mci')
-                <div class="row p-0" style="font-size: 13px !important;">
-                    <div class="col-md-12">
-                        <table style="width: 100%;">
-                            <thead>
-                                <tr>
-                                    <th colspan="4" class="text-center">RECORDS OF PRELIMINARY GRADUATION</th>
-                                </tr>
-                            </thead>
-                            <tr>
-                                <td style="width: 20% !important;">Primary Grades Completed</td>
-                                <td><input type="text" class="form-control form-control-sm"
-                                        value="{{ $details->primaryschoolname ?? '' }}"
-                                        style="border-bottom: 1px solid #ddd;" id="input-schoolname-primary" /></td>
-                                <td style="width: 10% !important;" class="text-right">SY&nbsp;&nbsp;&nbsp;</td>
-                                <td style="width: 15%;"><input type="text" class="form-control form-control-sm"
-                                        value="{{ $details->primaryschoolyear ?? '' }}"
-                                        id="input-schoolyear-primary" /></td>
-                            </tr>
-                            <tr>
-                                <td>Intermediate Grades Completed</td>
-                                <td><input type="text" class="form-control form-control-sm"
-                                        value="{{ $details->intermediatecourse }}" id="input-intermediatecourse"
-                                        style="border-bottom: 1px solid #ddd;" /></td>
-                                <td style="width: 10% !important;" class="text-right">SY&nbsp;&nbsp;&nbsp;</td>
-                                <td><input type="text" class="form-control form-control-sm"
-                                        value="{{ $details->intermediatesy }}" id="input-intermediateschoolyear"
-                                        style="border-bottom: 1px solid #ddd;" /></td>
-                            </tr>
-                            <tr>
-                                <td>Secondary Course Completed</td>
-                                <td><input type="text" class="form-control form-control-sm"
-                                        value="{{ $details->secondcourse }}" id="input-secondcourse"
-                                        style="border-bottom: 1px solid #ddd;" /></td>
-                                <td style="width: 10% !important;" class="text-right">SY&nbsp;&nbsp;&nbsp;</td>
-                                <td><input type="text" class="form-control form-control-sm"
-                                        value="{{ $details->secondsy }}" id="input-secondschoolyear"
-                                        style="border-bottom: 1px solid #ddd;" /></td>
-                            </tr>
-                        </table>
-                    </div>
-                    <div class="col-md-12 mt-5">
-                        <table style="width: 100%;">
-                            <tr>
-                                <td style="width: 15% !important;">TITLE OF DEGREE</td>
-                                <td><input type="text" class="form-control form-control-sm"
-                                        value="{{ $details->degree != null ? $details->degree : $coursename ?? '' }}"
-                                        id="input-degree" style="border-bottom: 1px solid #ddd;" /></td>
-                                <td style="width: 20% !important;" class="text-right">DATE OF
-                                    GRADUATION&nbsp;&nbsp;&nbsp;</td>
-                                <td style="width: 15%;"><input type="date" class="form-control form-control-sm"
-                                        value="{{ $details->graduationdate }}" id="input-graduationdate" /></td>
-                            </tr>
-                            <tr>
-                                <td>MAJOR</td>
-                                <td><input type="text" class="form-control form-control-sm"
-                                        value="{{ $details->major != null ? $details->major : $major ?? '' }}"
-                                        id="input-major" style="border-bottom: 1px solid #ddd;" /></td>
-                                <td style="width: 10% !important;" class="text-right">MINOR&nbsp;&nbsp;&nbsp;</td>
-                                <td><input type="text" class="form-control form-control-sm"
-                                        value="{{ $details->minor ?? '' }}" id="input-minor"
-                                        style="border-bottom: 1px solid #ddd;" /></td>
-                            </tr>
-                            <tr>
-                                <td>Remarks</td>
-                                <td colspan="3"><input type="text" class="form-control form-control-sm"
-                                        value="{{ $details->remarks }}" id="input-remarks"
-                                        style="border-bottom: 1px solid #ddd;" /></td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-            @elseif(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'dcc')
-                <table style="width: 100%;">
-                    <tr>
-                        <td style="width: 25%;">Degree:</td>
-                        <td colspan="2" style="width: 70%;"><input type="text"
-                                class="form-control form-control-sm"
-                                value="{{ $details->degree != null ? $details->degree : $coursename ?? '' }}"
-                                id="input-degree" style="border: 1px solid #ddd;" /></td>
-                    </tr>
-                    <tr>
-                        <td>Date Awarded:</td>
-                        <td><input type="date" class="form-control form-control-sm"
-                                value="{{ $details->graduationdate }}" id="input-graduationdate"
-                                style="border: 1px solid #ddd;" /></td>
-                        <td style="width: 20% !important;"></td>
-                    </tr>
-                    <tr>
-                        <td>Other Records of Graduation:</td>
-                        <td colspan="2"><input type="text" class="form-control form-control-sm"
-                                value="{{ $details->otherrecords ?? '' }}" id="input-otherrecords"
-                                style="border: 1px solid #ddd;" /></td>
-                    </tr>
-                    <tr>
-                        <td>Intermediate:</td>
-                        <td><input type="text" class="form-control form-control-sm"
-                                value="{{ $details->intermediatecourse }}" id="input-intermediatecourse"
-                                style="border: 1px solid #ddd;" /></td>
-                        <td><input type="text" class="form-control form-control-sm" placeholder="School Year"
-                                value="{{ $details->intermediatesy }}" id="input-intermediateschoolyear"
-                                style="border: 1px solid #ddd;" /></td>
-                    </tr>
-                    <tr>
-                        <td>Junior HS:</td>
-                        <td><input type="text" class="form-control form-control-sm"
-                                value="{{ $details->juniorschoolname ?? '' }}" id="input-schoolname-junior" /></td>
-                        <td><input type="text" class="form-control form-control-sm" placeholder="School Year"
-                                value="{{ $details->juniorschoolyear ?? '' }}" id="input-schoolyear-junior" /></td>
-                    </tr>
-                    <tr>
-                        <td>Senior HS:</td>
-                        <td><input type="text" class="form-control form-control-sm"
-                                value="{{ $details->seniorschoolname ?? '' }}" id="input-schoolname-senior" /></td>
-                        <td><input type="text" class="form-control form-control-sm" placeholder="School Year"
-                                value="{{ $details->seniorschoolyear ?? '' }}" id="input-schoolyear-senior" /></td>
-                    </tr>
-                    <tr>
-                        <td>Basis of Admission:</td>
-                        <td colspan="2"><input type="date" class="form-control form-control-sm"
-                                value="{{ $details->basisofadmission }}" id="input-basisofadmission"
-                                style="border: 1px solid #ddd;" /></td>
-                    </tr>
-                    <tr>
-                        <td>NSTP Serial No.:</td>
-                        <td colspan="2"><input type="text" class="form-control form-control-sm"
-                                value="{{ $details->nstpserialno ?? '' }}" id="input-nstpserialno"
-                                style="border: 1px solid #ddd;" /></td>
-                    </tr>
-                    <tr>
-                        <td>Remarks:</td>
-                        <td colspan="2"> <input type="text" class="form-control form-control-sm"
-                                value="{{ $details->remarks }}" id="input-remarks"
-                                style="bborder-bottom: 1px solid #ddd;" /></td>
-                    </tr>
-
-                </table>
-            @elseif(strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'pcc')
-                <div class="row p-0" style="font-size: 13px !important;">
-
-                    <div class="col-md-12">
-                        <table style="width: 100%; table-layout: fixed;">
-                            <tr>
-                                <td>Date of Admission <span class="float-right">:</span></td>
-                                <td colspan="2"> <input type="date" style="width: 100%;"
-                                        value="{{ $details->admissiondate }}" id="input-admissiondate"
-                                        style="border: none; border-bottom: 1px solid #ddd;" /></td>
-                                <td>Admission Credential <span class="float-right">:</span></td>
-                                <td colspan="2"><input type="text" style="width: 100%;"
-                                        value="{{ $details->entrancedata ?? '' }}" id="input-entrancedata" /></td>
-                            </tr>
-                            <tr>
-                                <td style="width: 12%;">Home Address <span class="float-right">:</span></td>
-                                <td colspan="5">{{ $studentinfo->street }}, {{ $studentinfo->barangay }},
-                                    {{ $studentinfo->city }}, {{ $studentinfo->province }}</td>
-                            </tr>
-                            {{-- <tr>
-                                <td style="width: 12%;">Birth Place</td>
-                                <td>: {{$studentinfo->pob ?? ''}}</td>
-                                <td style="width: 12%;">Citizenship</td>
-                                <td>:  <input type="text" style="width: 90%;" value="{{$details->citizenship ?? ''}}" id="input-citizenship"/></td>
-                                <td style="width: 12%;">Entrance Data</td>
-                                <td>: <input type="text" style="width: 90%;" value="{{$details->entrancedata ?? ''}}" id="input-entrancedata"/></td>
-                            </tr> --}}
-                            <tr>
-                                <td style="width: 12%;">Place of Birth <span class="float-right">:</span></td>
-                                <td colspan="2">{{ $studentinfo->pob ?? '' }}</td>
-                                <td style="width: 12%;">Civil Status <span class="float-right">:</span></td>
-                                <td colspan="2"><input type="text" style="width: 100%;"
-                                        value="{{ $details->civilstatus ?? '' }}" id="input-civilstatus" /></td>
-                            </tr>
-                            <tr>
-                                <td style="width: 12%;">City Address <span class="float-right">:</span></td>
-                                <td colspan="5"> <input type="text" style="width: 100%;"
-                                        value="{{ $details->entrancedata ?? '' }}" id="input-entrancedata" /></td>
-                            </tr>
-                            <tr>
-                                <td style="width: 12%;">Citizenship <span class="float-right">:</span></td>
-                                <td colspan="2"><input type="text" style="width: 100%;"
-                                        value="{{ $details->citizenship ?? '' }}" id="input-citizenship" /></td>
-                                <td style="width: 12%;">Religion <span class="float-right">:</span></td>
-                                <td colspan="2">{{ $studentinfo->religionanme ?? '' }}</td>
-                            </tr>
-                            <tr>
-                                <td style="width: 12%;">Degree <span class="float-right">:</span></td>
-                                <td colspan="5"><input type="text" style="width: 100%;"
-                                        value="{{ $details->degree != null ? $details->degree : $coursename ?? '' }}"
-                                        id="input-degree" style="border: none; border-bottom: 1px solid #ddd;" />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="width: 12%;">Father’s Name <span class="float-right">:</span></td>
-                                <td colspan="2">{{ $studentinfo->fathername ?? '' }}</td>
-                                <td style="width: 12%;">Mother’s Name <span class="float-right">:</span></td>
-                                <td colspan="2">{{ $studentinfo->mothername ?? '' }}</td>
-                            </tr>
-                            <tr>
-                                <td style="width: 12%;">Major <span class="float-right">:</span></td>
-                                <td colspan="2">
-                                    <input type="text" style="width: 100%;"
-                                        value="{{ $details->major != null ? $details->major : $major ?? '' }}"
-                                        id="input-major" style="border: none; border-bottom: 1px solid #ddd;" />
-                                </td>
-                                <td style="width: 12%;">Date Conferred <span class="float-right">:</span></td>
-                                <td colspan="2"><input type="text" style="width: 100%;"
-                                        value="{{ $details->dateconferred ?? '' }}" id="input-dateconferred"
-                                        style="border: none; border-bottom: 1px solid #ddd;" />
-                                </td>
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                    <div class="col-md-12 text-center">
-                        <h6 class="text-bold">RECORDS OF PRELIMINARY EDUCATION</h6>
-                    </div>
-                    <div class="col-md-12">
-                        <table class="" style="table-layout: fixed; width: 100%;" border="1">
-                            <thead>
-                                <tr>
-                                    <th style="width: 15%;"></th>
-                                    <th>Name of School</th>
-                                    <th>Address</th>
-                                    <th style="width: 15%;">School Year</th>
-                                </tr>
-                            </thead>
-                            <tr>
-                                <td>Primary</td>
-                                <td><input type="text" style="width: 100%;"
-                                        value="{{ $details->primaryschoolname ?? '' }}"
-                                        id="input-schoolname-primary" /></td>
-                                <td><input type="text" style="width: 100%;"
-                                        value="{{ $details->primaryschooladdress ?? '' }}"
-                                        id="input-schooladdress-primary" /></td>
-                                <td><input type="text" style="width: 100%;"
-                                        value="{{ $details->primaryschoolyear ?? '' }}"
-                                        id="input-schoolyear-primary" /></td>
-                            </tr>
-                            <tr>
-                                <td>Intermediate</td>
-                                <td><input type="text" style="width: 100%;"
-                                        value="{{ $details->intermediateschoolname ?? '' }}"
-                                        id="input-schoolname-intermediate" /></td>
-                                <td><input type="text" style="width: 100%;"
-                                        value="{{ $details->intermediateschooladdress ?? '' }}"
-                                        id="input-schooladdress-intermediate" /></td>
-                                <td><input type="text" style="width: 100%;"
-                                        value="{{ $details->intermediatesy ?? '' }}"
-                                        id="input-intermediateschoolyear" /></td>
-                            </tr>
-                            <tr>
-                                <td>High School</td>
-                                <td><input type="text" style="width: 100%;"
-                                        value="{{ $details->juniorschoolname ?? '' }}"
-                                        id="input-schoolname-junior" /></td>
-                                <td><input type="text" style="width: 100%;"
-                                        value="{{ $details->juniorschooladdress ?? '' }}"
-                                        id="input-schooladdress-junior" /></td>
-                                <td><input type="text" style="width: 100%;"
-                                        value="{{ $details->juniorschoolyear ?? '' }}"
-                                        id="input-schoolyear-junior" /></td>
-                            </tr>
-                        </table>
-                    </div>
-                    {{-- <div class="col-md-12">
-                        <table class="" style="table-layout: fixed; width: 100%;">
-                            <tr>
-                                <td style="width: 15%;">Date of Graduation</td>
-                                <td><input type="date" style="width:" value="{{$details->graduationdate}}" id="input-graduationdate" style="border: none; border-bottom: 1px solid #ddd;"/></td>
-                                <td class="text-right">NSTP Serial No.: &nbsp;&nbsp;&nbsp;</td>
-                                <td><input type="text"  style="width: 100%;" value="{{$details->nstpserialno ?? ''}}" id="input-nstpserialno"/></td>
-                            </tr>
-                        </table>
-                        
-                    </div> --}}
-                </div>
-            @else
                 <!-- SAIT -->
+
                 <div class="row p-0" style="font-size: 13px !important;">
+                    <div class="col-md-12 text-center">
+                        <h6 class="text-bold">PERSONAL DATASHEET</h6>
+                    </div>
                     <div class="col-md-12">
                         <table style="width: 100%; table-layout: fixed;">
                             <tr>
-                                <td style="width: 12%;">Date of Birth</td>
-                                <td>: {{ $studentinfo->dob }}</td>
+                                <td style="width: 12%;">Name</td>
+                                <td width="21%">: <input type="text" style="width: 90%;" value="{{ $studentinfo->lastname }}, {{ $studentinfo->firstname }} {{ $studentinfo->suffix }} {{ $studentinfo->middlename }}" disabled>
                                 <td style="width: 12%;">Sex</td>
-                                <td>: {{ $studentinfo->gender }}</td>
+                                <td width="21%">: <input type="text" style="width: 90%;" value="{{ $studentinfo->gender }}" disabled></td>
                                 <td style="width: 12%;">Date of Entrance</td>
-                                <td>: <input type="date" style="width: 90%;"
+                                <td width="21%">: <input type="date" style="width: 90%;"
                                         value="{{ $details->entrancedate ?? '' }}" id="input-entrancedate" /></td>
                             </tr>
                             <tr>
-                                <td style="width: 12%;">Birth Place</td>
-                                <td>: {{ $studentinfo->pob ?? '' }}</td>
+                                <td style="width: 12%;">Date of Birth</td>
+                                <td>: <input type="text" style="width: 90%;" value="{{ $studentinfo->dob ?? '' }}" disabled></td>
                                 <td style="width: 12%;">Citizenship</td>
                                 <td>: <input type="text" style="width: 90%;"
                                         value="{{ $details->citizenship ?? '' }}" id="input-citizenship" /></td>
@@ -1074,22 +136,33 @@
                             </tr>
                             <tr>
                                 <td style="width: 12%;">Father’s Name </td>
-                                <td>: {{ $studentinfo->fathername ?? '' }}</td>
+                                <td>: <input type="text" style="width: 90%;" value="{{ $studentinfo->fathername ?? '' }}" disabled></td>
                                 <td style="width: 12%;">Civil Status</td>
                                 <td>: <input type="text" style="width: 90%;"
                                         value="{{ $details->civilstatus ?? '' }}" id="input-civilstatus" /></td>
                                 <td style="width: 12%;">Religion</td>
-                                <td>: {{ $studentinfo->religionanme ?? '' }}</td>
+                                <td>: <input type="text" style="width: 90%;" value="{{ $studentinfo->religionanme ?? '' }}" disabled></td>
                             </tr>
                             <tr>
                                 <td style="width: 12%;">Mother’s Name </td>
-                                <td>: {{ $studentinfo->mothername ?? '' }}</td>
+                                <td>: <input type="text" style="width: 90%;" value="{{ $studentinfo->religionanme ?? '' }}" disabled></td>
                                 <td style="width: 12%;">Home Address</td>
-                                <td colspan="3">: {{ $studentinfo->street }}, {{ $studentinfo->barangay }},
-                                    {{ $studentinfo->city }}, {{ $studentinfo->province }}</td>
+                                <td>: <input type="text" style="width: 90%;" value="{{ $studentinfo->street }}, {{ $studentinfo->barangay }},
+                                    {{ $studentinfo->city }}, {{ $studentinfo->province }}" disabled></td>
+                                <td style="width: 12%;">Birth Place</td>
+                                <td>: <input type="text" style="width: 90%;" value="{{ $studentinfo->pob ?? '' }}" disabled></td>
                             </tr>
                         </table>
                     </div>
+                </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="callout callout-info pt-0">
+                <!-- SAIT -->
+                <div class="row p-0" style="font-size: 13px !important;">
                     <div class="col-md-12 text-center">
                         <h6 class="text-bold">RECORDS OF PRELIMINARY EDUCATION</h6>
                     </div>
@@ -1106,39 +179,42 @@
                             <tr>
                                 <td>Primary</td>
                                 <td><input type="text" style="width: 100%;"
-                                        value="{{ $details->primaryschoolname ?? '' }}"
+                                        value="{{ isset($details->primaryschoolname) ? $details->primaryschoolname : $details->gsschoolname ?? '' }}"
                                         id="input-schoolname-primary" /></td>
                                 <td><input type="text" style="width: 100%;"
                                         value="{{ $details->primaryschooladdress ?? '' }}"
                                         id="input-schooladdress-primary" /></td>
                                 <td><input type="text" style="width: 100%;"
-                                        value="{{ $details->primaryschoolyear ?? '' }}"
+                                        value="{{ isset($details->primaryschoolyear) ? $details->primaryschoolyear : $details->gssy ?? '' }}"
                                         id="input-schoolyear-primary" /></td>
                             </tr>
+
                             <tr>
                                 <td>Junior High School</td>
                                 <td><input type="text" style="width: 100%;"
-                                        value="{{ $details->juniorschoolname ?? '' }}"
+                                        value="{{ $details->juniorschoolname ?? ($details->jhsschoolname ?? '') }}"
                                         id="input-schoolname-junior" /></td>
                                 <td><input type="text" style="width: 100%;"
                                         value="{{ $details->juniorschooladdress ?? '' }}"
                                         id="input-schooladdress-junior" /></td>
                                 <td><input type="text" style="width: 100%;"
-                                        value="{{ $details->juniorschoolyear ?? '' }}"
+                                        value="{{ $details->juniorschoolyear ?? ($details->jhssy ?? '') }}"
                                         id="input-schoolyear-junior" /></td>
                             </tr>
+
                             <tr>
                                 <td>Senior High School</td>
                                 <td><input type="text" style="width: 100%;"
-                                        value="{{ $details->seniorschoolname ?? '' }}"
+                                        value="{{ $details->seniorschoolname ?? ($details->shsschoolname ?? '') }}"
                                         id="input-schoolname-senior" /></td>
                                 <td><input type="text" style="width: 100%;"
                                         value="{{ $details->seniorschooladdress ?? '' }}"
                                         id="input-schooladdress-senior" /></td>
                                 <td><input type="text" style="width: 100%;"
-                                        value="{{ $details->seniorschoolyear ?? '' }}"
+                                        value="{{ $details->seniorschoolyear ?? ($details->shssy ?? '') }}"
                                         id="input-schoolyear-senior" /></td>
                             </tr>
+
                         </table>
                     </div>
                     <div class="col-md-12">
@@ -1156,7 +232,6 @@
 
                     </div>
                 </div>
-            @endif
             <div class="col-md-12 text-right mt-2">
                 <button type="button" class="btn btn-outline-primary" id="btn-details-save"><i
                         class="fa fa-share"></i>&nbsp; Save Changes</button>
@@ -1252,7 +327,8 @@
                                                 @endif
                                             </tr>
                                         </thead>
-                                        <tbody id="tbody-subj">
+                                        <tbody id="">
+                                            {{-- @foreach ($record->subjdata as $subj) --}}
                                             @foreach (collect($record->subjdata)->unique('subjcode') as $subj)
                                                 <tr>
                                                     <td class="p-0"><input type="text"
@@ -1507,6 +583,274 @@
                 height: 289
             }
         });
+        var studid = @json($studentid)
+        
+        $(document).on('hide', '.swal2-loading', function() {
+            setTimeout(function() {
+                    get_data()
+            }, 500);
+        })
+        get_data()
+        function get_data() {
+              $.ajax({
+                url: "/schoolform/tor/getinfo",
+                type: "GET",
+                data: {
+                    "_token": "{{ csrf_token() }}",
+                    studid: studid
+                },
+                success: function(data) {
+                    $('#studentIdNumber').html(data.sid)
+                    $('#studentLevel').html(data.levelname)
+                    $('#studentCourse').html(data.courseDesc)
+                }
+            });
+        }
+        $(document).on('click', '#credSubjects', function() {
+            $('#creditedSubjects').modal('show')
+            get_schoolcred_subjcred()
+        })
+
+        function get_schoolcred_subjcred(){
+            $.ajax({
+                type: 'GET',
+                url: '/superadmin/student/grade/evaluation/get/credit',
+                data: {
+                    studid: studid
+                }, success: function(data) {
+                    $('.school_credit_modal_table').remove()
+                    append_credited_schools(data);
+                    insert_data_to_credited_table(data)
+                }
+                
+            })
+        }
+
+        var semesters = @json($semester);
+        function append_credited_schools(data) {
+            if (data.length == 0) {
+                $('.no_credit').empty();
+                $('.no_credit').append(`
+                    <p class="mb-0 text-sm font-weight-bold">NO CREDITED UNITS RECORDED</p>
+                    <span class="text-sm">(<i class="text-info">Please add subject/s to credit at the Grade Evaluation Module</i>)</span>
+                `);
+            } else {
+                $('.no_credit').empty();
+                $.each(data, function (key, school) {
+                    $('#credited_table').append(`
+                        <div style="font-size: 15px;" class="ml-1 font-weight-bold school_credit_modal_table">${school.schoolname}
+                            <button class="btn btn-sm edit_school_credit" data-id="${school.headerid}">
+                                <i class="fas fa-edit text-sm text-info ml-2"></i>
+                            </button>
+                            <button class="btn btn-sm delete_school_credit" data-id="${school.headerid}">
+                                <i class="fas fa-trash text-sm text-danger ml-2"></i>
+                            </button>
+                        </div>
+                    `);
+
+                    $.each(semesters, function (index, sem) {
+                        $('#credited_table').append(`
+                            <div class="card mt-2 d-none school_div_credit-${school.headerid}-${sem.id} school_credit_modal_table">
+                                <div class="card-body">
+                                    <div>
+                                        <div class="d-flex flex-row justify-content-between mb-1">
+                                            <div style="font-size: 12px; font-weight: bold">${school.sydesc} - ${sem.semester}</div>
+                                        </div>
+                                        <table width="100%" class="table table-sm table-bordered table-striped" id="school_credit-${school.headerid}-${sem.id}">
+                                            <thead>
+                                                <tr style="font-size: 11px">
+                                                    <th width="7%">Code</th>
+                                                    <th width="25%">Subject Description</th>
+                                                    <th width="25%">Pre-Requisite</th>
+                                                    <th width="7%" class="text-center">Lecture</th>
+                                                    <th width="7%" class="text-center">Laboratory</th>
+                                                    <th width="7%" class="text-center">Credited Units</th>
+                                                    <th width="7%" class="text-center">GPA</th>
+                                                    <th width="7%" class="text-center">Credited</th>
+                                                    <th width="8%" class="text-center">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                            <tfoot>
+                                                <tr>
+                                                    <td contenteditable="true" class="credit_subjCode bg-info" data-school="${school.headerid}" data-sem="${sem.id}"></td>
+                                                    <td contenteditable="true" class="credit_subjDesc bg-info" data-school="${school.headerid}" data-sem="${sem.id}"></td>
+                                                    <td class="credit_subjPrereq"></td>
+                                                    <td contenteditable="true" class="credit_subjLec bg-info text-center" data-school="${school.headerid}" data-sem="${sem.id}"></td>
+                                                    <td contenteditable="true" class="credit_subjLab bg-info text-center" data-school="${school.headerid}" data-sem="${sem.id}"></td>
+                                                    <td contenteditable="true" class="credit_subjCred bg-info text-center" data-school="${school.headerid}" data-sem="${sem.id}"></td>
+                                                    <td contenteditable="true" class="credit_subjGPA text-center bg-info" data-school="${school.headerid}" data-sem="${sem.id}"></td>
+                                                    <td></td>
+                                                    <td class="text-center">
+                                                        <button class="btn btn-sm btn-success credit_to_prospectus_subject" data-school="${school.headerid}" data-sem="${sem.id}" data-id="${school.credsubj?.[0]?.levelID || ''}">
+                                                            <i class="fa fa-save"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                        <div class="d-flex flex-row mb-1">
+                                            <div style="font-size: 12px;color: red"><i>Please Input Non-Credited Subjects To be Displayed on TOR</i></div>
+                                            <div class="d-flex flex-row text-success ml-auto align-middle">
+                                                <i class="fa fa-check text-lg  ml-auto"></i> - Credited
+                                            </div>
+                                            <div class="d-flex flex-row text-danger ml-2 align-middle">
+                                                <i class="fa fa-times text-lg  ml-auto"></i> - Not-Credited
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `);
+                    });
+                });
+            }
+        }
+        function insert_data_to_credited_table(data){
+            $.each(data, function(key, school) {
+                $.each(semester, function(key, sem) {
+                    $.each(school.credsubj, function(key, cred) {
+                        $('.school_div_credit-' + school.headerid + '-' + cred.semID).removeClass('d-none')
+                    })
+                    let credited_subj = school.credsubj.filter(cred => cred.schoolID == school.headerid && cred.semID == sem.id)
+                    $('#school_credit-' + school.headerid + '-' + sem.id).DataTable({
+                        destroy: true,
+                        order: false,
+                        data: credited_subj,
+                        lengthChange: false,
+                        info: false,
+                        paging: false,
+                        searching: false,
+                        columns: [
+                            {data: 'subjCode'},
+                            {data: 'subjDesc'},
+                            {data: null},
+                            {data: null},
+                            {data: null},
+                            {data: null},
+                            {data: null},
+                            {data: null},
+                            {data: null},
+                        ],
+                        columnDefs: [
+                            {
+                                targets: 0,
+                                orderable: false,
+                                createdCell: function(td, cellData, rowData) {
+                                    let credpreq = rowData.credpreq.length > 0 ? rowData.credpreq[0].subjDesc : ''
+                                    $(td).html(`${rowData.subjCode}`)
+                                    .addClass('mb-0 align-middle credited_subjCode')
+                                    .attr('data-school', rowData.schoolID)
+                                    .attr('data-sem', rowData.semID)
+                                    .attr('data-id', rowData.id)
+                                }
+                            },
+                            {
+                                targets: 1,
+                                orderable: false,
+                                createdCell: function(td, cellData, rowData) {
+                                    let credpreq = rowData.credpreq.length > 0 ? rowData.credpreq[0].subjDesc : ''
+                                    $(td).html(`${rowData.subjDesc}`)
+                                    .addClass('mb-0 align-middle credited_subjDesc')
+                                    .attr('data-school', rowData.schoolID)
+                                    .attr('data-sem', rowData.semID)
+                                    .attr('data-id', rowData.id)
+                                }
+                            },
+                            {
+                                targets: 2,
+                                orderable: false,
+                                createdCell: function(td, cellData, rowData) {
+                                    let credpreq = rowData.credpreq.length > 0 ? rowData.credpreq[0].subjDesc : ''
+                                    $(td).html(`<p class="mb-0">${credpreq}</p>`)
+                                    .addClass('mb-0 ')
+                                }
+                            },
+                            {
+                                targets: 3,
+                                orderable: false,
+                                createdCell: function(td, cellData, rowData) {
+                                    $(td).html(`<p class="mb-0">${rowData.lecunits ? rowData.lecunits : ''}</p>`)
+                                    .addClass('text-center  align-middle credited_lecunits')
+                                    .attr('data-school', rowData.schoolID)
+                                    .attr('data-sem', rowData.semID)
+                                    .attr('data-id', rowData.id)
+                                }
+                            },
+                            {
+                                targets: 4,
+                                orderable: false,
+                                createdCell: function(td, cellData, rowData) {
+                                    $(td).html(`<p  class="mb-0">${rowData.labunits ? rowData.labunits : ''}</p>`)
+                                    .addClass('text-center m-0 mb-0  align-middle credited_labunits')
+                                    .attr('data-school', rowData.schoolID)
+                                    .attr('data-sem', rowData.semID)
+                                    .attr('data-id', rowData.id)
+                                }
+                            },
+                            {
+                                targets: 5,
+                                orderable: false,
+                                createdCell: function(td, cellData, rowData) {
+                                    $(td).html(`<p  class="mb-0">${rowData.credunits ? rowData.credunits : ''}</p>`)
+                                    .addClass('text-center p-0 mb-0  align-middle credited_credunits')
+                                    .attr('data-school', rowData.schoolID)
+                                    .attr('data-sem', rowData.semID)
+                                    .attr('data-id', rowData.id)
+                                }
+                            },
+                            {
+                                targets: 6,
+                                orderable: false,
+                                createdCell: function(td, cellData, rowData) {
+                                    $(td).html(`<p  class="mb-0">${rowData.gpa != null ? rowData.gpa : ''}</p>`)
+                                    .addClass('text-center p-0 mb-0  align-middle credited_gpa')
+                                    .attr('data-school', rowData.schoolID)
+                                    .attr('data-sem', rowData.semID)
+                                    .attr('data-id', rowData.id)
+                                }
+                            },
+                            {
+                                targets: 7,
+                                orderable: false,
+                                createdCell: function(td, cellData, rowData) {
+                                    if(rowData.status == 0){
+                                        $(td).html(`<p  class="mb-0"><i class="fa fa-check text-success"></i></p>`)
+                                    }else{
+                                        $(td).html(`<p  class="mb-0"><i class="fa fa-times text-danger"></i></p>`)
+                                    }
+                                    $(td).addClass('text-center p-0 mb-0  align-middle')
+                                }
+                            },
+                            {
+                                targets: 8,
+                                orderable: false,
+                                createdCell: function(td, cellData, rowData) {
+                                    if(rowData.status == 1){
+                                        $(td).html(`<p  class="mb-0">
+                                            <button class="btn btn-sm save_edit_additional_credit d-none" data-id="${rowData.id}" data-school="${rowData.schoolID}" data-sem="${rowData.semID}"><i class="fa fa-save text-success"></i></button>
+                                            <button class="btn btn-sm close_edit_additional_credit d-none" data-id="${rowData.id}" data-school="${rowData.schoolID}" data-sem="${rowData.semID}"><i class="fa fa-window-close text-danger"></i></button>
+                                            <button class="btn btn-sm edit_additional_credit" data-id="${rowData.id}" data-school="${rowData.schoolID}" data-sem="${rowData.semID}"><i class="fa fa-edit text-primary"></i></button>
+                                            <button class="btn btn-sm delete_additional_credit" data-id="${rowData.id}"><i class="fa fa-trash text-danger"></i></button>
+                                            </p>`)
+                                        .addClass('text-center mb-0  align-middle ')
+
+                                    }else{
+                                        $(td).html(`<p  class="mb-0"></p>`)
+                                        .addClass('text-center mb-0  align-middle ')
+
+                                    }
+                                }
+                            },
+                        ]
+                    })
+                })
+            })
+        }
+
+
+        
+
         $(document).on('change', '#input-upload-photo', function() {
             var reader = new FileReader();
             reader.onload = function(e) {

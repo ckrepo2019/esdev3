@@ -173,6 +173,13 @@
                 $('#btn-deletemed').attr('hidden','hidden')
                 $('#btn-deletemed').removeAttr('data-id')
                 $('#btn-deletemed').removeAttr('data-id')
+
+                $('#input-add-brandname').val('')
+                $('#input-add-genericname').val('')
+                $('#input-add-dosage').val('')
+                $('#input-add-quantity').val('')
+                $('#input-add-expirydate').val('')
+                $('#input-add-description').val('')
                 
                 $('#modal-addmedicine').modal('show')
             })

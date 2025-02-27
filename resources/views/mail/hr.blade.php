@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Email Title</title>
+    <title>Apply Leave</title>
     <style>
         body {
             background-color: #f5f5f5;
@@ -30,18 +30,24 @@
         }
     </style>
 </head>
+
 <body>
     <div class="row">
         <div class="col-md-12">
             <div class="email-container">
                 <div class="email-header">
-                    <h1>Subjects: {{$details['subject']}}</h1>
+                    <h2>Subject: {{$details['subject']}}</h2>
+                    <h2>Employee: {{$details['name']}}</h2>
                 </div>
                 <div class="email-body">
-                    <p>{{$details['content']}}</p>
+                    <h4>{{$details['content']}}</h4>
+                    
+                    <div><p>Dates:</p></div>
+                    @foreach ($details['selecteddates'] as $item)
+                        <span>{{$item->ldate}}</span><br>
+                    @endforeach
                 </div>
                 <div class="actions">
-                    <h3>Needs Immediate Attention</h3>
                 </div>
             </div>
         </div>
@@ -50,7 +56,7 @@
         <div class="col-md-12">
             <h3>Thank you</h3>
             <h3>Sincerely!</h3>
-            <h3 class="mt-5">HR DEPARTMENT <br> LDCU <br> 0913456788989/ +088 004 4858</h3>
+            <h3 class="mt-5">HR DEPARTMENT <br> {{ auth()->user()->name }} <br> 0913456788989/ +088 004 4858</h3>
         </div>
     </div>
 </body>

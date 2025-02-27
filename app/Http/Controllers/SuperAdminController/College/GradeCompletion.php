@@ -57,12 +57,11 @@ class GradeCompletion extends \App\Http\Controllers\Controller
 
 
             }else if($teacherid != null && $teacherid != ""){
-
                   $subject = DB::table('college_classsched')
-                                    ->join('college_studsched',function($join){
-                                          $join->on('college_classsched.id','=','college_studsched.schedid');
-                                          $join->where('college_studsched.deleted',0);
-                                          $join->where('college_studsched.schedstatus','!=','DROPPED');
+                                    ->join('college_instructor', function($join) use($teacherid){
+                                          $join->on('college_classsched.id', '=', 'college_instructor.classschedid');
+                                          $join->where('college_instructor.deleted',0);
+                                          $join->where('college_instructor.teacherid',$teacherid);
                                     })
                                     ->join('college_prospectus',function($join){
                                           $join->on('college_classsched.subjectID','=','college_prospectus.id');
@@ -73,37 +72,48 @@ class GradeCompletion extends \App\Http\Controllers\Controller
                                           $join->where('college_sections.deleted',0);
                                     })
                                     ->join('college_enrolledstud',function($join) use($syid,$semid){
-                                          $join->on('college_studsched.studid','=','college_enrolledstud.studid');
+                                          $join->on('college_sections.id','=','college_enrolledstud.sectionID');
                                           $join->where('college_enrolledstud.deleted',0);
                                           $join->whereIn('college_enrolledstud.studstatus',[1,2,4]);
                                           $join->where('college_enrolledstud.syid',$syid);
                                           $join->where('college_enrolledstud.semid',$semid);
                                     })
+                                   ->join('studinfo','college_enrolledstud.studid','studinfo.id')
                                     ->where('college_classsched.deleted',0)
-                                    ->where('college_classsched.teacherid',$teacherid )
                                     ->where('college_classsched.syid',$syid)
                                     ->where('college_classsched.semesterID',$semid)
                                     ->select(
                                           'college_classsched.sectionid',
-                                          'college_studsched.studid',
+                                          'college_classsched.id as schedid',
+                                          'college_enrolledstud.studid',
+                                          'studinfo.sid',
                                           'college_prospectus.id',
                                           'subjDesc',
                                           'subjCode',
                                           'subjDesc'
                                     )
+                                    ->distinct('college_prospectus.id')
                                     ->get();
 
             }
 
 
             $grades = DB::table('college_studentprospectus')
-                              ->where('syid',$syid)
-                              ->where('semid',$semid)
-                              ->where('deleted',0)
-                              ->whereIn('prospectusID',collect($subject)->pluck('id'))
-                              ->whereIn('studid',collect($subject)->pluck('studid'))
-                              ->get();
+                  ->join('studinfo', function($join) use($subject){
+                        $join->on('studinfo.sid', '=', 'college_studentprospectus.studid');
+                        $join->where('studinfo.deleted',0);
+                        $join->whereIn('studinfo.id', collect($subject)->pluck('studid'));
+                  })
+                  ->where('college_studentprospectus.syid',$syid)
+                  ->where('college_studentprospectus.semid',$semid)
+                  ->where('college_studentprospectus.deleted',0)
+                  ->whereIn('college_studentprospectus.prospectusID',collect($subject)->pluck('id'))
+                  // ->whereIn('studid',collect($subject)->pluck('studid'))
+                  ->groupBy('college_studentprospectus.id')
+                  ->select('college_studentprospectus.*', 'studinfo.id as studid','college_studentprospectus.studid as sid')
+                  ->get();
 
+            
             $dates = DB::table('college_studentprosstat')
                               ->whereIn('headerid',collect($grades)->pluck('id'))
                               ->get();
@@ -248,14 +258,14 @@ class GradeCompletion extends \App\Http\Controllers\Controller
                                     ->where('college_classsched.syid',$syid)
                                     ->where('college_classsched.semesterID',$semid)
                                     ->where('college_classsched.deleted',0)
-                                    ->where('college_classsched.teacherid',$teacherid)
-                                    ->join('college_studsched',function($join){
-                                          $join->on('college_classsched.id','=','college_studsched.schedid');
-                                          $join->where('college_studsched.deleted',0);
-                                          $join->where('college_studsched.schedstatus','!=','DROPPED');
+                                    ->leftjoin('college_instructor',function($join) use($teacherid){
+                                          $join->on('college_classsched.id','=','college_instructor.classschedid');
+                                          $join->where('college_instructor.deleted',0);
+                                          $join->where('college_instructor.id',$teacherid);
                                     })
+                                    ->join('college_loadsubject', 'college_classsched.id', '=', 'college_loadsubject.schedid')
                                     ->join('college_enrolledstud',function($join) use($syid,$semid){
-                                          $join->on('college_studsched.studid','=','college_enrolledstud.studid');
+                                          $join->on('college_loadsubject.studid','=','college_enrolledstud.studid');
                                           $join->where('college_enrolledstud.deleted',0);
                                           $join->whereIn('college_enrolledstud.studstatus',[1,2,4]);
                                           $join->where('college_enrolledstud.syid',$syid);
@@ -291,15 +301,17 @@ class GradeCompletion extends \App\Http\Controllers\Controller
       public static function getteachers(Request $request){
 
             $syid = $request->get('syid');
-            $semid = $request->get('semid');
+            // $semid = $request->get('semid');
 
-            $teachers = DB::table('college_classsched')
-                              ->join('teacher',function($join){
-                                    $join->on('college_classsched.teacherid','=','teacher.id');
-                                    $join->where('teacher.deleted',0);
+            $teachers = DB::table('college_instructor')
+                              ->join('college_classsched',function($join) use($syid){
+                                    $join->on('college_classsched.id','=','college_instructor.classschedid');
+                                    $join->where('college_classsched.syid',$syid);
+                                    $join->where('college_classsched.deleted',0);
                               })
+                              ->join('teacher', 'college_instructor.teacherid', '=', 'teacher.id')
                               ->where('college_classsched.syid',$syid)
-                              ->where('college_classsched.semesterID',$semid)
+                              // ->where('college_classsched.semesterID',$semid)
                               ->where('college_classsched.deleted',0)
                               ->select(
                                     'teacher.id',
@@ -312,7 +324,7 @@ class GradeCompletion extends \App\Http\Controllers\Controller
                                     'suffix',
                                     'title'
                               )
-                              ->distinct('teacherid')
+                              ->distinct('college_instructor.teacherid')
                               ->get();
 
 

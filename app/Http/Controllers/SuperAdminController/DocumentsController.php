@@ -262,7 +262,7 @@ class DocumentsController extends \App\Http\Controllers\Controller
                   $documents = $documents->where('preregistrationreqlist.isActive',$isactive);
             }
             if($isrequired != null){
-                  $documents = $documents->where('preregistrationreqlist.isRequired',$syid);
+                  $documents = $documents->where('preregistrationreqlist.isRequired',$isrequired);
             }
             if($levelid != null){
                   $documents = $documents->where('preregistrationreqlist.levelid',$levelid);

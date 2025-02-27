@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Principal's Portal</title>
 
     @php
@@ -22,15 +22,20 @@
 
     <link rel="stylesheet" href="{{ asset('dist/css/adminlte.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets\css\sideheaderfooter.css') }}">
+    <link rel="stylesheet" href="{{ asset('plugins/daterangepicker/daterangepicker.css') }}">
+    <link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.css') }}">
+    <!-- Toastr -->
+    <link rel="stylesheet" href="{{ asset('plugins/toastr/toastr.min.css') }}">
 
     <script src="{{ asset('plugins/jquery/jquery.min.js') }}"></script>
     <script src="{{ asset('js/jquery-ui.js') }}"></script>
+
 
     @if (db::table('schoolinfo')->first()->abbreviation == 'LDCU')
         <script type="module">
             import Chatbot from "https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js"
             Chatbot.init({
-                chatflowid: "f42b9b1b-6218-429b-b8a1-fe7d858ad74d",
+                chatflowid: "e6771136-03bb-4e55-a272-f7c2ebaba346",
                 apiHost: "https://flowisechatbot-nxra.onrender.com",
                 chatflowConfig: {
                     // topK: 2
@@ -437,7 +442,8 @@
     <script src="{{ asset('plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js') }}"></script>
     <script src="{{ asset('plugins/select2/js/select2.full.min.js') }}"></script>
     <script src="{{ asset('plugins/moment/moment.min.js') }}"></script>
-
+    <script src="{{ asset('plugins/toastr/toastr.min.js') }}"></script>
+    <script src="{{ asset('plugins/daterangepicker/daterangepicker.js') }}"></script>
     <script>
         if ($(window).width() < 1024) {
             $('body').addClass('sidebar-collapse');
@@ -447,7 +453,75 @@
     </script>
 
     <script>
+        function getAllMessages2() {
+
+            return $.ajax({
+                type: "GET",
+                data: {
+                    header: 1,
+                },
+                url: "/hr/settings/notification/getAllMessages",
+            });
+        }
+
+        function getAllMessages3() {
+
+            return $.ajax({
+                type: "GET",
+                data: {
+                    header2: 1,
+                },
+                url: "/hr/settings/notification/getAllMessages",
+            });
+        }
+
+        function renderAllMessages2() {
+
+            getAllMessages2().then(function(data) {
+
+
+                var renderHtml = data.length > 0 ? data.map(entry => {
+                    return ` <a class="media" href="/hr/settings/notification/index?id=${entry.data_id}">
+                            <img src="/${entry.picurl ? entry.picurl : 'dist/img/download.png'}"  alt="User Avatar" onerror="this.onerror = null; this.src='{{ asset('dist/img/download.png') }}'"  class="img-size-50 img-circle mr-3">
+                           <div class="media-body">
+                                <h3 class="dropdown-item-title">
+                                    ${entry.name}
+                                    <span class="float-right text-sm text-warning"><i class="fas fa-star"></i></span>
+                                </h3>
+                                <p class="text-sm">
+                                    ${entry.additionalmessage.length > 50 ? entry.additionalmessage.substring(0, 50) + '...' : entry.additionalmessage}
+                                </p>
+                                <p class="text-sm text-muted">
+                                    <i class="far fa-clock mr-1" style="color: gray !important;"></i>
+                                    ${entry.time_ago}
+                                </p>
+                            </div>
+                        </a>
+                        <div class="dropdown-divider"></div>`;
+
+                }).join('') : `<div class="text-center"><p class="text-muted">No message found</p></div>`;
+                $('#notification_holder').prepend(renderHtml);
+
+
+
+
+            })
+
+
+            getAllMessages3().then(function(data) {
+
+                var count = data.length;
+                $('#notification_count').text(count);
+
+            })
+
+        }
+
+
+
         $(document).ready(function() {
+
+            renderAllMessages2();
             $(document).on('click', '#logout', function() {
 
                 Swal.fire({
@@ -490,7 +564,9 @@
     @yield('qab_sript')
 
 
-
+    <!-- dropzonejs -->
+    <script src="{{ asset('plugins/dropzone/min/dropzone.min.js') }}"></script>
+    @include('websockets.realtimenotification')
 
 </body>
 

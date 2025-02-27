@@ -271,12 +271,46 @@ class CollegeGradingSummaryController extends \App\Http\Controllers\Controller
             $semid = $request->get('semid');
             $studid = $request->get('studid');
 
-            $grades = DB::table('college_studentprospectus')
-                  ->where('deleted', 0)
-                  ->where('studid', $studid)
-                  ->where('syid', $syid)
-                  ->where('semid', $semid)
+            // $grades = DB::table('college_studentprospectus')
+            //       ->where('deleted', 0)
+            //       ->where('studid', $studid)
+            //       ->where('syid', $syid)
+            //       ->where('semid', $semid)
+            //       ->get();
+
+            $grades = DB::table('college_enrolledstud')
+                  ->join('studinfo', 'college_enrolledstud.studid', '=', 'studinfo.id')
+                  ->join('college_studentprospectus', 'studinfo.sid', '=', 'college_studentprospectus.studid')
+                  // ->join('gradelevel', 'college_enrolledstud.yearLevel', '=', 'gradelevel.id')
+                  ->where('college_enrolledstud.deleted', 0)
+                  ->where('studinfo.deleted', 0)
+                  ->where('college_studentprospectus.deleted', 0)
+                  ->where('college_enrolledstud.studid', $studid)
+                  ->where('college_studentprospectus.syid', $syid)
+                  ->where('college_studentprospectus.semid', $semid)
                   ->get();
+
+            
+
+            // $grades = DB::table('college_studentprospectus')
+            // ->join('studinfo', 'college_studentprospectus.studid', '=', 'studinfo.sid')
+            // ->join('college_enrolledstud', function ($join) use ($syid, $semid) {
+            //       $join->on('studinfo.id', '=', 'college_enrolledstud.studid')
+            //            ->where('college_enrolledstud.deleted', 0)
+            //            ->where('college_enrolledstud.syid', $syid)
+            //            ->where('college_enrolledstud.semid', $semid)
+            //            ->whereIn('college_enrolledstud.studstatus', [1, 2, 4]);
+            // })
+            // ->where([
+            //       ['college_studentprospectus.deleted', 0],
+            //       ['studinfo.deleted', 0],
+            //       ['college_studentprospectus.studid', $studid],
+            //       ['college_studentprospectus.syid', $syid],
+            //       ['college_studentprospectus.semid', $semid]
+            //       ])
+            //       ->get();
+
+            // return $grades;
 
 
             $schedule = \App\Http\Controllers\SuperAdminController\StudentLoading::collegestudentsched_plot($studid, $syid, $semid);
@@ -286,22 +320,33 @@ class CollegeGradingSummaryController extends \App\Http\Controllers\Controller
 
             foreach ($schedule[0]->info as $item) {
                   $check = collect($grades)->where('prospectusID', $item->subjectID)->first();
+
+
                   if (isset($check->id)) {
 
-                        if ($check->prelemstatus == null) {
-                              $check->prelemgrade = "";
-                        }
-                        if ($check->midtermstatus == null) {
-                              $check->midtermgrade = "";
-                              ;
-                        }
-                        if ($check->prefistatus == null) {
-                              $check->prefigrade = "";
-                              ;
-                        }
-                        if ($check->finalstatus == null) {
-                              $check->finalgrade = "";
-                              ;
+                      
+
+                        // if ($check->prelemstatus == null) {
+                        //       $check->prelemgrade = "";
+                        // }
+                        // if ($check->midtermstatus == null) {
+                        //       $check->midtermgrade = "";
+                        // }
+                        // if ($check->prefistatus == null) {
+                        //       $check->prefigrade = "";
+                        // }
+                        // if ($check->finalstatus == null) {
+                        //       $check->finalgrade = "";
+                        // }
+
+                      
+                        if ($check->prelemstatus == 2 || $check->prelemstatus == 4 || $check->midtermstatus == 2 || $check->midtermstatus == 4 || $check->finalstatus == 2 || $check->finalstatus == 4 || $check->prefistatus == 2 || $check->prefistatus == 4) {
+                              $check->fg = $check->finalgrade;
+
+                              // return $check;
+                        } 
+                        else {
+                              $check->fg = null;
                         }
 
                         $check->units = $item->lecunits;
@@ -309,15 +354,18 @@ class CollegeGradingSummaryController extends \App\Http\Controllers\Controller
                         $check->subjCode = $item->subjCode;
                         $check->teacher = $item->teacher;
                         array_push($temp_grades, $check);
-                  } else {
+                  } 
+                  else {
                         $check = collect(array());
                         $check->prelemgrade = null;
                         $check->midtermgrade = null;
                         $check->prefigrade = null;
                         $check->finalgrade = null;
+                        $check->fg = null;
                         $check->units = $item->lecunits;
                         $check->subjDesc = $item->subjDesc;
                         $check->subjCode = $item->subjCode;
+                        $check->teacher = $item->teacher;
                         array_push($temp_grades, (object) [
                               'prelemgrade' => null,
                               'midtermgrade' => null,
@@ -328,13 +376,122 @@ class CollegeGradingSummaryController extends \App\Http\Controllers\Controller
                               'subjDesc' => $item->subjDesc,
                               'subjCode' => $item->subjCode,
                               'teacher' => $item->teacher,
+                              'yrlevel' => $item->yearLevel,
+                              'schedid' => $item->id,
+                              'studid' => $item->studid,
                         ]);
                   }
             }
 
             return $temp_grades;
+           
 
       }
+      // public static function student_grades(Request $request)
+      // {
+
+      //       $syid = $request->get('syid');
+      //       $semid = $request->get('semid');
+      //       $studid = $request->get('studid');
+
+      //       // $grades = DB::table('college_studentprospectus')
+      //       //       ->where('deleted', 0)
+      //       //       ->where('studid', $studid)
+      //       //       ->where('syid', $syid)
+      //       //       ->where('semid', $semid)
+      //       //       ->get();
+
+      //       $grades = DB::table('college_enrolledstud')
+      //             ->join('studinfo', 'college_enrolledstud.studid', '=', 'studinfo.id')
+      //             ->join('college_studentprospectus', 'studinfo.sid', '=', 'college_studentprospectus.studid')
+      //             ->where('college_enrolledstud.deleted', 0)
+      //             ->where('studinfo.deleted', 0)
+      //             ->where('college_studentprospectus.deleted', 0)
+      //             ->where('college_enrolledstud.studid', $studid)
+      //             ->where('college_studentprospectus.syid', $syid)
+      //             ->where('college_studentprospectus.semid', $semid)
+      //             ->get();
+
+            
+
+      //       // $grades = DB::table('college_studentprospectus')
+      //       // ->join('studinfo', 'college_studentprospectus.studid', '=', 'studinfo.sid')
+      //       // ->join('college_enrolledstud', function ($join) use ($syid, $semid) {
+      //       //       $join->on('studinfo.id', '=', 'college_enrolledstud.studid')
+      //       //            ->where('college_enrolledstud.deleted', 0)
+      //       //            ->where('college_enrolledstud.syid', $syid)
+      //       //            ->where('college_enrolledstud.semid', $semid)
+      //       //            ->whereIn('college_enrolledstud.studstatus', [1, 2, 4]);
+      //       // })
+      //       // ->where([
+      //       //       ['college_studentprospectus.deleted', 0],
+      //       //       ['studinfo.deleted', 0],
+      //       //       ['college_studentprospectus.studid', $studid],
+      //       //       ['college_studentprospectus.syid', $syid],
+      //       //       ['college_studentprospectus.semid', $semid]
+      //       //       ])
+      //       //       ->get();
+
+      //       // return $grades;
+
+
+      //       $schedule = \App\Http\Controllers\SuperAdminController\StudentLoading::collegestudentsched_plot($studid, $syid, $semid);
+
+      //       // return $schedule;
+
+
+      //       $temp_grades = array();
+
+      //       foreach ($schedule[0]->info as $item) {
+      //             $check = collect($grades)->where('prospectusID', $item->subjectID)->first();
+      //             if (isset($check->id)) {
+
+      //                   if ($check->prelemstatus == null) {
+      //                         $check->prelemgrade = "";
+      //                   }
+      //                   if ($check->midtermstatus == null) {
+      //                         $check->midtermgrade = "";
+      //                   }
+      //                   if ($check->prefistatus == null) {
+      //                         $check->prefigrade = "";
+      //                   }
+      //                   if ($check->finalstatus == null) {
+      //                         $check->finalgrade = "";
+      //                   }
+
+      //                   $check->units = $item->lecunits;
+      //                   $check->subjDesc = $item->subjDesc;
+      //                   $check->subjCode = $item->subjCode;
+      //                   $check->teacher = $item->teacher;
+      //                   array_push($temp_grades, $check);
+      //             } else {
+      //                   $check = collect(array());
+      //                   $check->prelemgrade = null;
+      //                   $check->midtermgrade = null;
+      //                   $check->prefigrade = null;
+      //                   $check->finalgrade = null;
+      //                   $check->units = $item->lecunits;
+      //                   $check->subjDesc = $item->subjDesc;
+      //                   $check->subjCode = $item->subjCode;
+      //                   $check->teacher = $item->teacher;
+      //                   array_push($temp_grades, (object) [
+      //                         'prelemgrade' => null,
+      //                         'midtermgrade' => null,
+      //                         'prefigrade' => null,
+      //                         'finalgrade' => null,
+      //                         'fg' => null,
+      //                         'units' => $item->lecunits,
+      //                         'subjDesc' => $item->subjDesc,
+      //                         'subjCode' => $item->subjCode,
+      //                         'teacher' => $item->teacher,
+      //                   ]);
+      //             }
+      //       }
+
+      //       return $temp_grades;
+           
+
+      // }
 
       public static function students_enrolled(Request $request)
       {
@@ -431,34 +588,44 @@ class CollegeGradingSummaryController extends \App\Http\Controllers\Controller
             $enrollment = DB::table('college_enrolledstud')
                   ->join('college_courses', function ($join) {
                         $join->on('college_enrolledstud.courseid', '=', 'college_courses.id');
+                        $join->where('college_courses.deleted',0);
                   })
-                  ->where('studid', $studid)
-                  ->where('syid', $syid)
-                  ->where('semid', $semid)
+
+                  ->join('gradelevel',function($join){
+                        $join->on('college_enrolledstud.yearLevel','=','gradelevel.id');
+                        $join->where('gradelevel.deleted',0);
+                    })
+
+                  ->where('college_enrolledstud.studid', $studid)
+                  ->where('college_enrolledstud.syid', $syid)
+                  ->where('college_enrolledstud.semid', $semid)
                   ->select(
-                        'yearLevel',
-                        'courseabrv'
+                        'college_enrolledstud.yearLevel',
+                        'gradelevel.levelname',
+                        'college_courses.courseabrv'
                   )
                   ->first();
 
 
 
-            if ($enrollment->yearLevel == 17) {
-                  $enrollment->gradelevel = 1;
-                  $enrollment->leveltext = '1st';
-            } elseif ($enrollment->yearLevel == 18) {
-                  $enrollment->gradelevel = 2;
-                  $enrollment->leveltext = '2nd';
-            } elseif ($enrollment->yearLevel == 19) {
-                  $enrollment->gradelevel = 3;
-                  $enrollment->leveltext = '3rd';
-            } elseif ($enrollment->yearLevel == 20) {
-                  $enrollment->leveltext = '4th';
-                  $enrollment->gradelevel = 4;
-            }
+            // if ($enrollment->yearLevel == 17) {
+            //       $enrollment->gradelevel = 1;
+            //       $enrollment->leveltext = '1st';
+            // } elseif ($enrollment->yearLevel == 18) {
+            //       $enrollment->gradelevel = 2;
+            //       $enrollment->leveltext = '2nd';
+            // } elseif ($enrollment->yearLevel == 19) {
+            //       $enrollment->gradelevel = 3;
+            //       $enrollment->leveltext = '3rd';
+            // } elseif ($enrollment->yearLevel == 20) {
+            //       $enrollment->leveltext = '4th';
+            //       $enrollment->gradelevel = 4;
+            // }
+        
 
             $grades = self::student_grades($request);
-            //return $grades;
+            // dd($grades);
+            // return $grades;
 
             $sydesc = DB::table('sy')
                   ->where('id', $syid)
@@ -469,8 +636,10 @@ class CollegeGradingSummaryController extends \App\Http\Controllers\Controller
                   ->first();
 
             $registrar = DB::table('teacher')
-                  ->where('id', $request->get('registrar'))
+                  ->where('id', $request->get('registarid'))
                   ->first();
+
+            // return json_encode($registrar);
 
             $registrar_sig = '';
 
@@ -484,18 +653,19 @@ class CollegeGradingSummaryController extends \App\Http\Controllers\Controller
                   if (isset($registrar->acadtitle)) {
                         $temp_title = ', ' . $registrar->acadtitle;
                   }
-                  if (isset($item->suffix)) {
+                  if (isset($registrar->suffix)) {
                         $temp_suffix = ', ' . $registrar->suffix;
                   }
                   $registrar_sig = $registrar->firstname . ' ' . $temp_middle . ' ' . $registrar->lastname . $temp_suffix . $temp_title;
             }
 
-            $registrar = $registrar_sig;
-
+            $registrars = $registrar_sig;
+            
+            // return $registrars;
             $schoolinfo = DB::table('schoolinfo')->first();
 
 
-            $pdf = PDF::loadView('registrar.pdf.srrcapmc', compact('registrar', 'enrollment', 'studinfo', 'grades', 'sydesc', 'semdesc', 'schoolinfo'))->setPaper('8.5x13', 'landscape');
+            $pdf = PDF::loadView('registrar.pdf.srrcapmc', compact('registrars', 'enrollment', 'studinfo', 'grades', 'sydesc', 'semdesc', 'schoolinfo'))->setPaper('8.5x13', 'landscape');
             $pdf->getDomPDF()->set_option("enable_php", true)->set_option("DOMPDF_ENABLE_CSS_FLOAT", true);
             return $pdf->stream();
       }

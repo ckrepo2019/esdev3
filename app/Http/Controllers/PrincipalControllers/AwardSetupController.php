@@ -15,17 +15,20 @@ class AwardSetupController extends \App\Http\Controllers\Controller
             $syid = $request->get('syid');
             $award = 'lowest grade';
             $gto = $request->get('gto');
+            $levelid = $request->get('levelid');
 
             $check = DB::table('grades_ranking_setup')
                         ->where('award',$award)
                         ->where('syid',$syid)
                         ->where('deleted',0)
+                        ->where('levelid',$levelid)
                         ->count();
 
             if($check > 0){
 
                 DB::table('grades_ranking_setup')
                     ->where('award',$award)
+                    ->where('levelid',$levelid)
                     ->update([
                         'syid'=>$syid,
                         'gto'=>$gto,
@@ -39,6 +42,7 @@ class AwardSetupController extends \App\Http\Controllers\Controller
                     ->insert([
                         'syid'=>$syid,
                         'award'=>$award,
+                        'levelid'=>$levelid,
                         'gto'=>$gto,
                         'updatedby'=>auth()->user()->id,
                         'updateddatetime'=>\Carbon\Carbon::now('Asia/Manila')
@@ -53,6 +57,7 @@ class AwardSetupController extends \App\Http\Controllers\Controller
                         ->where('award',$award)
                         ->where('syid',$syid)
                         ->where('deleted',0)
+                        ->where('levelid',$levelid)
                         ->count();
 
 
@@ -69,6 +74,7 @@ class AwardSetupController extends \App\Http\Controllers\Controller
 
                 DB::table('grades_ranking_setup')
                     ->where('award',$award)
+                    ->where('levelid',$levelid)
                     ->update([
                         'gto'=>$gto,
                         'gfrom'=>$gfrom,
@@ -93,16 +99,23 @@ class AwardSetupController extends \App\Http\Controllers\Controller
                         'award'=>$award,
                         'gto'=>$gto,
                         'gfrom'=>$gfrom,
+                        'levelid'=>$levelid,
                         'updatedby'=>auth()->user()->id,
                         'updateddatetime'=>\Carbon\Carbon::now('Asia/Manila')
                     ]);
             }
 
+          $setup =  DB::table('grades_ranking_setup')
+            ->where('deleted', 0)
+            ->where('levelid', $levelid)
+            ->whereIn('award', ['lowest grade', 'base grade'] )
+            ->get();
 
             
             return array((object)[
                     'status'=>1,
-                    'message'=>'Setup Updated!'
+                    'message'=>'Setup Updated!',
+                    'setup' => $setup
             ]);
            
             
@@ -114,15 +127,22 @@ class AwardSetupController extends \App\Http\Controllers\Controller
     public static function list_award_setup(Request $request){
 
         $syid = $request->get('syid');
+        $levelid = $request->get('levelid');
         
         $award_setup = DB::table('grades_ranking_setup')
                             ->where('deleted',0)
                             ->where('syid',$syid)
+                            ->where( function($query) use ($levelid) {
+                                if(isset($levelid) || $levelid == null){
+                                    $query->where('levelid', $levelid);
+                                }
+                            })
                             ->select(
                                 'id',
                                 'award',
                                 'gto',
-                                'gfrom'
+                                'gfrom', 
+                                'levelid'
                             )
                             ->get();
 
@@ -138,11 +158,13 @@ class AwardSetupController extends \App\Http\Controllers\Controller
                 $award = $request->get('award');
                 $gto = $request->get('gto');
                 $gfrom = $request->get('gfrom');
+                $levelid = $request->get('levelid');
 
                 $check = DB::table('grades_ranking_setup')
                             ->where('award',$award)
                             ->where('syid',$syid)
                             ->where('deleted',0)
+                            ->where('levelid',$levelid)
                             ->count();
 
                 if($check > 0){
@@ -151,13 +173,28 @@ class AwardSetupController extends \App\Http\Controllers\Controller
                         'message'=>'Already Exist!'
                     ]);
                 }
-                
+
+                $check = DB::table('grades_ranking_setup')
+                    ->where('award', 'base grade')
+                    ->where('syid',$syid)
+                    ->where('deleted',0)
+                    ->where('levelid',$levelid)
+                    ->count();
+
+                if($check == 0){
+                    return array((object)[
+                        'status'=>0,
+                        'message'=>'Please add Base Grade first!'
+                    ]);
+                }
+            
                 DB::table('grades_ranking_setup')
                     ->insert([
                         'syid'=>$syid,
                         'award'=>$award,
                         'gto'=>$gto,
                         'gfrom'=>$gfrom,
+                        'levelid'=>$levelid,
                         'createdby'=>auth()->user()->id,
                         'createddatetime'=>\Carbon\Carbon::now('Asia/Manila')
                     ]);
@@ -180,12 +217,14 @@ class AwardSetupController extends \App\Http\Controllers\Controller
                 $award = $request->get('award');
                 $gto = $request->get('gto');
                 $gfrom = $request->get('gfrom');
+                $levelid = $request->get('levelid');
 
                 $check = DB::table('grades_ranking_setup')
                             ->where('id','!=',$id)
                             ->where('award',$award)
                             ->where('syid',$syid)
                             ->where('deleted',0)
+                            ->where('levelid',$levelid)
                             ->count();
 
                 if($check > 0){
@@ -197,6 +236,7 @@ class AwardSetupController extends \App\Http\Controllers\Controller
 
                 DB::table('grades_ranking_setup')
                     ->where('id',$id)
+                    ->where('levelid',$levelid)
                     ->update([
                         'syid'=>$syid,
                         'award'=>$award,

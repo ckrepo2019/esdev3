@@ -43,9 +43,16 @@
                 $extend = 'clinic_nurse.index';
             } elseif ($check_refid->refid == 25) {
                 $extend = 'clinic_doctor.index';
+            } elseif ($check_refid->refid == 26) {
+                $extend = 'hr.layouts.app';
             } elseif ($check_refid->refid == 31) {
                 $extend = 'guidanceV2.layouts.app2';
-            } else {
+            } elseif ($check_refid->refid == 35) {
+                $extend = 'tesda.layouts.app2';
+            } elseif ($check_refid->refid == 36) {
+                $extend = 'tesda_trainer.layouts.app2';
+            }
+             else {
                 $extend = 'general.defaultportal.layouts.app';
             }
         } else {
@@ -69,9 +76,9 @@
         }
 
         /* .shadow {
-                              box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
-                              border: 0;
-                        } */
+                                      box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+                                      border: 0;
+                                } */
 
         .shadow {
             box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
@@ -241,8 +248,6 @@
                                     <b>Account ID</b> <a class="float-right" id="label_tid"></a>
                                 </li>
                             </ul>
-                            {{-- <button
-                                class="btn btn-secondary btn-block mt-2"><b>Please contact the admin to change your profile picture.</b></button> --}}
                             <button data-toggle="modal" data-target="#image-modal"
                                 class="btn btn-primary btn-block mt-2"><b>Update Profile Picture</b></button>
                         </div>

@@ -161,10 +161,9 @@
 
                                     <div class="form-group">
                                         <label class="mb-1">Date Received</label>
-                                        <input type="text"
+                                        <input type="date"
                                             class="js-flatpickr font-size-sm form-control form-control-alt"
-                                            id="datereceived" name="datereceived" placeholder="Y-m-d"
-                                            data-date-format="Y-m-d">
+                                            id="datereceived" name="datereceived" placeholder="Y-m-d">
                                         <span class="invalid-feedback" role="alert">
                                             <strong>Date received is required</strong>
                                         </span>
@@ -404,7 +403,7 @@
 @endsection
 
 @section('js_after')
-    <script src="{{ asset('js/plugins/select2/js/select2.full.min.js') }}"></script>
+    {{-- <script src="{{ asset('js/plugins/select2/js/select2.full.min.js') }}"></script>
     <script src="{{ asset('js/plugins/datatables/jquery.dataTables.min.js') }}"></script>
     <script src="{{ asset('js/plugins/datatables/dataTables.bootstrap4.min.js') }}"></script>
     <script src="{{ asset('js/plugins/datatables/buttons/dataTables.buttons.min.js') }}"></script>
@@ -420,14 +419,14 @@
     <script src="{{ asset('js/plugins/jquery.maskedinput/jquery.maskedinput.min.js') }}"></script>
     <script src="{{ asset('js/plugins/ion-rangeslider/js/ion.rangeSlider.min.js') }}"></script>
     <script src="{{ asset('js/plugins/dropzone/dropzone.min.js') }}"></script>
-    <script src="{{ asset('js/plugins/flatpickr/flatpickr.min.js') }}"></script>
-    <script>
+    <script src="{{ asset('js/plugins/flatpickr/flatpickr.min.js') }}"></script> --}}
+    {{-- <script>
         jQuery(function() {
             One.helpers(['flatpickr', 'datepicker', 'colorpicker', 'maxlength', 'select2', 'masked-inputs',
                 'rangeslider'
             ]);
         });
-    </script>
+    </script> --}}
 
     <script>
         var jsonData = {!! json_encode($jsonData) !!};

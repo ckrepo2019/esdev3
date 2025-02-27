@@ -323,25 +323,16 @@ class SYSetupController extends \App\Http\Controllers\Controller
 
       public static function activatesem(Request $request, $semid = null)
       {
-
-            if ($semid == null) {
-                  $semid = $request->get('semid');
-            }
-
+            $semid = $semid ?? $request->get('semid');
 
             try {
-
                   DB::table('semester')
-                        ->where('isactive', 1)
-                        ->update([
-                              'isactive' => 0,
-                        ]);
+                        ->whereNotIn('id', [$semid])
+                        ->update(['isactive' => 0]);
 
                   DB::table('semester')
                         ->where('id', $semid)
-                        ->update([
-                              'isactive' => 1,
-                        ]);
+                        ->update(['isactive' => 1]);
 
                   return array(
                         (object) [
@@ -353,7 +344,6 @@ class SYSetupController extends \App\Http\Controllers\Controller
             } catch (\Exception $e) {
                   return self::store_error($e);
             }
-
       }
 
       public static function create_sy(Request $request)
@@ -392,6 +382,8 @@ class SYSetupController extends \App\Http\Controllers\Controller
                                     'createdby' => auth()->user()->id,
                                     'createddatetime' => \Carbon\Carbon::now('Asia/Manila')
                               ]);
+
+                        self::activatesem($request, 1);
 
                         return array(
                               (object) [

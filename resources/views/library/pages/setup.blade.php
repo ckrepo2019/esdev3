@@ -19,9 +19,9 @@
     <link rel="stylesheet" href="{{ asset('js/plugins/select2/css/select2.min.css') }}">
     <style>
         /* .nav-tabs-block .nav-item .nav-link {
-                    border-top-left-radius: 10px;
-                    border-top-right-radius: 10px;
-                } */
+                                        border-top-left-radius: 10px;
+                                        border-top-right-radius: 10px;
+                                    } */
 
         .select2-container--default .select2-selection--single {
             background-color: #F0F1F2;
@@ -709,7 +709,7 @@
 @endsection
 
 @section('js_after')
-    <script src="{{ asset('js/plugins/select2/js/select2.full.min.js') }}"></script>
+    {{-- <script src="{{ asset('js/plugins/select2/js/select2.full.min.js') }}"></script>
     <script src="{{ asset('js/plugins/datatables/jquery.dataTables.min.js') }}"></script>
     <script src="{{ asset('js/plugins/datatables/dataTables.bootstrap4.min.js') }}"></script>
     <script src="{{ asset('js/plugins/datatables/buttons/dataTables.buttons.min.js') }}"></script>
@@ -717,7 +717,7 @@
     <script src="{{ asset('js/plugins/datatables/buttons/buttons.html5.min.js') }}"></script>
     <script src="{{ asset('js/plugins/datatables/buttons/buttons.flash.min.js') }}"></script>
     <script src="{{ asset('js/plugins/datatables/buttons/buttons.colVis.min.js') }}"></script>
-    <script src="{{ asset('js/pages/tables_datatables.js') }}"></script>
+    <script src="{{ asset('js/pages/tables_datatables.js') }}"></script> --}}
     <script>
         var currentId;
         var purpose = '';
@@ -824,7 +824,7 @@
             $(document).on('click', '.delete_type', function() {
                 var id = $(this).attr('data-id');
                 Swal.fire({
-                    icon: 'warning',
+                    type: 'warning',
                     title: 'You want to delete this usertype?',
                     text: `You can't undo this process.`,
                     showCancelButton: true,
@@ -890,7 +890,7 @@
             $(document).on('click', '.delete_user', function() {
                 var id = $(this).attr('data-id');
                 Swal.fire({
-                    icon: 'warning',
+                    type: 'warning',
                     title: 'You want to delete this user?',
                     text: `You can't undo this process.`,
                     showCancelButton: true,
@@ -926,7 +926,7 @@
             $(document).on('click', '.delete_lib', function() {
                 var id = $(this).attr('data-id');
                 Swal.fire({
-                    icon: 'warning',
+                    type: 'warning',
                     title: 'You want to delete this library?',
                     text: `You can't undo this process.`,
                     showCancelButton: true,
@@ -1141,7 +1141,7 @@
             $(document).on('click', '.delete_cat', function() {
                 var id = $(this).attr('data-id');
                 Swal.fire({
-                    icon: 'warning',
+                    type: 'warning',
                     title: 'You want to delete this category?',
                     text: `You can't undo this process.`,
                     showCancelButton: true,
@@ -1246,7 +1246,7 @@
             $(document).on('click', '.delete_genre', function() {
                 var id = $(this).attr('data-id');
                 Swal.fire({
-                    icon: 'warning',
+                    type: 'warning',
                     title: 'You want to delete this genre?',
                     text: `You can't undo this process.`,
                     showCancelButton: true,
@@ -1340,7 +1340,7 @@
             $(document).on('click', '.delete_borrower', function() {
                 var id = $(this).attr('data-id');
                 Swal.fire({
-                    icon: 'warning',
+                    type: 'warning',
                     title: 'You want to delete this borrower?',
                     text: `You can't undo this process.`,
                     showCancelButton: true,
@@ -1745,7 +1745,7 @@
                                     return match.toUpperCase();
                                 });
                             };
-                            return `<a class="font-w600 font-size-sm text-primary-dark"> ${ capitalizeFirstLetter(row.name) } </a>`;
+                            return `<a class="font-size-sm text-primary-dark"> ${ row.name ? capitalizeFirstLetter(row.name) : ' N/A' } </a>`;
                         }
                     },
                     {

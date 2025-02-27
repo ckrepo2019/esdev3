@@ -4,14 +4,24 @@
         /* font-size: 11px; */
     }
 </style>
-<div class="row">
+<div class="row boxes-container">
 
   <div class="col-md-4 col-sm-6 col-12">
     <div class="info-box shadow-lg">
       <span class="info-box-icon bg-warning"><i class="far fa-star"></i></span>
       <div class="info-box-content">
+        <span class="info-box-text">Enrolled</span>
+        <span class="info-box-number enrolled">{{$enrolled}}</span>
+      </div>
+  
+    </div>
+  </div>
+  <div class="col-md-4 col-sm-6 col-12">
+    <div class="info-box shadow-lg">
+      <span class="info-box-icon bg-warning"><i class="far fa-star"></i></span>
+      <div class="info-box-content">
         <span class="info-box-text">Dropped Out</span>
-        <span class="info-box-number">{{$droppedout}}</span>
+        <span class="info-box-number dropout">{{$droppedout}}</span>
       </div>
   
     </div>
@@ -21,7 +31,7 @@
       <span class="info-box-icon bg-warning"><i class="far fa-star"></i></span>
       <div class="info-box-content">
         <span class="info-box-text">Transferred Out</span>
-        <span class="info-box-number">{{$transferredout}}</span>
+        <span class="info-box-number transferredout">{{$transferredout}}</span>
       </div>
   
     </div>
@@ -31,12 +41,21 @@
       <span class="info-box-icon bg-warning"><i class="far fa-star"></i></span>
       <div class="info-box-content">
         <span class="info-box-text">Transferred In</span>
-        <span class="info-box-number">{{$transferredin}}</span>
+        <span class="info-box-number transferredin">{{$transferredin}}</span>
       </div>
-  
+    </div>
+  </div>
+  <div class="col-md-4 col-sm-6 col-12">
+    <div class="info-box shadow-lg">
+      <span class="info-box-icon bg-warning"><i class="far fa-star"></i></span>
+      <div class="info-box-content">
+        <span class="info-box-text">Withdrawn</span>
+        <span class="info-box-number withdrawn">{{$withdrawn}}</span>
+      </div>
     </div>
   </div>
 </div>
+
 <div class="row">
     <div class="col-12">
     

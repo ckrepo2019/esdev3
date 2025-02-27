@@ -156,25 +156,25 @@ class CollegeSectionsController extends \App\Http\Controllers\Controller
             $syid = $request->get('syid');
             $semid = $request->get('semid');
 
-            $enroll_students = DB::table('college_studsched')
+            $enroll_students = DB::table('college_loadsubject')
                               ->join('college_enrolledstud',function($join) use($syid,$semid){
-                                    $join->on('college_studsched.studid','=','college_enrolledstud.studid');
+                                    $join->on('college_loadsubject.studid','=','college_enrolledstud.studid');
                                     $join->where('college_enrolledstud.deleted',0);
                                     $join->whereIn('studstatus',[1,2,4]);
                                     $join->where('syid',$syid);
                                     $join->where('semid',$semid);
                               })
-                              ->where('college_studsched.schedid',$schedid)
-                              ->where('college_studsched.schedstatus','!=','DROPPED')
-                              ->where('college_studsched.deleted',0)
+                              ->where('college_loadsubject.schedid',$schedid)
+                              // ->where('college_loadsubject.schedstatus','!=','DROPPED')
+                              ->where('college_loadsubject.deleted',0)
                               ->select(
                                     'college_enrolledstud.studid'
                               )
                               ->get();
 
-            $students = DB::table('college_studsched')
+            $students = DB::table('college_loadsubject')
                               ->join('studinfo',function($join){
-                                    $join->on('college_studsched.studid','=','studinfo.id');
+                                    $join->on('college_loadsubject.studid','=','studinfo.id');
                                     $join->where('studinfo.deleted',0);
                               })
                               ->leftJoin('college_courses',function($join){
@@ -183,12 +183,12 @@ class CollegeSectionsController extends \App\Http\Controllers\Controller
                               ->join('gradelevel',function($join){
                                     $join->on('studinfo.levelid','=','gradelevel.id');
                               })
-                              ->where('college_studsched.schedid',$schedid)
-                              ->where('college_studsched.schedstatus','!=','DROPPED')
-                              ->where('college_studsched.deleted',0)
+                              ->where('college_loadsubject.schedid',$schedid)
+                              ->where('college_loadsubject.schedstatus','!=','DROPPED')
+                              ->where('college_loadsubject.deleted',0)
                               ->select(
                                     'sid',
-                                    'college_studsched.studid',
+                                    'college_loadsubject.studid',
                                     'lastname',
                                     'firstname',
                                     'middlename',
@@ -206,7 +206,7 @@ class CollegeSectionsController extends \App\Http\Controllers\Controller
                         foreach ($middlename as $middlename_item) {
                               if(strlen($middlename_item) > 0){
                               $temp_middle .= $middlename_item[0].'.';
-                              } 
+                              }    
                         }
                   }
                   $check = collect($enroll_students)->where('studid',$eitem->studid)->count();
@@ -231,13 +231,13 @@ class CollegeSectionsController extends \App\Http\Controllers\Controller
             $syid = $request->get('syid');
             $semid = $request->get('semid');
 
-            $students = DB::table('college_studsched')
+            $students = DB::table('college_loadsubject')
                               ->join('college_enrolledstud',function($join) use($syid,$semid){
-                                    $join->on('college_studsched.studid','=','college_enrolledstud.studid');
+                                    $join->on('college_loadsubject.studid','=','college_enrolledstud.studid');
                                     $join->where('college_enrolledstud.deleted',0);
                                     $join->whereIn('studstatus',[1,2,4]);
-                                    $join->where('syid',$syid);
-                                    $join->where('semid',$semid);
+                                    $join->where('college_loadsubject.syid',$syid);
+                                    $join->where('college_loadsubject.semid',$semid);
                               })
                               ->join('studinfo',function($join){
                                     $join->on('college_enrolledstud.studid','=','studinfo.id');
@@ -249,9 +249,9 @@ class CollegeSectionsController extends \App\Http\Controllers\Controller
                               ->join('gradelevel',function($join){
                                     $join->on('college_enrolledstud.yearLevel','=','gradelevel.id');
                               })
-                              ->where('college_studsched.schedid',$schedid)
-                              ->where('college_studsched.schedstatus','!=','DROPPED')
-                              ->where('college_studsched.deleted',0)
+                              ->where('college_loadsubject.schedid',$schedid)
+                              // ->where('college_loadsubject.schedstatus','!=','DROPPED')
+                              ->where('college_loadsubject.deleted',0)
                               ->select(
                                     'lastname',
                                     'firstname',
@@ -259,7 +259,7 @@ class CollegeSectionsController extends \App\Http\Controllers\Controller
                                     'suffix',
                                     'levelname',
                                     'courseabrv',
-									'college_studsched.studid'
+						'college_loadsubject.studid'
                               )
                               ->orderBy('lastname')
                               ->get();

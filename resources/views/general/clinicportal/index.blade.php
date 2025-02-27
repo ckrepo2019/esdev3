@@ -621,7 +621,7 @@ $check_refid = DB::table('usertype')->where('id',Session::get('currentPortal'))-
                   </div>
                   @if($myappointment->admitted != '1')
                   <div class="timeline-footer">
-                    <a type="button" class="btn btn-warning btn-sm btn-editappointment" data-id="{{$myappointment->id}}">Edit</a>
+                    <a type="button" class="btn btn-warning btn-sm btn-editappointment" data-timeslot="{{$myappointment->atime}}" data-desc="{{$myappointment->description}}" data-id="{{$myappointment->id}}">Edit</a>
                     <a type="button" class="btn btn-danger btn-sm btn-deleteappointment" data-id="{{$myappointment->id}}">Delete</a>
                   </div>
                   @endif
@@ -1706,8 +1706,16 @@ const months = [
       $('.btn-editappointment').on('click', function(){
                 $('#modal-editappointment').modal('show');
                 var id = $(this).attr('data-id');
-                $('#btn-submit-editappointment').attr('data-id',id);
+                var desc = $(this).attr('data-desc');
+                var time = $(this).attr('data-timeslot');
+                console.log(desc,time);
                 
+                $('#btn-submit-editappointment').attr('data-id',id);
+                $('#btn-submit-editappointment').attr('data-desc',desc);
+                $('#btn-submit-editappointment').attr('data-timeslot',time);
+                let timeValue = time.substring(0, 5);
+                $('#description').val(desc)
+                $('#timeslot').val(timeValue)
             })
 
                 $('#btn-submit-editappointment').on('click', function(){

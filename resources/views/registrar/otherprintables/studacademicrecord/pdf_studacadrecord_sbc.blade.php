@@ -136,13 +136,13 @@
         <table style="width: 100%; font-size: 11px;" border="1">
             <thead>
                 <tr>
-                    <th style="vertical-align: bottom;">COURSE</th>
-                    <th style="vertical-align: bottom;">NO.</th>
-                    <th style="width: 50%; vertical-align: bottom;" colspan="2">DESCRIPTIVE TITLE</th>
-                    <th style="vertical-align: bottom;">GRADE</th>
-                    <th style="vertical-align: bottom;">HPA EQUIV</th>
-                    <th style="vertical-align: bottom;">CREDIT</th>
-                    <th style="vertical-align: bottom;">HPA/<br/>WEIGHTED<br/>AVERAGE</th>
+                    <th style="vertical-align: middle;">SUBJECT CODE</th>
+                    {{-- <th style="vertical-align: bottom;">NO.</th> --}}
+                    <th style="width: 50%; vertical-align: middle;" colspan="2">DESCRIPTIVE TITLE</th>
+                    <th style="vertical-align: middle;">GRADE</th>
+                    <th style="vertical-align: middle;">HPA EQUIV</th>
+                    <th style="vertical-align: middle;">CREDIT</th>
+                    <th style="vertical-align: middle;">HPA/<br/>WEIGHTED<br/>AVERAGE</th>
                 </tr>
             </thead>
             @if(count($records)>0)
@@ -161,7 +161,7 @@
                     @endphp
                     <tr>
                         <td style="border-bottom: none !important;"></td>
-                        <td style="border-bottom: none !important;"></td>
+                        {{-- <td style="border-bottom: none !important;"></td> --}}
                         <td colspan="2" style="border-bottom: none !important; text-align: center; font-weight: bold;">{{$record->schoolname}} - {{$record->schooladdress}}</td>
                         <td style="border-bottom: none !important;"></td>
                         <td style="border-bottom: none !important;"></td>
@@ -175,7 +175,7 @@
                             @endphp
                             <tr>
                                 <td style="border-bottom: none !important; border-top: none !important;"></td>
-                                <td style="border-bottom: none !important; border-top: none !important;"></td>
+                                {{-- <td style="border-bottom: none !important; border-top: none !important;"></td> --}}
                                 <td colspan="2" style="border-bottom: none !important; border-top: none !important; text-align: center; font-weight: bold;">{{$initschoolname}} - {{$record->schooladdress}}</td>
                                 <td style="border-bottom: none !important; border-top: none !important;"></td>
                                 <td style="border-bottom: none !important; border-top: none !important;"></td>
@@ -185,7 +185,7 @@
                         @else
                             <tr>
                                 <td style="border-bottom: none !important; border-top: none !important;"></td>
-                                <td style="border-bottom: none !important; border-top: none !important;"></td>
+                                {{-- <td style="border-bottom: none !important; border-top: none !important;"></td> --}}
                                 <td colspan="2" style="border-bottom: none !important; border-top: none !important; text-align: center; font-weight: bold;"></td>
                                 <td style="border-bottom: none !important; border-top: none !important;"></td>
                                 <td style="border-bottom: none !important; border-top: none !important;"></td>
@@ -196,7 +196,7 @@
                     @endif
                     <tr>
                         <td style="border-bottom: none !important; border-top: none !important;"></td>
-                        <td style="border-bottom: none !important; border-top: none !important;"></td>
+                        {{-- <td style="border-bottom: none !important; border-top: none !important;"></td> --}}
                         <td colspan="2" style="border-bottom: none !important; border-top: none !important; text-align: center;"><u>@if($record->semid == 1) 1ST SEMESTER @elseif($record->semid == 2) 2ND SEMESTER @else SUMMER @endif - {{$record->sydesc}}</u></td>
                         <td style="border-bottom: none !important; border-top: none !important;"></td>
                         <td style="border-bottom: none !important; border-top: none !important;"></td>
@@ -209,8 +209,11 @@
                                 $hpaequiv = 0;
                             @endphp
                             <tr>
-                                <td style="border-bottom: none !important; border-top: none !important; text-align: left;">{{preg_replace("/[^a-zA-Z]+/", "", $eachsubject->subjcode)}}</td>
-                                <td style="border-bottom: none !important; border-top: none !important; text-align: center;">{{filter_var($eachsubject->subjcode, FILTER_SANITIZE_NUMBER_INT)}}</td>
+                                {{-- <td style="border-bottom: none !important; border-top: none !important; text-align: left;">{{preg_replace("/[^a-zA-Z]+/", "", $eachsubject->subjcode)}}</td> --}}
+                                <td style="border-bottom: none !important; border-top: none !important; text-align: left;">
+                                    {{ preg_replace("/[^a-zA-Z0-9]/", "", $eachsubject->subjcode) }}
+                                </td>
+                                {{-- <td style="border-bottom: none !important; border-top: none !important; text-align: center;">{{filter_var($eachsubject->subjcode, FILTER_SANITIZE_NUMBER_INT)}}</td> --}}
                                 <td colspan="2" style="border-bottom: none !important; border-top: none !important; padding: 0px 4px;">{{$eachsubject->subjdesc}}</td>
                                 <td style="border-bottom: none !important; border-top: none !important; text-align: center;">{{$eachsubject->subjgrade}}</td>
                                 <td style="border-bottom: none !important; border-top: none !important; text-align: center;">@if(count($transmutations) > 0) {{collect($transmutations)->where('hpaeqto','<=',$eachsubject->subjgrade)->where('hpaeq','>=',$eachsubject->subjgrade)->first()->honorpointeq ?? null}} 
@@ -249,7 +252,7 @@
             {{-- @if(collect($records)->where('display','0')->count() == 0) --}}
                 <tr>
                     <td style="border-bottom: none; border-right: none;"></td>
-                    <td style="border-bottom: none; border-right: none; border-left: none;"></td>
+                    {{-- <td style="border-bottom: none; border-right: none; border-left: none;"></td> --}}
                     <th style="text-align: center; border-bottom: none; border-left: none; font-size: 9px; vertical-align: top;" colspan="2">x-x-x-x Closed x-x-x-x</th>
                     <th style="padding: 3px;">TOTAL</th>
                     <th></th>
@@ -266,7 +269,7 @@
                 }
                 @endphp
                 <tr>
-                    <td style="border-top: none; border-right: none; padding-left: 20px; vertical-align: top;" colspan="3" rowspan="9">
+                    <td style="border-top: none; border-right: none; padding-left: 20px; vertical-align: top;" colspan="2" rowspan="9">
                         <table style="width: 90%; font-size: 9px;" border="1">
                             <tr>
                                 <th colspan="3">Grading System</th>

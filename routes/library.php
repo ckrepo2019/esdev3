@@ -17,7 +17,7 @@ Route::get('/request-reset', 'UserController@request_reset_password')->name('req
 
 Route::view('/catalogue-view', 'library.pages.catalogue');
 
-Route::get('/books', 'LibraryController\LibraryBookController@getLibraryBooks')->name('books');
+Route::get('/books', 'LibraryController\LibraryBookController@getLibraryBooks')->name('lib.books');
 Route::get('/get-book', 'LibraryController\CirculationController@getBook')->name('get.book');
 Route::get('/masterlist/get-book', 'LibraryController\LibraryBookController@getBook')->name('get.masterlist.book');
 Route::get('/pinbook', 'LibraryController\LibraryBookController@pin_book')->name('request.pinbook');
@@ -25,8 +25,8 @@ Route::get('/clear-session', 'LibraryController\LibraryBookController@clear_sess
 Route::get('/catalogue-signin', 'LibraryController\UserController@catalogue_signin')->name('catalogue.signin');
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('/homeborrower', 'LibraryController\BorrowerController@homeborrower')->name('homeborrower');
 
-    // Route::get('/', 'HomeController@index')->name('home');
     Route::view('/change-pass', 'library.pages.changepass');
     // CHANGE PASSWORD
     Route::match(['get', 'post'], '/update-password', 'LibraryController\UserController@updatePassword')->name('update.password');

@@ -381,14 +381,13 @@ class EnrollmentController extends Controller
 							->leftJoin('religion','studinfo.religionid','=','religion.id')
 							->leftJoin('nationality','studinfo.nationality','=','nationality.id')
 							->leftJoin('mothertongue','studinfo.mtid','=','mothertongue.id')
-							->leftJoin('grantee','studinfo.grantee','=','grantee.id')
 							// ->leftJoin('sections','studinfo.sectionid','=','sections.id')
 							->where('studinfo.id', $request->get('studid'))
 							->where('gradelevel.deleted', '0')
 							// ->where('sections.deleted', '0')
 							->first();
 							
-							// return collect($studentinfo);
+							
 			$schoolinfo = DB::table('schoolinfo')
 				->select(
 					'schoolinfo.schoolid',
@@ -411,7 +410,7 @@ class EnrollmentController extends Controller
 				->where('studid', $request->get('studid'))
 				->where('deleted','0')
 				->first();
-
+			
 			$schoollastattended = '';
 			if($checkmoreinfo)
 			{
@@ -452,10 +451,10 @@ class EnrollmentController extends Controller
 
 				if(strtolower($studentinfo->studtype) == 'old')
 				{
-					$schoollastattended = DB::table('schoolinfo')
-						->first()->schoolname;
+					// $schoollastattended = DB::table('schoolinfo')
+					// 	->first()->schoolname;
+					$schoollastattended = $studentinfo->lastschoolatt;
 				}else{
-					
 					if($checkmoreinfo->gsschoolname != null)
 					{
 						$schoollastattended = $checkmoreinfo->gsschoolname;

@@ -327,15 +327,17 @@ class TeacherProfileController extends \App\Http\Controllers\Controller
             $semid = $request->get('semid');
             $teacherid = $request->get('teacherid');
             $subject = array();
-            
+
             if(Session::get('currentPortal') != 1){
                   $college = self::college_get_teacher_college_sched($request);
             }else{
                   $college = array();
             }
-            
+
+
             $gs = self::gs_sched($request);
             $shs = self::shs_sched($request);
+
             $all_sched = array();
 
             foreach($college as $item){
@@ -463,6 +465,8 @@ class TeacherProfileController extends \App\Http\Controllers\Controller
                                           $join->on('college_sections.yearID','=','gradelevel.id');
                                           $join->where('gradelevel.deleted',0);
                                     })
+                                    ->join('college_instructor', 'college_classsched.id', '=', 'college_instructor.classschedid')
+                                    ->where('college_instructor.deleted',0)
                                     ->where('college_classsched.deleted',0);
 
                   if($semid != null){
@@ -472,7 +476,7 @@ class TeacherProfileController extends \App\Http\Controllers\Controller
                         $subjects = $subjects->where('college_classsched.syID',$syid);
                   }
                   if($teacherid != null){
-                        $subjects = $subjects ->where('college_classsched.teacherid',$teacherid);
+                        $subjects = $subjects ->where('college_instructor.teacherid',$teacherid);
                   }
 
                   $subjects = $subjects->select(
@@ -635,7 +639,7 @@ class TeacherProfileController extends \App\Http\Controllers\Controller
 
                   }
 
-                  return $subjects;
+                  return $subjects->unique('schedid');
                  
             }catch(\Exception $e){
                   return self::store_error($e);
@@ -901,7 +905,7 @@ class TeacherProfileController extends \App\Http\Controllers\Controller
             $teacherid = $teacherid == null ? $request->get('teacherid') : $teacherid;
             $acad = $acad == null ? $request->get('acad') : $acad;
             $subjid = $subjid == null ? $request->get('subjid') : $subjid;
-           
+        
             $sched = DB::table('assignsubj')
                         ->where('assignsubj.syid',$syid)
                         ->where('assignsubj.deleted',0)
@@ -947,8 +951,7 @@ class TeacherProfileController extends \App\Http\Controllers\Controller
                               'sectionname as sectionDesc',
                               'levelname',
                               'gradelevel.acadprogid',
-                              'gradelevel.sortid',
-                              'subjects.term'
+                              'gradelevel.sortid'
                         )
                         ->get();
 
@@ -1208,7 +1211,7 @@ class TeacherProfileController extends \App\Http\Controllers\Controller
                                     ]);
                         }
                   }elseif($acadprogid == 2 || $acadprogid == 3 || $acadprogid == 4){
-                        
+
                         foreach($schedule as $item){
 
                               $info = DB::table('classsched')
@@ -1436,7 +1439,7 @@ class TeacherProfileController extends \App\Http\Controllers\Controller
                                 'gender',
                                 'nationality',
                                 'nationalityid',
-                                'email',
+                                'teacher.email',
                                 'tid',
                                 'picurl',
                                 'maritalstatusid',

@@ -1,12 +1,22 @@
 <style>
     @keyframes blink {
-        0% { opacity: 1; }
-        50% { opacity: 0.5; }  /* Reduce the opacity to make it more subtle */
-        100% { opacity: 1; }
+        0% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.5;
+        }
+
+        /* Reduce the opacity to make it more subtle */
+        100% {
+            opacity: 1;
+        }
     }
 
     .blink {
-        animation: blink 1s ease-in-out infinite;  /* Increase the duration for a smoother effect */
+        animation: blink 1s ease-in-out infinite;
+        /* Increase the duration for a smoother effect */
     }
 </style>
 <nav class="mt-2">
@@ -14,12 +24,31 @@
 
         <li class="nav-item">
             <a class="{{ Request::url() == url('/home') ? 'active' : '' }} nav-link" href="/home">
-                <i class="fas fa-tachometer-alt nav-icon"></i>
+                <i class="fas fa-home nav-icon"></i>
                 <p>
                     Home
                 </p>
             </a>
         </li>
+
+        @if (isset(DB::table('schoolinfo')->first()->withschoolfolder))
+            @if (DB::table('schoolinfo')->first()->withschoolfolder == 1)
+                <li class="nav-item">
+                    <a class="{{ Request::url() == url('/schoolfolderv2/index') ? 'active' : '' }} nav-link"
+                        href="/schoolfolderv2/index">
+                        <i class="nav-icon fa fa-folder"></i>
+                        <p>
+                            @if (strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'bct')
+                                BCT Commons
+                            @else
+                                File Directory
+                            @endif
+                        </p>
+                    </a>
+                </li>
+            @endif
+        @endif
+
         <li class="nav-item">
             <a href="/user/profile" class="nav-link {{ Request::url() == url('/user/profile') ? 'active' : '' }}">
                 <i class="nav-icon fa fa-user"></i>
@@ -34,7 +63,7 @@
                 <p>School Calendar</p>
             </a>
         </li>
-        <li class="nav-item">
+        {{-- <li class="nav-item">
             <a href="/user/notification/userview_notifications" class="nav-link">
                 <i class="nav-icon fas fa-exclamation"></i>
                 <p>Notifications</p> &nbsp; 
@@ -83,9 +112,9 @@
                 @endphp
                 <span class="badge badge-light {{ $notacknowledge > 0 ? 'blink' : '' }}">{{ $notacknowledge }}</span>
             </a>
-        </li>
+        </li> --}}
 
-        @if (isset(DB::table('schoolinfo')->first()->withschoolfolder))
+        {{-- @if (isset(DB::table('schoolinfo')->first()->withschoolfolder))
             @if (DB::table('schoolinfo')->first()->withschoolfolder == 1)
                 <li class="nav-item">
                     <a class="{{ Request::url() == url('/schoolfolderv2/index') ? 'active' : '' }} nav-link"
@@ -101,15 +130,36 @@
                     </a>
                 </li>
             @endif
-        @endif
+        @endif --}}
+
 
 
         <li class="nav-item">
-            <a href="/blade/notification" class="nav-link {{Request::url() == url('/blade/notification') ? 'active' : ''}}">
-                <i class="nav-icon fa fa-user"></i>
+            <a href="/hr/settings/notification/index"
+                class="nav-link {{ Request::url() == url('/hr/settings/notification/index') ? 'active' : '' }}">
+                <i class="nav-icon  fas fa-exclamation"></i>
                 <p>
-                Notification & Request
-                <span class="ml-2 badge badge-primary">2</span>
+                    Notification & Request
+                    {{-- <span class="ml-2 badge badge-primary">2</span> --}}
+                </p>
+            </a>
+        </li>
+
+        <li class="nav-header text-warning">My Applications</li>
+        {{-- <li class="nav-item">
+            <a href="/hr/leaves/index?action=myleave" class="nav-link {{ Request::fullUrl() === url('/hr/leaves/index?action=myleave') ? 'active' : '' }}">
+                <i class="nav-icon fa fa-calendar-alt"></i>
+                <p>
+                    Leave Applications
+                </p>
+            </a>
+        </li> --}}
+        <li class="nav-item">
+            <a href="/leaves/apply/index" id="dashboard"
+                class="nav-link {{ Request::url() == url('/leaves/apply/index') ? 'active' : '' }}">
+                <i class="nav-icon fa fa-file"></i>
+                <p>
+                    Leave Applications
                 </p>
             </a>
         </li>
@@ -183,6 +233,12 @@
                 <p>
                     School Days
                 </p>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/setup/character/grade" class="nav-link">
+                <i class="fas fa-layer-group nav-icon"></i>
+                <p>Character Grade</p>
             </a>
         </li>
         <li class="nav-item">
@@ -299,6 +355,16 @@
             </a>
         </li>
 
+        <li class="nav-item">
+            <a href="/dtr/attendance/index"
+                class="nav-link {{ Request::url() == url('/dtr/attendance/index') ? 'active' : '' }}">
+                <i class="nav-icon fa fa-file"></i>
+                <p>
+                    Daily Time Record
+                </p>
+            </a>
+        </li>
+
         <li class="nav-header text-warning">DOCUMENT TRACKING</li>
         <li class="nav-item">
             <a href="/documenttracking"
@@ -310,13 +376,25 @@
             </a>
         </li>
 
+        <li class="nav-header text-warning">Employee Requirements</li>
+        <li class="nav-item">
+            <a href="/hr/requirements/employee"
+                class="nav-link {{ Request::fullUrl() === url('/hr/requirements/employee') ? 'active' : '' }}">
+                <i class="nav-icon fa fa-folder-open"></i>
+                <p>
+                    My Requirements
+                </p>
+            </a>
+        </li>
+
+
         <script>
             $(document).ready(function() {
                 var uri = @json(\Request::path());
                 $('a[href="/' + uri + '"]').addClass('active')
             })
         </script>
-        <li class="nav-header text-warning">HR</li>
+        {{-- <li class="nav-header text-warning">HR</li>
         @if (isset(DB::table('schoolinfo')->first()->withleaveapp))
             @if (DB::table('schoolinfo')->first()->withleaveapp == 1)
                 <li class="nav-item">
@@ -362,16 +440,9 @@
                     </p>
                 </a>
             </li>
-        @endif
-        <li class="nav-item">
-            <a href="/dtr/attendance/index"
-                class="nav-link {{ Request::url() == url('/dtr/attendance/index') ? 'active' : '' }}">
-                <i class="nav-icon fa fa-file"></i>
-                <p>
-                    Daily Time Record
-                </p>
-            </a>
-        </li>
+        @endif --}}
+
+
         @include('components.privsidenav')
         {{--  <li class="nav-header text-warning">Your Portal</li>
         

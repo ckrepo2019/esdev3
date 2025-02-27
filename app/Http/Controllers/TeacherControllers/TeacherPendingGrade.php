@@ -9,6 +9,9 @@ class TeacherPendingGrade extends \App\Http\Controllers\Controller
 {
     //get list of pending student grades
     public static function peding_student_grades(Request $request){
+
+        // return $request->all();
+
         $subject = array();
 
         $syid = $request->get('syid');
@@ -56,6 +59,8 @@ class TeacherPendingGrade extends \App\Http\Controllers\Controller
                 )
                 ->get();
 
+                // return $sched;
+
         foreach($sched as $item){
         
             $check_if_exist_in_plot = DB::table('subject_plot')
@@ -70,6 +75,8 @@ class TeacherPendingGrade extends \App\Http\Controllers\Controller
             }      
 
         }
+
+        // dd($subject);
 
         $asssubj = DB::table('assignsubj')
                     ->where('assignsubj.syid',$syid)
@@ -122,6 +129,8 @@ class TeacherPendingGrade extends \App\Http\Controllers\Controller
             }                    
         }
 
+        // dd($asssubj);
+
        
 
         foreach($subject as $item){
@@ -168,7 +177,7 @@ class TeacherPendingGrade extends \App\Http\Controllers\Controller
                     $grade_count = DB::table('grades')
                                 ->where('levelid',$item->levelid)
                                 ->where('sectionid',$item->sectionid)
-                                ->where('grades.status','!=',3)
+                                ->where('grades.status',3)
                                 ->where('syid',$syid)
                                 ->where('quarter',$x)
                                 ->where('subjid',$item->subjid)
@@ -276,6 +285,8 @@ class TeacherPendingGrade extends \App\Http\Controllers\Controller
             
         }
 
+        // dd($subject);
+        
         return collect($subject)->where('with_pending',true)->values();
 
     }

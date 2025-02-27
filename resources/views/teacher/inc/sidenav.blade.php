@@ -17,26 +17,82 @@
 @endphp
 <style>
     @keyframes blink {
-        0% { opacity: 1; }
-        50% { opacity: 0.5; }  /* Reduce the opacity to make it more subtle */
-        100% { opacity: 1; }
+        0% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.5;
+        }
+
+        /* Reduce the opacity to make it more subtle */
+        100% {
+            opacity: 1;
+        }
     }
 
     .blink {
-        animation: blink 1s ease-in-out infinite;  /* Increase the duration for a smoother effect */
+        animation: blink 1s ease-in-out infinite;
+        /* Increase the duration for a smoother effect */
+    }
+
+    .nav-link,
+    .nav-header {
+        color: #343A30 !important;
+    }
+
+    .nav-link.active {
+        color: #F0F0F0 !important;
+        background: #787c7f !important;
+    }
+
+    .user-panel {
+        border-bottom: 1px solid #dee2e6 !important;
+    }
+
+    .brand-link {
+        border-bottom: 1px solid #dee2e6 !important;
+    }
+
+    .side li i {
+        font-size: 14px !important;
+        color: #343A30 !important;
+    }
+
+    .side li:hover .udernavs p {
+        transition: none;
+        font-size: 15px;
+        padding-left: none;
+    }
+
+    .side li:hover i {
+        color: #343A30 !important;
+    }
+
+    .nav-link.active .nav-icon {
+        color: white !important;
+    }
+
+    .sidebar {
+        overflow-y: auto;
+        /* Enable scrolling */
+        max-height: 100vh;
+        /* Ensure sidebar has limited height */
+        position: relative;
     }
 </style>
 <!-- Main Sidebar Container -->
-<aside class="main-sidebar sidebar-dark-primary elevation-4">
+<aside class="main-sidebar sidebar-dark-primary elevation-4" style="background-color: white !important">
 
     <div>
-        <a href="#" class="brand-link nav-bg">
+        <a href="/home" class="brand-link nav-bg">
             <img src="{{ asset(DB::table('schoolinfo')->first()->picurl) }}" {{-- alt="{{DB::table('schoolinfo')->first()->abbreviation}}" --}}
-                class="brand-image img-circle elevation-3" style="opacity: .8">
+                class="brand-image img-circle elevation-3 " style="opacity: .8 !important; width: 33px; height: 33px;"
+                onerror="this.src='{{ asset('assets/images/department_of_Education.png') }}'">
             <span class="brand-text font-weight-light"
                 style="position: absolute;top: 6%;">{{ DB::table('schoolinfo')->first()->abbreviation }}</span>
             <span class="brand-text font-weight-light"
-                style="position: absolute;top: 50%;font-size: 16px!important;color:#ffc107"><b>TEACHER'S
+                style="position: absolute;top: 50%;font-size: 16px!important;"><b>TEACHER'S
                     PORTAL</b></span>
         </a>
     </div>
@@ -57,7 +113,7 @@
                         'teacher.deleted',
                         'teacher.isactive',
                         'teacher.picurl',
-                        'usertype.utype'
+                        'usertype.utype',
                     )
                     ->join('usertype', 'teacher.usertypeid', '=', 'usertype.id')
                     ->where('teacher.userid', auth()->user()->id)
@@ -81,7 +137,7 @@
                         'employee_personalinfo.emercontactnum',
                         'employee_personalinfo.departmentid',
                         'employee_personalinfo.designationid',
-                        'employee_personalinfo.date_joined'
+                        'employee_personalinfo.date_joined',
                     )
                     ->where('employee_personalinfo.employeeid', $teacher_profile->id)
                     ->get();
@@ -95,16 +151,6 @@
                         $avatar = 'avatar/T(M) ' . $number . '.png';
                     }
                 }
-
-
-                if ($teacher_profile) {
-                    $advisory = DB::table('sections')
-                        ->where('sections.teacherid', $teacher_profile->id)
-                        ->leftJoin('sectiondetail', function ($join) use ($syid) {
-                            $join->on('sections.id', '=', 'sectiondetail.sectionid');
-                            $join->where('sectiondetail.deleted', '0');
-                        })->get();
-                }
             } else {
                 $avatar = 'assets/images/avatars/unknown.png';
                 $teacher_profile = (object) [
@@ -117,15 +163,15 @@
                 <div class="text-center">
                     <img class="profile-user-img img-fluid img-circle"
                         src="{{ asset($teacher_profile->picurl) }}?random={{ \Carbon\Carbon::now('Asia/Manila')->isoFormat('MMDDYYHHmmss') }}"
-                        onerror="this.onerror = null, this.src='{{ asset($avatar) }}'" alt="User Image" width="100%"
-                        style="width:130px; border-radius: 12% !important;">
+                        onerror="this.onerror=null; this.src='{{ asset($avatar) }}';" alt="User Image"
+                        style="max-width:130px; width:100%; height:auto; aspect-ratio:1/1; border-radius:20px !important; object-fit:cover; background:#f0f0f0;">
                 </div>
             </div>
         </div>
         <div class="row  user-panel">
             <div class="col-md-12 info text-center">
-                <a class=" text-white mb-0 ">{{ auth()->user()->name }}</a>
-                <h6 class="text-warning text-center">{{ auth()->user()->email }}</h6>
+                <h6 class=" mb-0 ">{{ auth()->user()->name }}</h6>
+                <h6 class="text-center">{{ auth()->user()->email }}</h6>
             </div>
         </div>
 
@@ -154,34 +200,44 @@
                         </p>
                     </a>
                 </li>
+
                 @if (isset(DB::table('schoolinfo')->first()->withschoolfolder))
                     @if (DB::table('schoolinfo')->first()->withschoolfolder == 1)
                         <li class="nav-item">
                             <a class="{{ Request::url() == url('/schoolfolderv2/index') ? 'active' : '' }} nav-link"
                                 href="/schoolfolderv2/index">
-                                <i class="nav-icon fa fa-calendar"></i>
+                                <i class="nav-icon fa fa-folder"></i>
                                 <p>
                                     @if (strtolower(DB::table('schoolinfo')->first()->abbreviation) == 'bct')
                                         BCT Commons
                                     @else
-                                        Doc Con
+                                        File Directory
                                     @endif
                                 </p>
                             </a>
                         </li>
                     @endif
                 @endif
-                
-                {{-- <li class="nav-item">
-                    <a href="/blade/notification" class="nav-link {{Request::url() == url('/blade/notification') ? 'active' : ''}}">
-                        <i class="nav-icon fa fa-user"></i>
+                <li class="nav-item">
+                    <a href="/documenttracking"
+                        class="nav-link {{ Request::url() == url('/documenttracking') ? 'active' : '' }}">
+                        <i class="nav-icon fa fa-file"></i>
                         <p>
-                        Notification & Request
-                        <span class="ml-2 badge badge-primary">2</span>
+                            Document Tracking
                         </p>
                     </a>
-                </li> --}}
-                
+                </li>
+                <li class="nav-item">
+                    <a href="/hr/settings/notification/index"
+                        class="nav-link {{ Request::url() == url('/hr/settings/notification/index') ? 'active' : '' }}">
+                        <i class="nav-icon  fas fa-bell"></i>
+                        <p>
+                            Notification & Request
+                            {{-- <span class="ml-2 badge badge-primary">2</span> --}}
+                        </p>
+                    </a>
+                </li>
+
                 <li
                     class="nav-item has-treeview {{ Request::url() == url('/classattendance') || Request::url() == url('/beadleAttendance') ? 'menu-open' : '' }}">
                     <a href="/principal/setup/schedule/get/teachersview" class="nav-link">
@@ -200,17 +256,18 @@
                         </p>
                     </a>
                 </li>
+
                 {{-- <li class="nav-item">
                     <a href="/user/notification/userview_notifications" class="nav-link">
                         <i class="nav-icon fas fa-exclamation"></i>
-                        <p>Notifications</p> &nbsp; 
+                        <p>Notifications</p> &nbsp;
                         @php
                             $deptid = null;
                             $authid = auth()->user()->id;
                             $userid = DB::table('teacher')
                                 ->where('userid', $authid)
                                 ->first()->id;
-                
+
                             // Fetch department ID, handle null if not found
                             $dept_userid = DB::table('employee_personalinfo')
                                 ->where('employeeid', $userid)
@@ -222,7 +279,7 @@
                                     $deptid = $dept_userid->departmentid;
                                 }
                             }
-                            
+
                             $notifications = DB::table('hr_notifications')
                                 ->where('sentrusystem', 1)
                                 ->where('deleted', 0)
@@ -230,27 +287,27 @@
                                 ->map(function ($notification) use ($userid, $deptid) {
                                     $recipientIds = explode(',', $notification->recipientid);
                                     $acknowledgeIds = explode(',', $notification->acknowledgeby);
-                
+
                                     // Check if the user ID or department ID is in the recipient IDs
                                     $isRecipient = in_array($userid, $recipientIds);
                                     if ($deptid !== null) {
                                         $isRecipient = $isRecipient || in_array($deptid, $recipientIds);
                                     }
-                
+
                                     // Set acknowledge status
                                     $notification->acknowledge_status = in_array($userid, $acknowledgeIds) ? 1 : 0;
-                
+
                                     // Return the notification only if the user or department is a recipient
                                     return $isRecipient ? $notification : null;
                                 })
                                 ->filter();
-                
+
                             $notacknowledge = count($notifications->where('acknowledge_status', 0));
                         @endphp
                         <span class="badge badge-light {{ $notacknowledge > 0 ? 'blink' : '' }}">{{ $notacknowledge }}</span>
                     </a>
                 </li> --}}
-                <li class="nav-item">
+                {{-- <li class="nav-item">
                     <a class="{{ Request::url() == url('/userguide/setup') ? 'active' : '' }} nav-link"
                         href="/userguide/setup">
                         <i class="nav-icon fas fa-layer-group"></i>
@@ -258,24 +315,7 @@
                             User Guide
                         </p>
                     </a>
-                </li>
-                @php
-                    $countapproval = DB::table('hr_leaveemployeesappr')
-                        ->where('appuserid', auth()->user()->id)
-                        ->where('deleted', '0')
-                        ->count();
-                @endphp
-                @if ($countapproval > 0)
-                    <li class="nav-item">
-                        <a href="/hr/leaves/index"
-                            class="nav-link {{ Request::url() == url('/hr/leaves/index') ? 'active' : '' }}">
-                            <i class="fa fa-file-contract nav-icon"></i>
-                            <p>
-                                Filed Leaves
-                            </p>
-                        </a>
-                    </li>
-                @endif
+                </li> --}}
                 <li class="nav-header">
                     STUDENTS
                 </li>
@@ -436,7 +476,7 @@
                                 </p>
                             </a>
                         </li>
-{{-- 
+
                         <li class="nav-item" id="pre_grade_sidenav">
                             <a href="/grade/prekinder" id="dashboard" class="nav-link">
                                 <i class="nav-icon far fa-circle"></i>
@@ -444,7 +484,7 @@
                                     Pre-School
                                 </p>
                             </a>
-                        </li> --}}
+                        </li>
                         <li class="nav-item">
                             <a href="/teacher/pending/grades/view" id="dashboard"
                                 class="nav-link {{ Request::url() == url('/teacher/pending/grades/view') ? 'active' : '' }}">
@@ -473,7 +513,7 @@
                                 </p>
                             </a>
                         </li>
-                        {{-- <li class="nav-item">
+                        <li class="nav-item">
                             <a href="/grade/deportment-record" id="dashboard"
                                 class="nav-link {{ Request::url() == url('/grade/deportment-record') ? 'active' : '' }}">
                                 <i class="nav-icon far fa-circle"></i>
@@ -481,7 +521,7 @@
                                     Deportment Record
                                 </p>
                             </a>
-                        </li> --}}
+                        </li>
                     </ul>
                     <script>
                         $(document).ready(function() {
@@ -511,18 +551,31 @@
                                 }
                             });
                         })
+                        window.onload = function() {
+                            const activeItem = document.querySelector(".sidebar .active");
+
+                            if (activeItem) {
+                                setTimeout(function() {
+                                    activeItem.scrollIntoView({
+                                        behavior: "smooth",
+                                        block: "center"
+                                    });
+                                }, 100);
+                            }
+
+                            // Monitor window resize events to ensure the scroll stays in place
+                            window.addEventListener("resize", () => {
+                                const activeItem = document.querySelector(".sidebar .active");
+                                if (activeItem) {
+                                    activeItem.scrollIntoView({
+                                        behavior: "smooth",
+                                        block: "center"
+                                    });
+                                }
+                            });
+                        };
                     </script>
                 </li>
-                @if (count($advisory) > 0 && auth()->user()->type == 1)
-                    <li class="nav-item">
-                        <a class="nav-link" href="/principalAwardsAndRecognitions">
-                            <i class="fas fa-window-restore nav-icon"></i>
-                            <p>
-                                Student Awards
-                            </p>
-                        </a>
-                    </li>
-                @endif 
                 <li class="nav-item">
                     <a href="/setup/sections" id="dashboard"
                         class="nav-link  {{ request()->is('principalPortalSectionProfile/*') ? 'active' : '' }}">
@@ -713,41 +766,84 @@
                     </a>
                 </li>
 
-
-                <li class="nav-header">HR</li>
+                @php
+                $countapproval = DB::table('hr_leaveemployeesappr')
+                    ->where('appuserid', auth()->user()->id)
+                    ->where('deleted', '0')
+                    ->count();
+            @endphp
+            @if ($countapproval > 0)
                 <li class="nav-item">
-                    <a href="/dtr/attendance/index"
-                        class="nav-link {{ Request::url() == url('/dtr/attendance/index') ? 'active' : '' }}">
-                        <i class="nav-icon fa fa-file"></i>
+                    <a href="/hr/leaves/index"
+                        class="nav-link {{ Request::url() == url('/hr/leaves/index') ? 'active' : '' }}">
+                        <i class="fa fa-file-contract nav-icon"></i>
                         <p>
-                            Daily Time Record
+                            Filed Leaves
                         </p>
                     </a>
                 </li>
+            @endif
 
-                <li class="nav-header text-warning">DOCUMENT TRACKING</li>
-                <li class="nav-item">
-                    <a href="/documenttracking"
-                        class="nav-link {{ Request::url() == url('/documenttracking') ? 'active' : '' }}">
-                        <i class="nav-icon fa fa-file"></i>
-                        <p>
-                            Document Tracking
-                        </p>
-                    </a>
-                </li>
+            <li class="nav-header text-warning">My Applications</li>
+            {{-- <li class="nav-item">
+                <a href="/hr/leaves/index?action=myleave"
+                    class="nav-link {{ Request::fullUrl() === url('/hr/leaves/index?action=myleave') ? 'active' : '' }}">
+                    <i class="nav-icon fa fa-calendar-alt"></i>
+                    <p>
+                        Leave Applications
+                    </p>
+                </a>
+            </li> --}}
+            <li class="nav-item">
+                <a href="/leaves/apply/index" id="dashboard"
+                    class="nav-link {{ Request::url() == url('/leaves/apply/index') ? 'active' : '' }}">
+                    <i class="nav-icon fa fa-file"></i>
+                    <p>
+                        Leave Applications
+                    </p>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/dtr/attendance/index"
+                    class="nav-link {{ Request::url() == url('/dtr/attendance/index') ? 'active' : '' }}">
+                    <i class="nav-icon fa fa-file"></i>
+                    <p>
+                        Daily Time Record
+                    </p>
+                </a>
+            </li>
 
-
+            <li class="nav-header text-warning">Employee Requirements</li>
+            <li class="nav-item">
+                <a href="/hr/requirements/employee"
+                    class="nav-link {{ Request::fullUrl() === url('/hr/requirements/employee') ? 'active' : '' }}">
+                    <i class="nav-icon fa fa-folder-open"></i>
+                    <p>
+                        My Requirements
+                    </p>
+                </a>
+            </li>
                 <li class="nav-header text-warning">Clinic Appointment</li>
                 <li class="nav-item">
-                    <a href="/clinic/patientdashboard/index"  id="dental" class="nav-link {{Request::url() == url('clinic/patientdashboard/index') ? 'active' : ''}}">
+                    <a href="/clinic/patientdashboard/index" id="dental"
+                        class="nav-link {{ Request::url() == url('clinic/patientdashboard/index') ? 'active' : '' }}">
                         <i class="nav-icon fa fa-user-md"></i>
                         <p>
-                            Create Appointment 
+                            Create Appointment
                         </p>
                     </a>
                 </li>
 
-
+                <li class="nav-header">UTILITY</li>
+                <li class="nav-item">
+                    <a class="{{ Request::url() == url('guidance/referralTeacher') ? 'active' : '' }} nav-link"
+                        href="/guidance/referralTeacher">
+                        <i class="nav-icon far fa-handshake"></i>
+                        <p>
+                            Referral
+                        </p>
+                    </a>
+                </li>
 
 
                 @include('components.privsidenav')

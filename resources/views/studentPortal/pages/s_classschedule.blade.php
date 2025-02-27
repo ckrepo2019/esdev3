@@ -220,7 +220,7 @@
                 semid = $('#filter_sem').val()
                 get_gradelevel_section()
             }
-            else if(levelid >= 17 && levelid <= 20){
+            else if(levelid >= 17){
                 semid = $('#filter_sem').val()
                 get_gradelevel_section()
             }
@@ -249,7 +249,7 @@
                     $('#strand_name').text('')
                     $('#total_unit').text('')
                     if(data.length > 0){
-                        $('#gradelevel_section')[0].innerHTML = data[0].levelname +'  - '+ data[0].sectionname
+                        $('#gradelevel_section')[0].innerHTML =data[0].courseabrv + ' ' + data[0].levelname +'  - '+ data[0].sectionname
                         levelid = data[0].levelid
                         if(levelid == 14 || levelid == 15){
                             $('#strand_holder').removeAttr('hidden')
@@ -257,7 +257,7 @@
                             $('#semester_holder').removeAttr('hidden')
                             semid = $('#filter_sem').val()
                         }
-                        else if(levelid >= 17 && levelid <= 20){
+                        else if(levelid >= 17){
                             $('#semester_holder').removeAttr('hidden')
                             semid = $('#filter_sem').val()
                         }
@@ -271,7 +271,7 @@
                         if(studinfo.levelid == 14 || studinfo.levelid == 15){
                             $('#semester_holder').removeAttr('hidden')
                         }
-                        else if(studinfo.levelid >= 17 && studinfo.levelid <= 20){
+                        else if(studinfo.levelid >= 17){
                             $('#semester_holder').removeAttr('hidden')
                             $('#gradelevel_section').text('No record found.')
                         }
@@ -295,7 +295,8 @@
                 url: '/student/enrollment/record/classschedule/list',
                 data:{
                     syid:$('#filter_sy').val(),
-                    semid:semid
+                    semid:semid,
+                    type:'today'
                 },
                 success:function(data) {
                     all_sched = data
@@ -356,17 +357,19 @@
             var today = $('#filter_day').val()
             var day_sched = []
             var temp_sched = all_sched
-
+            console.log(temp_sched,'wewew')
             $.each(temp_sched,function(a,b){
-                    $.each(b.schedule,function(c,d){
-                        if(d.days.filter(x=>x == today).length > 0){
-                                var temp_data = d;
-                                temp_data.subjdesc = b.subjdesc
-                                day_sched.push(d)
-                        }
-                    })
-            })
+                if (b.days.includes(parseInt(today))) {
+                        day_sched.push({
+                            start: b.start,
+                            end: b.end,
+                            subjdesc: b.subjdesc,
+                            teacher: b.teacher
+                        });
+                    }
 
+            })
+            
             day_sched.sort(function(a, b){
                 return ((a.sort < b.sort) ? -1 : ((a.sort > b.sort) ? 1 : 0));
             });

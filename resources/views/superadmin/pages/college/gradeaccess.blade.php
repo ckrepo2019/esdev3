@@ -1,9 +1,11 @@
 @php
       if(auth()->user()->type == 17){
             $extend = 'superadmin.layouts.app2';
-      }else if(auth()->user()->type == 3 || Session::get('currentPortal') == 3){
-            $extend = 'registrar.layouts.app';
-      }
+      } else if(Session::get('currentPortal') == 6){
+            $extend = 'adminPortal.layouts.app2';
+      } 
+
+      // dd(Session::get('currentPortal'))
 @endphp
 
 @extends($extend)

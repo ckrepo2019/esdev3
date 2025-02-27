@@ -150,7 +150,7 @@
                                                       <div class="col-md-6">
                                                             <button class="btn btn-primary btn-sm" id="create_subjsched"> Create Schedule</button>
                                                       </div>
-                                                       <div class="col-md-5" >
+                                                       <div class="col-md-5" id="conflict_holder" style="display:none" >
                                                             <button class="btn btn-info btn-sm btn-block cnflctBttn_newsched" >Conflict List</button>
                                                       </div>
                                                 </div>
@@ -172,6 +172,7 @@
                                           <span aria-hidden="true" >×</span></button>
                                     </div>
                                     <div class="modal-body pt-1" style="font-size:.8rem !important" id="cnflctLstHldr_newsched">
+
                                           
                                     </div>
                               </div>
@@ -207,10 +208,6 @@
                         {'id':'Laboratory','text':'Laboratory'},
                   ]
             }
-
-            
-
-
 
             subjsched_sy()
             subjsched_sem()
@@ -271,6 +268,7 @@
 
             $(document).on('click','.subjsched_form',function(){
                   allowconflict = 0;
+                  $('#conflict_holder').hide();
                   $('#subjsched_input_sem').val($('#filter_semester').val()).change()
                   $('#subjsched_input_sy').val($('#filter_sy').val()).change()
 
@@ -564,11 +562,12 @@
                               else if(data[0].data == 'Conflict'){
                                     $('#create_subjsched').text('Conflict : Proceed Create')
                                     
-
+                                    $('#conflict_holder').show();
 
                                     if(data[0].data == 'Conflict'){
                                           // $('#btn-csl-create_subjsched-sched').text('Conflict : Proceed Update')
                                           allowconflict = 1
+
 
                                           $('#cnflctLstHldr_newsched').empty()
                                           $('.cnflctLstHldr_newsched').removeAttr('hidden')

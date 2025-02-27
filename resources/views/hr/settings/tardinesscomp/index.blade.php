@@ -95,7 +95,7 @@
         </div>
    </div>
    <div class="card shadow" style="box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; border: none !important;" id="card-results">
-        <div class="card-body" id="container-brackets">
+        <div class="card-body" id="container-brackets" hidden>
         </div>
    </div>
    

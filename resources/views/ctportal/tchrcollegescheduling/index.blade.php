@@ -412,6 +412,9 @@
                     }
                 }
 
+                console.log('TEMPSCHED',temp_sched);
+                
+
                 $("#datatable_1").DataTable({
                     destroy: true,
                     lengthChange: true,

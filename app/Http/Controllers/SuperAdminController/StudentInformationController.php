@@ -80,7 +80,6 @@ class StudentInformationController extends \App\Http\Controllers\Controller
       public static function all_student($syid = null, $semid = null){
 
             if(auth()->user()->type == 17){
-
                   $students = DB::table('studinfo')
                               ->where('deleted',0)
                               ->orderBy('lastname')

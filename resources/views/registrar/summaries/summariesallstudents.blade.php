@@ -335,9 +335,13 @@ $teacheradprogid = DB::table('teacheracadprog')
         <li class="nav-item p-1">
           <a class="nav-link p-2" id="custom-content-above-section-tab" data-toggle="pill" href="#custom-content-above-section" role="tab" aria-controls="custom-content-above-section" aria-selected="false">By Section</a>
         </li>
-        {{-- <li class="nav-item">
-          <a class="nav-link" id="custom-content-above-section-tab" data-toggle="pill" href="#custom-content-above-section" role="tab" aria-controls="custom-content-above-section" aria-selected="false">By Section</a>
-        </li> --}}
+        <li class="nav-item p-1">
+          <a class="nav-link p-2" id="custom-content-above-religion-tab" data-toggle="pill" href="#custom-content-above-religion" role="tab" aria-controls="custom-content-above-religion" aria-selected="false">By Religion</a>
+        </li>
+        <li class="nav-item p-1">
+          <a class="nav-link p-2" id="custom-content-above-mtname-tab" data-toggle="pill" href="#custom-content-above-mtname" role="tab" aria-controls="custom-content-above-mtname" aria-selected="false">By Mother Tongue</a>
+        </li>
+       
       </ul>
       {{-- <div class="tab-custom-content">
         <p class="lead mb-0">Custom Content goes here</p>
@@ -570,6 +574,63 @@ $teacheradprogid = DB::table('teacheracadprog')
                 </div>
             </div>
         </div>
+        <div class="tab-pane fade" id="custom-content-above-religion" role="tabpanel" aria-labelledby="custom-content-above-religion-tab">
+            <div class="row mt-2 mb-2" id="container-religion">
+                <div class="col-md-6 mb-2 text-left">
+                    <button type="button" class="btn btn-default btn-sm export-pdf" exporttype="religion" id="allreligions"><i class="fa fa-file-pdf"></i> List of students</button>
+                </div>
+                <div class="col-md-6 mb-2 text-right">
+                    <button type="button" class="btn btn-default btn-sm export-pdf" exporttype="religion"><i class="fa fa-file-pdf"></i> Export to PDF</button>
+                    <button type="button" class="btn btn-default btn-sm export-excel" exporttype="religion"><i class="fa fa-file-excel"></i> Export to EXCEL</button>
+                </div>
+                <div class="col-md-12">
+                    {{-- <input type="text" id="myInput" placeholder="Search" class="form-control"> --}}
+                    <table id="religionstable" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th style="width: 20px;">#</th>    
+                                <th>Religion</th>     
+                                <th>Male</th>      
+                                <th>Female</th>    
+                                <th>Total</th>    
+                            </tr>
+                        </thead>
+                        <tbody class="religioncontainer"  style="font-size: 12px; ">
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="custom-content-above-mtname" role="tabpanel" aria-labelledby="custom-content-above-mtname-tab">
+            <div class="row mt-2 mb-2" id="container-mtname">
+                <div class="col-md-6 mb-2 text-left">
+                    <button type="button" class="btn btn-default btn-sm export-pdf" exporttype="mtname" id="allmtname"><i class="fa fa-file-pdf"></i> List of students</button>
+                </div>
+                <div class="col-md-6 mb-2 text-right">
+                    <button type="button" class="btn btn-default btn-sm export-pdf" exporttype="mtname"><i class="fa fa-file-pdf"></i> Export to PDF</button>
+                    <button type="button" class="btn btn-default btn-sm export-excel" exporttype="mtname"><i class="fa fa-file-excel"></i> Export to EXCEL</button>
+                </div>
+                <div class="col-md-12">
+                    {{-- <input type="text" id="myInput" placeholder="Search" class="form-control"> --}}
+                    <table id="mtnametable" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th style="width: 20px;">#</th>    
+                                <th>Mother Tongue</th>     
+                                <th>Male</th>      
+                                <th>Female</th>    
+                                <th>Total</th>    
+                            </tr>
+                        </thead>
+                        <tbody class="mtnamecontainer"  style="font-size: 12px; ">
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
       </div>
     </div>
     <!-- /.card -->
@@ -1037,7 +1098,111 @@ $teacheradprogid = DB::table('teacheracadprog')
                                 '</tr>'
                             )
                         }
+
+
+
+
+
+
+
+
+                        // Religion tab
+                        $('.religioncontainer').empty()
+                        var religionmaletotal = 0;
+                        var religionfemaletotal = 0;
+                        var religiontotal = 0;
+                        var religioncounter = 0;
+
+                        $.each(data[0].religions, (index, element) => {
+                            let maleCount = 0;
+                            let femaleCount = 0;
+                            religioncounter += 1;
+
+                            if (index && index.trim() !== '') {
+                                element.forEach(detail => {
+                                    if (detail.gender.toLowerCase() === 'male') {
+                                        maleCount += 1;
+                                    } else if (detail.gender.toLowerCase() === 'female') {
+                                        femaleCount += 1;
+                                    }
+                                });
+                                $('.religioncontainer').append(
+                                    '<tr>'+
+                                        '<td>'+religioncounter+'</td>'+
+                                        '<td>'+index+'</td>'+
+                                        '<td class="text-center">'+maleCount+'</td>'+
+                                        '<td class="text-center">'+femaleCount+'</td>'+
+                                        '<td class="text-center">'+(maleCount + femaleCount)+'</td>'+
+                                    '</tr>'
+                                );
+
+                                religionmaletotal+=maleCount;
+                                religionfemaletotal+=femaleCount;
+                                religiontotal+=(maleCount + femaleCount);
+                            }
+                            
+                        });
+
+                        $('.religioncontainer').append(
+                            '<tr>'+
+                                '<td class="text-center" colspan="2">TOTAL</td>'+
+                                '<td class="text-center">'+religionmaletotal+'</td>'+    
+                                '<td class="text-center">'+religionfemaletotal+'</td>'+
+                                '<td class="text-center">'+religiontotal+'</td>'+
+                            '</tr>'
+                        )
+
+
+                        // Mother Tongue tab
+                        $('.mtnamecontainer').empty()
+                        var mothertonguemalecount = 0;
+                        var mothertonguefemalecount = 0;
+                        var mothertonguetotal = 0;
+                        var mtcounter = 0;
+                        $.each(data[0].mtname, (index, element) => {
+                            let maleCount = 0;
+                            let femaleCount = 0;
+                            mtcounter += 1;
+                            if (index && index.trim() !== '') {
+                                element.forEach(detail => {
+                                    if (detail.gender.toLowerCase() === 'male') {
+                                        maleCount += 1;
+                                    } else if (detail.gender.toLowerCase() === 'female') {
+                                        femaleCount += 1;
+                                    }
+                                });
+                                $('.mtnamecontainer').append(
+                                    '<tr>'+
+                                        '<td>'+mtcounter+'</td>'+
+                                        '<td>'+index+'</td>'+
+                                        '<td class="text-center">'+maleCount+'</td>'+
+                                        '<td class="text-center">'+femaleCount+'</td>'+
+                                        '<td class="text-center">'+(maleCount + femaleCount)+'</td>'+
+                                    '</tr>'
+                                );
+
+                                mothertonguemalecount+=maleCount;
+                                mothertonguefemalecount+=femaleCount;
+                                mothertonguetotal+=(maleCount + femaleCount);
+                            }
+                            
+                        });
+
+                        $('.mtnamecontainer').append(
+                            '<tr>'+
+                                '<td class="text-center" colspan="2">TOTAL</td>'+
+                                '<td class="text-center">'+mothertonguemalecount+'</td>'+    
+                                '<td class="text-center">'+mothertonguefemalecount+'</td>'+
+                                '<td class="text-center">'+mothertonguetotal+'</td>'+
+                            '</tr>'
+                        )
+
                     }
+
+
+
+
+
                     var $rows = $('.studentscontainer tr');
                     $('#myInput').on('keyup', function(){
                         var val = $.trim($(this).val()).replace(/ +/g, ' ').toLowerCase();

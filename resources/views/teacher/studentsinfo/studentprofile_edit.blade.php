@@ -214,7 +214,7 @@
           <div class="row">
             <div class="col-md-12">
               
-              <label>Mother's Name</label>
+              <label>Guardian's Name</label>
             </div>
               <div class="col-md-3">
                 <input type="text" class="form-control" id="edit-gfname" value="{{$data->parentsinfo->gfname ?? ''}}" placeholder="First Name">

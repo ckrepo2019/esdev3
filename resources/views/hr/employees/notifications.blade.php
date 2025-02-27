@@ -351,6 +351,8 @@ $refid = DB::table('usertype')
             </div>
             <div class="modal-footer d-flex justify-content-start">
                 <button type="button" class="btn btn-primary btn-sm" id="sendnotification" style="border-radius: 10px">Send</button>
+                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal" style="border-radius: 10px">Close</button>
+
                 {{-- <a href="javascript:void(0);" style="font-size: 20px;">
                     <i class="fas fa-paperclip rotate-icon text-dark" id="attachfile"></i>
                     <input type="file" id="fileInput" multiple style="display: none;">

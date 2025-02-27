@@ -281,14 +281,14 @@
                                          
                                     </div>
                                     <div class="row mt-2">
-                                          <div class="col-md-12">
-                                                <table class="table table-striped table-sm table-bordered " id="attendance_setup" width="100%">
+                                          <div class="col-md-12 table-responsive">
+                                                <table class="table table-striped table-sm table-bordered table-head-fixed w-100" id="attendance_setup">
                                                       <thead>
                                                             <tr>
                                                                   <th width="5%"></th>
                                                                   <th width="10%">Year</th>
                                                                   <th width="20%">Month</th>
-                                                                  <th width="45%">Dates</th>
+                                                                  <th width="45%" style="white-space: nowrap;">Dates</th>
                                                                   <th width="10%" class="text-center">Days</th>
                                                                   <th width="5%"></th>
                                                                   <th width="5%"></th>
@@ -851,7 +851,7 @@
 
                   if(temp_sy.ended == 0){
                         var label_text = $($('#attendance_setup'+'_wrapper')[0].children[0])[0].children[0]
-                        $(label_text)[0].innerHTML = ' <button class="btn btn-primary btn-sm" id="attendance_setup_button" '+disabled+'><i class="fas fa-plus" ></i> Add Month</button>  <button class="btn btn-primary btn-sm btn-warning " id="schooldays_copy_to" '+disabled+'><i class="fas fa-copy"></i> Copy From</button><button class="btn btn-primary btn-sm btn-secondary ml-2" id="active_month_to" ><i class="fas fa-copy"></i> Active Month</button>'
+                        $(label_text)[0].innerHTML = ' <div class="d-flex flex-md-row flex-column"><button style="white" class="btn btn-primary btn-sm" id="attendance_setup_button" '+disabled+'><i class="fas fa-plus" ></i> Add Month</button>  <button class="btn btn-primary btn-sm btn-warning mt-md-0 mt-2 ml-md-1 " id="schooldays_copy_to" '+disabled+'><i class="fas fa-copy"></i> Copy From</button><button class="btn btn-primary btn-sm btn-secondary my-md-0 my-2 ml-md-1 " id="active_month_to" ><i class="fas fa-copy"></i> Active Month</button></div>'
                   }
 
             }

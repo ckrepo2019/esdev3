@@ -3,6 +3,7 @@
 @php
     $check_refid = DB::table('usertype')
         ->where('id', Session::get('currentPortal'))
+        ->where('deleted', 0)
         ->select('refid', 'resourcepath')
         ->first();
 
@@ -34,6 +35,8 @@
         if (isset($check_refid->refid)) {
             if ($check_refid->resourcepath == null) {
                 $extend = 'general.defaultportal.layouts.app';
+            } elseif ($check_refid->refid == 26) {
+                $extend = 'hr.layouts.app';
             } elseif ($check_refid->refid == 27) {
                 $extend = 'academiccoor.layouts.app2';
             } elseif ($check_refid->refid == 22) {
@@ -192,6 +195,12 @@
 
 @section('footerjavascript')
     <script>
+        var Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000
+        });
         var listofreasons = [];
         var listofremarks = [];
         var checkedItems = [];
@@ -375,6 +384,7 @@
                                     if (response.status == 'success') {
                                         notify(response.status, response.message)
                                         // getreferralsetup()
+                                        window.history.back();
                                     }
                                 },
                                 error: function(xhr, status, error) {
@@ -387,6 +397,13 @@
 
                 }
             })
+        }
+
+        function notify(status, message) {
+            Toast.fire({
+                type: status,
+                title: message,
+            });
         }
     </script>
 @endsection

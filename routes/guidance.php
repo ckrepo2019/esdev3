@@ -20,6 +20,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/counseling/{any}', 'GuidanceController\CounselController@counsel_view');
     Route::get('/referral', 'GuidanceController\ReferralController@referral_view');
+    Route::get('/referralTeacher', 'GuidanceController\ReferralController@referralViewTeaher');
     Route::get('/referral-form', 'GuidanceController\ReferralController@referral_form');
     Route::post('/add-appointment', 'GuidanceController\CounselController@store_appointment')->name('store.appointment');
     Route::post('/add-referralsetup', 'GuidanceController\CounselController@store_referral_setup')->name('store.referralsetup');
@@ -41,9 +42,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/activatePassingrate', 'GuidanceController\AdmissionController@activate_passingrate');
 
     Route::get('/edit-category', 'GuidanceController\AdmissionController@get_category')->name('get.category');
-    Route::get('/update-category', 'GuidanceController\AdmissionController@update_category')->name('update.category');
+    Route::get('/update-category', 'GuidanceController\AdmissionController@update_category')->name('adm.update.category');
     Route::get('/getall-category', 'GuidanceController\AdmissionController@allCategories')->name('getall.category');
-    Route::get('/delete-category', 'GuidanceController\AdmissionController@delete_category')->name('delete.category');
+    Route::get('/delete-category', 'GuidanceController\AdmissionController@delete_category')->name('adm.delete.category');
     Route::get('/store-category', 'GuidanceController\AdmissionController@store_category')->name('store.category');
     Route::post('/update-passingrate', 'GuidanceController\AdmissionController@update_passingrate')->name('update.passingrate');
 
@@ -76,6 +77,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/createvirtualroom', 'VideoConferenceController@createVirtualRoom')->name('createvirtualroom');
     Route::post('/deletevirtualroom', 'VideoConferenceController@deleteVirtualRoom')->name('deletevirtualroom');
     Route::get('/checkvirtualroom', 'VideoConferenceController@checkVirtualRoom')->name('checkvirtualroom');
+
+    Route::get('/end-exam', 'GuidanceController\AdmissionController@endExam')->name('end.exam');
+    Route::get('/start-exam', 'GuidanceController\AdmissionController@startExam')->name('start.exam');
 
 
 

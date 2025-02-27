@@ -45,6 +45,7 @@ class SuperAdminController extends \App\Http\Controllers\Controller
 
             $schoolinfo = DB::table('schoolinfo')
                               ->first();
+                              
             $admin_pass = DB::table('users')
                               ->whereIn('type',[6,12])
                               ->where('deleted',0)

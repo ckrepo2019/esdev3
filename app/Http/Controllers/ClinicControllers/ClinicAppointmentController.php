@@ -110,36 +110,39 @@ class ClinicAppointmentController extends Controller
 
 
 
-
                 $name_showfirst = "";
 
+                // Check if properties exist and concatenate accordingly
                 if (isset($info->title)) {
                     $name_showfirst .= $info->title . ' ';
                 }
-                $name_showfirst .= $info->firstname . ' ';
-
-                if ($info->middlename != null) {
+                $name_showfirst .= ($info->firstname ?? '') . ' ';
+                
+                if (!empty($info->middlename)) {
                     $name_showfirst .= $info->middlename[0] . '. ';
                 }
-                $name_showfirst .= $info->lastname . ' ';
-                $name_showfirst .= $info->suffix . ' ';
-
+                $name_showfirst .= ($info->lastname ?? '') . ' ';
+                $name_showfirst .= ($info->suffix ?? '') . ' ';
+                
+                // Assign the concatenated result to $appointment object
                 $appointment->name_showfirst = $name_showfirst;
-
+                
                 $name_showlast = "";
-
-                if ($info->title != null) {
+                
+                // Similar checks for name_showlast
+                if (!empty($info->title)) {
                     $name_showlast .= $info->title . ' ';
                 }
-                $name_showlast .= $info->lastname . ', ';
-                $name_showlast .= $info->firstname . ' ';
-
-                if ($info->middlename != null) {
+                $name_showlast .= ($info->lastname ?? '') . ', ';
+                $name_showlast .= ($info->firstname ?? '') . ' ';
+                
+                if (!empty($info->middlename)) {
                     $name_showlast .= $info->middlename[0] . '. ';
                 }
-                $name_showlast .= $info->suffix . ' ';
-
+                $name_showlast .= ($info->suffix ?? '') . ' ';
+                
                 $appointment->name_showlast = $name_showlast;
+                
                 $appointedname = '';
                 if ($appointment->admitted == 1) {
                     $appointed = DB::table('teacher')

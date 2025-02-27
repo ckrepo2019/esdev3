@@ -583,7 +583,8 @@ class TeacherFormController extends Controller
                 ->with('students', $students);
             // return $request->all();
         } else {
-            if ($request->get('exporttype') == 'pdf') {	//retuurn 'shabudoy';
+            if ($request->get('exporttype') == 'pdf') {	
+                // dd($students);
                 // $pdf = PDF::loadview('teacher/pdf/pdf_form1',compact('forms')); ;
                 $pdf = PDF::loadview('teacher/pdf/pdf_form1_withlmod', compact('forms'));
                 ;
@@ -4451,6 +4452,7 @@ class TeacherFormController extends Controller
         }
         $students = collect($students)->sortBy('sortthis')->values();
         // return $students;
+        // return $request->all();
         if ($request->get('action') == 'show') {
             if (Session::get('currentPortal') == 1) {
                 // return $students;

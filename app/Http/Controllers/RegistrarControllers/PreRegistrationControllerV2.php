@@ -141,6 +141,7 @@ class PreRegistrationControllerV2 extends \App\Http\Controllers\Controller
                 // 'moccupation' => $request->get('moccupaton'),
                 'foccupation' => strtoupper($request->get('foccupation')),
                 'moccupation' => strtoupper($request->get('moccupation')),
+                'goccupation' => strtoupper($request->get('goccupation')),
                 'guardianrelation' => strtoupper($request->get('relation')),
 
                 'mcontactno' => str_replace('-', '', $request->get('mcontactno')),

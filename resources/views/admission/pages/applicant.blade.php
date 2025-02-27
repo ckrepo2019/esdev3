@@ -30,6 +30,10 @@
         .select2-container--default .select2-selection--single .select2-selection__rendered {
             line-height: unset !important;
         }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            margin-top: -6px;
+        }
     </style>
 @endsection
 
@@ -450,7 +454,7 @@
                                     <thead class="thead-dark">
                                         <tr>
                                             <th>Date Registered</th>
-                                            <th>Applicant Name</th>
+                                            <th>Applicant</th>
                                             <th>Last School Attended</th>
                                             <th>Desired Course</th>
                                             <th>Pooling No.</th>
@@ -469,13 +473,13 @@
                                     id="tbl_applicant_accepted" style="width: 100%;">
                                     <thead class="thead-dark">
                                         <tr>
-                                            <th>Date Registered</th>
+                                            <th>Join Date</th>
                                             <th>Code</th>
-                                            <th>Applicant Name</th>
-                                            <th>Last School Attended</th>
-                                            <th>Exam Result</th>
-                                            <th>Fitted Course</th>
-                                            <th>Assigned Course</th>
+                                            <th>Applicant</th>
+                                            <th>Prev School</th>
+                                            {{-- <th>Exam Result</th> --}}
+                                            {{-- <th>Fitted Course</th> --}}
+                                            <th>Assigned</th>
                                             <th>Status</th>
                                             <th>Actions</th>
                                         </tr>
@@ -663,6 +667,7 @@
     <script src="{{ asset('plugins/select2/js/select2.full.min.js') }}"></script>
     <script src="{{ asset('plugins/inputmask/min/jquery.inputmask.bundle.min.js') }}"></script>
     <script>
+        $('body').addClass('sidebar-collapse');
         var jsonPreregistered = {!! json_encode($jsonPreregistered) !!}
         var jsonVerified = {!! json_encode($jsonVerified) !!}
         var jsonAccepted = {!! json_encode($jsonAccepted) !!}
@@ -1241,19 +1246,19 @@
                         render: (data, type, row) =>
                             row.acadprog_id == 7 ?
                             `<span class="text-muted"> <strong> Not Applicable </strong> </span>
-                            <br> <span class="badge badge-secondary"> Technical Vocational </span>` : row
+                             <span class="badge badge-secondary"> Technical Vocational </span>` : row
                             .acadprog_id == 6 ?
-                            `<span> <strong> ${row.courseDesc} </strong> </span>
-                            <br> <span class="badge badge-primary"> College </span>` : row
+                            `<span> <strong> ${row.courseabrv} </strong> </span>
+                             <span class="badge badge-primary"> College </span>` : row
                             .acadprog_id == 5 ?
-                            `<span> <strong> ${row.strandname} </strong></span> <br> 
+                            `<span> <strong> ${row.strandname} </strong></span>  
                             <span class="badge badge-danger" > SHS Strand </span>` : row.acadprog_id == 4 ?
                             `<span class="text-muted"> <strong> Not Applicable </strong> </span>
-                            <br> <span class="badge badge-secondary"> High School </span>` : row.acadprog_id == 3 ?
+                             <span class="badge badge-secondary"> High School </span>` : row.acadprog_id == 3 ?
                             `<span class="text-muted"> <strong> Not Applicable </strong> </span>
-                            <br> <span class="badge badge-secondary"> Elementary </span>` : row.acadprog_id == 2 ?
+                             <span class="badge badge-secondary"> Elementary </span>` : row.acadprog_id == 2 ?
                             `<span class="text-muted"> <strong> Not Applicable </strong> </span>
-                            <br> <span class="badge badge-secondary"> Pre-School </span>` :
+                             <span class="badge badge-secondary"> Pre-School </span>` :
                             `<span class="text-muted"> <strong> Not Applicable </strong> </span>`
                     },
                     {
@@ -1313,19 +1318,19 @@
                         render: (data, type, row) =>
                             row.acadprog_id == 7 ?
                             `<span class="text-muted"> <strong> Not Applicable </strong> </span>
-                            <br> <span class="badge badge-secondary"> Technical Vocational </span>` : row
-                            .acadprog_id == 6 ?
-                            `<span> <strong> ${row.courseDesc} </strong> </span>
-                            <br> <span class="badge badge-primary"> College </span>` : row
+                             <span class="badge badge-secondary"> Technical Vocational </span>` : row
+                            .acadprog_id == 6 || row.acadprog_id == 8 ?
+                            `<span> <strong> ${row.courseabrv} </strong> </span>
+                             <span class="badge badge-primary"> College </span>` :  row
                             .acadprog_id == 5 ?
-                            `<span> <strong> ${row.strandname} </strong></span> <br> 
+                            `<span> <strong> ${row.strandcode} </strong></span>  
                             <span class="badge badge-danger" > SHS Strand </span>` : row.acadprog_id == 4 ?
                             `<span class="text-muted"> <strong> Not Applicable </strong> </span>
-                            <br> <span class="badge badge-secondary"> High School </span>` : row.acadprog_id == 3 ?
+                             <span class="badge badge-secondary"> High School </span>` : row.acadprog_id == 3 ?
                             `<span class="text-muted"> <strong> Not Applicable </strong> </span>
-                            <br> <span class="badge badge-secondary"> Elementary </span>` : row.acadprog_id == 2 ?
+                             <span class="badge badge-secondary"> Elementary </span>` : row.acadprog_id == 2 ?
                             `<span class="text-muted"> <strong> Not Applicable </strong> </span>
-                            <br> <span class="badge badge-secondary"> Pre-School </span>` :
+                             <span class="badge badge-secondary"> Pre-School </span>` :
                             `<span class="text-muted"> <strong> Not Applicable </strong> </span>`
                     },
                     {
@@ -1395,7 +1400,7 @@
                     {
                         data: "studname",
                         render: function(type, data, row) {
-                            return `<span style="font-weight: 600;"> ${ row.studname ? row.studname : 'Not Specified'} </span>`
+                            return `<span > ${ row.studname ? row.studname : 'Not Specified'} </span>`
                         }
                     },
                     {
@@ -1404,12 +1409,12 @@
                     // {
                     //     data: 'courseDesc',
                     // },
-                    {
-                        data: null,
-                        render: function(type, data, row) {
-                            return ` <span class="badge bg-success"> <i class="fas fa-check"></i>  Passed </span> `;
-                        }
-                    },
+                    // {
+                    //     data: null,
+                    //     render: function(type, data, row) {
+                    //         return ` <span class="badge bg-success"> <i class="fas fa-check"></i>  Passed </span> `;
+                    //     }
+                    // },
                     // {
                     //     data: 'probation',
                     //     className: 'text-center',
@@ -1425,32 +1430,51 @@
                     //     }
 
                     // },
+                    // {
+                    //     data: null,
+                    //     render: (data, type, row) =>
+                    //         row.acadprog_id == 7 ?
+                    //         `<span class="text-muted"> <strong> Not Applicable </strong> </span>
+                //         <br> <span class="badge badge-secondary"> Technical Vocational </span>` : row
+                    //         .acadprog_id == 6 ?
+                    //         `<span> <strong> ${row.fitted_course ?? 'None'} </strong> </span>
+                //         <br> <span class="badge badge-primary"> College </span>` : row
+                    //         .acadprog_id == 5 ?
+                    //         `<span> <strong> ${row.strandname} </strong></span> <br> 
+                //         <span class="badge badge-danger" > SHS Strand </span>` : row.acadprog_id == 4 ?
+                    //         `<span class="text-muted"> <strong> Not Applicable </strong> </span>
+                //         <br> <span class="badge badge-secondary"> High School </span>` : row.acadprog_id == 3 ?
+                    //         `<span class="text-muted"> <strong> Not Applicable </strong> </span>
+                //         <br> <span class="badge badge-secondary"> Elementary </span>` : row.acadprog_id == 2 ?
+                    //         `<span class="text-muted"> <strong> Not Applicable </strong> </span>
+                //         <br> <span class="badge badge-secondary"> Pre-School </span>` :
+                    //         `<span class="text-muted"> <strong> Not Applicable </strong> </span>`
+                    // },
                     {
                         data: null,
                         render: (data, type, row) =>
                             row.acadprog_id == 7 ?
                             `<span class="text-muted"> <strong> Not Applicable </strong> </span>
-                            <br> <span class="badge badge-secondary"> Technical Vocational </span>` : row
+                             <span class="badge badge-secondary"> Technical Vocational </span>` : row
                             .acadprog_id == 6 ?
-                            `<span> <strong> ${row.courseDesc} </strong> </span>
-                            <br> <span class="badge badge-primary"> College </span>` : row
+                            `<span> <strong> ${row.final_courseabrv ?? 'None'} </strong> </span>
+                             <span class="badge badge-primary"> College </span>` : row
                             .acadprog_id == 5 ?
-                            `<span> <strong> ${row.strandname} </strong></span> <br> 
+                            `<span> <strong> ${row.strandcode} </strong></span>  
                             <span class="badge badge-danger" > SHS Strand </span>` : row.acadprog_id == 4 ?
                             `<span class="text-muted"> <strong> Not Applicable </strong> </span>
-                            <br> <span class="badge badge-secondary"> High School </span>` : row.acadprog_id == 3 ?
+                             <span class="badge badge-secondary"> High School </span>` : row.acadprog_id == 3 ?
                             `<span class="text-muted"> <strong> Not Applicable </strong> </span>
-                            <br> <span class="badge badge-secondary"> Elementary </span>` : row.acadprog_id == 2 ?
+                             <span class="badge badge-secondary"> Elementary </span>` : row.acadprog_id == 2 ?
                             `<span class="text-muted"> <strong> Not Applicable </strong> </span>
-                            <br> <span class="badge badge-secondary"> Pre-School </span>` :
+                             <span class="badge badge-secondary"> Pre-School </span>` :
                             `<span class="text-muted"> <strong> Not Applicable </strong> </span>`
-                    },
-                    {
-                        data: null,
-                        render: function(type, data, row) {
-                            return ` <span class="text-success"> <strong>${row.final_courseabrv ?? 'N/A'} - ${row.final_courseDesc ?? 'N/A'} </strong> </span> 
-                            <br> ${ row.strandname ? `<span class="badge badge-danger"> Final Strand </span>` : ''  } `;
-                        }
+
+
+                        // render: function(type, data, row) {
+                        //     return ` <span class="text-success"> <strong>${row.final_courseabrv ?? 'N/A'} </strong> </span> 
+                    //     <br> ${ row.strandname ? `<span class="badge badge-danger"> Final Strand </span>` : ''  } `;
+                        // }
                     },
                     {
                         data: 'status',

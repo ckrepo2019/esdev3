@@ -426,7 +426,7 @@ class RegistrarSetupController extends \App\Http\Controllers\Controller
 
       public static function courses_select(Request $request)
       {
-            
+
             $syid = $request->get('syid');
             $semid = $request->get('semid');
 
@@ -437,7 +437,7 @@ class RegistrarSetupController extends \App\Http\Controllers\Controller
                   $teacher = DB::table('teacher')
                         ->where('tid', auth()->user()->email)
                         ->first();
-                
+
                   $courses = DB::table('teacherprogramhead')
                         ->where('college_courses.collegeid', $request->get('collegeid'))
                         ->where('teacherprogramhead.deleted', 0)
@@ -455,7 +455,6 @@ class RegistrarSetupController extends \App\Http\Controllers\Controller
                                     }
                               });
                         })
-                        ->where('college_courses.collegeid', $request->get('collegeid'))
                         ->select(
                               'college_courses.id',
                               'college_courses.courseDesc',
@@ -463,7 +462,7 @@ class RegistrarSetupController extends \App\Http\Controllers\Controller
                               'courseDesc as text'
                         )
                         ->get();
-                 
+
                   $courses_count = DB::table('teacherprogramhead')
                         ->where('teacherprogramhead.deleted', 0)
                         ->where('teacherprogramhead.syid', $syid)
@@ -478,7 +477,6 @@ class RegistrarSetupController extends \App\Http\Controllers\Controller
                                     }
                               });
                         })
-                        ->where('college_courses.collegeid', $request->get('collegeid'))
                         ->select(
                               'college_courses.id',
                               'college_courses.courseDesc',
@@ -486,7 +484,7 @@ class RegistrarSetupController extends \App\Http\Controllers\Controller
                               'courseDesc as text'
                         )
                         ->count();
-                  
+
             } else if (Session::get('currentPortal') == 14) {
 
                   $teacher = DB::table('teacher')
@@ -607,89 +605,62 @@ class RegistrarSetupController extends \App\Http\Controllers\Controller
       }
 
       public static function colleges_select2(Request $request)
-      {     
+      {
 
             $syid = $request->get('syid');
             $semid = $request->get('semid');
 
             $search = $request->get('search');
 
-            
+
             if (Session::get('currentPortal') == 16) {
-                 
+
                   $teacher = DB::table('teacher')
                         ->where('tid', auth()->user()->email)
                         ->first();
-                  
-                  // $colleges = DB::table('teacherdean')
-                  //       ->where('teacherdean.deleted', 0)
-                  //       ->where('teacherdean.syid', $syid)
-                  //       ->where('teacherid', $teacher->id)
-                  //       ->take(10)
-                  //       ->skip($request->get('page') * 10)
-                  //       ->join('college_colleges', function ($join) use ($search) {
-                  //             $join->on('teacherdean.collegeid', '=', 'college_colleges.id');
-                  //             $join->where('college_colleges.deleted', 0);
-                  //             $join->where(function ($query) use ($search) {
-                  //                   if ($search != null && $search != "") {
-                  //                         $query->orWhere('courseDesc', 'like', '%' . $search . '%');
-                  //                         $query->orWhere('courseabrv', 'like', '%' . $search . '%');
-                  //                   }
-                  //             });
-                  //       })
-                  //       ->select(
-                  //             'college_colleges.id',
-                  //             'college_colleges.collegeDesc',
-                  //             'college_colleges.collegeabrv',
-                  //             'collegeDesc as text'
-                  //       )
-                  //       ->get();
-                  
-                  // $colleges_count = DB::table('teacherdean')
-                  //       ->where('teacherdean.deleted', 0)
-                  //       ->where('teacherdean.syid', $syid)
-                  //       ->where('teacherid', $teacher->id)
-                  //       ->join('college_colleges', function ($join) use ($search) {
-                  //             $join->on('teacherdean.collegeid', '=', 'college_colleges.id');
-                  //             $join->where('college_colleges.deleted', 0);
-                  //             $join->where(function ($query) use ($search) {
-                  //                   if ($search != null && $search != "") {
-                  //                         $query->orWhere('courseDesc', 'like', '%' . $search . '%');
-                  //                         $query->orWhere('courseabrv', 'like', '%' . $search . '%');
-                  //                   }
-                  //             });
-                  //       })
-                  //       ->count();
-                  
-                  $colleges = DB::table('college_courses')
-                        ->where('courseChairman', $teacher->id)
+
+                  $colleges = DB::table('teacherdean')
+                        ->where('teacherdean.deleted', 0)
+                        ->where('teacherdean.syid', $syid)
+                        ->where('teacherid', $teacher->id)
                         ->take(10)
                         ->skip($request->get('page') * 10)
                         ->join('college_colleges', function ($join) use ($search) {
-                                    $join->on('college_courses.collegeid', '=', 'college_colleges.id');
-                                    $join->where('college_colleges.deleted', 0);
-                                    $join->where(function ($query) use ($search) {
-                                          if ($search != null && $search != "") {
-                                                $query->orWhere('courseDesc', 'like', '%' . $search . '%');
-                                                $query->orWhere('courseabrv', 'like', '%' . $search . '%');
-                                          }
-                                    });
-                              })
-                        ->where('college_courses.deleted', 0)
+                              $join->on('teacherdean.collegeid', '=', 'college_colleges.id');
+                              $join->where('college_colleges.deleted', 0);
+                              $join->where(function ($query) use ($search) {
+                                    if ($search != null && $search != "") {
+                                          $query->orWhere('courseDesc', 'like', '%' . $search . '%');
+                                          $query->orWhere('courseabrv', 'like', '%' . $search . '%');
+                                    }
+                              });
+                        })
                         ->select(
                               'college_colleges.id',
                               'college_colleges.collegeDesc',
                               'college_colleges.collegeabrv',
                               'collegeDesc as text'
                         )
-                        ->distinct()
                         ->get();
 
-                        
-                  $colleges_count = count($colleges);
+                  $colleges_count = DB::table('teacherdean')
+                        ->where('teacherdean.deleted', 0)
+                        ->where('teacherdean.syid', $syid)
+                        ->where('teacherid', $teacher->id)
+                        ->join('college_colleges', function ($join) use ($search) {
+                              $join->on('teacherdean.collegeid', '=', 'college_colleges.id');
+                              $join->where('college_colleges.deleted', 0);
+                              $join->where(function ($query) use ($search) {
+                                    if ($search != null && $search != "") {
+                                          $query->orWhere('courseDesc', 'like', '%' . $search . '%');
+                                          $query->orWhere('courseabrv', 'like', '%' . $search . '%');
+                                    }
+                              });
+                        })
+                        ->count();
 
             } else if (Session::get('currentPortal') == 14) {
-                  
+
                   $teacher = DB::table('teacher')
                         ->where('tid', auth()->user()->email)
                         ->first();
@@ -782,7 +753,16 @@ class RegistrarSetupController extends \App\Http\Controllers\Controller
 
       public static function list_college(Request $request)
       {
-
+            $teacherid = auth()->user()->id;
+            $teacheracad = DB::table('teacher')
+                  ->join('teacheracadprog', function ($join) use ($teacherid) {
+                        $join->on('teacher.id', '=', 'teacheracadprog.teacherid');
+                        $join->where('teacher.userid', $teacherid);
+                        $join->where('teacheracadprog.deleted', 0);
+                  })
+                  ->where('teacher.deleted', 0)
+                  ->select('teacheracadprog.acadprogid')
+                  ->get();
 
             $syid = $request->get('syid');
             // $semid = $request->get('semid');
@@ -797,8 +777,8 @@ class RegistrarSetupController extends \App\Http\Controllers\Controller
             if ($request->has('withEnrollmentCount')) {
                   $with_enrollment_count = true;
             }
-
-            $colleges = DB::table('college_colleges')
+            if($teacheracad->contains('acadprogid', 8)){
+                  $colleges = DB::table('college_colleges')
                   ->where('college_colleges.deleted', 0)
                   ->leftJoin('teacher', function ($join) {
                         $join->on('college_colleges.dean', '=', 'teacher.id');
@@ -815,9 +795,36 @@ class RegistrarSetupController extends \App\Http\Controllers\Controller
                         'middlename',
                         'suffix',
                         'title',
-                        'cisactive'
+                        'cisactive',
+                        'acadprogid'
                   )
                   ->get();
+            }else{
+                  $colleges = DB::table('college_colleges')
+                  ->where('college_colleges.deleted', 0)
+                  ->where('college_colleges.acadprogid', '!=', 8)
+                  ->leftJoin('teacher', function ($join) {
+                        $join->on('college_colleges.dean', '=', 'teacher.id');
+                        $join->where('teacher.deleted', 0);
+                  })
+                  ->select(
+                        'dean as deanid',
+                        'college_colleges.id',
+                        'collegeabrv',
+                        'collegeDesc',
+                        'collegeDesc as text',
+                        'lastname',
+                        'firstname',
+                        'middlename',
+                        'suffix',
+                        'title',
+                        'cisactive',
+                        'acadprogid'
+                  )
+                  ->get();
+            }
+
+            
 
             foreach ($colleges as $item) {
 
@@ -927,7 +934,7 @@ class RegistrarSetupController extends \App\Http\Controllers\Controller
       public static function create_college(Request $request)
       {
             try {
-
+                  $higher = $request->get('ishigher');
                   $collegedesc = $request->get('collegedesc');
                   $collegeabrv = $request->get('collegeabrv');
                   $dean = $request->get('dean');
@@ -961,6 +968,7 @@ class RegistrarSetupController extends \App\Http\Controllers\Controller
                               // 'dean'=>$dean,
                               'collegedesc' => $collegedesc,
                               'collegeabrv' => $collegeabrv,
+                              'acadprogid' =>$higher,
                               'createdby' => auth()->user()->id,
                               'createddatetime' => \Carbon\Carbon::now('Asia/Manila'),
                               'deleted' => 0
@@ -1077,6 +1085,7 @@ class RegistrarSetupController extends \App\Http\Controllers\Controller
                   $headdean = $request->get('headdean');
                   $updatetype = $request->get('updatetype');
                   $isactive = $request->get('isactive');
+                  $higher = $request->get('ishigher');
 
                   $check = DB::table('college_colleges')
                         ->where('id', '!=', $id)
@@ -1136,9 +1145,10 @@ class RegistrarSetupController extends \App\Http\Controllers\Controller
                         DB::table('college_colleges')
                               ->where('id', $id)
                               ->update([
-                                    'isactive' => $isactive,
+                                    'cisactive' => $isactive,
                                     'collegeDesc' => $collegedesc,
                                     'collegeabrv' => $collegeabrv,
+                                    'acadprogid' => $higher,
                                     'updatedby' => auth()->user()->id,
                                     'updateddatetime' => \Carbon\Carbon::now('Asia/Manila'),
                               ]);
@@ -1637,6 +1647,11 @@ class RegistrarSetupController extends \App\Http\Controllers\Controller
                                     'updatedby' => auth()->user()->id,
                                     'updateddatetime' => \Carbon\Carbon::now('Asia/Manila'),
                               ]);
+                        DB::table('college_sections')
+                        ->where('courseID', $id)
+                        ->update([
+                              'collegeID' => $collegeid,
+                        ]);
                   }
 
 
@@ -1828,5 +1843,108 @@ class RegistrarSetupController extends \App\Http\Controllers\Controller
                   ]
             );
       }
+
+      public function get_sections_registrar(Request $request)
+      {
+          $syid = $request->get('syid');
+          $semid = $request->get('semester');
+          $course = $request->get('course');
+          $academic = $request->get('academic');
+  
+          return DB::table('college_sections')
+              ->where('college_sections.syID', $syid)
+              // ->where('college_sections.semesterID', $semid)
+              ->when($academic, function ($query) use ($academic) {
+                  return $query->where('college_sections.yearID', $academic);
+              })
+              ->when ($course, function ($query) use ($course) {
+                  return $query->where('college_sections.courseID', $course);
+              })
+              ->join('college_courses', 'college_sections.courseID', 'college_courses.id')
+              ->join('college_year', 'college_sections.yearID', 'college_year.levelid')
+              ->where('college_sections.deleted', 0)
+              ->select(
+                  'college_sections.id',
+                  'college_sections.sectionDesc',
+                  'college_sections.courseID',
+                  'college_courses.courseDesc',
+                  'college_courses.courseabrv',
+                  'college_year.levelid as yearID',
+                  'college_year.yearDesc',
+              )
+              ->get();
+           
+      }
+
+      public function getAddedStudentLoadingAllSections(Request $request)
+      {
+          $studentId = $request->input('studentId');
+          $syid = $request->input('syid');
+          $semid = $request->input('semid');
+  
+          $studentLoading = DB::table('college_loadsubject')
+              ->join('college_prospectus', 'college_loadsubject.subjectID', '=', 'college_prospectus.id')
+              ->where('college_loadsubject.studid', $studentId)
+              ->where('college_loadsubject.syid', $syid)
+              ->where('college_loadsubject.semid', $semid)
+              ->where('college_loadsubject.deleted', 0)
+              ->select(
+                  'college_prospectus.subjCode',
+                  'college_prospectus.subjDesc',
+                  'college_prospectus.lecunits',
+                  'college_prospectus.labunits',
+                  'college_prospectus.credunits'
+              )
+              ->groupBy('college_loadsubject.id')
+              ->get();
+
+            foreach ($studentLoading as $item) {
+                  $item->credunits = is_null($item->credunits) ? $item->lecunits + $item->labunits : $item->credunits;
+            }
+  
+          $totalSubjects = $studentLoading->count();
+          $totalCreditUnits = $studentLoading->sum('credunits');
+          $totalLecUnits = $studentLoading->sum('lecunits');
+          $totalLabUnits = $studentLoading->sum('labunits');
+          
+          return response()->json([
+              'studentLoading' => $studentLoading,
+              'totalSubjects' => $totalSubjects,
+              'totalCreditUnits' => $totalCreditUnits,
+              'totalLecUnits' => $totalLecUnits,
+              'totalLabUnits' => $totalLabUnits
+          ], 200);
+      }
+
+      // public function getAddedStudentLoadingAllSections(Request $request)
+      // {
+      //     $studentId = $request->input('studentId');
+      //     $syid = $request->input('syid');
+      //     $semid = $request->input('semid');
+  
+      //     $studentLoading = DB::table('college_loadsubject')
+      //         ->join('college_subjects', 'college_loadsubject.subjectID', '=', 'college_subjects.id')
+      //         ->where('college_loadsubject.studid', $studentId)
+      //         ->where('college_loadsubject.syid', $syid)
+      //         ->where('college_loadsubject.semid', $semid)
+      //         ->where('college_loadsubject.deleted', 0)
+      //         ->select(
+      //             'college_subjects.subjCode',
+      //             'college_subjects.subjDesc',
+      //             'college_subjects.lecunits',
+      //             'college_subjects.labunits'
+      //         )
+      //         ->get();
+  
+      //     $totalSubjects = $studentLoading->count();
+      //     $totalCreditUnits = $studentLoading->sum('lecunits') + $studentLoading->sum('labunits');
+          
+  
+      //     return response()->json([
+      //         'studentLoading' => $studentLoading,
+      //         'totalSubjects' => $totalSubjects,
+      //         'totalCreditUnits' => $totalCreditUnits
+      //     ], 200);
+      // }
 
 }

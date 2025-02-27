@@ -923,7 +923,7 @@
 
       function colUI(levelid)
       {
-        if(levelid >= 17 && levelid <= 20)
+        if(levelid >= 17 && levelid <= 25)
         {
           $('.course-ui').show();
           $('.basic-ed').hide();
@@ -951,7 +951,7 @@
         {
           $('.semUI').show();
         }
-        else if(levelid >= 17 && levelid <= 21)
+        else if(levelid >= 17 && levelid <= 25)
         {
           $('.semUI').show();
         }
@@ -976,7 +976,7 @@
         {
           $('#feesSem').prop('disabled', false);
         }
-        else if($('#feesglevel').val() >= 17 && $('#feesglevel').val() <= 20)
+        else if($('#feesglevel').val() >= 17 && $('#feesglevel').val() <= 25)
         {
           $('#feesSem').prop('disabled', false); 
         }
@@ -1170,7 +1170,7 @@
         var levelid = $('#feesglevel').val();
 
         
-        if(levelid >= 17 && levelid <= 20)
+        if(levelid >= 17 && levelid <= 25)
         {
           $('#txtdesc').val(course);
           $('#txtdesc').trigger('keyup');
@@ -1211,7 +1211,7 @@
           $(this).removeClass('is-invalid'); 
         }
 
-        if($(this).val() >= 17 && $(this).val() <= 20)
+        if($(this).val() >= 17 && $(this).val() <= 25)
         {
           $('#divTuition').removeClass('Div-hide')
         }

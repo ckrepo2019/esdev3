@@ -105,6 +105,7 @@ class RCFGController extends Controller
                 $subjects = self::collegestudentsched_plot($request->get('studid'), $collectgradelevel->syid, $collectgradelevel->semid);
                 $getthegrades = collect($records)->where('syid',$collectgradelevel->syid)->where('semid', $collectgradelevel->semid)->first()->subjdata ?? array();
                 // return $getthegrades;
+                // return $subjects;
 
                 if(count($subjects)>0)
                 {
@@ -148,10 +149,11 @@ class RCFGController extends Controller
             $coursename = strtoupper(explode(' major',strtolower($coursename))[0]);
         }
         $subjgroups = DB::table('setup_subjgroups')
-            ->where('deleted','0')
-            ->orderBy('sortnum','asc')
-            ->groupBy('sortnum')
-            ->get();
+        ->where('deleted', '0')
+        ->orderBy(DB::raw('CAST(sortnum AS UNSIGNED)'), 'asc')
+        ->groupBy('sortnum')
+        ->get();
+    
 
         $studinfo = DB::table('studinfo')
             ->where('id', $request->get('studid'))
@@ -185,6 +187,7 @@ class RCFGController extends Controller
             // return $collectgradelevels;
         if($request->ajax())
         {
+            // dd($subjgroups);
             return view('registrar.forms.rcfg.results')
                 ->with('details', $details)
                 ->with('studinfo', $studinfo)
@@ -302,9 +305,9 @@ class RCFGController extends Controller
 
         try{
 
-              $subjects = DB::table('college_studsched')
+              $subjects = DB::table('college_loadsubject')
                     ->join('college_classsched',function($join) use($syid,$semid){
-                            $join->on('college_studsched.schedid','=','college_classsched.id');
+                            $join->on('college_loadsubject.schedid','=','college_classsched.id');
                             $join->where('college_classsched.deleted',0);
                             $join->where('college_classsched.syid',$syid);
                             $join->where('college_classsched.semesterID',$semid);
@@ -317,8 +320,8 @@ class RCFGController extends Controller
                             $join->on('college_classsched.sectionID','=','college_sections.id');
                             $join->where('college_sections.deleted',0);
                     })
-                    ->where('college_studsched.deleted',0)
-                    ->where('college_studsched.studid',$studid)
+                    ->where('college_loadsubject.deleted',0)
+                    ->where('college_loadsubject.studid',$studid)
                     ->select(
                             'lecunits',
                             'labunits',
@@ -328,7 +331,7 @@ class RCFGController extends Controller
                             'subjDesc',
                             'subjCode',
                             'sectionDesc',
-                            'schedstatus'
+                            // 'schedstatus'
                     )
                     ->get();
 

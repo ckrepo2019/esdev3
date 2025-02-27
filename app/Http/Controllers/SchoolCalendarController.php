@@ -104,10 +104,16 @@ class SchoolCalendarController extends Controller
                 )
                 ->get();
     
-            foreach ($events as $value) {
-                // Convert the allDay field to a boolean
-                $value->allDay = $value->allDay == 1;
-            }
+                foreach ($events as $value) {
+                    // Convert the allDay field to a boolean
+                    $value->allDay = $value->allDay == 1;
+                    
+                    $sdate = explode(' ', $value->start)[0];
+                    $edate = explode(' ', $value->end)[0];
+    
+                    $value->start = $sdate . ' ' . $value->stime;
+                    $value->end = $edate . ' ' . $value->etime;
+                }
     
             return response()->json($events); // Move this outside of the loop
         } else {
@@ -154,7 +160,7 @@ class SchoolCalendarController extends Controller
     public function get_event(Request $request){
 
         $event = DB::table('school_calendar')
-            // ->select('school_calendar.*')
+            ->select('school_calendar.*', 'schoolcaltype.typename', 'hr_holidaytype.description')
             ->leftJoin('schoolcaltype', 'school_calendar.holiday', '=', 'schoolcaltype.id')
             ->leftJoin('hr_holidaytype', 'school_calendar.holidaytype', '=', 'hr_holidaytype.id')
             ->where('school_calendar.id', $request->id)
@@ -166,7 +172,7 @@ class SchoolCalendarController extends Controller
         
     }
 
-    public function add_event(Request $request){
+    public function add_event(Request $request) {
         $eventtypeid = $request->get('eventypeid');
         $time = explode(" - ", $request->get('ttime'));
         $stime = '';
@@ -174,33 +180,37 @@ class SchoolCalendarController extends Controller
         
         if (!empty($time) && count($time) == 2 && !empty($time[0]) && !empty($time[1])) {
             // If $time is not empty and has two valid parts
-            $stime = \Carbon\Carbon::create($time[0])->isoFormat('HH:mm:ss');
-            $etime = \Carbon\Carbon::create($time[1])->isoFormat('HH:mm:ss');
+            $stime = Carbon::create($time[0])->isoFormat('HH:mm:ss');
+            $etime = Carbon::create($time[1])->isoFormat('HH:mm:ss');
         } else {
             // If $time is empty or invalid, set default times
-            $stime = \Carbon\Carbon::create('08:00:00')->isoFormat('HH:mm:ss'); // Default start time
-            $etime = \Carbon\Carbon::create('17:00:00')->isoFormat('HH:mm:ss'); // Default end time
+            $stime = Carbon::create('08:00:00')->isoFormat('HH:mm:ss'); // Default start time
+            $etime = Carbon::create('17:00:00')->isoFormat('HH:mm:ss'); // Default end time
         }
-        
+    
         // dd($stime, $etime);
-
+    
+        $startDate = Carbon::parse($request->start); // Parse the start date from the request
+        $endDate = Carbon::parse($request->end);     // Parse the end date from the request
+    
+        // Check if the end time is earlier than the start time, indicating the event crosses over to the next day
+        if ($etime < $stime) {
+            $endDate->addDay();  // Add 1 day to the end date if the time exceeds midnight
+        }
+    
         $colleges = null;
         $courses = null;
-
-        if($request->collegeid != null){
-
-            $colleges =  implode(" ",$request->collegeid);
+    
+        if ($request->collegeid != null) {
+            $colleges = implode(" ", $request->collegeid);
         }
-        if($request->courseid != null){
-
-            $courses =  implode(" ",$request->courseid);
+        if ($request->courseid != null) {
+            $courses = implode(" ", $request->courseid);
         }
-
+    
         if ($eventtypeid == 1) {
-
             $ifeventexist = DB::table('school_calendar')
                 ->where('title', $request->event_desc)
-                // ->where('venue', $request->act_venue)
                 ->where('start', $request->start)
                 ->where('end', $request->end)
                 ->where('deleted', 0)
@@ -215,36 +225,34 @@ class SchoolCalendarController extends Controller
                 ]); 
             } else {
                 DB::table('school_calendar')
-                ->insert([
-
-                    "start" => $request->start, 
-                    "end" => $request->end,
-                    "title" => $request->event_desc, 
-                    "venue"=> $request->act_venue ? $request->act_venue : 'Not Specified',
-                    "involve"=> $request->involve ? $request->involve : 'Not Specified',
-                    'isnoclass'=> $request->isNoClass,
-                    'gradelevelid'=> $request->gradelevelid,
-                    'acadprogid'=> $request->acadprogid,
-                    'courseid'=> $courses,
-                    'collegeid'=> $colleges,
-                    'type'=> $request->type,
-                    'syid'=> $request->syid,
-                    'holiday' => $request->holiday,
-                    'holidaytype' => $request->typeholiday,
-                    'withpay' => 1,
-                    'stime' => $stime,
-                    'etime' => $etime
-                ]);
-            
+                    ->insert([
+                        "start" => $startDate->toDateString(), 
+                        "end" => $endDate->toDateString(),
+                        "title" => $request->event_desc, 
+                        "venue"=> $request->act_venue ? $request->act_venue : 'Not Specified',
+                        "involve"=> $request->involve ? $request->involve : 'Not Specified',
+                        'isnoclass'=> $request->isNoClass,
+                        'gradelevelid'=> $request->gradelevelid,
+                        'acadprogid'=> $request->acadprogid,
+                        'courseid'=> $courses,
+                        'collegeid'=> $colleges,
+                        'type'=> $request->type,
+                        'syid'=> $request->syid,
+                        'holiday' => $request->holiday,
+                        'holidaytype' => $request->typeholiday,
+                        'withpay' => 1,
+                        'stime' => $stime,
+                        'etime' => $etime
+                    ]);
+                
                 return array (
                     (object)[
-                    'status'=>200,
-                    'statusCode'=>"success",
-                    'message'=>'Event Added Successfully!'
+                        'status'=>200,
+                        'statusCode'=>"success",
+                        'message'=>'Event Added Successfully!'
                 ]); 
             }
         } else {
-
             $ifeventexist = DB::table('school_calendar')
                 ->where('title', $request->event_desc)
                 ->where('venue', $request->act_venue)
@@ -261,35 +269,34 @@ class SchoolCalendarController extends Controller
                 ]); 
             } else {
                 DB::table('school_calendar')
-                ->insert([
-
-                    "start" => $request->start, 
-                    "end" => $request->end,
-                    "title" => $request->event_desc, 
-                    "venue"=> $request->act_venue,
-                    "involve"=> $request->involve,
-                    'isnoclass'=> $request->isNoClass,
-                    'gradelevelid'=> $request->gradelevelid,
-                    'acadprogid'=> $request->acadprogid,
-                    'courseid'=> $courses,
-                    'collegeid'=> $colleges,
-                    'type'=> $request->type,
-                    'syid'=> $request->syid,
-                    'holiday' => $request->holiday,
-                    'stime' => $stime,
-                    'etime' => $etime
-                    
-                ]);
-            
+                    ->insert([
+                        "start" => $startDate->toDateString(), 
+                        "end" => $endDate->toDateString(),
+                        "title" => $request->event_desc, 
+                        "venue"=> $request->act_venue,
+                        "involve"=> $request->involve,
+                        'isnoclass'=> $request->isNoClass,
+                        'gradelevelid'=> $request->gradelevelid,
+                        'acadprogid'=> $request->acadprogid,
+                        'courseid'=> $courses,
+                        'collegeid'=> $colleges,
+                        'type'=> $request->type,
+                        'syid'=> $request->syid,
+                        'holiday' => $request->holiday,
+                        'stime' => $stime,
+                        'etime' => $etime
+                    ]);
+                
                 return array (
                     (object)[
-                    'status'=>200,
-                    'statusCode'=>"success",
-                    'message'=>'Event Added Successfully!'
+                        'status'=>200,
+                        'statusCode'=>"success",
+                        'message'=>'Event Added Successfully!'
                 ]); 
             }
         }
     }
+    
     
     public function update_event(Request $request){
 

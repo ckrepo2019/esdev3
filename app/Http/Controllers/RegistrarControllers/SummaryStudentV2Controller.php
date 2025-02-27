@@ -20,7 +20,7 @@ class SummaryStudentV2Controller extends Controller
     
     public function reportssummariesallstudentsnew($id, Request $request)
     {
-        
+        // return $request->all();
         date_default_timezone_set('Asia/Manila');
         
         $academicprogram = Db::table('academicprogram')
@@ -311,7 +311,7 @@ class SummaryStudentV2Controller extends Controller
                 $isgs = collect($teacheradprogid)->where('acadprogid',3)->count() > 0 ? true :false;
                 $isps = collect($teacheradprogid)->where('acadprogid',3)->count() > 0 ? true :false;
 
-                $acadprogs = [];
+                $acadprogs = [2];
                 $acadpoverall = 0;
                 if($isjs)
                 {
@@ -424,7 +424,9 @@ class SummaryStudentV2Controller extends Controller
                     'enrolledstud.dateenrolled',
                     'gradelevel.acadprogid',
                     'gradelevel.sortid',
-                    'modeoflearning.description as mol'
+                    'modeoflearning.description as mol',
+                    'studinfo.religionname',
+                    'studinfo.mtname'
                 )
                 
                 ->join('studinfo','enrolledstud.studid','=','studinfo.id')
@@ -514,7 +516,9 @@ class SummaryStudentV2Controller extends Controller
                     'gradelevel.acadprogid',
                     'gradelevel.sortid',
                     'gradelevel.levelname',
-                    'modeoflearning.description as mol'
+                    'modeoflearning.description as mol',
+                    'studinfo.religionname',
+                    'studinfo.mtname'
                 )
                 ->join('studinfo','sh_enrolledstud.studid','=','studinfo.id')
                 ->leftJoin('modeoflearning','studinfo.mol','=','modeoflearning.id')
@@ -593,7 +597,9 @@ class SummaryStudentV2Controller extends Controller
                     'college_colleges.collegeDesc as collegename',
                     'college_courses.courseabrv as coursename',
                     'college_courses.courseDesc as course',
-                    'college_year.id as yearid'
+                    'college_year.id as yearid',
+                    'studinfo.religionname',
+                    'studinfo.mtname',
                 )
                 ->join('studinfo','college_enrolledstud.studid','=','studinfo.id')
                 ->leftJoin('modeoflearning','studinfo.mol','=','modeoflearning.id')
@@ -1070,6 +1076,9 @@ class SummaryStudentV2Controller extends Controller
 
                     }    
                 }
+
+                $religionslist = $filteredstudents->groupBy('religionname');
+                $mtnamelist = $filteredstudents->groupBy('mtname');
                 
                 array_push($records, (object) array(
                     'gradelevels'       => $bygradelevels,
@@ -1078,7 +1087,9 @@ class SummaryStudentV2Controller extends Controller
                     'colleges'          => $bycolleges,
                     'courses'           => $bycourses,
                     'sections'          => $bysections,
-                    'students'          => $filteredstudents
+                    'students'          => $filteredstudents,
+                    'religions'         => $religionslist,
+                    'mtname'            => $mtnamelist
                 ));
             }
             elseif($selectedacadprog == 'basiced')
@@ -1319,6 +1330,8 @@ class SummaryStudentV2Controller extends Controller
                     ->where('acadprogid',$selectedacadprog)
                     ->orderBy('sortid','asc')
                     ->get();
+
+                   
                 
                 if(count($bygradelevels)>0)
                 {
@@ -1353,7 +1366,12 @@ class SummaryStudentV2Controller extends Controller
                             }
                         }
                     }
-                }                
+                } 
+
+          
+                $religionslist = $filteredstudents->groupBy('religionname');
+                $mtnamelist = $filteredstudents->groupBy('mtname');
+                
                 array_push($records, (object) array(
                     'gradelevels'       => $bygradelevels,
                     'tracks'            => $bytracks,
@@ -1361,18 +1379,23 @@ class SummaryStudentV2Controller extends Controller
                     'colleges'          => $bycolleges,
                     'courses'           => $bycourses,
                     'sections'          => $bysections,
-                    'students'          => $filteredstudents
+                    'students'          => $filteredstudents,
+                    'religions'         => $religionslist,
+                    'mtname'            => $mtnamelist
                 ));
             }
-            // return $filteredstudents;
+            // return $request->all();
+            // return $id;
             if($id == 'filter'){
                 if($request->ajax())
                 {
                     return $records;
+                }else{
+                    return $records;
                 }
-            }
+            } 
             elseif($id == 'print'){
-
+                // return $request->all();
                 $schoolinfo = Db::table('schoolinfo')
                     ->select(
                         'schoolinfo.schoolid',
@@ -1644,9 +1667,14 @@ class SummaryStudentV2Controller extends Controller
                 }
                 // return $selectedstudenttype;
                 if($request->get('exporttype') == 'excel')
-                { 
+                {
                     $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();;
                     $sheet = $spreadsheet->getActiveSheet();
+
+                    $sheet->getColumnDimension('H')->setAutoSize(true);
+                    $sheet->getColumnDimension('I')->setAutoSize(true);
+                    $sheet->getColumnDimension('J')->setAutoSize(true);
+
                     $border    = [
                                         'borders' => [
                                             'top' => [
@@ -1784,8 +1812,8 @@ class SummaryStudentV2Controller extends Controller
                         $sheet->setCellValue('G'.$startcellno, 'Section');
                         $sheet->setCellValue('H'.$startcellno, 'College/Track');
                         $sheet->setCellValue('I'.$startcellno, 'Course/Strand');
-                        $sheet->setCellValue('J'.$startcellno, 'MOL'); // Adjust this column index as needed
-                        $sheet ->getStyle('B'.$startcellno.':J'.$startcellno)->applyFromArray($border);
+                        $sheet->setCellValue('J'.$startcellno, 'MOL');
+                        $sheet ->getStyle('A'.$startcellno.':J'.$startcellno)->applyFromArray($border);
 
                         $startcellno+=1;
                         if(count($filteredstudents)>0)
@@ -1793,42 +1821,42 @@ class SummaryStudentV2Controller extends Controller
                             foreach($filteredstudents as $studentkey => $filteredstudent)
                             {
                                 $sheet->setCellValue('A'.$startcellno, $studentkey+1);
-                                $sheet->setCellValueExplicit('B'.$startcellno, $filteredstudent->lrn, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
-                                $sheet->setCellValue('C'.$startcellno, $filteredstudent->lastname . ', ' . $filteredstudent->firstname . ' ' . $filteredstudent->suffix . ' ' . $filteredstudent->middlename); // Name in column C
+                                $sheet->setCellValueExplicit('B'.$startcellno, (string)$filteredstudent->lrn, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                                $sheet->setCellValue('C'.$startcellno, $filteredstudent->lastname.', '.$filteredstudent->firstname.' '.$filteredstudent->suffix.' '.$filteredstudent->middlename);
                                 $sheet->setCellValue('D'.$startcellno, strtoupper($filteredstudent->gender));
                                 $sheet->setCellValue('E'.$startcellno, $filteredstudent->dob);
                                 $sheet->setCellValue('F'.$startcellno, $filteredstudent->levelname);
                                 $sheet->setCellValue('G'.$startcellno, $filteredstudent->sectionname);
                                 $sheet->setCellValue('H'.$startcellno, $filteredstudent->trackname);
                                 $sheet->setCellValue('I'.$startcellno, $filteredstudent->strandname);
-                                $sheet->setCellValue('J'.$startcellno, $filteredstudent->mol); // Adjust this column index as needed
-                                $sheet->getStyle('B'.$startcellno.':J'.$startcellno)->applyFromArray($border); // Adjust style range
-                        
+                                $sheet->setCellValue('J'.$startcellno, $filteredstudent->mol);
+                                $sheet ->getStyle('A'.$startcellno.':J'.$startcellno)->applyFromArray($border);
+
                                 $startcellno+=1;
                             }
                         }    
                         $startcellno+=2;
-                        $sheet->mergeCells('G'.$startcellno.':I'.$startcellno);
+                        $sheet->mergeCells('G'.$startcellno.':J'.$startcellno);
                         $sheet->setCellValue('G'.$startcellno, 'Prepared by:');
                         
                         $startcellno+=2;
-                        $sheet->mergeCells('G'.$startcellno.':I'.$startcellno);
+                        $sheet->mergeCells('G'.$startcellno.':J'.$startcellno);
                         $sheet->setCellValue('G'.$startcellno, $preparedby);
-                        $sheet->getStyle('G'.$startcellno.':I'.$startcellno)
+                        $sheet->getStyle('G'.$startcellno.':J'.$startcellno)
                             ->getBorders()->getBottom()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
-                        $sheet->getStyle('G'.$startcellno.':I'.$startcellno)
+                        $sheet->getStyle('G'.$startcellno.':J'.$startcellno)
                             ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
                         $startcellno+=2;
-                        $sheet->mergeCells('G'.$startcellno.':I'.$startcellno);
+                        $sheet->mergeCells('G'.$startcellno.':J'.$startcellno);
                         $sheet->setCellValue('G'.$startcellno, 'Generated by:');
                         
                         $startcellno+=2;
-                        $sheet->mergeCells('G'.$startcellno.':I'.$startcellno);
+                        $sheet->mergeCells('G'.$startcellno.':J'.$startcellno);
                         $sheet->setCellValue('G'.$startcellno, $generatedby);
-                        $sheet->getStyle('G'.$startcellno.':I'.$startcellno)
+                        $sheet->getStyle('G'.$startcellno.':J'.$startcellno)
                             ->getBorders()->getBottom()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
-                        $sheet->getStyle('G'.$startcellno.':I'.$startcellno)
+                        $sheet->getStyle('G'.$startcellno.':J'.$startcellno)
                             ->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                     }
                     elseif($request->get('layout') == 'studdirectoryexcel')

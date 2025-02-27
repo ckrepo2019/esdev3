@@ -35,8 +35,7 @@
     <link rel="stylesheet" href="{{ asset('dist/css/fontfamily.css') }}">
     <link rel="stylesheet" href="{{ asset('dist/css/ionicons.min.css') }}">
     <link rel="stylesheet" href="{{ asset('dist/css/googleapis-font.css') }}">
-    <link rel="stylesheet" href="{{ asset('dist/css/select2.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('dist/css/select2-bootstrap4.min.css') }}">
+
     <link rel="stylesheet" href="{{ asset('dist/css/simplePagination.css') }}">
     <link rel="stylesheet" href="{{ asset('assets\css\sideheaderfooter.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/toastr/toastr.min.css') }}">
@@ -44,20 +43,31 @@
     <link rel="stylesheet" href="{{ asset('plugins/jqvmap/jqvmap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/daterangepicker/daterangepicker.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/summernote/summernote-bs4.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets\css\sideheaderfooter.css') }}">
+    {{-- <link rel="stylesheet" href="{{ asset('assets\css\sideheaderfooter.css') }}"> --}}
     <link rel="stylesheet" href="{{ asset('plugins/croppie/croppie.css') }}">
+    <link rel="stylesheet" href="{{ asset('plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('dist/css/select2-bootstrap4.min.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
     <!-- dropzonejs -->
-    <link rel="stylesheet" href="{{ asset('plugins/dropzone/min/dropzone.min.css') }}">
+    {{-- <link rel="stylesheet" href="{{ asset('plugins/dropzone/min/dropzone.min.css') }}"> --}}
     <!-- Ekko Lightbox -->
     <link rel="stylesheet" href="{{ asset('plugins/ekko-lightbox/ekko-lightbox.css') }}">
 
+
+    <link rel="stylesheet" href="{{ asset('dist/css/simplePagination.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/datatables-fixedcolumns/css/fixedColumns.bootstrap4.css') }}">
-    @yield('jsUP')
+
     @yield('headerjavascript')
     @yield('pagespecificscripts')
+    @yield('jsUP')
 
+    <style>
+           .card {
+            box-shadow: 0 0 1px rgba(0,0,0,0.08), 0 1px 1px rgba(0,0,0,0.12) !important;
+            border: unset !important;
+        }
+    </style>
 </head>
 
 <body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed" style="height: auto;">
@@ -76,13 +86,13 @@
         <script src="{{ asset('plugins/jquery/jquery.min.js') }}"></script>
         <script src="{{ asset('plugins/jquery-ui/jquery-ui.min.js') }}"></script>
         <script src="{{ asset('plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-        <script src="{{ asset('plugins/chart.js/Chart.min.js') }}"></script>
+        {{-- <script src="{{ asset('plugins/chart.js/Chart.min.js') }}"></script> --}}
         <script src="{{ asset('plugins/daterangepicker/daterangepicker.js') }}"></script>
         <script src="{{ asset('plugins/daterangepicker/moment.min.js') }}"></script>
         <script src="{{ asset('plugins/jquery-knob/jquery.knob.min.js') }}"></script>
 
         <script src="{{ asset('plugins/daterangepicker/daterangepicker.js') }}"></script>
-        <script src="{{ asset('dist/js/pages/dashboard3.js') }}"></script>
+        {{-- <script src="{{ asset('dist/js/pages/dashboard3.js') }}"></script> --}}
 
         <script src="{{ asset('plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js') }}"></script>
         <script src="{{ asset('dist/js/adminlte.js') }}"></script>
@@ -100,16 +110,16 @@
         <script src="{{ asset('assets/scripts/gijgo.min.js') }}"></script>
         <script src="{{ asset('plugins/croppie/croppie.js') }}"></script>
         <!-- dropzonejs -->
-        <script src="{{ asset('plugins/dropzone/min/dropzone.min.js') }}"></script>
+        {{-- <script src="{{ asset('plugins/dropzone/min/dropzone.min.js') }}"></script> --}}
         <script src="{{ asset('plugins/ekko-lightbox/ekko-lightbox.min.js') }}"></script>
         <!-- Filterizr-->
         <script src="{{ asset('plugins/filterizr/jquery.filterizr.min.js') }}"></script>
 
-        @if(DB::table('schoolinfo')->first()->snr == 'ldcu')
+        @if (DB::table('schoolinfo')->first()->snr == 'ldcu')
             <script type="module">
                 import Chatbot from "https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js"
                 Chatbot.init({
-                    chatflowid: "53ae11aa-4b02-4955-bdaf-ec1e6d86a940",
+                    chatflowid: "be0a5761-31f0-4b7a-a752-0df8769d1efe",
                     apiHost: "https://flowisechatbot-nxra.onrender.com",
                     chatflowConfig: {
                         // topK: 2
@@ -166,7 +176,7 @@
                                 sendMessageSound: true,
                                 // sendSoundLocation: "send_message.mp3", // If this is not used, the default sound effect will be played if sendSoundMessage is true.
                                 receiveMessageSound: true,
-                                // receiveSoundLocation: "receive_message.mp3", // If this is not used, the default sound effect will be played if receiveSoundMessage is true. 
+                                // receiveSoundLocation: "receive_message.mp3", // If this is not used, the default sound effect will be played if receiveSoundMessage is true.
                             },
                             feedback: {
                                 color: '#303235',
@@ -311,6 +321,10 @@
                 });
             })
         </script>
+
+        <!-- dropzonejs -->
+        <script src="{{ asset('plugins/dropzone/min/dropzone.min.js') }}"></script>
+        @include('websockets.realtimenotification')
 
 </body>
 

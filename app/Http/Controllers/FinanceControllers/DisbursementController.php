@@ -62,7 +62,7 @@ class DisbursementController extends Controller
             {
                 goto details;
             }
-            
+
             if($dis->trxstatus == 'POSTED')
             {
                 $details = db::table('disbursement_details')
@@ -88,9 +88,9 @@ class DisbursementController extends Controller
             {
                 // if($details->trxstatus == 'POSTED')
                 // {
-                //     $paidamount = $details->payment;    
+                //     $paidamount = $details->payment;
                 // }
-                
+
                 $headerid = $details->headerid;
                 $ddid = $details->id;
 
@@ -118,7 +118,7 @@ class DisbursementController extends Controller
             else{
                 $paidamount = 0;
                 $headerid = 0;
-                $ddid = 0; 
+                $ddid = 0;
                 $payment = 0;
             }
 
@@ -184,7 +184,7 @@ class DisbursementController extends Controller
 
         return $rr_array;
     }
-    
+
     public function disbursement_save(Request $request)
     {
         $id = $request->get('dataid');
@@ -197,6 +197,7 @@ class DisbursementController extends Controller
         $paytype = $request->get('paytype');
         $rr_array = $request->get('rr_array');
         $jearray = $request->get('jearray');
+        $voucherno = $request->get('voucherno');
         $totalamount = 0;
         $refnum = 'Reference Number';
 
@@ -211,81 +212,90 @@ class DisbursementController extends Controller
                     'bankid' => $bankid,
                     'checkno' => $checkno,
                     'checkdate' => $checkdate,
+                    'voucherno' => $voucherno,
                     'transdate' => date_format(date_create($date), 'Y-m-d'),
                     'remarks' => $remarks,
                     'createdby' => auth()->user()->id,
                     'createddatetime' => FinanceModel::getServerDateTime()
                 ]);
 
-
-            foreach($rr_array as $rr)
+            if($rr_array != '')
             {
-                $rrid = $rr['rrid'];
-                $detailid = $rr['dataid'];
-                $rramount = str_replace(',', '', $rr['rramount']);
-
-                if($detailid == 0)
+                foreach($rr_array as $rr)
                 {
-                    if($rramount > 0)
-                    {
-                        db::table('disbursement_details')
-                            ->insert([
-                                'headerid' => $did,
-                                'rrid' => $rrid,
-                                'payment' => $rramount,
-                                'createdby' => auth()->user()->id,
-                                'createddatetime' => FinanceModel::getServerDateTime()
-                            ]);
+                    $rrid = $rr['rrid'];
+                    $detailid = $rr['dataid'];
+                    $rramount = str_replace(',', '', $rr['rramount']);
 
-                        $totalamount += $rramount;
+                    if($detailid == 0)
+                    {
+                        if($rramount > 0)
+                        {
+                            db::table('disbursement_details')
+                                ->insert([
+                                    'headerid' => $did,
+                                    'rrid' => $rrid,
+                                    'payment' => $rramount,
+                                    'createdby' => auth()->user()->id,
+                                    'createddatetime' => FinanceModel::getServerDateTime()
+                                ]);
+
+                            $totalamount += $rramount;
+                        }
+                    }
+                    else{
+                        if($rramount > 0)
+                        {
+                            // return 'aaa';
+                            // db::table('disbursement_details')
+                            //     ->where('id', $detailid)
+                            //     ->update([
+                            //         'headerid' => $did,
+                            //         'rrid' => $rrid,
+                            //         'payment' => $rramount,
+                            //         'updatedby' => auth()->user()->id,
+                            //         'updateddatetime' => FinanceModel::getServerDateTime()
+                            //     ]);
+
+                            db::table('disbursement_details')
+                                ->insert([
+                                    'headerid' => $did,
+                                    'rrid' => $rrid,
+                                    'payment' => $rramount,
+                                    'createdby' => auth()->user()->id,
+                                    'createddatetime' => FinanceModel::getServerDateTime()
+                                ]);
+
+                            $totalamount += $rramount;
+                        }
                     }
                 }
-                else{
-                    if($rramount > 0)
-                    {
-                        // return 'aaa';
-                        // db::table('disbursement_details')
-                        //     ->where('id', $detailid)
-                        //     ->update([
-                        //         'headerid' => $did,
-                        //         'rrid' => $rrid,
-                        //         'payment' => $rramount,
-                        //         'updatedby' => auth()->user()->id,
-                        //         'updateddatetime' => FinanceModel::getServerDateTime()
-                        //     ]);
-
-                        db::table('disbursement_details')
-                            ->insert([
-                                'headerid' => $did,
-                                'rrid' => $rrid,
-                                'payment' => $rramount,
-                                'createdby' => auth()->user()->id,
-                                'createddatetime' => FinanceModel::getServerDateTime()
-                            ]);
-
-                        $totalamount += $rramount;
-                    }
-                }    
             }
 
-            foreach($jearray as $je)
+            // return $jearray;
+
+            if($jearray != '')
             {
-                if($je['djeid'] == 0)
+
+                foreach($jearray as $je)
                 {
-                    db::table('disbursement_jedetails')
-                        ->insert([
-                            'headerid' => $did,
-                            'glid' => $je['glid'],
-                            'debit' => str_replace(',', '', $je['debit']),
-                            'credit' => str_replace(',', '', $je['credit']),
-                            'createdby' => auth()->user()->id,
-                            'createddatetime' => FinanceModel::getServerDateTime()
-                        ]);
-                }
-                else{
+                    if($je['djeid'] == 0)
+                    {
+                        db::table('disbursement_jedetails')
+                            ->insert([
+                                'headerid' => $did,
+                                'glid' => $je['glid'],
+                                'debit' => str_replace(',', '', $je['debit']),
+                                'credit' => str_replace(',', '', $je['credit']),
+                                'createdby' => auth()->user()->id,
+                                'createddatetime' => FinanceModel::getServerDateTime()
+                            ]);
+                    }
+                    else{
+
+                    }
 
                 }
-
             }
 
             $refnum =  'DSMT-' . sprintf('%07d', $did);
@@ -311,6 +321,7 @@ class DisbursementController extends Controller
                     'checkno' => $checkno,
                     'bankid' => $bankid,
                     'checkdate' => $checkdate,
+                    'voucherno' => $voucherno,
                     'transdate' => date_format(date_create($date), 'Y-m-d'),
                     'remarks' => $remarks,
                     'updatedby' => auth()->user()->id,
@@ -363,7 +374,7 @@ class DisbursementController extends Controller
                                     'payment' => $rramount,
                                     'updatedby' => auth()->user()->id,
                                     'updateddatetime' => FinanceModel::getServerDateTime()
-                                ]);    
+                                ]);
                         }
                         else{
                             db::table('disbursement_details')
@@ -376,7 +387,7 @@ class DisbursementController extends Controller
                                 ]);
                         }
 
-                        
+
                     }
                 }
             }
@@ -399,7 +410,7 @@ class DisbursementController extends Controller
                             ]);
                     }
                     else{
-                        db::table('disbursement_jedetails') 
+                        db::table('disbursement_jedetails')
                             ->where('id', $je['djeid'])
                             ->update([
                                 'glid' => $je['glid'],
@@ -464,6 +475,7 @@ class DisbursementController extends Controller
         $data = array(
             'id' => $disbursement->id,
             'refnum' => $disbursement->refnum,
+            'voucherno' => $disbursement->voucherno,
             'supplierid' => $disbursement->supplierid,
             'paytype' => $disbursement->paytype,
             'bankid' => $disbursement->bankid,
@@ -474,16 +486,16 @@ class DisbursementController extends Controller
             'remarks' => $disbursement->remarks,
             'trxstatus' => $disbursement->trxstatus
         );
-        
+
         if($action != 'print')
         {
             return $data;
         }
         else{
             $supplier = db::table('expense_company')->where('id', $disbursement->supplierid)->first();
-            
+
             $detail = db::table('disbursement')
-                ->select(db::raw('headerid, rrid, SUM(payment) AS payment, receiving.refnum'))
+                ->select(db::raw('headerid, rrid, SUM(payment) AS payment, receiving.refnum, voucherno'))
                 ->join('disbursement_details', 'disbursement.id', 'disbursement_details.headerid')
                 ->join('receiving', 'disbursement_details.rrid', '=', 'receiving.id')
                 ->where('disbursement_details.deleted', 0)
@@ -531,7 +543,7 @@ class DisbursementController extends Controller
             // return $action;
             // return view('finance.purchasing.reports.pdf_po', compact('purchasing', 'data'));
             $pdf = PDF::loadview('finance.disbursement.reports.pdf_voucher', compact('disbursement', 'data', 'supplier', 'payment', 'detail', 'jedetails', 'bankname', 'paytitle'));
-            return $pdf->stream('Cash/Check Voucher.pdf'); 
+            return $pdf->stream('Cash/Check Voucher.pdf');
         }
     }
 
@@ -592,7 +604,7 @@ class DisbursementController extends Controller
 
             foreach($disbursement_je as $detail)
             {
-                db::table('acc_jedetails')                  
+                db::table('acc_jedetails')
                     ->insert([
                         'headerid' => $jeid,
                         'accid' => $detail->glid,
@@ -624,6 +636,6 @@ class DisbursementController extends Controller
 
         return 'done';
     }
-    
+
 
 }

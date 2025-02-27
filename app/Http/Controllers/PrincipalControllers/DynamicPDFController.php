@@ -1165,7 +1165,7 @@ class DynamicPDFController extends \App\Http\Controllers\Controller
                         ->first();
             }
            
-			$strand = $student->strandid;
+			$strand = (isset($student) && isset($student->strandid)) ? $student->strandid : '';
         }
 
 		
@@ -1528,7 +1528,7 @@ class DynamicPDFController extends \App\Http\Controllers\Controller
             ->where('acadprogid', $acad)
             ->first();
 			
-			
+		// dd($activetemplate);
 		//if($activetemplate->templatepath == '' || $activetemplate->templatepath == null){
 			//$activetemplate->templatepath = principalsportal.forms.sf9layout.ica.shs;
 		//}
@@ -1544,6 +1544,7 @@ class DynamicPDFController extends \App\Http\Controllers\Controller
                             'title'
                         )
                         ->first();
+                        // dd($signatory) ;
 
         if(isset($signatory->name)){
             $principal_info[0]->name = $signatory->name;
@@ -1924,7 +1925,6 @@ class DynamicPDFController extends \App\Http\Controllers\Controller
 			return "No template available";
 		}
 		
-		
             if($acad == 5){
 				
 				$strandInfo = DB::table('sh_strand')
@@ -1943,7 +1943,7 @@ class DynamicPDFController extends \App\Http\Controllers\Controller
 								->first()
 								->id;
 				}
-				
+				// return $activetemplate->templatepath;
 									
                 $pdf = PDF::loadView($activetemplate->templatepath,compact('semid','strandInfo','principal_info','student','subjects','studgrades','finalgrade','attendance_setup','schoolyear','schoolinfo','checkGrades','rv','adviser'))->setPaper('legal');
                 $pdf->getDomPDF()->set_option("enable_php", true)->set_option("DOMPDF_ENABLE_CSS_FLOAT", true);

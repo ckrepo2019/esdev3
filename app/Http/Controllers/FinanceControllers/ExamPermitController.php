@@ -135,7 +135,7 @@ class ExamPermitController extends Controller
                 ->orderBy('firstname')
                 ->get();
         }
-        elseif($levelid >= 17 && $levelid <= 21)
+        elseif($levelid >= 17 && $levelid <= 25 )
         {
             $enrolled = db::table('college_enrolledstud')
                 ->select(db::raw('sid, college_enrolledstud.studid, lastname, firstname, middlename, levelname, college_courses.courseabrv AS code, college_sections.sectiondesc as sectionname, CONCAT(lastname, ", ", firstname, ", ", sid) AS fullname')) 
@@ -203,7 +203,7 @@ class ExamPermitController extends Controller
         foreach($enrolled as $stud)
         {
             $course = '';
-            if($levelid >= 17 && $levelid <= 21)
+            if($levelid >= 17 && $levelid <= 25)
             {
                 $course = $stud->code;
             }
@@ -293,7 +293,7 @@ class ExamPermitController extends Controller
                         }
                     }
                 }
-                elseif($levelid >= 17 && $levelid <= 21)
+                elseif($levelid >= 17 && $levelid <= 25)
                 {
                     $q->where('semid', $semid);
                 }

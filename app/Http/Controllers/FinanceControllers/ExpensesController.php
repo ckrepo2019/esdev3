@@ -37,7 +37,7 @@ class ExpensesController extends Controller
             $voucherno = $request->get('voucherno');
             // $voucherno = '';
             // if($request->get('voucherno') != '')
-            // {   
+            // {
             //     $voucherno = explode(' - ', $request->get('voucherno'));
             //     $voucherno = $voucherno[1];
             // }
@@ -916,8 +916,8 @@ class ExpensesController extends Controller
             ->where('deleted', 0)
             ->first();
 
-        if ($check) {
-
+        if ($debit == 0 && $credit == 0) {
+            return 'error';
         } else {
             db::table('expense_jedetails')
                 ->insert([
@@ -1072,6 +1072,65 @@ class ExpensesController extends Controller
             return 'error';
         }
 
+    }
+
+    public static function expenses_getvoucherno(Request $request)
+    {
+        $type = $request->get('type');
+        $paytype = $request->get('paytype');
+
+        if($type == 'EXP')
+        {
+            $expense = db::table('expense')
+                ->select(db::raw('voucherno'))
+                ->where('deleted', 0)
+                ->where('status', '!=', 'DISAPPROVED')
+                ->where('paytype', $paytype)
+                ->orderBy('id', 'DESC')
+                ->first();
+
+            if($expense)
+            {
+                return sprintf('%06d', $expense->voucherno+1);
+            }
+            else{
+                return sprintf('%06d', 1);
+            }
+        }
+        elseif($type == 'JE')
+        {
+            $je = db::table('acc_je')
+            ->select(db::raw('voucherno'))
+                ->where('transtype', 'JE')
+                ->where('deleted', 0)
+                ->orderBy('id', 'DESC')
+                ->first();
+
+            if($je)
+            {
+                return sprintf('%06d', $je->voucherno+1);
+            }
+            else{
+                return sprintf('%06d', 1);
+            }
+        }
+        elseif($type == 'DSMT')
+        {
+            $je = db::table('disbursement')
+                ->select(db::raw('voucherno'))
+                ->where('paytype', $paytype)
+                ->where('deleted', 0)
+                ->orderBy('id', 'DESC')
+                ->first();
+
+            if($je)
+            {
+                return sprintf('%06d', $je->voucherno+1);
+            }
+            else{
+                return sprintf('%06d', 1);
+            }
+        }
     }
 
 }

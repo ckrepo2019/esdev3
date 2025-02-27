@@ -248,23 +248,51 @@ class ClearanceController extends Controller
 
         try {
             if ($clearancefor == 'SUBJECT TEACHER') {
-                $enableclearance = DB::table('clearance_acadterm_acadprog')
+                $subjteacher = DB::table('clearance_acadterm_acadprog')
                     ->where('id', $cler_acadprogid)
-                    ->update([
-                        'subjteacher' => $status,
-                        'updatedby' => auth()->user()->id,
-                        'updateddatetime' => \Carbon\Carbon::now('Asia/Manila'),
-                    ]);
+                    ->value('subjteacher');
+
+                if ($subjteacher == 0) {
+                    $enableclearance = DB::table('clearance_acadterm_acadprog')
+                        ->where('id', $cler_acadprogid)
+                        ->update([
+                            'subjteacher' => 1,
+                            'updatedby' => auth()->user()->id,
+                            'updateddatetime' => \Carbon\Carbon::now('Asia/Manila'),
+                        ]);
+                } else {
+                    $enableclearance = DB::table('clearance_acadterm_acadprog')
+                        ->where('id', $cler_acadprogid)
+                        ->update([
+                            'subjteacher' => 0,
+                            'updatedby' => auth()->user()->id,
+                            'updateddatetime' => \Carbon\Carbon::now('Asia/Manila'),
+                        ]);
+                }
             }
 
             if ($clearancefor == 'CLASS ADVISER') {
-                $enableclearance = DB::table('clearance_acadterm_acadprog')
+                $classadviser = DB::table('clearance_acadterm_acadprog')
                     ->where('id', $cler_acadprogid)
-                    ->update([
-                        'classadviser' => $status,
-                        'updatedby' => auth()->user()->id,
-                        'updateddatetime' => \Carbon\Carbon::now('Asia/Manila'),
-                    ]);
+                    ->value('classadviser');
+
+                if ($classadviser == 0) {
+                    $enableclearance = DB::table('clearance_acadterm_acadprog')
+                        ->where('id', $cler_acadprogid)
+                        ->update([
+                            'classadviser' => 1,
+                            'updatedby' => auth()->user()->id,
+                            'updateddatetime' => \Carbon\Carbon::now('Asia/Manila'),
+                        ]);
+                } else {
+                    $enableclearance = DB::table('clearance_acadterm_acadprog')
+                        ->where('id', $cler_acadprogid)
+                        ->update([
+                            'classadviser' => 0,
+                            'updatedby' => auth()->user()->id,
+                            'updateddatetime' => \Carbon\Carbon::now('Asia/Manila'),
+                        ]);
+                }
             }
         } catch (\Exception $e) {
             return self::store_error($e);
@@ -640,7 +668,6 @@ class ClearanceController extends Controller
         }
 
         $string_acadprogid = json_encode($getacademicprogid[0]->acadprogid);
-
         if ($requested == 'MONITORING') {
             if ($string_acadprogid == 6) {
                 $getstudent = DB::table('college_enrolledstud') // SHS
@@ -934,6 +961,7 @@ class ClearanceController extends Controller
                             'clearance_stud_status.subject_id',
                             'gradelevel.levelname'
                         )
+                        ->groupby('clearance_stud_status.id')
                         ->where('clearance_studinfo.isactive', 0)
                         ->where('clearance_stud_status.subject_id', $string_title)
                         ->where('clearance_stud_status.clearance_type', $string_id)
@@ -994,6 +1022,7 @@ class ClearanceController extends Controller
                             'sectiondetail.sectname',
                             'gradelevel.levelname'
                         )
+                        ->groupby('clearance_stud_status.id')
                         ->where('clearance_studinfo.isactive', 0)
                         ->where('clearance_stud_status.subject_id', $string_title)
                         ->where('clearance_stud_status.clearance_type', $string_id)
@@ -1054,6 +1083,7 @@ class ClearanceController extends Controller
                             'sectiondetail.sectname',
                             'gradelevel.levelname'
                         )
+                        ->groupby('clearance_stud_status.id')
                         ->where('clearance_studinfo.isactive', 0)
                         ->where('clearance_stud_status.subject_id', $string_title)
                         ->where('clearance_stud_status.clearance_type', $string_id)
@@ -1070,6 +1100,7 @@ class ClearanceController extends Controller
                             return $query->where('clearance_studinfo.iscleared', $iscleared);
                         })
                         ->get();
+
                 }
             }//if empty end
         }//else end
@@ -1656,6 +1687,8 @@ class ClearanceController extends Controller
                 ->select('acadprogid', 'isactive')
                 ->get();
 
+              
+
             $check_subteacher_status = DB::table('clearance_acadterm_acadprog')
                 ->where('termid', $termid)
                 ->where('deleted', 0)
@@ -1677,10 +1710,8 @@ class ClearanceController extends Controller
                 }
             }
 
-
-
-
             if ($subteacher_isactive) {
+                
                 // $getassignsubj = \App\Http\Controllers\PrincipalControllers\ScheduleController::get_schedule($levelid,$syid,$section);
                 $getassignsubj = DB::table('assignsubj')
                     ->where('assignsubj.syid', $syid)
@@ -1820,15 +1851,26 @@ class ClearanceController extends Controller
                 ->distinct('clearance_signatory.title')
                 ->get();
 
-            if ($getassignsubj == null && $getadviser == null || $getassignsubj == "" && $getadviser == "") {
-                $data = $checksignatories;
-            } else if ($getassignsubj == null || $getassignsubj == "") {
-                $data = $getadviser->concat($checksignatories);
-            } else if ($getadviser == null || $getadviser == "") {
-                $data = $getassignsubj->concat($checksignatories);
-            } else {
-                $data1 = $getassignsubj->concat($getadviser);
-                $data = $data1->concat($checksignatories);
+
+            $data = collect([]);
+
+            if (is_string($getassignsubj)) {
+                $getassignsubj = json_decode($getassignsubj);
+            }
+
+            if ($getassignsubj !== null && $getassignsubj->isNotEmpty()) {
+                $data = $data->merge($getassignsubj);
+            }
+            if (is_string($getadviser)) {
+                $getadviser = json_decode($getadviser);
+            }
+
+            if ($getadviser !== null && $getadviser->count() > 0) {
+                $data = $data->merge($getadviser);
+            }
+
+            if ($checksignatories !== null && $checksignatories->isNotEmpty()) {
+                $data = $data->merge($checksignatories);
             }
 
             $getclearedstatus = DB::table('clearance_studinfo')

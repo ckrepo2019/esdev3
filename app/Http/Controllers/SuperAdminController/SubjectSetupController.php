@@ -55,12 +55,10 @@ class SubjectSetupController extends \App\Http\Controllers\Controller
             $per = $request->get('per');
             $isVisible = $request->get('isVisible');
             $isInSF9 = $request->get('isInSF9');
-            $term = $request->get('term');
-
             if($stage == 1){
-                  return self::update($id,$subjdesc,$subjcode,$subjunit,$isCon,$isSP,$comp,$per,$isVisible,$isInSF9,$hours,$term);
+                  return self::update($id,$subjdesc,$subjcode,$subjunit,$isCon,$isSP,$comp,$per,$isVisible,$isInSF9,$hours);
             }else{
-                  return self::update_sh($id,$subjdesc,$subjcode,$subjunit,$type,$isInSF9,$isVisible,$hours,$term);
+                  return self::update_sh($id,$subjdesc,$subjcode,$subjunit,$type,$isInSF9,$isVisible,$hours);
             }
       }
 
@@ -202,8 +200,7 @@ class SubjectSetupController extends \App\Http\Controllers\Controller
             $per = 100,
             $isVisible = 1,
             $isInSF9 = 1,
-            $hours = 0,
-            $term = null
+            $hours = 0
       ){
             try{
 
@@ -299,7 +296,6 @@ class SubjectSetupController extends \App\Http\Controllers\Controller
                               'inSF9'=>$isInSF9,
                               'subj_per'=>$per,
                               'isVisible'=>$isVisible,
-                              'term'=>$term,
                               'updateddatetime'=>\Carbon\Carbon::now('Asia/Manila'),
                               'updatedby'=>auth()->user()->id
                         ]);
@@ -365,10 +361,10 @@ class SubjectSetupController extends \App\Http\Controllers\Controller
             $type = null,
             $isInSF9 = 1,
             $isVisible = 1,
-            $hours = 0,
-            $term = null
+            $hours = 0
       ){
             try{
+
                   $endedsy = DB::table('sy')
                                     ->where('ended',1)
                                     ->select('id')
@@ -416,7 +412,6 @@ class SubjectSetupController extends \App\Http\Controllers\Controller
                               // JAM END: add new variable subjunit
                               'type'=>$type,
                               'sh_isVisible'=>$isVisible,
-                              'term'=>$term,
                               'updateddatetime'=>\Carbon\Carbon::now('Asia/Manila'),
                               'updatedby'=>auth()->user()->id
                         ]);
@@ -635,8 +630,7 @@ class SubjectSetupController extends \App\Http\Controllers\Controller
                                     'subjtitle as text',
                                     'type',
                                     'inSF9',
-                                    'sh_isVisible as isVisible',
-                                    'term'
+                                    'sh_isVisible as isVisible'
                               )
                               ->where('deleted',0)
                               ->get();
@@ -670,8 +664,7 @@ class SubjectSetupController extends \App\Http\Controllers\Controller
                                     'isCon',
                                     'subj_per',
                                     'isVisible',
-                                    'inSF9',
-                                    'term'
+                                    'inSF9'
                               )
                               ->where('deleted',0)
                               ->get();

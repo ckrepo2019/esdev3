@@ -15,6 +15,7 @@
       <link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.css') }}">
       <link rel="stylesheet" href="{{ asset('plugins/datatables-fixedcolumns/css/fixedColumns.bootstrap4.css') }}">
       <link rel="stylesheet" href="{{asset('plugins/icheck-bootstrap/icheck-bootstrap.min.css')}}">
+      
       <style>
             .select2-container--default .select2-selection--single .select2-selection__rendered {
                   margin-top: -9px;
@@ -228,8 +229,8 @@
                                           </div>
                                     </div> --}}
                                     <div class="row mt-2">
-                                          <div class="col-md-12">
-                                                <table class="table-hover table table-striped table-sm table-bordered table-head-fixed " id="studentspecialclass_datatable" width="100%" style="font-size:.9rem !important">
+                                          <div class="col-md-12 table-responsive">
+                                                <table class="table-hover table table-striped table-sm table-bordered table-head-fixed " id="studentspecialclass_datatable" width="100%" style="font-size:.9rem !important; overflow-x: scroll!important">
                                                       <thead>
                                                             <tr>
                                                                   <th width="25%">Student</th>
@@ -921,6 +922,7 @@
                               data:all_student_specialclass,
                               lengthChange : false,
                               stateSave: true,
+                              responsive: true,
                               columns: [
                                           { "data": "full_name" },
                                           { "data": "subjtext" },
@@ -990,7 +992,7 @@
                         var label_text = $($('#studentspecialclass_datatable_wrapper')[0].children[0])[0].children[0]
 
                         if(button_enable){
-                              $(label_text)[0].innerHTML = '<button class="btn btn-sm btn-primary" id="student_specialclass_button">Add Student Special Class</button>'
+                              $(label_text)[0].innerHTML = '<div class="d-flex flex-md-row flex-column"><button class="btn btn-sm btn-primary mb-md-0 mb-2" id="student_specialclass_button">Add Student Special Class</button>'
 
                         }else{
                               $(label_text)[0].innerHTML = ''

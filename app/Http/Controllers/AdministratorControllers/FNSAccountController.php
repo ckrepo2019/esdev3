@@ -617,7 +617,6 @@ class FNSAccountController extends \App\Http\Controllers\Controller
 
             $sy = DB::table('sy')->where('isactive',1)->first();
             $sydesc = explode('-',$sy->sydesc);
-
             $teacherid = DB::table('teacher')
                             ->insertGetId([
                                 'lastname'=>$request->get('lname'),
@@ -644,6 +643,15 @@ class FNSAccountController extends \App\Http\Controllers\Controller
                                 'password'=>Hash::make('123456'),
                                 'name'=>$request->get('lname').', '.$request->get('fname')
                             ]);
+
+            if($usertypeinfo->refid == 36){
+                DB::table('tesda_trainers')
+                        ->insert([
+                            'user_id'=>$userId,
+                            'createdby'=> auth()->user()->id,
+                            'createddatetime'=>\Carbon\Carbon::now('Asia/Manila'),
+                        ]);
+            }
 
             DB::table('teacher')
                         ->where('id',$teacherid)
@@ -684,6 +692,12 @@ class FNSAccountController extends \App\Http\Controllers\Controller
 
         try{
 
+            $tesdauser = DB::table('usertype')
+                            ->where('id',$usertype)
+                            ->select('refid')
+                            ->first();
+            
+
             if($status == 1){
                 
                 $check =  DB::table('faspriv')
@@ -705,7 +719,26 @@ class FNSAccountController extends \App\Http\Controllers\Controller
                             ]);
                 }
 
+                if($tesdauser->refid == 36){
+                    DB::table('tesda_trainers')
+                        ->insert([
+                            'user_id'=>$userid,
+                            'createdby'=> auth()->user()->id,
+                            'createddatetime'=>\Carbon\Carbon::now('Asia/Manila'),
+                        ]);
+                }
+
             }else{
+
+                if($tesdauser->refid == 36){
+                    DB::table('tesda_trainers')
+                        ->where('user_id',$userid)
+                        ->update([
+                            'deleted'=>1,
+                            'deletedby'=> auth()->user()->id,
+                            'deleteddatetime'=>\Carbon\Carbon::now('Asia/Manila'),
+                        ]);
+                }
 
                 DB::table('faspriv')
                         ->where('userid',$userid)
@@ -1080,6 +1113,33 @@ class FNSAccountController extends \App\Http\Controllers\Controller
                                 ->where('teacherid',$teacher)
                                 ->where('deleted',0)
                                 ->count();
+
+            $check_grades = DB::table('grades')
+            ->join('users','grades.createdby', '=','users.id')
+            ->join('teacher', 'users.id', '=', 'teacher.userid' )
+            ->where('teacher.id',$teacher)
+            ->where('grades.deleted',0)
+            ->count();
+            if($check_grades > 0){
+                return array((object)[
+                    'status'=>0,
+                    'message'=>'Cannot Remove Account with Existing Gradings'
+                ]);
+            }
+
+            $check_grades = DB::table('college_studentprospectus')
+            ->join('users','college_studentprospectus.createdby', '=','users.id')
+            ->join('teacher', 'users.id', '=', 'teacher.userid' )
+            ->where('teacher.id',$teacher)
+            ->where('college_studentprospectus.deleted',0)
+            ->count();
+
+            if($check_grades > 0){
+                return array((object)[
+                    'status'=>0,
+                    'message'=>'Cannot Remove Account with Existing Gradings'
+                ]);
+            }
 
             if($check_sched > 0){
                 return array((object)[

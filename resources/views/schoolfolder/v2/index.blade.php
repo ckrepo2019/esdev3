@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="{{asset('plugins/ekko-lightbox/ekko-lightbox.css')}}">
     
 <link rel="stylesheet" href="{{asset('plugins/daterangepicker/daterangepicker.css')}}">
-<link href="{{asset('plugins/bootstrap-datepicker/1.2.0/css/datepicker.min.css')}}" rel="stylesheet">
+<link href="{{asset('plugins/bootstrap-datepicker/css/bootstrap-datepicker.min.css')}}" rel="stylesheet">
 <!-- dropzonejs -->
 <link rel="stylesheet" href="{{asset('plugins/dropzone/min/dropzone.min.css')}}">
 <link rel="stylesheet" href="{{asset('dist/css/select2.min.css')}}">
@@ -396,7 +396,9 @@
         </div>
         <ul class="order-1 order-md-3 navbar-nav navbar-no-expand ml-auto">
             <li class="nav-item text-right">
-                <button type="button" class="btn btn-primary" id="btn-addfolder"><i class="fa fa-plus"></i> Add Folder</button>
+                @if($create_folder == 1)
+                    <button type="button" class="btn btn-primary" id="btn-addfolder"><i class="fa fa-plus"></i> Add Folder</button>
+                @endif
             </li>
         </ul> 
     </nav>
@@ -505,29 +507,29 @@
                         <label>Visible to</label>
                         <div class="form-group clearfix">
                             <div class="icheck-primary d-inline mr-4">
+                            <input type="radio" id="radioPrimary1" name="visibilitytype" value="1">
+                            <label for="radioPrimary1">
+                                All
+                            </label>
+                            </div>
+                            <div class="icheck-primary d-inline mr-4">
                             <input type="radio" id="radioPrimary4" name="visibilitytype" checked value="0">
                             <label for="radioPrimary4">
                                 Only me
                             </label>
                             </div>
-                        <div class="icheck-primary d-inline mr-4">
-                        <input type="radio" id="radioPrimary1" name="visibilitytype" value="1">
-                        <label for="radioPrimary1">
-                            All
-                        </label>
-                        </div>
-                        <div class="icheck-primary d-inline mr-2">
-                        <input type="radio" id="radioPrimary2" name="visibilitytype" value="2">
-                        <label for="radioPrimary2">
-                            Selected Portals
-                        </label>
-                        </div>
-                        <div class="icheck-primary d-inline">
-                        <input type="radio" id="radioPrimary3" name="visibilitytype" value="3">
-                        <label for="radioPrimary3">
-                            Selected Users
-                        </label>
-                        </div>
+                            <div class="icheck-primary d-inline mr-2">
+                            <input type="radio" id="radioPrimary2" name="visibilitytype" value="2">
+                            <label for="radioPrimary2">
+                                Selected Departments
+                            </label>
+                            </div>
+                            <div class="icheck-primary d-inline">
+                            <input type="radio" id="radioPrimary3" name="visibilitytype" value="3">
+                            <label for="radioPrimary3">
+                                Selected Users
+                            </label>
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-12 mt-2" id="container-visibility">
@@ -554,7 +556,7 @@
     <script src="{{asset('plugins/bootstrap4-duallistbox/jquery.bootstrap-duallistbox.min.js')}}"></script>
     <script src="{{asset('plugins/ekko-lightbox/ekko-lightbox.min.js')}}"></script>
     <script src="{{asset('plugins/daterangepicker/daterangepicker.js')}}"></script>
-    <script src="{{asset('plugins/bootstrap-datepicker/1.2.0/js/bootstrap-datepicker.min.js')}}"></script>
+    <script src="{{asset('plugins/bootstrap-datepicker/js/bootstrap-datepicker.min.js')}}"></script>
     <!-- Filterizr-->
     <!-- dropzonejs -->
     <script src="{{asset('plugins/dropzone/min/dropzone.min.js')}}"></script>
@@ -616,7 +618,7 @@
             $('.note-editor').find('.modal[aria-label="Insert Video"]').remove()
             $('.note-editor').find('.modal[aria-label="Help"]').remove()
             // $('.note-editing-area').remove()
-            $('body').addClass('sidebar-collapse')
+            // $('body').addClass('sidebar-collapse')
             $('#btn-addfolder').on('click', function(){
                 $('#modal-default').modal('show')
             })
@@ -633,6 +635,8 @@
 					},
 					success:function(data)
 					{
+                        console.log(data);
+                        
                         if(selectedtype == 0)
                         {
 						$('#container-visibility').empty();
@@ -640,7 +644,7 @@
                         else if(selectedtype == 2)
                         {
                             $('#container-visibility').empty();
-                            var displayhtml = '<select class="form-control select2portals" multiple="multiple" name="portals[]" required>'
+                            var displayhtml = '<div class="row"><div class="col-md-8"> <select class="form-control select2portals" multiple="multiple" name="portals[]" required>'
 
                                 if(data.length > 0)
                                 {
@@ -648,7 +652,11 @@
                                         displayhtml+='<option value="'+value.id+'">'+value.utype+'</option>'
                                     })
                                 }
-                            displayhtml += '<</select>'
+                            displayhtml += `</select></div><div class="col-md-4"><select name="viewtype" class="form-control viewwertype">
+                                            <option value="viewer">Viewer</option>
+                                            <option value="comment">Comment</option>
+                                            <option value="editor">Editor</option>
+                                            </select></div></div>`
                             $('#container-visibility').append(displayhtml);
                             $('.select2portals').select2({
                                 theme: 'bootstrap4'
@@ -657,16 +665,20 @@
                         else if(selectedtype == 3)
                         {
                             $('#container-visibility').empty();
-                            var displayhtml = '<select class="form-control select2portals" multiple="multiple" name="users[]" required>'
+                            var displayhtml = '<div class="row"><div class="col-md-8"> <select class="form-control select2portals" multiple="multiple" name="users[]" required>'
 
                                 if(data.length > 0)
                                 {
                                     $.each(data, function(key, value){
 										var temp_middle = value.middlename != null ? ' '+value.middlename : ''
-                                        displayhtml+='<option value="'+value.userid+'">'+value.lastname+', '+value.firstname+' '+temp_middle+'</option>'
+                                        displayhtml+='<option value="'+value.userid+'">'+value.lastname+', '+value.firstname+' '+temp_middle+ ' - ' + value.utype+ '</option>'
                                     })
                                 }
-                            displayhtml += '<</select>'
+                            displayhtml += `</select></div><div class="col-md-4"><select name="viewtype" class="form-control viewwertype">
+                                            <option value="viewer">Viewer</option>
+                                            <option value="comment">Comment</option>
+                                            <option value="editor">Editor</option>
+                                            </select></div></div>`
                             $('#container-visibility').append(displayhtml);
                             $('.select2portals').select2({
                                 theme: 'bootstrap4'

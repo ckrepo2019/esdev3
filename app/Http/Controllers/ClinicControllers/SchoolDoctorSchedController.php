@@ -14,6 +14,7 @@ class SchoolDoctorSchedController extends Controller
     public function getschedavailability(Request $request)
     {
         // return $request->all();
+        // dd($request->all());
         $docid = DB::table('teacher')->where('userid', auth()->user()->id)->where('deleted','0')->first()->id;
         $weekid = $request->get('weekid');
 
@@ -53,7 +54,9 @@ class SchoolDoctorSchedController extends Controller
                     array_push($timeavailabilities, $checkifexist);
                 }
             }
-        }        
+        }   
+        
+        // dd($days, $timeavailabilities);
 
         return view('clinic_doctor.schedavailability.timeavailability')
             ->with('timeavailabilities', $timeavailabilities)

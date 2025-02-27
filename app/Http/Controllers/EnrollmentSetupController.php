@@ -303,7 +303,7 @@ class EnrollmentSetupController extends Controller
                   $temp_acad = self::get_acad();
                   $temp_acad = collect($temp_acad)->pluck('id');
             }else{
-                  $temp_acad = [2,3,4,5,6];
+                  $temp_acad = [2,3,4,5,6,8];
             }
 
             $acad_porg = DB::table('academicprogram')
@@ -335,7 +335,7 @@ class EnrollmentSetupController extends Controller
             // }            
 
       }else{
-            $temp_acad = [2,3,4,5,6];
+            $temp_acad = [2,3,4,5,6,8];
       }
 
      

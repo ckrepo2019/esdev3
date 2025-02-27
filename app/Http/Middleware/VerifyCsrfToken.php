@@ -19,6 +19,14 @@ class VerifyCsrfToken extends Middleware
      * @var array
      */
     protected $except = [
-        //
+        '/api/mobile/api_update_pushstatus',
+        '/api/mobile/api_update_sms',
+        '/api/mobile/api_save_fcmtoken',
+        '/api/mobile/deleteFcmToken',
+        '/api/mobile/api_send_payment',
+        '/api/mobile/api_savescholarship',
+        '/api/mobile/api_uploadrequirement',
+        '/api/mobile/api_delscholarship',
+      	'/api/mobile/employees/add/attendance',
     ];
 }
