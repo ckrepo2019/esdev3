@@ -1,0 +1,1527 @@
+
+        if(strlen($request->get('currentmonth'))==11){
+
+            $month_id = mb_substr($request->get('currentmonth'), 0, 2);
+
+        }
+        elseif(strlen($request->get('currentmonth'))==1){
+
+            $month_id = '0'.$request->get('currentmonth');
+
+        }else{
+            
+            $month_id = $request->get('currentmonth');
+        }
+        
+        $getSchoolYear = DB::table('sy')
+            ->select(
+                'id',
+                'sydesc'
+                )
+            ->where('isactive',1)
+            ->get();
+            
+        $getTeacherName = DB::table('teacher')
+                ->select(
+                    'teacher.id',
+                    'teacher.firstname',
+                    'teacher.middlename',
+                    'teacher.lastname',
+                    'teacher.suffix'
+                    )
+                ->where('teacher.userid',auth()->user()->id)
+                ->distinct()
+                ->first();
+
+        $getSectionAndLevel = DB::table('sectiondetail')
+            ->select(
+                'sections.levelid',
+                'gradelevel.levelname',
+                'sections.id as sectionid',
+                'sections.sectionname',
+                'academicprogram.progname',
+                'academicprogram.acadprogcode'
+                )
+            ->join('sections','sectiondetail.sectionid','=','sections.id')
+            ->join('gradelevel','sections.levelid','=','gradelevel.id')
+            ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+            ->where('sectiondetail.syid',$getSchoolYear[0]->id)
+            ->where('sectiondetail.teacherid',$getTeacherName->id)
+            ->where('sections.deleted','0')
+            ->where('sections.id',$request->get('sectionid'))
+            ->distinct()
+            ->get();
+        
+        $getSchoolInfo = DB::table('schoolinfo')
+            ->select(
+                'schoolinfo.schoolid',
+                'schoolinfo.schoolname',
+                'schoolinfo.authorized',
+                'refcitymun.citymunDesc as division',
+                'schoolinfo.district',
+                'schoolinfo.address',
+                'refregion.regDesc as region'
+            )
+            ->join('refregion','schoolinfo.region','=','refregion.regCode')
+            ->join('refcitymun','schoolinfo.division','=','refcitymun.citymunCode')
+            ->get();
+
+            
+        if(count($getSectionAndLevel)==0){
+            
+            return view('teacher.forms.form2.showschoolform2')
+                ->with('school',$getSchoolInfo)
+                ->with('sy',$getSchoolYear)
+                ->with('teachername',$getTeacherName);
+
+        }
+        else{
+
+            $getPrincipal = DB::table('gradelevel')
+                ->select(
+                    'teacher.firstname',
+                    'teacher.middlename',
+                    'teacher.lastname',
+                    'teacher.suffix'
+                    )
+                ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+                ->join('teacher','academicprogram.principalid','=','teacher.id')
+                ->where('gradelevel.id',$request->get('levelid'))
+                ->get();
+
+            if(strtolower($getSectionAndLevel[0]->acadprogcode) == "shs"){
+                
+                $getStudents = DB::table('sh_enrolledstud')
+                    ->select(
+                        'studinfo.id',
+                        'studinfo.lrn',
+                        'studinfo.lastname',
+                        'studinfo.firstname',
+                        'studinfo.middlename',
+                        'studinfo.suffix',
+                        'studinfo.gender'
+                        )
+                    ->join('studinfo','sh_enrolledstud.studid','=','studinfo.id')
+                    ->join('sections','sh_enrolledstud.sectionid','=','sections.id')
+                    ->where('sections.id',$request->get('sectionid'))
+                    ->where('sh_enrolledstud.promotionstatus', '0')
+                    ->whereIn('sh_enrolledstud.studstatus',[1,2,4])
+                    ->where('sh_enrolledstud.deleted', '0')
+                    ->where('sh_enrolledstud.syid',$getSchoolYear[0]->id)
+                    ->orderBy('studinfo.lastname','asc')
+                    ->where('studinfo.deleted', '0')
+                    ->distinct()
+                    ->get();
+
+            }
+            else{
+                
+                $getStudents = DB::table('enrolledstud')
+                    ->select(
+                        'studinfo.id',
+                        'studinfo.lrn',
+                        'studinfo.lastname',
+                        'studinfo.firstname',
+                        'studinfo.middlename',
+                        'studinfo.suffix',
+                        'studinfo.gender'
+                        )
+                    ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                    ->where('enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                    ->where('enrolledstud.promotionstatus', '0')
+                    ->whereIn('enrolledstud.studstatus',[1,2,4])
+                    ->where('enrolledstud.deleted', '0')
+                    ->where('enrolledstud.syid',$getSchoolYear[0]->id)
+                    ->orderBy('studinfo.lastname','asc')
+                    ->where('studinfo.deleted', '0')
+                    ->distinct()
+                    ->get();
+
+            }
+            
+            $currentYear    = Carbon::now()->year;
+            
+            $getMonths      = array();
+
+            if(count($getStudents) > 0){
+
+                foreach($getStudents as $getstudent){
+
+                    $getMonthsAttendance      = DB::table('studattendance')
+                                    ->select('tdate')
+                                    ->where('studid', $getstudent->id)
+                                    ->distinct()
+                                    ->get()->groupBy(function($d) {
+                                        return Carbon::parse($d->tdate)->format('m');
+                                    });
+                            
+                    foreach($getMonthsAttendance->keys() as $eachmonth)
+                    {
+                        array_push($getMonths, $eachmonth);
+                    }
+                    
+
+                }
+
+            }
+            $getMonths = collect($getMonths)->unique();
+            
+            $countMaleDailyAttendance = array();
+
+            $countFemaleDailyAttendance = array(); 
+
+            if(count($getMonths) == 0){
+
+                $currentMonth = $month_id;
+
+                $currentDay = Carbon::now()->day;
+
+                $first_day_of_the_current_month = Carbon::today()->startOfMonth()->isoFormat('D');
+
+                $last_day_of_the_current_month = Carbon::today()->endOfMonth()->isoFormat('D');
+
+                $period = CarbonPeriod::between($currentYear.'-'.$currentMonth.'-'.$first_day_of_the_current_month, $currentYear.'-'.$currentMonth.'-'.$last_day_of_the_current_month);
+        
+                $weekendFilter = function ($date) {
+
+                    return $date->isWeekday();
+
+                };
+
+                $period->filter($weekendFilter);
+                
+                $days_num = array();
+
+                $days_str = array();
+                
+                $daysMonth = array();
+
+                foreach ($period as $date) {
+
+                    array_push($days_num,$date->isoFormat('D'));
+
+                    array_push($days_str,$date->isoFormat('ddd'));
+                    
+                    array_push($daysMonth,$date->isoFormat('MMM DD YYYY'));
+                }   
+                
+                return view('teacher.forms.form2.showschoolform2')
+                    ->with('school',$getSchoolInfo)
+                    ->with('sy',$getSchoolYear)
+                    ->with('gradeAndLevel',$getSectionAndLevel)
+                    ->with('selected_month',$month_id)
+                    ->with('teachername',$getTeacherName)
+                    ->with('days_num',$days_num)
+                    ->with('days_str',$days_str)
+                    ->with('countMaleDailyAttendance',$countMaleDailyAttendance)
+                    ->with('countFemaleDailyAttendance',$countFemaleDailyAttendance)
+                    ->with('principalname',$getPrincipal)
+                    ->with('getStudents',$getStudents);
+            }
+            else{
+                
+                $getMonths2 = DB::table('studattendance')
+                    ->select(
+                        'tdate'
+                        )
+                    ->whereYear('tdate', $currentYear)
+                    ->whereMonth('tdate', $month_id)
+                    ->distinct()
+                    ->get();
+                    
+                if(count($getMonths2)==0){
+
+                    $currentYear = (Carbon::now()->year)-1;
+
+                    $getMonths2 = DB::table('studattendance')
+                        ->select('tdate')
+                        ->whereYear('tdate', $currentYear)
+                        ->whereMonth('tdate', $month_id)
+                        ->distinct()
+                        ->get();
+
+                }
+
+
+                $currentMonth = $month_id;
+
+                foreach($getMonths as $item){
+
+                    $newDate = Carbon::create($item);
+
+                    $item= $newDate->isoFormat('MMMM');
+
+                }
+                
+                $months = $getMonths->unique();
+                
+                if(Carbon::create($currentYear,$currentMonth)->isoFormat('YYYY-MM') >= Carbon::create($currentYear,'06')->isoFormat('YYYY-MM')){
+                    
+                    //*Enrolment as of (1st Friday of June)
+                        $monthOfJune                        = Carbon::create($currentYear,'06');
+
+                        $previousMonth                      = $monthOfJune->submonth()->isoFormat('YYYY-MM');
+
+                        $getFridayFirstWeek                 = Carbon::create($currentYear,'06')->startOfWeek();
+
+                        $fridayFirstWeek                    = Carbon::parse('first friday of '.Carbon::create($currentYear,'06').'')->isoFormat('YYYY-MM-DD');
+
+                        $getLastDayOfLastWeek               = Carbon::parse('last friday of '.$previousMonth.'')        ->isoFormat('YYYY-MM-DD');
+
+                        
+                        if($getSectionAndLevel[0]->progname == "SENIOR HIGH SCHOOL"){
+
+                            $getNumberOfEnrollees = DB::table('sh_enrolledstud')
+                                                            ->join('studinfo','sh_enrolledstud.studid','=','studinfo.id')
+                                                            ->where('sh_enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                            ->whereBetween('sh_enrolledstud.dateenrolled',[$getLastDayOfLastWeek,$fridayFirstWeek ])
+                                                            ->whereIn('studinfo.studstatus',[1,2,4])
+                                                            ->whereIn('sh_enrolledstud.studstatus',[1,2,4])
+                                                            ->where('sh_enrolledstud.syid',$getSchoolYear[0]->id)
+                                                            ->where('studinfo.deleted', '0')
+                                                            ->where('sh_enrolledstud.deleted', '0')
+                                                            ->distinct()
+                                                            ->get();
+                                                
+                        }
+                        else{
+
+                            $getNumberOfEnrollees = DB::table('enrolledstud')
+                                                            ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                                                            ->where('enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                            ->whereBetween('enrolledstud.dateenrolled',[$getLastDayOfLastWeek,$fridayFirstWeek ])
+                                                            ->whereIn('studinfo.studstatus',[1,2,4])
+                                                            ->whereIn('enrolledstud.studstatus',[1,2,4])
+                                                            ->where('enrolledstud.syid',$getSchoolYear[0]->id)
+                                                            ->where('studinfo.deleted', '0')
+                                                            ->where('enrolledstud.deleted', '0')
+                                                            ->distinct()
+                                                            ->get();
+
+                        }
+
+                        $numberOfJuneEnrollees              = count($getNumberOfEnrollees);
+
+                        $getNumberOfEnrolleesFemale         = count($getNumberOfEnrollees->where('gender','FEMALE'));
+
+                        $getNumberOfEnrolleesMale           = count($getNumberOfEnrollees->where('gender','MALE'));
+
+                    //Late Enrollment during the month (beyond cut-off)
+
+                        $firstDayOfSelectedMonth            = Carbon::create($currentYear,$month_id)->startOfMonth();
+
+                        $lastDayOfSelectedMonth             = Carbon::create($currentYear,$month_id)->endOfMonth();
+                        
+                        if($getSectionAndLevel[0]->progname == "SENIOR HIGH SCHOOL"){
+
+                            $getNumberOfLateEnrollees = DB::table('sh_enrolledstud')
+                                                            ->join('studinfo','sh_enrolledstud.studid','=','studinfo.id')
+                                                            ->where('sh_enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                            ->whereBetween('sh_enrolledstud.dateenrolled',[$firstDayOfSelectedMonth, $lastDayOfSelectedMonth])
+                                                            ->where('studinfo.studstatus',2)
+                                                            ->where('sh_enrolledstud.studstatus',2)
+                                                            ->where('sh_enrolledstud.syid',$getSchoolYear[0]->id)
+                                                            ->where('studinfo.deleted', '0')
+                                                            ->where('sh_enrolledstud.deleted', '0')
+                                                            ->distinct()
+                                                            ->get();
+
+                        }
+                        else{
+
+                            $getNumberOfLateEnrollees = DB::table('enrolledstud')
+                                                            ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                                                            ->where('enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                            ->whereBetween('enrolledstud.dateenrolled',[$firstDayOfSelectedMonth, $lastDayOfSelectedMonth])
+                                                            ->where('studinfo.studstatus',2)
+                                                            ->where('enrolledstud.studstatus',2)
+                                                            ->where('enrolledstud.syid',$getSchoolYear[0]->id)
+                                                            ->where('studinfo.deleted', '0')
+                                                            ->where('enrolledstud.deleted', '0')
+                                                            ->distinct()
+                                                            ->get();
+
+                        }
+
+                        $numberOfLateEnrollees              = count($getNumberOfLateEnrollees);
+
+                        $getNumberOfLateEnrolleesFemale     = count($getNumberOfLateEnrollees->whereIn('gender',['FEMALE','Female']));
+                        
+                        $getNumberOfLateEnrolleesMale       = count($getNumberOfLateEnrollees->whereIn('gender',['MALE','Male']));
+
+                    //Registered Learner as of end of the month
+
+                        $firstDayOfSelectedMonth            = Carbon::create($currentYear,$month_id)->startOfMonth();
+
+                        $lastDayOfSelectedMonth             = Carbon::create($currentYear,$month_id)->endOfMonth();
+
+                            if($getSectionAndLevel[0]->progname == "SENIOR HIGH SCHOOL"){
+
+                                $getNumberOfRegisteredEnrollees = DB::table('sh_enrolledstud')
+                                                            ->join('studinfo','sh_enrolledstud.studid','=','studinfo.id')
+                                                            ->where('sh_enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                            ->whereBetween('sh_enrolledstud.dateenrolled',[$firstDayOfSelectedMonth, $lastDayOfSelectedMonth])
+                                                            ->whereIn('sh_enrolledstud.studstatus', [1,2,4])
+                                                            ->whereIn('studinfo.studstatus',[1,2,4])
+                                                            ->where('sh_enrolledstud.syid',$getSchoolYear[0]->id)
+                                                            ->where('studinfo.deleted', '0')
+                                                            ->where('sh_enrolledstud.deleted', '0')
+                                                            ->groupBy('sh_enrolledstud.studid')
+                                                            ->distinct()
+                                                            ->get();
+
+                            }
+                            else{
+
+                                $getNumberOfRegisteredEnrollees = DB::table('enrolledstud')
+                                                            ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                                                            ->where('enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                            ->whereBetween('enrolledstud.dateenrolled',[$firstDayOfSelectedMonth, $lastDayOfSelectedMonth])
+                                                            ->whereIn('enrolledstud.studstatus', [1,2,4])
+                                                            ->whereIn('studinfo.studstatus',[1,2,4])
+                                                            ->where('enrolledstud.syid',$getSchoolYear[0]->id)
+                                                            ->where('studinfo.deleted', '0')
+                                                            ->where('enrolledstud.deleted', '0')
+                                                            ->groupBy('enrolledstud.studid')
+                                                            ->distinct()
+                                                            ->get();
+
+                            }
+
+                            $numberOfRegisteredEnrollees            = count($getNumberOfRegisteredEnrollees);
+
+                            $getNumberOfRegisteredEnrolleesFemale   = count($getNumberOfRegisteredEnrollees->whereIn('gender',['FEMALE','Female']));
+
+                            $getNumberOfRegisteredEnrolleesMale     = count($getNumberOfRegisteredEnrollees->whereIn('gender',['MALE','Male']));
+
+                    //Percentage of Enrollment as of end of the month
+                        //selected month (up)
+                        //July 31
+                        $monthOfJuly                        =  Carbon::create($currentYear,'07')->endOfMonth()->isoFormat('YYYY-MM-DD');
+                        
+                        if($getSectionAndLevel[0]->progname == "SENIOR HIGH SCHOOL"){
+
+                            $getPercentageOfJulyEnrolles = DB::table('sh_enrolledstud')
+                                                            ->join('studinfo','sh_enrolledstud.studid','=','studinfo.id')
+                                                            ->where('sh_enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                            ->whereBetween('sh_enrolledstud.dateenrolled',[$fridayFirstWeek, $monthOfJuly])
+                                                            ->whereIn('studinfo.studstatus',[1,2,4])
+                                                            ->whereIn('sh_enrolledstud.studstatus',[1,2,4])
+                                                            ->where('sh_enrolledstud.syid',$getSchoolYear[0]->id)
+                                                            ->where('studinfo.deleted', '0')
+                                                            ->where('sh_enrolledstud.deleted', '0')
+                                                            ->distinct()
+                                                            ->get();
+
+                        }
+                        else{
+
+                            $getPercentageOfJulyEnrolles = DB::table('enrolledstud')
+                                                            ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                                                            ->where('enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                            ->whereBetween('enrolledstud.dateenrolled',[$fridayFirstWeek, $monthOfJuly])
+                                                            ->whereIn('studinfo.studstatus',[1,2,4])
+                                                            ->whereIn('enrolledstud.studstatus',[1,2,4])
+                                                            ->where('enrolledstud.syid',$getSchoolYear[0]->id)
+                                                            ->where('studinfo.deleted', '0')
+                                                            ->where('enrolledstud.deleted', '0')
+                                                            ->distinct()
+                                                            ->get();
+
+                        }
+
+                        $percentageJulyEnrollees                = count($getPercentageOfJulyEnrolles);
+
+                        $getPercentageJulyLateEnrolleesFemale   = count($getPercentageOfJulyEnrolles->whereIn('gender',['FEMALE','Female']));
+
+                        $getPercentageJulyLateEnrolleesMale     = count($getPercentageOfJulyEnrolles->whereIn('gender',['MALE','Male']));
+
+                        if($numberOfLateEnrollees == 0 || $percentageJulyEnrollees == 0 ){
+
+                            $totalPercentage            = 0;
+                            $totalPercentageMale        = 0;
+                            $totalPercentageFemale      = 0;
+
+                        }else{
+                            // return $numberOfJuneEnrollees;
+                            if($numberOfJuneEnrollees == 0){
+                                $totalPercentage        = $numberOfLateEnrollees*100;
+                            }else{
+                                if($numberOfLateEnrollees == 0){
+                                    // $totalPercentage        = $numberOfJuneEnrollees*100;
+                                    $totalPercentage        = $numberOfJuneEnrollees/100;
+                                }else{
+                                    // return 'asdsad';
+                                    // $totalPercentage            = ($numberOfLateEnrollees / $numberOfJuneEnrollees)*100;
+                                    $totalPercentage            = ($numberOfLateEnrollees / $numberOfJuneEnrollees);
+                                }
+                            }
+                            if($getNumberOfEnrolleesMale == 0){
+                                $totalPercentageMale        = $getNumberOfLateEnrolleesMale*100;
+                            }else{
+                                // return 'sdfsdfsd';
+                                if($getNumberOfLateEnrolleesMale == 0){
+                                    // $totalPercentageMale        = $getNumberOfEnrolleesMale*100;
+                                    $totalPercentageMale        = 0;
+                                }else{
+                                    // return 'sdfsdfsd';
+                                    $totalPercentageMale        = ($getNumberOfLateEnrolleesMale / $getNumberOfEnrolleesMale);
+                                }
+                                // $totalPercentageMale        = ($getNumberOfLateEnrolleesMale / $getNumberOfEnrolleesFemale)*100;
+                            }
+                            if($getNumberOfEnrolleesFemale == 0){
+                                // return $getNumberOfEnrolleesFemale;;
+                                // $totalPercentageFemale        = $getNumberOfEnrolleesFemale*100;
+                                $totalPercentageFemale        = $getNumberOfEnrolleesFemale/100;
+                            }else{
+                                // return 'adasd';
+                                if($getNumberOfLateEnrolleesFemale == 0){
+                                    // $totalPercentageFemale        = $getNumberOfEnrolleesFemale*100;
+                                    $totalPercentageFemale        = 0;
+                                }else{
+                                    // $totalPercentageFemale      = ($getNumberOfLateEnrolleesFemale / $getNumberOfEnrolleesMale)*100;
+                                    $totalPercentageFemale      = ($getNumberOfLateEnrolleesFemale / $getNumberOfEnrolleesFemale);
+                                }
+                                // $totalPercentageFemale      = ($getNumberOfLateEnrolleesFemale / $getNumberOfEnrolleesFemale)*100;
+                            }
+
+                        }
+                    //Average Daily Attendance
+                        // $getAttOfStudentsOfSelectedMonth = DB::table('studattendance')
+                        //     ->join('studinfo','studattendance.studid','=','studinfo.id')
+                        //     ->where('studinfo.sectionid',$getSectionAndLevel[0]->sectionid)
+                        //     ->whereBetween('studattendance.tdate',[$firstDayOfSelectedMonth->isoFormat('YYYY-MM-DD'), $lastDayOfSelectedMonth->isoFormat('YYYY-MM-DD')])
+                        //     ->get();
+                        // $attOfStudentsTotal = count($getAttOfStudentsOfSelectedMonth);
+                        // $attOfFemaleStudents = count($getAttOfStudentsOfSelectedMonth->where('gender','Female'));
+                        // $attOfMaleStudents = count($getAttOfStudentsOfSelectedMonth->where('gender','Male'));
+                    //students 5 consecutive absences
+                    // $startRange = $firstDayOfSelectedMonth->isoFormat('YYYY-MM-DD');
+                    // $endRange = $lastDayOfSelectedMonth->isoFormat('YYYY-MM-DD');
+                    // $period2 = CarbonPeriod::between($startRange, $endRange);
+                    // $weekendFilter2 = function ($date) {
+                    //     return $date->isWeekday();
+                    // };
+                    // $period2->filter($weekendFilter2);
+                    
+                    //     $getStudentsWith5Absences = DB::table('enrolledstud')
+                    //         ->select('enrolledstud.studid',DB::raw('count(IF(studattendance.absent = 1,1,NULL))as absent'))
+                    //         ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                    //         ->join('studattendance','enrolledstud.studid','=','studattendance.studid')
+                    //         ->where('enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                    //         ->where('studinfo.sectionid',$getSectionAndLevel[0]->sectionid)
+                    //         ->where('studinfo.sectionid',$getSectionAndLevel[0]->sectionid)
+                    //         ->whereBetween('enrolledstud.dateenrolled',[$firstDayOfSelectedMonth->isoFormat('YYYY-MM-DD'), $lastDayOfSelectedMonth->isoFormat('YYYY-MM-DD')])
+                    //         ->groupBy('studid')
+                    //         ->get();
+                    //         return $getStudentsWith5Absences;
+
+                    //Drop-out
+                        if($getSectionAndLevel[0]->progname == "SENIOR HIGH SCHOOL"){
+
+                            $getDroppedOut                  = DB::table('sh_enrolledstud')
+                                                            ->join('studinfo','sh_enrolledstud.studid','=','studinfo.id')
+                                                            ->join('studattendance','sh_enrolledstud.studid','=','studattendance.studid')
+                                                            // ->join('studentstatus','studinfo.studstatus','=','studentstatus.id')
+                                                            ->where('sh_enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                            // ->where('studentstatus.description','ENROLLED')
+                                                            ->whereBetween('sh_enrolledstud.updateddatetime',[$firstDayOfSelectedMonth->isoFormat('YYYY-MM-DD'), $lastDayOfSelectedMonth->isoFormat('YYYY-MM-DD')])
+                                                            ->where('sh_enrolledstud.studstatus',3)
+                                                            ->where('studinfo.studstatus',3)
+                                                            ->where('sh_enrolledstud.syid',$getSchoolYear[0]->id)
+                                                            ->where('studinfo.deleted', '0')
+                                                            ->where('sh_enrolledstud.deleted', '0')
+                                                            ->distinct()
+                                                            ->get();
+
+                        }
+                        else{
+
+                            $getDroppedOut                  = DB::table('enrolledstud')
+                                                            ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                                                            ->join('studattendance','enrolledstud.studid','=','studattendance.studid')
+                                                            // ->join('studentstatus','studinfo.studstatus','=','studentstatus.id')
+                                                            ->where('enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                            // ->where('studentstatus.description','ENROLLED')
+                                                            ->whereBetween('enrolledstud.updateddatetime',[$firstDayOfSelectedMonth->isoFormat('YYYY-MM-DD'), $lastDayOfSelectedMonth->isoFormat('YYYY-MM-DD')])
+                                                            ->where('enrolledstud.studstatus',3)
+                                                            ->where('studinfo.studstatus',3)
+                                                            ->where('enrolledstud.syid',$getSchoolYear[0]->id)
+                                                            ->where('studinfo.deleted', '0')
+                                                            ->where('enrolledstud.deleted', '0')
+                                                            ->distinct()
+                                                            ->get();
+
+                        }
+
+                        $numberOfDroppedOut                 = count($getDroppedOut);
+                        $numberOfDroppedOutMale             = count($getDroppedOut->whereIn('gender',['MALE','Male']));
+                        $numberOfDroppedOutFemale           = count($getDroppedOut->whereIn('gender',['FEMALE','Female']));
+
+                    //Transferred out
+                        if($getSectionAndLevel[0]->progname == "SENIOR HIGH SCHOOL"){
+
+                            $getTransferredOut              = DB::table('sh_enrolledstud')
+                                                            ->join('studinfo','sh_enrolledstud.studid','=','studinfo.id')
+                                                            ->join('studattendance','sh_enrolledstud.studid','=','studattendance.studid')
+                                                            // ->join('studentstatus','studinfo.studstatus','=','studentstatus.id')
+                                                            ->where('sh_enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                            // ->where('studentstatus.description','TRANSFERRED OUT')
+                                                            ->whereBetween('sh_enrolledstud.updateddatetime',[$firstDayOfSelectedMonth->isoFormat('YYYY-MM-DD'), $lastDayOfSelectedMonth->isoFormat('YYYY-MM-DD')])
+                                                            ->where('sh_enrolledstud.studstatus',5)
+                                                            ->where('studinfo.studstatus',5)
+                                                            ->where('sh_enrolledstud.syid',$getSchoolYear[0]->id)
+                                                            ->where('studinfo.deleted', '0')
+                                                            ->where('sh_enrolledstud.deleted', '0')
+                                                            ->distinct()
+                                                            ->get();
+
+                        }
+                        else{
+
+                            $getTransferredOut              = DB::table('enrolledstud')
+                                                            ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                                                            ->join('studattendance','enrolledstud.studid','=','studattendance.studid')
+                                                            // ->join('studentstatus','studinfo.studstatus','=','studentstatus.id')
+                                                            ->where('enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                            // ->where('studentstatus.description','TRANSFERRED OUT')
+                                                            ->whereBetween('enrolledstud.updateddatetime',[$firstDayOfSelectedMonth->isoFormat('YYYY-MM-DD'), $lastDayOfSelectedMonth->isoFormat('YYYY-MM-DD')])
+                                                            ->where('enrolledstud.studstatus',5)
+                                                            ->where('studinfo.studstatus',5)
+                                                            ->where('enrolledstud.syid',$getSchoolYear[0]->id)
+                                                            ->where('studinfo.deleted', '0')
+                                                            ->where('enrolledstud.deleted', '0')
+                                                            ->distinct()
+                                                            ->get();
+
+                        }
+
+                        $numberOfTransferredOut             = count($getTransferredOut);
+                        $numberOfTransferredOutMale         = count($getTransferredOut->whereIn('gender',['MALE','Male']));
+                        $numberOfTransferredOutFemale       = count($getTransferredOut->whereIn('gender',['FEMALE','Female']));
+
+                    //Transferred in
+                        if($getSectionAndLevel[0]->progname == "SENIOR HIGH SCHOOL"){
+
+                            $getTransferredIn               = DB::table('sh_enrolledstud')
+                                                            ->join('studinfo','sh_enrolledstud.studid','=','studinfo.id')
+                                                            ->join('studattendance','sh_enrolledstud.studid','=','studattendance.studid')
+                                                            // ->join('studentstatus','studinfo.studstatus','=','studentstatus.id')
+                                                            ->where('sh_enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                            // ->where('studentstatus.description','TRANSFERRED IN')
+                                                            ->whereBetween('sh_enrolledstud.updateddatetime',[$firstDayOfSelectedMonth->isoFormat('YYYY-MM-DD'), $lastDayOfSelectedMonth->isoFormat('YYYY-MM-DD')])
+                                                            ->where('sh_enrolledstud.studstatus',4)
+                                                            ->where('studinfo.studstatus',4)
+                                                            ->where('sh_enrolledstud.syid',$getSchoolYear[0]->id)
+                                                            ->where('studinfo.deleted', '0')
+                                                            ->where('sh_enrolledstud.deleted', '0')
+                                                            ->distinct()
+                                                            ->get();
+
+                        }
+                        else{
+
+                            $getTransferredIn               = DB::table('enrolledstud')
+                                                            ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                                                            ->join('studattendance','enrolledstud.studid','=','studattendance.studid')
+                                                            // ->join('studentstatus','studinfo.studstatus','=','studentstatus.id')
+                                                            ->where('enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                            // ->where('studentstatus.description','TRANSFERRED IN')
+                                                            ->whereBetween('enrolledstud.updateddatetime',[$firstDayOfSelectedMonth->isoFormat('YYYY-MM-DD'), $lastDayOfSelectedMonth->isoFormat('YYYY-MM-DD')])
+                                                            ->where('enrolledstud.studstatus',4)
+                                                            ->where('studinfo.studstatus',4)
+                                                            ->where('enrolledstud.syid',$getSchoolYear[0]->id)
+                                                            ->where('studinfo.deleted', '0')
+                                                            ->where('enrolledstud.deleted', '0')
+                                                            ->distinct()
+                                                            ->get();
+
+                        }
+
+                        $numberOfTransferredIn              = count($getTransferredIn);
+                        $numberOfTransferredInMale          = count($getTransferredIn->whereIn('gender',['MALE','Male']));
+                        $numberOfTransferredInFemale        = count($getTransferredIn->whereIn('gender',['FEMALE','Female']));
+                        
+                }
+                else{
+                    
+                    //*Enrolment as of (1st Friday of June)
+                        $previousYear                       = Carbon::create($currentYear - 1,'06');
+
+                        $getFridayFirstWeek                 = $previousYear->startOfWeek();
+
+                        $fridayFirstWeek                    = Carbon::parse('first friday of '.Carbon::create($currentYear - 1,'06').'')->isoFormat('YYYY-MM-DD');
+
+                        $lastYearPreviousMonth              = Carbon::create($currentYear - 1,'05');
+
+                        $getLastDayOfLastWeek               = Carbon::parse('last friday of '.$lastYearPreviousMonth.'')->isoFormat('YYYY-MM-DD');
+
+                        if($getSectionAndLevel[0]->progname == "SENIOR HIGH SCHOOL"){
+
+                            $getNumberOfEnrollees           = DB::table('sh_enrolledstud')
+                                                            ->join('studinfo','sh_enrolledstud.studid','=','studinfo.id')
+                                                            ->where('sh_enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                            ->whereBetween('sh_enrolledstud.dateenrolled',[$getLastDayOfLastWeek,$fridayFirstWeek ])
+                                                            ->whereIn('studinfo.studstatus',[1,2,4])
+                                                            ->whereIn('sh_enrolledstud.studstatus',[1,2,4])
+                                                            ->where('sh_enrolledstud.syid',$getSchoolYear[0]->id)
+                                                            ->where('studinfo.deleted', '0')
+                                                            ->where('sh_enrolledstud.deleted', '0')
+                                                            ->distinct()
+                                                            ->get();
+
+                        }
+                        else{
+
+                            $getNumberOfEnrollees           = DB::table('enrolledstud')
+                                                            ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                                                            ->where('enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                            ->whereBetween('enrolledstud.dateenrolled',[$getLastDayOfLastWeek,$fridayFirstWeek ])
+                                                            ->whereIn('studinfo.studstatus',[1,2,4])
+                                                            ->whereIn('enrolledstud.studstatus',[1,2,4])
+                                                            ->where('enrolledstud.syid',$getSchoolYear[0]->id)
+                                                            ->where('studinfo.deleted', '0')
+                                                            ->where('enrolledstud.deleted', '0')
+                                                            ->distinct()
+                                                            ->get();
+
+                        }
+
+                        $numberOfJuneEnrollees              = count($getNumberOfEnrollees);
+
+                        $getNumberOfEnrolleesFemale         = count($getNumberOfEnrollees->whereIn('gender',['FEMALE','Female']));
+
+                        $getNumberOfEnrolleesMale           = count($getNumberOfEnrollees->whereIn('gender',['MALE','Male']));
+
+                    //Late Enrollment during the month (beyond cut-off)
+                        $firstDayOfSelectedMonth            = Carbon::create($currentYear,$month_id)->startOfMonth();
+
+                        $lastDayOfSelectedMonth             = Carbon::create($currentYear,$month_id)->endOfMonth();
+
+                        if($getSectionAndLevel[0]->progname == "SENIOR HIGH SCHOOL"){
+
+                            $getNumberOfLateEnrollees       = DB::table('sh_enrolledstud')
+                                                            ->join('studinfo','sh_enrolledstud.studid','=','studinfo.id')
+                                                            ->where('sh_enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                            ->whereBetween('sh_enrolledstud.dateenrolled',[$firstDayOfSelectedMonth, $lastDayOfSelectedMonth])
+                                                            ->where('sh_enrolledstud.studstatus', '2')
+                                                            ->where('sh_enrolledstud.syid',$getSchoolYear[0]->id)
+                                                            ->where('studinfo.studstatus',2)
+                                                            ->groupBy('sh_enrolledstud.studid')
+                                                            ->where('studinfo.deleted', '0')
+                                                            ->where('sh_enrolledstud.deleted', '0')
+                                                            ->distinct()
+                                                            ->get();
+
+                        }
+                        else{
+
+                            $getNumberOfLateEnrollees       = DB::table('enrolledstud')
+                                                            ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                                                            ->where('enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                            ->whereBetween('enrolledstud.dateenrolled',[$firstDayOfSelectedMonth, $lastDayOfSelectedMonth])
+                                                            ->where('enrolledstud.studstatus', '2')
+                                                            ->where('studinfo.studstatus',2)
+                                                            ->where('enrolledstud.syid',$getSchoolYear[0]->id)
+                                                            ->where('studinfo.deleted', '0')
+                                                            ->where('enrolledstud.deleted', '0')
+                                                            ->groupBy('enrolledstud.studid')
+                                                            ->distinct()
+                                                            ->get();
+
+                        }
+                        
+                        $numberOfLateEnrollees              = count($getNumberOfLateEnrollees);
+
+                        $getNumberOfLateEnrolleesFemale     = count($getNumberOfLateEnrollees->whereIn('gender',['FEMALE','Female']));
+
+                        $getNumberOfLateEnrolleesMale       = count($getNumberOfLateEnrollees->whereIn('gender',['MALE','Male']));
+
+                    //Registered Learner as of end of the month
+                            $firstDayOfSelectedMonth        = Carbon::create($currentYear,$month_id)->startOfMonth();
+
+                            $lastDayOfSelectedMonth         = Carbon::create($currentYear,$month_id)->endOfMonth();
+
+                            if($getSectionAndLevel[0]->progname == "SENIOR HIGH SCHOOL"){
+
+                                $getNumberOfRegisteredEnrollees = DB::table('sh_enrolledstud')
+                                                                ->join('studinfo','sh_enrolledstud.studid','=','studinfo.id')
+                                                                ->where('sh_enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                                ->whereBetween('sh_enrolledstud.dateenrolled',[$firstDayOfSelectedMonth, $lastDayOfSelectedMonth])
+                                                                ->whereIn('studinfo.studstatus',[1,2,4])
+                                                                ->whereIn('sh_enrolledstud.studstatus',[1,2,4])
+                                                                ->where('sh_enrolledstud.syid',$getSchoolYear[0]->id)
+                                                                ->where('studinfo.deleted', '0')
+                                                                ->where('sh_enrolledstud.deleted', '0')
+                                                                ->groupBy('sh_enrolledstud.studid')
+                                                                ->distinct()
+                                                                ->get();
+
+                            }
+                            else{
+
+                                $getNumberOfRegisteredEnrollees = DB::table('enrolledstud')
+                                                                ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                                                                ->where('enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                                ->whereBetween('enrolledstud.dateenrolled',[$firstDayOfSelectedMonth, $lastDayOfSelectedMonth])
+                                                                ->whereIn('studinfo.studstatus',[1,2,4])
+                                                                ->whereIn('enrolledstud.studstatus',[1,2,4])
+                                                                ->where('enrolledstud.syid',$getSchoolYear[0]->id)
+                                                                ->where('studinfo.deleted', '0')
+                                                                ->where('enrolledstud.deleted', '0')
+                                                                ->groupBy('enrolledstud.studid')
+                                                                ->distinct()
+                                                                ->get();
+
+                            }
+                            
+                            $numberOfRegisteredEnrollees            = count($getNumberOfRegisteredEnrollees);
+
+                            $getNumberOfRegisteredEnrolleesFemale   = count($getNumberOfRegisteredEnrollees->whereIn('gender',['FEMALE','Female']));
+
+                            $getNumberOfRegisteredEnrolleesMale     = count($getNumberOfRegisteredEnrollees->whereIn('gender',['MALE','Male']));
+
+                    //Percentage of Enrollment as of end of the month
+                        //selected month (up)
+                        //July 31
+                        $monthOfJuly                                =  Carbon::create($currentYear - 1,'07')->endOfMonth()->isoFormat('YYYY-MM-DD');
+
+                        if($getSectionAndLevel[0]->progname == "SENIOR HIGH SCHOOL"){
+
+                            $getPercentageOfJulyEnrolles            = DB::table('sh_enrolledstud')
+                                                                    ->join('studinfo','sh_enrolledstud.studid','=','studinfo.id')
+                                                                    ->where('sh_enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                                    ->whereBetween('sh_enrolledstud.dateenrolled',[$fridayFirstWeek, $monthOfJuly])
+                                                                    ->whereIn('studinfo.studstatus',[1,2,4])
+                                                                    ->whereIn('sh_enrolledstud.studstatus',[1,2,4])
+                                                                    ->where('sh_enrolledstud.syid',$getSchoolYear[0]->id)
+                                                                    ->where('studinfo.deleted', '0')
+                                                                    ->where('sh_enrolledstud.deleted', '0')
+                                                                    ->distinct()
+                                                                    ->get();
+
+                        }
+                        else{
+
+                            $getPercentageOfJulyEnrolles            = DB::table('enrolledstud')
+                                                                    ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                                                                    ->where('enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                                    ->whereBetween('enrolledstud.dateenrolled',[$fridayFirstWeek, $monthOfJuly])
+                                                                    ->whereIn('studinfo.studstatus',[1,2,4])
+                                                                    ->whereIn('enrolledstud.studstatus',[1,2,4])
+                                                                    ->where('enrolledstud.syid',$getSchoolYear[0]->id)
+                                                                    ->where('studinfo.deleted', '0')
+                                                                    ->where('enrolledstud.deleted', '0')
+                                                                    ->distinct()
+                                                                    ->get();
+
+                        }
+
+                        $percentageJulyEnrollees                    = count($getPercentageOfJulyEnrolles);
+
+                        $getPercentageJulyLateEnrolleesFemale       = count($getPercentageOfJulyEnrolles->whereIn('gender',['FEMALE','Female']));
+
+                        $getPercentageJulyLateEnrolleesMale         = count($getPercentageOfJulyEnrolles->whereIn('gender',['MALE','Male']));
+
+                        if($numberOfLateEnrollees == 0 || $percentageJulyEnrollees == 0 ){
+
+                            $totalPercentage            = 0;
+                            $totalPercentageMale        = 0;
+                            $totalPercentageFemale      = 0;
+
+                        }else{
+
+                            $totalPercentage            = ($numberOfLateEnrollees / $numberOfJuneEnrollees)*100;
+                            $totalPercentageMale        = ($getNumberOfLateEnrolleesMale / $getNumberOfEnrolleesFemale)*100;
+                            $totalPercentageFemale      = ($getNumberOfLateEnrolleesFemale / $getNumberOfEnrolleesMale)*100;
+
+                        }
+                    //Average Daily Attendance
+                        // $getAttOfStudentsOfSelectedMonth = DB::table('studattendance')
+                        //     ->join('studinfo','studattendance.studid','=','studinfo.id')
+                        //     ->where('studinfo.sectionid',$getSectionAndLevel[0]->sectionid)
+                        //     ->whereBetween('studattendance.tdate',[$firstDayOfSelectedMonth->isoFormat('YYYY-MM-DD'), $lastDayOfSelectedMonth->isoFormat('YYYY-MM-DD')])
+                        //     ->get();
+                        // $attOfStudentsTotal = count($getAttOfStudentsOfSelectedMonth);
+                        // $attOfFemaleStudents = count($getAttOfStudentsOfSelectedMonth->where('gender','Female'));
+                        // $attOfMaleStudents = count($getAttOfStudentsOfSelectedMonth->where('gender','Male'));
+                    //Drop-out
+                        if($getSectionAndLevel[0]->progname == "SENIOR HIGH SCHOOL"){
+
+                            $getDroppedOut              = DB::table('sh_enrolledstud')
+                                                        ->join('studinfo','sh_enrolledstud.studid','=','studinfo.id')
+                                                        ->join('studattendance','sh_enrolledstud.studid','=','studattendance.studid')
+                                                        // ->join('studentstatus','studinfo.studstatus','=','studentstatus.id')
+                                                        ->where('sh_enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                        // ->where('studentstatus.description','ENROLLED')
+                                                        ->whereBetween('sh_enrolledstud.updateddatetime',[$firstDayOfSelectedMonth->isoFormat('YYYY-MM-DD'), $lastDayOfSelectedMonth->isoFormat('YYYY-MM-DD')])
+                                                        ->where('sh_enrolledstud.studstatus',3)
+                                                        ->where('sh_enrolledstud.syid',$getSchoolYear[0]->id)
+                                                        ->where('studinfo.studstatus',3)
+                                                        ->where('studinfo.deleted', '0')
+                                                        ->where('sh_enrolledstud.deleted', '0')
+                                                        ->distinct()
+                                                        ->get();
+
+                        }
+                        else{
+                            $getDroppedOut              = DB::table('enrolledstud')
+                                                        ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                                                        ->join('studattendance','enrolledstud.studid','=','studattendance.studid')
+                                                        // ->join('studentstatus','studinfo.studstatus','=','studentstatus.id')
+                                                        ->where('enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                        // ->where('studentstatus.description','ENROLLED')
+                                                        ->whereBetween('enrolledstud.updateddatetime',[$firstDayOfSelectedMonth->isoFormat('YYYY-MM-DD'), $lastDayOfSelectedMonth->isoFormat('YYYY-MM-DD')])
+                                                        ->where('enrolledstud.studstatus',3)
+                                                        ->where('enrolledstud.syid',$getSchoolYear[0]->id)
+                                                        ->where('studinfo.studstatus',3)
+                                                        ->where('studinfo.deleted', '0')
+                                                        ->where('enrolledstud.deleted', '0')
+                                                        ->distinct()
+                                                        ->get();
+                        }
+
+                        $numberOfDroppedOut             = count($getDroppedOut);
+
+                        $numberOfDroppedOutMale         = count($getDroppedOut->whereIn('gender',['MALE','Male']));
+
+                        $numberOfDroppedOutFemale       = count($getDroppedOut->whereIn('gender',['FEMALE','Female']));
+
+                    //Transferred out
+                        if($getSectionAndLevel[0]->progname == "SENIOR HIGH SCHOOL"){
+
+                            $getTransferredOut          = DB::table('sh_enrolledstud')
+                                                        ->join('studinfo','sh_enrolledstud.studid','=','studinfo.id')
+                                                        ->join('studattendance','sh_enrolledstud.studid','=','studattendance.studid')
+                                                        // ->join('studentstatus','studinfo.studstatus','=','studentstatus.id')
+                                                        ->where('sh_enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                        // ->where('studentstatus.description','TRANSFERRED OUT')
+                                                        ->whereBetween('sh_enrolledstud.updateddatetime',[$firstDayOfSelectedMonth->isoFormat('YYYY-MM-DD'), $lastDayOfSelectedMonth->isoFormat('YYYY-MM-DD')])
+                                                        ->where('sh_enrolledstud.studstatus',5)
+                                                        ->where('sh_enrolledstud.syid',$getSchoolYear[0]->id)
+                                                        ->where('studinfo.studstatus',5)
+                                                        ->where('studinfo.deleted', '0')
+                                                        ->where('sh_enrolledstud.deleted', '0')
+                                                        ->distinct()
+                                                        ->get();
+
+                        }
+                        else{
+
+                            $getTransferredOut          = DB::table('enrolledstud')
+                                                        ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                                                        ->join('studattendance','enrolledstud.studid','=','studattendance.studid')
+                                                        // ->join('studentstatus','studinfo.studstatus','=','studentstatus.id')
+                                                        ->where('enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                        // ->where('studentstatus.description','TRANSFERRED OUT')
+                                                        ->whereBetween('enrolledstud.updateddatetime',[$firstDayOfSelectedMonth->isoFormat('YYYY-MM-DD'), $lastDayOfSelectedMonth->isoFormat('YYYY-MM-DD')])
+                                                        ->where('enrolledstud.studstatus',5)
+                                                        ->where('enrolledstud.syid',$getSchoolYear[0]->id)
+                                                        ->where('studinfo.studstatus',5)
+                                                        ->where('studinfo.deleted', '0')
+                                                        ->where('enrolledstud.deleted', '0')
+                                                        ->distinct()
+                                                        ->get();
+
+                        }
+
+                        $numberOfTransferredOut         = count($getTransferredOut);
+
+                        $numberOfTransferredOutMale     = count($getTransferredOut->whereIn('gender',['MALE','Male']));
+
+                        $numberOfTransferredOutFemale   = count($getTransferredOut->whereIn('gender',['FEMALE','Female']));
+
+                    //Transferred in
+                        if($getSectionAndLevel[0]->progname == "SENIOR HIGH SCHOOL"){
+
+                            $getTransferredIn           = DB::table('sh_enrolledstud')
+                                                        ->join('studinfo','sh_enrolledstud.studid','=','studinfo.id')
+                                                        ->join('studattendance','sh_enrolledstud.studid','=','studattendance.studid')
+                                                        // ->join('studentstatus','studinfo.studstatus','=','studentstatus.id')
+                                                        ->where('sh_enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                        // ->where('studentstatus.description','TRANSFERRED IN')
+                                                        ->whereBetween('sh_enrolledstud.updateddatetime',[$firstDayOfSelectedMonth->isoFormat('YYYY-MM-DD'), $lastDayOfSelectedMonth->isoFormat('YYYY-MM-DD')])
+                                                        ->where('sh_enrolledstud.studstatus',4)
+                                                        ->where('sh_enrolledstud.syid',$getSchoolYear[0]->id)
+                                                        ->where('studinfo.studstatus',4)
+                                                        ->where('studinfo.deleted', '0')
+                                                        ->where('sh_enrolledstud.deleted', '0')
+                                                        ->distinct()
+                                                        ->get();
+
+                        }
+                        else{
+
+                            $getTransferredIn           = DB::table('enrolledstud')
+                                                        ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                                                        ->join('studattendance','enrolledstud.studid','=','studattendance.studid')
+                                                        // ->join('studentstatus','studinfo.studstatus','=','studentstatus.id')
+                                                        ->where('enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                                        // ->where('studentstatus.description','TRANSFERRED IN')
+                                                        ->whereBetween('enrolledstud.updateddatetime',[$firstDayOfSelectedMonth->isoFormat('YYYY-MM-DD'), $lastDayOfSelectedMonth->isoFormat('YYYY-MM-DD')])
+                                                        ->where('enrolledstud.studstatus',4)
+                                                        ->where('enrolledstud.syid',$getSchoolYear[0]->id)
+                                                        ->where('studinfo.studstatus',4)
+                                                        ->where('studinfo.deleted', '0')
+                                                        ->where('enrolledstud.deleted', '0')
+                                                        ->distinct()
+                                                        ->get();
+
+                        }
+
+                        $numberOfTransferredIn          = count($getTransferredIn);
+
+                        $numberOfTransferredInMale      = count($getTransferredIn->whereIn('gender',['MALE','Male']));
+
+                        $numberOfTransferredInFemale    = count($getTransferredIn->whereIn('gender',['FEMALE','Female']));
+
+                }
+                
+                $currentMonthString                 = Carbon::create($currentYear,$currentMonth)->isoFormat('MMMM');
+                
+                $currentDay                         = Carbon::now()->day;
+                
+                $first_day_of_the_current_month     = Carbon::today()->startOfMonth()->isoFormat('D');
+
+                $last_day_of_the_current_month      = Carbon::today()->endOfMonth()->isoFormat('D');
+                // return $months;
+                // return date('Y-m-d',strtotime($currentYear.'-'.$months[0].'-'.$currentDay));
+                $start                              = date('Y-m-d',strtotime($currentYear.'-'.$months[0].'-'.$currentDay));
+
+                $period                             = CarbonPeriod::between($currentYear.'-'.$currentMonth.'-'.$first_day_of_the_current_month, $currentYear.'-'.$currentMonth.'-'.$last_day_of_the_current_month);
+
+                $workdays                           = array();
+
+                $type                               = CAL_GREGORIAN;
+                
+                $day_count                          = cal_days_in_month($type, $month_id, $currentYear); // Get the amount of days
+
+                for ($i = 1; $i <= $day_count; $i++) {
+
+                    $date       = $currentYear.'/'.$month_id.'/'.$i; //format date
+                    $get_name   = Carbon::create($date)->isoFormat('ddd'); //get week day
+                    // return $get_name;
+                    $day_name   = substr($get_name, 0, 3); // Trim day name to 3 chars
+            
+                    //if not a weekend add day to array
+                    if($day_name != 'Sun' ){
+                        $workdays[] = $currentYear.'-'.$month_id.'-'.$i;
+                    }
+            
+                }
+
+                $holidays                           = DB::table('schoolcal')
+                                                    ->select('datefrom','dateto')
+                                                    ->where('noclass','1')
+                                                    ->where('deleted','0')
+                                                    ->get();
+
+                $holidaysArray                      = array();
+
+                foreach($holidays as $twodates){
+
+                    $period         = CarbonPeriod::create($twodates->datefrom, $twodates->dateto);
+
+                    foreach ($period as $date) {
+
+                        $date->format('Y-m-d');
+
+                    }
+
+                    array_push($holidaysArray, $period);
+
+                }
+                
+                $days_num   = array();
+
+                $days_str   = array();
+
+                $daysMonth  = array();
+
+                foreach ($workdays as $date) {
+
+                    $noMatch = true;
+
+                    foreach(array_unique($holidaysArray) as $holi){
+
+                        foreach($holi as $holiday){
+
+                            if(date('M d Y',strtotime($date)) == date('M d Y',strtotime($holiday))){
+
+                                $noMatch = false;
+
+                            }
+                            
+                        }
+
+                    }
+
+                    if($noMatch){
+
+                        array_push($days_num,date('d',strtotime($date)));
+
+                        array_push($days_str,date('D',strtotime($date)));
+
+                        array_push($daysMonth,date('M d Y',strtotime($date)));
+
+                    }
+                    
+                }    
+
+                $attendance     = array();
+
+                $fullstudatt    = array();
+
+                $monthsArray    = array();
+                
+                foreach($getStudents as $student){
+
+                    $studatt        = array();
+
+                    $countAbsent    = array();
+
+                    $countTardy     = array();
+
+                    $users          = Db::table('studinfo')
+                                    ->join('assignsubj','studinfo.sectionid','=','assignsubj.sectionid')
+                                    ->join('assignsubjdetail','assignsubj.id','=','assignsubjdetail.headerid')
+                                    ->where('assignsubj.syid',$getSchoolYear[0]->id)
+                                    ->where('studinfo.id',$student->id)
+                                    ->distinct()
+                                    ->get();
+                                    
+                    $studattrep     = DB::table('studattendance')
+                                    ->where('studid',$student->id)
+                                    ->where('studattendance.syid',$getSchoolYear[0]->id)
+                                    ->whereYear('tdate',$currentYear)
+                                    ->whereMonth('tdate',$month_id)
+                                    ->distinct()
+                                    ->get();
+                                    
+                    foreach($studattrep as $studentAtt){
+                        
+                        $monthStrOnly = Carbon::create($studentAtt->tdate)->isoFormat("MMMM");
+
+                        $monthNumOnly = Carbon::create($studentAtt->tdate)->isoFormat("M");
+
+                        array_push($monthsArray,array(
+                            'month_id'  => $monthNumOnly,
+                            'month'     => $monthStrOnly
+                        ));
+
+                    }
+
+                    foreach($daysMonth as $eachday){
+                        
+                        $y          = Carbon::create($eachday)->isoFormat('YYYY');
+
+                        $m          = Carbon::create($eachday)->isoFormat('MM');
+
+                        $d          = Carbon::create($eachday)->isoFormat('DD');
+                        
+                        $studrep    = $studattrep->where('tdate',$y.'-'.$m.'-'.$d);
+
+                        if(count($studrep) == 0){
+
+                            array_push($studatt, (object)array('status' => 'no record'));
+
+                        }
+                        else{
+                            
+                            foreach($studrep as $rep){
+                                
+                                if($rep->present == '1'){
+
+                                    $attendanceSubj = DB::table('studentsubjectattendance')
+                                                    ->where('student_id',$student->id)
+                                                    // ->where('status','present')
+                                                    ->whereYear('date','=', $currentYear)
+                                                    ->whereMonth('date','=',$month_id)
+                                                    ->whereDay('date','=',$d)
+                                                    ->distinct()
+                                                    ->get();
+                                    
+                                    if(count($attendanceSubj)==0){
+                                    
+                                        array_push($studatt, (object)array('status' => 'present'));
+
+                                    }
+                                    else{
+                                        //Absent >= //Present && //Absent>= late --> cutting classess
+                                        //Late >= //Present  --> Late
+                                        if(count($attendanceSubj->where('status','absent')) >= count($attendanceSubj->where('status','present')) && count($attendanceSubj->where('status','absent')) >= count($attendanceSubj->where('status','late'))){
+
+                                            array_push($studatt, (object)array('status' => 'cuttingclasses'));
+
+                                            array_push($countTardy, 1);
+
+                                        }
+                                        elseif(count($attendanceSubj->where('status','late')) >= count($attendanceSubj->where('status','present'))){
+
+                                            array_push($studatt, (object)array('status' => 'late'));
+
+                                            array_push($countTardy, 1);
+
+                                        }
+                                        elseif(count($attendanceSubj->where('status','present')) == count($attendanceSubj)){
+
+                                            array_push($studatt, (object)array('status' => 'present'));
+
+                                        }
+
+                                    }
+                                    
+                                }
+                                elseif($rep->absent == '1'){
+
+                                    array_push($studatt, (object)array('status' => 'absent'));
+
+                                    array_push($countAbsent, 1);
+
+                                }
+                                elseif($rep->tardy == '1'){
+
+                                    array_push($studatt, (object)array('status' => 'late'));
+
+                                    array_push($countTardy, 1);
+
+                                }
+                                elseif($rep->cc == '1'){
+
+                                    array_push($studatt, (object)array('status' => 'cuttingclasses'));
+
+                                    array_push($countTardy, 1);
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                    array_push($fullstudatt, (object)array(
+                        'studentinfo'       =>$student,
+                        'studentattendance' =>$studatt,
+                        'numberOfAbsent'    =>count($countAbsent),
+                        'numberOfTardy' =>count($countTardy)
+                    ));
+
+                }
+
+                foreach($daysMonth as $weekday){
+                    
+                    if($getSectionAndLevel[0]->progname == "SENIOR HIGH SCHOOL"){
+
+                        $dailyMaleAttendance = DB::table('studattendance')
+                                            ->join('studinfo','studattendance.studid','=','studinfo.id')
+                                            ->join('sh_enrolledstud','studattendance.studid','=','sh_enrolledstud.studid')
+                                            ->where('studattendance.tdate',Carbon::create($weekday)->isoFormat('YYYY-MM-DD'))
+                                            ->where(function ($query) {
+                                                $query->where('studattendance.present',1)
+                                                    ->orWhere('studattendance.tardy',1)
+                                                    ->orWhere('studattendance.cc',1);
+                                            })
+                                            ->whereIn('studinfo.gender',['MALE','Male'])
+                                            ->where('sh_enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                            ->where('sh_enrolledstud.levelid',$getSectionAndLevel[0]->levelid)
+                                            ->where('sh_enrolledstud.promotionstatus', '0')
+                                            ->where('sh_enrolledstud.syid',$getSchoolYear[0]->id)
+                                            ->whereIn('studinfo.studstatus',[1,2,4])
+                                            ->whereIn('sh_enrolledstud.studstatus',[1,2,4])
+                                            ->groupBy('sh_enrolledstud.studid')
+                                            ->distinct()
+                                            ->get();
+
+                    }
+                    else{
+                        
+                        $dailyMaleAttendance = DB::table('studattendance')
+                                            ->join('studinfo','studattendance.studid','=','studinfo.id')
+                                            ->join('enrolledstud','studattendance.studid','=','enrolledstud.studid')
+                                            ->where('studattendance.tdate',Carbon::create($weekday)->isoFormat('YYYY-MM-DD'))
+                                            ->where(function ($query) {
+                                                $query->where('studattendance.present',1)
+                                                    ->orWhere('studattendance.tardy',1)
+                                                    ->orWhere('studattendance.cc',1);
+                                            })
+                                            // ->where(function ($query2) {
+                                            //     $query2->where('studinfo.gender','MALE')
+                                            //         ->orWhere('studattendance.tardy',1)
+                                            // })
+                                            ->whereIn('studinfo.gender',['MALE','Male'])
+                                            ->where('enrolledstud.syid',$getSchoolYear[0]->id)
+                                            ->where('enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                            ->where('enrolledstud.levelid',$getSectionAndLevel[0]->levelid)
+                                            ->where('enrolledstud.promotionstatus', '0')
+                                            ->whereIn('studinfo.studstatus',[1,2,4])
+                                            ->whereIn('enrolledstud.studstatus',[1,2,4])
+                                            ->groupBy('enrolledstud.studid')
+                                            ->distinct()
+                                            ->get();
+                                            
+                    }
+                    if(count($dailyMaleAttendance)==0){
+
+                        array_push($countMaleDailyAttendance,(object) ['total' => '']);
+
+                    }
+                    else{
+
+                        array_push($countMaleDailyAttendance,(object) ['total' => count($dailyMaleAttendance)]);
+
+                    }
+                    
+                }
+                
+                foreach($daysMonth as $weekday){
+                    
+                    if($getSectionAndLevel[0]->progname == "SENIOR HIGH SCHOOL"){
+                        
+                        $dailyFemaleAttendance = DB::table('studattendance')
+                                            ->join('studinfo','studattendance.studid','=','studinfo.id')
+                                            ->join('sh_enrolledstud','studattendance.studid','=','sh_enrolledstud.studid')
+                                            ->where('studattendance.tdate',Carbon::create($weekday)->isoFormat('YYYY-MM-DD'))
+                                            ->where(function ($query) {
+                                                $query->where('studattendance.present',1)
+                                                    ->orWhere('studattendance.tardy',1)
+                                                    ->orWhere('studattendance.cc',1);
+                                            })
+                                            ->whereIn('studinfo.gender',['FEMALE','Female'])
+                                            ->where('sh_enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                            ->where('sh_enrolledstud.levelid',$getSectionAndLevel[0]->levelid)
+                                            ->where('sh_enrolledstud.syid',$getSchoolYear[0]->id)
+                                            ->where('sh_enrolledstud.promotionstatus', '0')
+                                            ->whereIn('studinfo.studstatus',[1,2,4])
+                                            ->whereIn('sh_enrolledstud.studstatus',[1,2,4])
+                                            ->groupBy('sh_enrolledstud.studid')
+                                            ->distinct()
+                                            ->get();
+
+                    }
+                    else{
+
+                        $dailyFemaleAttendance = DB::table('studattendance')
+                                            ->join('studinfo','studattendance.studid','=','studinfo.id')
+                                            ->join('enrolledstud','studattendance.studid','=','enrolledstud.studid')
+                                            ->where('studattendance.tdate',Carbon::create($weekday)->isoFormat('YYYY-MM-DD'))
+                                            ->where(function ($query) {
+                                                $query->where('studattendance.present',1)
+                                                    ->orWhere('studattendance.tardy',1)
+                                                    ->orWhere('studattendance.cc',1);
+                                            })
+                                            ->whereIn('studinfo.gender',['FEMALE','Female'])
+                                            ->where('enrolledstud.syid',$getSchoolYear[0]->id)
+                                            ->where('enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                            ->where('enrolledstud.levelid',$getSectionAndLevel[0]->levelid)
+                                            ->whereIn('studinfo.studstatus',[1,2,4])
+                                            ->whereIn('enrolledstud.studstatus',[1,2,4])
+                                            ->where('enrolledstud.promotionstatus', '0')
+                                            ->groupBy('enrolledstud.studid')
+                                            ->distinct()
+                                            ->get();
+
+                    }
+
+                    if(count($dailyFemaleAttendance)==0){
+
+                        array_push($countFemaleDailyAttendance,(object) ['total' => '']);
+
+                    }
+                    else{
+
+                        array_push($countFemaleDailyAttendance,(object) ['total' => count($dailyFemaleAttendance)]);
+
+                    }
+
+                }
+                
+                $countDailyAttendance = array();
+
+                foreach($daysMonth as $weekday){
+
+                    if($getSectionAndLevel[0]->progname == "SENIOR HIGH SCHOOL"){
+
+                        $dailyAttendance = DB::table('studattendance')
+                                        ->join('studinfo','studattendance.studid','=','studinfo.id')
+                                        ->join('sh_enrolledstud','studattendance.studid','=','sh_enrolledstud.studid')
+                                        ->where('studattendance.tdate',Carbon::create($weekday)->isoFormat('YYYY-MM-DD'))
+                                        ->where(function ($query) {
+                                            $query->where('studattendance.present',1)
+                                                ->orWhere('studattendance.tardy',1)
+                                                ->orWhere('studattendance.cc',1);
+                                        })
+                                        ->where('sh_enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                        ->where('sh_enrolledstud.levelid',$getSectionAndLevel[0]->levelid)
+                                        ->where('sh_enrolledstud.syid',$getSchoolYear[0]->id)
+                                        ->whereIn('studinfo.studstatus',[1,2,4])
+                                        ->whereIn('sh_enrolledstud.studstatus',[1,2,4])
+                                        ->where('sh_enrolledstud.promotionstatus', '0')
+                                        ->groupBy('studattendance.studid')
+                                        ->distinct()
+                                        ->get();
+
+                    }
+                    else{
+
+                        $dailyAttendance = DB::table('studattendance')
+                                        ->join('studinfo','studattendance.studid','=','studinfo.id')
+                                        ->join('enrolledstud','studattendance.studid','=','enrolledstud.studid')
+                                        ->where('studattendance.tdate',Carbon::create($weekday)->isoFormat('YYYY-MM-DD'))
+                                        ->where(function ($query) {
+                                            $query->where('studattendance.present',1)
+                                                ->orWhere('studattendance.tardy',1)
+                                                ->orWhere('studattendance.cc',1);
+                                        })
+                                        ->where('enrolledstud.sectionid',$getSectionAndLevel[0]->sectionid)
+                                        ->where('enrolledstud.levelid',$getSectionAndLevel[0]->levelid)
+                                        ->where('enrolledstud.syid',$getSchoolYear[0]->id)
+                                        ->whereIn('studinfo.studstatus',[1,2,4])
+                                        ->whereIn('enrolledstud.studstatus',[1,2,4])
+                                        ->where('enrolledstud.promotionstatus', '0')
+                                        ->groupBy('studattendance.studid')
+                                        ->distinct()
+                                        ->get();
+
+                    }
+                    
+                    if(count($dailyAttendance)==0){
+
+                        array_push($countDailyAttendance,(object) ['total' => '']);
+
+                    }
+                    else{
+
+                            array_push($countDailyAttendance,(object) ['total' => count($dailyAttendance)]);
+
+                    }
+
+                }
+                
+
+                $collectedAttendance    = collect($attendance)->filter()->all();
+
+                $collectedMonthsArray   = collect($monthsArray)->unique();
+            
+                $month_id               = $currentMonth;
+                
+                
+                foreach($getMonths as $key=>$item){
+                    // return date('F d, Y',strtotime($item));
+                    $getMonths->push((object)[
+                        'month_id'=> $item,
+                        'month'=> date('F',strtotime($currentYear.'-'.$item))
+                        ]);
+
+                    $getMonths->push((object)[
+                        'month_id'=> (date('m')),
+                        'month'=> date('F',strtotime($currentYear.'-'.date('m')))
+                        ]);
+
+                    unset($getMonths[$key]);
+
+                }
+                // array_push($getMonths, (object)array(
+                //     'month_id'=> $month_id,
+                //     'month'=> date('F',strtotime($currentYear.'-'.$month_id))
+                // ));
+
+                    // return $getMonths;
+                $getMonths              = collect($getMonths)->unique();
+                
+
+                $getMonthsArray         = array();
+
+                foreach($getMonths as $key=>$item){
+                    
+                        array_push($getMonthsArray,$item);
+                        
+                }
+
+                if($request->get('action') == 'show'){
+                    
+                    return view('teacher.forms.form2.showschoolform2')
+                        ->with('school',$getSchoolInfo)
+                        ->with('sy',$getSchoolYear)
+                        ->with('gradeAndLevel',$getSectionAndLevel)
+                        ->with('months',$getMonthsArray)
+                        ->with('selected_month',$currentMonth)
+                        ->with('selected_month_string',$currentMonthString)
+                        ->with('numberOfJuneEnrolleesTotal',$numberOfJuneEnrollees)
+                        ->with('numberOfJuneEnrolleesFemale',$getNumberOfEnrolleesFemale)
+                        ->with('numberOfJuneEnrolleesMale',$getNumberOfEnrolleesMale)
+                        ->with('numberOfJuneLateEnrolleesTotal',$numberOfLateEnrollees)
+                        ->with('numberOfJuneLateEnrolleesFemale',$getNumberOfLateEnrolleesFemale)
+                        ->with('numberOfJuneLateEnrolleesMale',$getNumberOfLateEnrolleesMale)
+                        ->with('totalPercentage',$totalPercentage)
+                        ->with('totalPercentageMale',$totalPercentageMale)
+                        ->with('totalPercentageFemale',$totalPercentageFemale)
+                        // ->with('attOfStudentsTotal',$attOfStudentsTotal)
+                        // ->with('attOfFemaleStudents',$attOfFemaleStudents)
+                        // ->with('attOfMaleStudents',$attOfMaleStudents)
+                        ->with('numberOfRegisteredEnrollees',$numberOfRegisteredEnrollees)
+                        ->with('getNumberOfRegisteredEnrolleesFemale',$getNumberOfRegisteredEnrolleesFemale)
+                        ->with('getNumberOfRegisteredEnrolleesMale',$getNumberOfRegisteredEnrolleesMale)
+                        ->with('numberOfDroppedOut',$numberOfDroppedOut)
+                        ->with('numberOfDroppedOutMale',$numberOfDroppedOutMale)
+                        ->with('numberOfDroppedOutFemale',$numberOfDroppedOutFemale)
+                        ->with('numberOfTransferredOut',$numberOfTransferredOut)
+                        ->with('numberOfTransferredOutMale',$numberOfTransferredOutMale)
+                        ->with('numberOfTransferredOutFemale',$numberOfTransferredOutFemale)
+                        ->with('numberOfTransferredIn',$numberOfTransferredIn)
+                        ->with('numberOfTransferredInMale',$numberOfTransferredInMale)
+                        ->with('numberOfTransferredInFemale',$numberOfTransferredInFemale)
+                        ->with('days_num',$days_num)
+                        ->with('days_str',$days_str)
+                        ->with('attendance',$fullstudatt)
+                        ->with('teachername',$getTeacherName)
+                        ->with('countMaleDailyAttendance',$countMaleDailyAttendance)
+                        ->with('countFemaleDailyAttendance',$countFemaleDailyAttendance)
+                        ->with('countDailyAttendance',$countDailyAttendance)
+                        ->with('principalname',$getPrincipal);
+                }
+
+                if($request->get('action') == 'print'){
+                    
+                    if($request->get('exporttype') == 'pdf')
+                    {
+                        $pdf = PDF::loadview('teacher/pdf/schoolform2preview',compact('getSchoolInfo','getSchoolYear','getSectionAndLevel','getTeacherName','getPrincipal',
+                        'collectedMonthsArray','month_id','currentMonthString','numberOfJuneEnrollees','getNumberOfEnrolleesFemale','getNumberOfEnrolleesMale','numberOfLateEnrollees','getNumberOfLateEnrolleesFemale','getNumberOfLateEnrolleesMale','totalPercentage','totalPercentageMale','totalPercentageFemale','numberOfDroppedOut','numberOfDroppedOutMale','numberOfDroppedOutFemale','numberOfTransferredOut','numberOfTransferredOutMale','numberOfTransferredOutFemale','numberOfTransferredIn','numberOfTransferredInMale','numberOfTransferredInFemale','days_num','days_str','fullstudatt','countMaleDailyAttendance','countFemaleDailyAttendance','countDailyAttendance','currentYear','numberOfRegisteredEnrollees','getNumberOfRegisteredEnrolleesFemale','getNumberOfRegisteredEnrolleesMale'))->setPaper('legal','landscape');
+            
+                        return $pdf->stream('School Form 2');
+                    }else{
+                        // return $request->all();
+                        
+                        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load(base_path().'/public/excelformats/schoolform2.xlsx');
+                        $sheet = $spreadsheet->getActiveSheet();
+                        $borderstyle = [
+                            // 'alignment' => [
+                            //     'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT,
+                            // ],
+                            'borders' => [
+                                'top' => [
+                                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                                ],
+                            ]
+                        ];
+                        $sheet->getStyle('I13')
+                        ->getFill()
+                        ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                        ->getStartColor()
+                        ->setARGB('bf3406')
+                        ->setRotation(45);
+                        
+                        $sheet->getStyle('I13')
+                        ->getFill()
+                        ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                        ->getEndColor()
+                        ->setARGB('bf3406')
+                        ->setRotation(45);
+                    }
+
+                }
+
+            }
+
+        }
+        

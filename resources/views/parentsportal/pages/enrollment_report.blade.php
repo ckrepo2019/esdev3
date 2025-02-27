@@ -1,0 +1,708 @@
+@extends('parentsportal.layouts.app2')
+
+@section('pagespecificscripts')
+      <style>
+            .enrollment_history{
+                  cursor: pointer;
+            }
+            .font-sm{
+                  font-size: 13px;
+            }
+      </style>
+@endsection
+
+@section('content')
+      <section class="content-header pt-0">
+            <div class="container-fluid ">
+                  <div class="row mb-2">
+                    <div class="col-sm-6">
+                      <h1>Enrollment History</h1>
+                    </div>
+                    <div class="col-sm-6">
+                      <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="#">Home</a></li>
+                        <li class="breadcrumb-item active">Enrollment History</li>
+                      </ol>
+                    </div>
+                  </div>
+            </div>
+      </section>
+      <section class="">
+            <div class="row">
+                  <div class="col-md-12">
+                        <div class="card">
+                              <div class="card-header p-1 bg-primary">
+
+                              </div>
+                              <div class="card-body">
+                                    <div class="row">
+                                          <div class="col-md-3 border-right pl-0">
+                                                <table class="table table-sm">
+                                                      <thead>
+                                                            <tr><th>SCHOOL YEAR - SEMESTER</th></tr>
+                                                      </thead>
+                                                      <tbody id="enrollment_history_holder">
+                                                           
+                                                      </tbody>
+                                                </table>
+                                          </div>
+                                          <div class="col-md-9 pr-0">
+                                                <div class="row">
+                                                      <div class="col-md-12">
+                                                           <div class="row">
+                                                                  <div class="col-md-3">
+                                                                        <strong>Grade Level</strong>
+                                                                        <p class="text-muted" id="enrollment_level">--</p>
+                                                                  </div>
+                                                                  <div class="col-md-3">
+                                                                        <strong>Section</strong>
+                                                                        <p class="text-muted" id="enrollment_section">--</p>
+                                                                  </div>
+                                                                  <div class="col-md-3">
+                                                                        <strong>Enrollment Status</strong>
+                                                                        <p class="text-muted" id="enrollment_status">--</p>
+                                                                  </div>
+                                                                  <div class="col-md-2">
+
+                                                                  </div>
+                                                           </div>
+                                                      </div>
+                                                      <div class="col-md-12">
+                                                            <div class="row">
+                                                                  <div class="col-md-6">
+                                                                        <strong>Adviser</strong>
+                                                                        <p class="text-muted" id="enrollment_adviser">--</p>
+                                                                  </div>
+                                                            </div>
+                                                      </div>
+                                                      <hr>
+                                                      <table class="table table-sm font-sm mb-0 mt-3 ps">
+                                                            <thead>
+                                                                  <tr>
+                                                                        <th class="bg-secondary">GRADES<span class="sydisplay"></span></th>
+                                                                  </tr>
+                                                            </thead>
+                                                     </table>
+                                                     <div class="col-md-12 ps p-0">
+                                                            <table class="table table-sm font-sm table-bordered">
+                                                                  <thead>
+                                                                        <tr>
+                                                                              <th width="5%"></th>
+                                                                              <th width="75%"></th>
+                                                                              <th width="20%" colspan="4" class="text-center">Grading Period</th>
+                                                                        </tr>
+                                                                        <tr>
+                                                                              <th></th>
+                                                                              <th></th>
+                                                                              <th width="5%" class="text-center">1</th>
+                                                                              <th width="5%" class="text-center">2</th>
+                                                                              <th width="5%" class="text-center">3</th>
+                                                                              <th width="5%" class="text-center">4</th>
+                                                                        </tr>
+                                                                  </thead>
+                                                                  <tbody id="ps_grade">
+                                                                  
+                                                                  </tbody>
+                                                            </table>
+                                                      </div>
+
+                                                      <table class="table table-sm font-sm mb-0 mt-3 gs" hidden>
+                                                            <thead>
+                                                                  <tr>
+                                                                        <th class="bg-secondary">CLASS SCHEDULE <span class="sydisplay"></span></th>
+                                                                  </tr>
+                                                            </thead>
+                                                     </table>
+                                                      <div class="col-md-12 table-responsive p-0"  style="height: 300px;">
+                                                            <table class="table table-sm font-sm table-bordered" style="width: 100%">
+                                                                  <thead>
+                                                                        <tr>
+                                                                              <th width="20%">SUBJECT</th>
+                                                                              <th width="20%" class="text-center">DAY</th>
+                                                                              <th width="20%" class="text-center">TIME</th>
+                                                                              <th width="20%" class="text-center">ROOM</th>
+                                                                              <th width="20%" class="text-center">TEACHER</th>
+                                                                        </tr>
+                                                                  </thead>
+                                                                  <tbody id="enrollment_history_schedule">
+                                                                       
+                                                                  </tbody>
+                                                            </table>
+                                                      </div>
+                                                     
+                                                     <table class="table table-sm font-sm mb-0 mt-3 gs" hidden>
+                                                            <thead>
+                                                                  <tr>
+                                                                        <th class="bg-secondary" >GRADES <span class="sydisplay"></span></th>
+                                                                  </tr>
+                                                            </thead>
+                                                     </table>
+                                                     <div class="col-md-12 table-responsive p-0 gs">
+                                                            <table class="mb-0 table table-bordered table-sm font-sm">
+                                                                  <thead>
+                                                                        <tr>
+                              
+                                                                              <td class="p-1 align-middle text-center" rowspan="2" width="55%"><small>SUBJECTS</small></td>
+                                                                              <td class="p-1 align-middle pr" align="center" colspan="4" width="20%" id="pr"><small>PERIODIC RATINGS</small></td>
+                                                                              <td class="p-1 align-middle" align="center" rowspan="2" width="10%"><small>Final<br>Rating</small></td>
+                                                                              <td class="p-1 align-middle" align="center" rowspan="2" width="15%"><small>Action<br>Taken</small></td>
+                                          
+                                                                        </tr>
+                                                                        <tr align="center">
+                                                                              <td class="p-1" id="q1_fg"><small>1</small></td>
+                                                                              <td class="p-1" id="q2_fg"><small>2</small></td>
+                                                                              <td class="p-1" id="q3_fg"><small>3</small></td>
+                                                                              <td class="p-1" id="q4_fg"><small>4</small></td>
+                                                                        </tr>
+                                                                  </thead>
+                                                                  <tbody id="enrollment_history_grade">
+                                                                        
+                                                                  </tbody>
+                                                            </table>
+                                                      </div>
+                                                      <table class="table table-sm font-sm mb-0 mt-3" hidden>
+                                                            <thead>
+                                                                  <tr>
+                                                                        <th class="bg-secondary">BILLING ASSESSMENT <span class="sydisplay"></span></th>
+                                                                  </tr>
+                                                            </thead>
+                                                      </table>
+                                                      <div class="col-md-12 table-responsive p-0" hidden>
+                                                            <table class="table table-sm font-sm table-head-fixed">
+                                                                  <thead>
+                                                                        
+                                                                        <tr>
+                                                                              <th width="55%">PARTICULARS</th>
+                                                                              <th width="15%" class="text-right">AMOUNT</th>
+                                                                              <th width="15%" class="text-right">PAYMENT</th>
+                                                                              <th width="15%" class="text-right">BALANCE</th>
+                                                                        </tr>
+                                                                  </thead>
+                                                                  <tbody id="student_billing">
+                                                                    
+                                                                  </tbody>
+                                                            </table>
+                                                      </div>
+                                                      <table class="table table-sm font-sm mb-0 mt-3 gs" hidden>
+                                                            <thead>
+                                                                  <tr>
+                                                                        <th class="bg-secondary">LEDGER <span class="sydisplay"></span></th>
+                                                                  </tr>
+                                                            </thead>
+                                                      </table>
+                                                      <div class="col-md-12 table-responsive p-0 gs" hidden>
+                                                            <table class="table table-sm font-sm table-head-fixed">
+                                                                  <thead>
+                                                                        
+                                                                        <tr>
+                                                                              <th width="55%">PARTICULARS</th>
+                                                                              <th width="15%" class="text-right">AMOUNT</th>
+                                                                              <th width="15%" class="text-right">PAYMENT</th>
+                                                                              <th width="15%" class="text-right">BALANCE</th>
+                                                                        </tr>
+                                                                  </thead>
+                                                                  <tbody id="student_ledger">
+                                                                    
+                                                                  </tbody>
+                                                            </table>
+                                                      </div>
+                                                </div>
+                                          </div>
+                                    </div>
+
+                                   
+                              </div>
+                        </div>
+                  </div>
+            </div>
+            
+      </section>
+      <section>
+            <div class="row">
+                  
+            </div>
+      </section>
+
+      <script>
+            $(document).ready(function(){
+
+                  var active_sy = @json(DB::table('sy')->where('isactive',1)->select('id','sydesc')->first())
+
+                  var active_sem =  @json(DB::table('semester')->where('isactive',1)->select('id','semester')->first())
+                  
+                  var payment_setup = @json(DB::table('schoolinfo')->first())
+
+                  var currently_enrolled = false
+                  var syid 
+                  var semid
+                  var levelid
+
+                  loadstudentenrollment()
+
+                  function loadstudentenrollment(){
+
+                        $.ajax({
+                              type:'GET',
+                              url: '/parent/enrollment/record',
+                              success:function(data) {
+                                    enrollment_record = data
+
+
+                                    $.each(data,function(a,b){
+
+                                          if(b.acadprogid == 5){
+                                                
+                                                $('.gs').removeAttr('hidden')
+                                                $('.ps').attr('hidden','hidden')
+
+                                                if(active_sy.id == b.syid && active_sem.id == b.semid){
+                                                      $('#enrollment_history_holder').append('<tr tr-acad="'+b.acadprogid+'" class="enrollment_history bg-primary" tr-sy="'+b.syid+'" tr-sem="'+b.semid+'" tr-sydesc="'+b.sydesc+'" tr-semdesc="'+b.semester+'"><td>'+b.sydesc+' - '+ b.semester+'</td></tr>')
+                                                      currently_enrolled = true;
+                                                      var temp_enrollment_info = enrollment_record.filter(x=>x.syid == b.syid && x.semid == b.semid)
+                                                      syid = b.syid
+                                                      semid = b.semid
+                                                      $('#enrollment_section').text(temp_enrollment_info[0].sectionname)
+                                                      $('#enrollment_level').text(temp_enrollment_info[0].levelname)
+                                                      $('#enrollment_status').text(temp_enrollment_info[0].description)
+                                                      $('#enrollment_adviser').text(temp_enrollment_info[0].adviser)
+                                                      var sectionid = temp_enrollment_info[0].sectionid;
+                                                      var blockid = temp_enrollment_info[0].blockid;
+                                                      levelid = temp_enrollment_info[0].levelid;
+                                                      acadprogid = temp_enrollment_info[0].acadprogid;
+                                                      loadall(sectionid,blockid,levelid)
+                                                       if(payment_setup.shssetup == 0){
+                                                            //  load_billing(syid,semid)
+                                                            //  prev_balance(syid,semid)
+                                                            load_ledger(syid,semid)
+                                                       }else{
+                                                            //  load_billing(syid,1)
+                                                            //  prev_balance(syid,1)
+                                                            load_ledger(syid,semid)
+                                                       }
+                                                }else{
+                                                      $('#enrollment_history_holder').append('<tr tr-acad="'+b.acadprogid+'" class="enrollment_history" tr-sy="'+b.syid+'" tr-sem="'+b.semid+'" tr-sydesc="'+b.sydesc+'" tr-semdesc="'+b.semester+'"><td>'+b.sydesc+' - '+ b.semester+'</td></tr>')
+                                                }
+                                          }
+                                          else if(b.acadprogid == 2){
+                                                $('.ps').removeAttr('hidden')
+                                                $('.gs').attr('hidden','hidden')
+                                                if(active_sy.id == b.syid){
+                                                      $('#enrollment_history_holder').append('<tr tr-acad="'+b.acadprogid+'" class="enrollment_history bg-primary" tr-sy="'+b.syid+'" tr-sydesc="'+b.sydesc+'"><td>'+b.sydesc+'</td></tr>')
+                                                      currently_enrolled = true;
+                                                      var temp_enrollment_info = enrollment_record.filter(x=>x.syid == b.syid)
+                                                      syid = b.syid
+                                                      $('#enrollment_section').text(temp_enrollment_info[0].sectionname)
+                                                      $('#enrollment_level').text(temp_enrollment_info[0].levelname)
+                                                      $('#enrollment_status').text(temp_enrollment_info[0].description)
+                                                      var sectionid = temp_enrollment_info[0].sectionid;
+                                                      var blockid = temp_enrollment_info[0].blockid;
+                                                      levelid = temp_enrollment_info[0].levelid;
+                                                      $.ajax({
+                                                            type:'GET',
+                                                            url: '/parent/ps/ps_grades',
+                                                            data:{
+                                                                  syid:syid
+                                                            },
+                                                            success:function(data) {
+                                                                  var count = 0
+                                                                  $.each(data,function(a,b){
+                                                                       
+                                                                        if(b.value == 0){
+                                                                              $('#ps_grade').append('<tr><th colspan="6">'+b.description+'</th></tr>')
+                                                                        }else{
+                                                                              count += 1
+                                                                              var q1 = ""
+                                                                              var q2 = ""
+                                                                              var q3 = ""
+                                                                              var q4 = ""
+
+                                                                              if(b.q1eval != null){
+                                                                                    q1 = b.q1eval
+                                                                              }
+                                                                              if(b.q2eval != null){
+                                                                                    q2 = b.q2eval
+                                                                              }
+                                                                              if(b.q3eval != null){
+                                                                                    q3 = b.q3eval
+                                                                              }
+                                                                              if(b.q4eval != null){
+                                                                                    q4 = b.q4eval
+                                                                              }
+
+                                                                              $('#ps_grade').append('<tr><td class="text-center align-middle">'+count+'</td><td>'+b.description+'</td ><td class="text-center align-middle">'+q1+'</td><td class="text-center align-middle">'+q2+'</td><td class="text-center align-middle">'+q3+'</td><td class="text-center align-middle">'+q4+'</td></tr>')
+                                                                        }
+                                                                     
+                                                                  })
+
+                                                            }
+                                                      })
+                                                }else{
+                                                      $('#enrollment_history_holder').append('<tr tr-acad="'+b.acadprogid+'" class="enrollment_history" tr-sy="'+b.syid+'" tr-sem="'+b.semid+'" tr-sydesc="'+b.sydesc+'" tr-semdesc="'+b.semester+'"><td>'+b.sydesc+' - '+ b.semester+'</td></tr>')
+                                                }
+                                          }
+                                          else{
+
+                                                $('.gs').removeAttr('hidden')
+                                                $('.ps').attr('hidden','hidden')
+                                                if(active_sy.id == b.syid){
+
+                                                      $('#enrollment_history_holder').append('<tr tr-acad="'+b.acadprogid+'" class="enrollment_history bg-primary" tr-sy="'+b.syid+'" tr-sydesc="'+b.sydesc+'"><td>'+b.sydesc+'</td></tr>')
+                                                      currently_enrolled = true;
+                                                      var temp_enrollment_info = enrollment_record.filter(x=>x.syid == b.syid)
+                                                      syid = b.syid
+                                                      $('#enrollment_section').text(temp_enrollment_info[0].sectionname)
+                                                      $('#enrollment_status').text(temp_enrollment_info[0].description)
+                                                      $('#enrollment_level').text(temp_enrollment_info[0].levelname)
+                                                      $('#enrollment_adviser').text(temp_enrollment_info[0].adviser)
+                                                      var sectionid = temp_enrollment_info[0].sectionid;
+                                                      var blockid = temp_enrollment_info[0].blockid;
+                                                      levelid = temp_enrollment_info[0].levelid;
+                                                      acadprogid = temp_enrollment_info[0].acadprogid;
+                                                      loadall(sectionid,blockid,levelid)
+                                                       if(payment_setup.shssetup == 0){
+                                                             //load_billing(syid,semid)
+                                                            //  prev_balance(syid,semid)
+                                                            load_ledger(syid,semid)
+                                                       }else{
+                                                             //load_billing(syid,1)
+                                                            //  prev_balance(syid,1)
+                                                            load_ledger(syid,semid)
+                                                       }
+                                                     
+
+                                                }else{
+                                                      $('#enrollment_history_holder').append('<tr tr-acad="'+b.acadprogid+'" class="enrollment_history" tr-sy="'+b.syid+'" tr-sem="'+b.semid+'" tr-sydesc="'+b.sydesc+'" tr-semdesc="'+b.semester+'"><td>'+b.sydesc+'</td></tr>')
+                                                }
+                                          }
+                                        
+                                    })
+
+                              }
+                        })
+
+                  }
+
+                  function load_enrollment_history(syid = null, semid = null){
+
+                        var total_units = 0;
+
+                        if(acadprogid != 5 && acadprogid != 6){
+                              var temp_enrollment_info = enrollment_record.filter(x=>x.syid == syid)
+                        }else{
+                              var temp_enrollment_info = enrollment_record.filter(x=>x.syid == syid && x.semid == semid)
+                        }
+
+                        if(temp_enrollment_info.length > 0){
+
+                              $('#enrollment_section').text(temp_enrollment_info[0].sectionname)
+                              $('#enrollment_status').text(temp_enrollment_info[0].description)
+                              $('#enrollment_level').text(temp_enrollment_info[0].levelname)
+                              $('#enrollment_adviser').text(temp_enrollment_info[0].adviser)
+                              var sectionid = temp_enrollment_info[0].sectionid;
+                              var blockid = temp_enrollment_info[0].blockid;
+                              levelid = temp_enrollment_info[0].levelid;
+                              loadall(sectionid,blockid,levelid)
+                             
+                              if(payment_setup.shssetup == 0){
+                                    //load_billing(syid, semid)
+                                    // prev_balance(syid,semid)
+                                    load_ledger(syid,semid)
+                              }else{
+                                    //load_billing(syid,1)
+                                    // prev_balance(syid,1)
+                                    load_ledger(syid,semid)
+                              }
+                             
+                        }
+
+                  }
+
+                  function loadall(sectionid,blockid,levelid) {
+                        load_schedule(sectionid,blockid,levelid)
+                        student_grades(sectionid,blockid,levelid)
+                        //student_attendance()
+                  }
+
+                  function load_schedule(sectionid,blockid,levelid) {
+                        if(acadprogid != 5 && acadprogid != 6){
+                              var temp_enrollment_info = enrollment_record.filter(x=>x.syid == syid)
+                        }else{
+                              var temp_enrollment_info = enrollment_record.filter(x=>x.syid == syid && x.semid == semid)
+                        }
+                      
+                        $.ajax({
+                              type:'GET',
+                              url: '/parent/enrollment/record/subjects',
+                              data:{
+                                    syid:temp_enrollment_info[0].syid,
+                                    semid:temp_enrollment_info[0].semid,
+                                    sectionid:temp_enrollment_info[0].sectionid,
+                                    levelid:temp_enrollment_info[0].levelid,
+                                    strandid:temp_enrollment_info[0].strandid
+                              },
+                              success:function(data) {
+                                    $('#enrollment_history_schedule').append(data)
+                                   
+                              }
+                        })
+                  }
+
+                  function student_grades(sectionid,blockid,levelid) {
+
+                        if(acadprogid != 5 && acadprogid != 6){
+                              var temp_enrollment_info = enrollment_record.filter(x=>x.syid == syid)
+                        }else{
+                              var temp_enrollment_info = enrollment_record.filter(x=>x.syid == syid && x.semid == semid)
+                        }
+                        
+                        $.ajax({
+                              type:'GET',
+                              url: '/parent/enrollment/record/grades',
+                              data:{
+                                    syid:temp_enrollment_info[0].syid,
+                                    semid:temp_enrollment_info[0].semid,
+                                    sectionid:temp_enrollment_info[0].sectionid,
+                                    levelid:temp_enrollment_info[0].levelid,
+                                    strandid:temp_enrollment_info[0].strandid
+                              },
+                              success:function(data) {
+                                    $('#q1_fg').removeAttr('hidden')
+                                    $('#q2_fg').removeAttr('hidden')
+                                    $('#q3_fg').removeAttr('hidden')
+                                    $('#q4_fg').removeAttr('hidden')
+                                    $('#enrollment_history_grade').empty()
+                                    $('#pr').attr('colspan',4)
+                                    var sem1 = '';
+                                    var sem2 = '';
+                                    if(temp_enrollment_info[0].levelid == 14 || temp_enrollment_info[0].levelid == 15){
+                                          $('#pr').attr('colspan',2)
+                                          if(semid == 1){
+                                                sem2 = 'hidden="hidden"'
+                                                $('#q3_fg').attr('hidden','hidden')
+                                                $('#q4_fg').attr('hidden','hidden')
+                                          }else if(semid == 2){
+                                                sem1 = 'hidden="hidden"'
+                                                $('#q1_fg').attr('hidden','hidden')
+                                                $('#q2_fg').attr('hidden','hidden')
+                                          }
+                                    }
+                                     if(data.length > 0){
+                                          var subjgrades = data.filter(x=>x.id != 'G1')
+                                          $.each(subjgrades,function (a,b){
+                                                var padding = b.subjCom != null ? 'pl-4':''
+                                                var quarter1_grade = b.q1 != null ? b.q1 : ''
+                                                var quarter2_grade = b.q2 != null ? b.q2 : ''
+                                                var quarter3_grade = b.q3 != null ? b.q3 : ''
+                                                var quarter4_grade = b.q4 != null ? b.q4 : ''
+                                                var finalrating = b.finalrating != null ? b.finalrating : ''
+                                                var actiontaken = b.actiontaken != null ? b.actiontaken : ''
+                                                $('#enrollment_history_grade').append('<tr><td class="'+padding+'" >'+b.subjdesc+'</td><td class="text-center align-middle" '+sem1+'>'+quarter1_grade+'</td><td class="text-center align-middle" '+sem1+'>'+quarter2_grade+'</td></td><td class="text-center align-middle" '+sem2+'>'+quarter3_grade+'</td><td class="text-center align-middle" '+sem2+'>'+quarter4_grade+'</td><td class="text-center align-middle">'+finalrating+'</td><td class="text-center align-middle">'+actiontaken+'</td></tr>') 
+                                          })
+                                          
+                                          var finalgrade = data.filter(x=>x.id == 'G1')
+                                          var colspan = 5;
+                                          $.each(finalgrade,function (a,b){
+                                                var finalrating = b.finalrating != null ? b.finalrating : ''
+                                                var actiontaken = b.actiontaken != null ? b.actiontaken : ''
+                                                if(temp_enrollment_info[0].levelid == 14 || temp_enrollment_info[0].levelid == 15){
+                                                     colspan = 3;
+                                                }
+                                                 $('#enrollment_history_grade').append('<tr><td  colspan="'+colspan+'" class="text-right">'+b.subjdesc+'</td><td class="text-center align-middle">'+finalrating+'</td><td class="text-center align-middle">'+actiontaken+'</td></tr>') 
+                                          })
+                                    }
+                              }
+                        })
+                  }
+
+                  function student_attendance(sectionid,blockid,levelid) {
+                        $.ajax({
+                              type:'GET',
+                              url: '/parent/enrollment/record/attendance',
+                              data:{
+                                    syid:syid,
+                              },
+                              success:function(data) {
+                                    
+                                    if(data.length > 0){
+                                          var total_absent = 0;
+                                          var total_present = 0;
+                                          var total_days = 0;
+                                          $.each(data,function (a,b){
+                                                total_absent += parseInt(b.absent);
+                                                total_present += parseInt(b.present);
+                                                total_days += parseInt(b.days)
+                                                $('#enrollment_history_attendance').append('<tr><td class="text-center">'+b.monthdesc+'</td><td  class="text-center">'+b.days+'</td><td  class="text-center">'+b.present+'</td><td  class="text-center">'+b.absent+'</td></tr>')
+                                          })
+                                          $('#enrollment_history_attendance').append('<tr><td  class="text-center">TOTAL</td><td  class="text-center">'+total_days+'</td><td  class="text-center">'+total_present+'</td><td  class="text-center">'+total_absent+'</td></tr>')
+                                    }
+                              }
+                        })
+                  }
+
+                  function load_billing(syid,semid){
+
+                        // if(!levelid == 14 && !levelid == 15){
+                        //       semid = 1
+                        // }
+
+                        // $('#student_billing').empty()
+                        // $.ajax({
+                        //       type:'GET',
+                        //       url: '/parent/enrollment/billing',
+                        //       data:{
+                        //             syid:syid,
+                        //             semid:semid,
+                        //       },
+                        //       success:function(data) {
+
+                        //             var total_amount = 0;
+                        //             var total_payment = 0;
+                        //             var total_balance = 0
+                        //             var count = 0
+                        //             $.each(data,function(a,b){
+
+                        //                   pariticular = (new Date(b.duedate)).toLocaleString('en-US', { month: "long"})+' - '+'Payable'
+
+                        //                   $('#student_billing').append('<tr><td >'+pariticular.toUpperCase()+'</td><td class="text-right">&#8369;'+b.amount+'</td><td class="text-right">&#8369;'+b.amountpay+'</td><td class="text-right">&#8369;'+b.balance+'</td></tr>')
+
+                        //                   total_amount += parseFloat(b.amount)
+                        //                   total_payment += parseFloat(b.amountpay)
+                        //                   total_balance += parseFloat(b.balance)
+                        //             })
+
+                        //             if(data.length != 0){
+                        //                   total_amount = total_amount.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,")
+                        //                   total_payment = total_payment.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,")
+                        //                   total_balance = total_balance.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,")
+
+                        //                   $('#student_billing').append('<tr class="bg-info"><td class="text-right">TOTAL</td><td class="text-right">&#8369;'+total_amount+'</td><td class="text-right">&#8369;'+total_payment+'</td><td class="text-right">&#8369;'+total_balance+'</td></tr>')
+                        //             }
+                        //       }
+                        // })
+                  }
+
+                  // function prev_balance(syid,semid,balance){
+                      
+                  //       if(semid == 2){
+                  //             my_sem = semid - 1
+                  //       }
+                  //       else if(semid == 1){
+                  //             my_sem = 2
+                  //       }else{
+                  //             my_sem = 1
+                  //       }
+
+                  //       my_sy = syid;
+
+                  //       if(semid == 1){
+                  //             my_sy -= 1  
+                  //       }
+
+                  //       $.ajax({
+                  //             type:'GET',
+                  //             url: '/parent/enrollment/previousbalance',
+                  //             data:{
+                  //                   syid:my_sy,
+                  //                   semid:my_sem,
+                  //             },
+                  //             success:function(data) {
+                  //                   if(acadprogid != 5 && acadprogid != 6){
+                  //                         var temp_er = enrollment_record.filter(x=>x.syid == syid)
+                  //                   }else{
+                  //                         var temp_er = enrollment_record.filter(x=>x.syid == syid && x.semid == semid)
+                  //                   }
+                                    
+                  //                   var prevbalance = 0
+
+                  //                   if(data[0].prev_balance != null && enrollment_record.length != 0 && data[0].prev_balance != 0){
+
+                  //                         pre_balance = parseFloat(data[0].prev_balance) + parseFloat( balance)
+
+                  //                         pre_balance = parseFloat(data[0].prev_balance).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,")
+
+                  //                         $('#student_ledger').append('<tr><td>'+temp_er[0].sydesc+'- '+temp_er[0].semester+' Balance </td><td></td><td></td><td class="text-right">&#8369; '+pre_balance+'</td></tr>')
+                  //                   }
+
+                  //                   if(data.length != 0){
+
+                  //                         prevbalance = data[0].prev_balance
+
+                  //                   }
+                               
+                  //                   load_ledger(syid, semid, prevbalance)
+
+                  //             }
+                  //       })
+                  // }
+
+                  function load_ledger(syid,semid,prevbalance){
+                        $('#student_ledger').empty();
+
+                        if(acadprogid != 5 && acadprogid != 6){
+                              var temp_enrollment_info = enrollment_record.filter(x=>x.syid == syid)
+                        }else{
+                              var temp_enrollment_info = enrollment_record.filter(x=>x.syid == syid && x.semid == semid)
+                        }
+
+                        $.ajax({
+                              type:'GET',
+                              url: '/parent/enrollment/ledger',
+                              data:{
+                                    syid:syid,
+                                    semid:temp_enrollment_info[0].semid,
+                              },
+                              success:function(data) {
+
+                                    var total_amount = 0;
+                                    var total_payment = 0;
+                                    var total_balance = 0
+                                    var abalance
+                                    var apayment
+                                    var aamount
+                                    if(prevbalance == null){
+                                          var runbal = 0;
+                                    }else{
+                                          var runbal = parseFloat(prevbalance);
+                                    }
+
+                                    $.each(data,function(a,b){
+                                          var ornum = ''
+                                          if(b.ornum != ''){
+                                                ornum = b.ornum
+                                          }
+                                          runbal += parseFloat( b.amount )
+                                          runbal -=  parseFloat(b.payment)
+                                          abalance = parseFloat(runbal).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,")
+                                          apayment = parseFloat(b.payment).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,")
+                                          aamount = parseFloat(b.amount).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,")
+                                          $('#student_ledger').append('<tr><td >'+b.particulars+'</td><td class="text-right">&#8369; '+aamount+'</td><td class="text-right">&#8369; '+apayment+'</td><td class="text-right">'+abalance+'</td></tr>')
+
+                                    })
+                                    if(data.length != 0 || runbal != 0){
+                                          runbal = parseFloat(runbal).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,")
+                                          $('#student_ledger').append('<tr class="bg-info"><td class="text-right" colspan="3">REMAINING BALANCE</td><td class="text-right">&#8369; '+runbal+'</td></tr>')
+                                    }
+                              }
+                        })
+                  }
+                  
+
+                  $(document).on('click','.enrollment_history',function(){
+                        syid = $(this).attr('tr-sy')
+                        semid = $(this).attr('tr-sem')
+                        $('#student_ledger').empty();
+                        $('.enrollment_history').removeClass('bg-primary')
+                        $(this).addClass('bg-primary')
+                        $('.sydisplay').text($(this).attr('tr-sydesc') + ' - ' +$(this).attr('tr-semdesc'))
+                        acadprogid = $(this).attr('tr-acad')
+                        load_enrollment_history(syid,semid)
+                        $('#enrollment_history_schedule').empty()
+                        $('#enrollment_history_grade').empty()
+                        $('#enrollment_history_attendance').empty()
+                  })
+
+
+            })
+      </script>
+
+@endsection

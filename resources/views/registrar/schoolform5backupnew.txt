@@ -1,0 +1,2417 @@
+<?php
+
+namespace App\Http\Controllers\RegistrarControllers;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use DB;
+use PDF;
+use App\GenerateGrade;
+use App\AttendanceReport;
+use \Carbon\Carbon;
+class ReportsController extends  Controller
+{
+    public function reports($id, Request $request)
+    {
+        // return 'asd';
+        if($id == 'selectForms'){
+            return view("registrar.reportsforms");
+        }
+        elseif($id == 'selectSy'){
+            // return  $request->all();
+            $schoolyear = DB::table('sy')
+                ->select('id','sydesc','isactive')
+                ->orderbyDesc('sydesc')
+                ->get();
+            $academicprogram = $request->get('academicprogram');
+            // return 'sdf';
+            return view("registrar.reports")
+                ->with('selectedform',$request->get('selectedform'))
+                ->with('academicprogram',$academicprogram)
+                ->with('schoolyear',$schoolyear);
+        }
+        elseif($id == 'selectSection'){
+            // return  $request->all();
+            $selectedyear = $request->get('syid');
+            $selectedform = $request->get('selectedform');
+            $schoolyear = DB::table('sy')
+                ->select('id','sydesc','isactive')
+                ->where('id',$selectedyear)
+                ->get();
+            $academicprogram = $request->get('academicprogram');
+            // -----------------------------------------
+            $preSchoolLevel = array();
+            $preSchoolSection = array();
+            $preSchoolLower = DB::table('sectiondetail')
+                ->select('sections.id as sectionid','sections.sectionname as sectionname','gradelevel.id as gradelevelid','gradelevel.levelname as gradelevelname','teacher.id as teacherid','teacher.lastname as teacher_lastname','teacher.firstname as teacher_firstname','teacher.middlename as teacher_middlename','teacher.suffix as teacher_suffix','gradelevel.sortid','academicprogram.progname')
+                ->join('sections','sectiondetail.sectionid','=','sections.id')
+                ->join('gradelevel','sections.levelid','=','gradelevel.id')
+                ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+                ->join('teacher','sectiondetail.teacherid','=','teacher.id')
+                ->where('sectiondetail.teacherid','!=',0)
+                ->where('sectiondetail.deleted','0')
+                ->where('sectiondetail.syid',$selectedyear)
+                ->where('academicprogram.progname','PRE-SCHOOL')
+                ->distinct()
+                ->orderBy('sortid','asc')
+                ->get();
+            // return $schoolyear;
+            foreach($preSchoolLower as $getLevels){
+                array_push($preSchoolLevel,(object) array(
+                    'gradelevelid'=>$getLevels->gradelevelid,
+                    'gradelevelname'=>$getLevels->gradelevelname,
+                    'progname'=>$getLevels->progname
+                ));
+            }
+            foreach($preSchoolLower as $getSections){
+                    array_push($preSchoolSection,(object) array(
+                        'gradelevelid'=>$getSections->gradelevelid,
+                        'gradelevelname'=>$getSections->gradelevelname,
+                        'sectionid'=>$getSections->sectionid,
+                        'sectionname'=>$getSections->sectionname,
+                        'teacherid'=>$getSections->teacherid,
+                        'teacher_lastname'=>$getSections->teacher_lastname,
+                        'teacher_firstname'=>$getSections->teacher_firstname,
+                        'teacher_middlename'=>$getSections->teacher_middlename,
+                        'teacher_suffix'=>$getSections->teacher_suffix,
+                        'sortid'=>$getSections->sortid,
+                        'progname'=>$getSections->progname
+                    ));
+            }
+            $preSchool_level = array();
+            $preSchool_section = array();
+            $preSchoolLevel = collect($preSchoolLevel)->unique();
+            $preSchoolSection = collect($preSchoolSection)->unique();
+            foreach($preSchoolLevel as $preSchool){
+                array_push($preSchool_level,(object) array(
+                    'gradelevelid'=>$preSchool->gradelevelid,
+                    'gradelevelname'=>$preSchool->gradelevelname,
+                    'progname'=>$preSchool->progname
+                ));
+            }
+
+            foreach($preSchoolSection as $preSchool){
+                $count_students = DB::table('enrolledstud')
+                    ->select('enrolledstud.studid')
+                    ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                    ->where('enrolledstud.sectionid',$preSchool->sectionid)
+                    ->whereIn('studinfo.studstatus',['1','2','4'])
+                    ->where('enrolledstud.deleted','0')
+                    ->where('enrolledstud.studstatus','!=','0')
+                    ->where('enrolledstud.syid',$selectedyear)
+                    // ->groupBy('enrolledstud.studid')
+                    ->distinct()
+                    ->get()
+                    ->count();
+                    // return $count_students;
+
+                array_push($preSchool_section,(object) array(
+                    'gradelevelid'=>$preSchool->gradelevelid,
+                    'gradelevelname'=>$preSchool->gradelevelname,
+                    'sectionid'=>$preSchool->sectionid,
+                    'sectionname'=>$preSchool->sectionname,
+                    'teacherid'=>$preSchool->teacherid,
+                    'teacher_lastname'=>$preSchool->teacher_lastname,
+                    'teacher_firstname'=>$preSchool->teacher_firstname,
+                    'teacher_middlename'=>$preSchool->teacher_middlename,
+                    'teacher_suffix'=>$preSchool->teacher_suffix,
+                    'sortid'=>$preSchool->sortid,
+                    'students'=>$count_students
+                ));
+            }
+            // return $preSchool_section;
+            // return 
+            // -----------------------------------------
+            $lowerLevel = array();
+            $lowerSection = array();
+            $countLower = DB::table('sectiondetail')
+                ->select('sections.id as sectionid','sections.sectionname as sectionname','gradelevel.id as gradelevelid','gradelevel.levelname as gradelevelname','gradelevel.sortid','academicprogram.progname','sectiondetail.teacherid')
+                // 'teacher.id as teacherid','teacher.lastname as teacher_lastname','teacher.firstname as teacher_firstname','teacher.middlename as teacher_middlename','teacher.suffix as teacher_suffix',
+                ->join('sections','sectiondetail.sectionid','=','sections.id')
+                ->join('gradelevel','sections.levelid','=','gradelevel.id')
+                ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+                // ->join('teacher','sectiondetail.teacherid','=','teacher.id')
+                // ->where('sectiondetail.teacherid','!=',0)
+                ->where('sectiondetail.deleted','0')
+                ->where('sectiondetail.syid',$selectedyear)
+                ->where('academicprogram.progname','ELEMENTARY')
+                ->distinct()
+                ->orderBy('sortid','asc')
+                ->get();
+
+                // $countLower = DB::table('sectiondetail')
+                // ->select('sections.id as sectionid','sections.sectionname as sectionname','gradelevel.id as gradelevelid','gradelevel.levelname as gradelevelname','teacher.id as teacherid','teacher.lastname as teacher_lastname','teacher.firstname as teacher_firstname','teacher.middlename as teacher_middlename','teacher.suffix as teacher_suffix','gradelevel.sortid','academicprogram.progname')
+                // ->join('sections','sectiondetail.sectionid','=','sections.id')
+                // ->join('gradelevel','sections.levelid','=','gradelevel.id')
+                // ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+                // ->join('teacher','sectiondetail.teacherid','=','teacher.id')
+                // ->where('sectiondetail.teacherid','!=',0)
+                // ->where('sectiondetail.deleted','0')
+                // ->where('sectiondetail.syid',$selectedyear)
+                // ->where('academicprogram.progname','ELEMENTARY')
+                // ->distinct()
+                // ->orderBy('sortid','asc')
+                // ->get();
+            // return $countLower;
+            foreach($countLower as $getLevels){
+                // $
+                $getTeacher = Db::table('teacher')  
+                    ->where('id',$getLevels->teacherid)
+                    ->get();
+                if(count($getTeacher) == 0){
+                    $getLevels->teachername = "";
+                    $getLevels->teacherid = "";
+                }else{
+                    $getLevels->teachername = $getTeacher[0]->firstname.' '.$getTeacher[0]->middlename.' '.$getTeacher[0]->lastname.' '.$getTeacher[0]->suffix;
+                    $getLevels->teacherid = $getTeacher[0]->id;
+                }
+                array_push($lowerLevel,(object) array(
+                    'gradelevelid'=>$getLevels->gradelevelid,
+                    'gradelevelname'=>$getLevels->gradelevelname,
+                    'progname'=>$getLevels->progname,
+                    'teachername'=>$getLevels->teachername,
+                    'teacherid'=>$getLevels->teacherid
+                ));
+            }
+            foreach($countLower as $getSections){
+                    array_push($lowerSection,(object) array(
+                        'gradelevelid'=>$getSections->gradelevelid,
+                        'gradelevelname'=>$getSections->gradelevelname,
+                        'sectionid'=>$getSections->sectionid,
+                        'sectionname'=>$getSections->sectionname,
+                        'teacherid'=>$getSections->teacherid,
+                        // 'teacher_lastname'=>$getSections->teacher_lastname,
+                        // 'teacher_firstname'=>$getSections->teacher_firstname,
+                        // 'teacher_middlename'=>$getSections->teacher_middlename,
+                        'teachername'=>$getSections->teachername,
+                        'sortid'=>$getSections->sortid,
+                        'progname'=>$getSections->progname
+                    ));
+            }
+            $lower_level = array();
+            $lower_section = array();
+            $lowerLevel = collect($lowerLevel)->unique();
+            $lowerSection = collect($lowerSection)->unique();
+            foreach($lowerLevel as $lower){
+                array_push($lower_level,(object) array(
+                    'gradelevelid'=>$lower->gradelevelid,
+                    'gradelevelname'=>$lower->gradelevelname,
+                    'progname'=>$lower->progname
+                ));
+            }
+            $lower_level = collect($lower_level)->unique();
+            $lowerSection = collect($lowerSection)->unique('sectionid');
+            // return $lowerSection;
+            foreach($lowerSection as $lower){
+                $count_students = DB::table('enrolledstud')
+                    ->select('enrolledstud.studid')
+                    ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                    ->where('enrolledstud.sectionid',$lower->sectionid)
+                    ->whereIn('enrolledstud.studstatus',['1','2','4'])
+                    ->where('enrolledstud.deleted','0')
+                    ->where('enrolledstud.syid',$selectedyear)
+                    ->where('enrolledstud.studstatus','!=','0')
+                    // ->groupBy('enrolledstud.studid')
+                    ->distinct()
+                    ->get()
+                    ->count();
+                    // return $count_students;
+                array_push($lower_section,(object) array(
+                    'gradelevelid'=>$lower->gradelevelid,
+                    'gradelevelname'=>$lower->gradelevelname,
+                    'sectionid'=>$lower->sectionid,
+                    'sectionname'=>$lower->sectionname,
+                    'teacherid'=>$lower->teacherid,
+                    'teachername'=>$lower->teachername,
+                    'sortid'=>$lower->sortid,
+                    'students'=>$count_students
+                ));
+            }
+            // return $lower_section;
+            $lower_section =  collect($lower_section)->unique('gradelevelid','sectionid');
+            // -----------------------------------------
+            $juniorLevel = array();
+            $juniorSection = array();
+            $juniorLower = DB::table('sectiondetail')
+                ->select('sections.id as sectionid','sections.sectionname as sectionname','gradelevel.id as gradelevelid','gradelevel.levelname as gradelevelname','teacher.id as teacherid','teacher.lastname as teacher_lastname','teacher.firstname as teacher_firstname','teacher.middlename as teacher_middlename','teacher.suffix as teacher_suffix','gradelevel.sortid','academicprogram.progname')
+                ->join('sections','sectiondetail.sectionid','=','sections.id')
+                ->join('gradelevel','sections.levelid','=','gradelevel.id')
+                ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+                ->join('teacher','sectiondetail.teacherid','=','teacher.id')
+                ->where('sectiondetail.teacherid','!=',0)
+                ->where('sectiondetail.deleted','0')
+                ->where('sectiondetail.syid',$selectedyear)
+                ->where('academicprogram.progname','HIGH SCHOOL')
+                ->distinct()
+                ->orderBy('sortid','asc')
+                ->get();
+            
+            foreach($juniorLower as $getLevels){
+                array_push($juniorLevel,(object) array(
+                    'gradelevelid'=>$getLevels->gradelevelid,
+                    'gradelevelname'=>$getLevels->gradelevelname,
+                    'progname'=>$getLevels->progname
+                ));
+            }
+            foreach($juniorLower as $getSections){
+                    array_push($juniorSection,(object) array(
+                        'gradelevelid'=>$getSections->gradelevelid,
+                        'gradelevelname'=>$getSections->gradelevelname,
+                        'sectionid'=>$getSections->sectionid,
+                        'sectionname'=>$getSections->sectionname,
+                        'teacherid'=>$getSections->teacherid,
+                        'teacher_lastname'=>$getSections->teacher_lastname,
+                        'teacher_firstname'=>$getSections->teacher_firstname,
+                        'teacher_middlename'=>$getSections->teacher_middlename,
+                        'teacher_suffix'=>$getSections->teacher_suffix,
+                        'sortid'=>$getSections->sortid,
+                        'progname'=>$getSections->progname
+                    ));
+            }
+            $junior_level = array();
+            $junior_section = array();
+            $juniorLevel = collect($juniorLevel)->unique();
+            $juniorSection = collect($juniorSection)->unique();
+            foreach($juniorLevel as $junior){
+                array_push($junior_level,(object) array(
+                    'gradelevelid'=>$junior->gradelevelid,
+                    'gradelevelname'=>$junior->gradelevelname,
+                    'progname'=>$junior->progname
+                ));
+            }
+            foreach($juniorSection as $junior){
+                $count_students = DB::table('enrolledstud')
+                    ->select('enrolledstud.studid')
+                    ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                    ->where('enrolledstud.sectionid',$junior->sectionid)
+                    ->whereIn('enrolledstud.studstatus',['1','2','4'])
+                    ->where('enrolledstud.deleted','0')
+                    ->where('enrolledstud.studstatus','!=','0')
+                    ->where('enrolledstud.syid',$selectedyear)
+                    // ->groupBy('enrolledstud.studid')
+                    ->distinct()
+                    ->get()
+                    ->count();
+                // $count_students = DB::table('enrolledstud')
+                //     ->select('enrolledstud.studid')
+                //     ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                //     ->where('sectionid',$junior->sectionid)
+                //     ->whereIn('studstatus',['1','2','4'])
+                //     ->where('deleted','0')
+                //     ->count();
+                // return $count_students;
+                array_push($junior_section,(object) array(
+                    'gradelevelid'=>$junior->gradelevelid,
+                    'gradelevelname'=>$junior->gradelevelname,
+                    'sectionid'=>$junior->sectionid,
+                    'sectionname'=>$junior->sectionname,
+                    'teacherid'=>$junior->teacherid,
+                    'teacher_lastname'=>$junior->teacher_lastname,
+                    'teacher_firstname'=>$junior->teacher_firstname,
+                    'teacher_middlename'=>$junior->teacher_middlename,
+                    'teacher_suffix'=>$junior->teacher_suffix,
+                    'sortid'=>$junior->sortid,
+                    'students'=>$count_students
+                ));
+            }
+            // return $junior_section;
+            // -----------------------------------------
+            $higherLevel = array();
+            $higherSection = array();
+            $countHigher =  DB::table('sectiondetail')
+                ->select('sections.id as sectionid','sections.sectionname as sectionname','gradelevel.id as gradelevelid','gradelevel.levelname as gradelevelname','teacher.id as teacherid','teacher.lastname as teacher_lastname','teacher.firstname as teacher_firstname','teacher.middlename as teacher_middlename','teacher.suffix as teacher_suffix','gradelevel.sortid')
+                ->join('sections','sectiondetail.sectionid','=','sections.id')
+                ->join('gradelevel','sections.levelid','=','gradelevel.id')
+                ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+                ->join('teacher','sectiondetail.teacherid','=','teacher.id')
+                ->where('sectiondetail.teacherid','!=',0)
+                ->where('sectiondetail.deleted','0')
+                ->where('sectiondetail.syid',$selectedyear)
+                // ->where('teacher.syid',$selectedyear)
+                ->where('academicprogram.acadprogcode','SHS')
+                ->distinct()
+                // ->orderBy('sortid','asc')
+                ->get();
+                // return $countHigher;
+            foreach($countHigher as $getLevelsHigher){
+                array_push($higherLevel,(object) array(
+                    'gradelevelid'=>$getLevelsHigher->gradelevelid,
+                    'gradelevelname'=>$getLevelsHigher->gradelevelname
+                ));
+            }
+            foreach($countHigher as $getSectionsHigher){
+                    array_push($higherSection,(object) array(
+                        'gradelevelid'=>$getSectionsHigher->gradelevelid,
+                        'gradelevelname'=>$getSectionsHigher->gradelevelname,
+                        'sectionid'=>$getSectionsHigher->sectionid,
+                        'sectionname'=>$getSectionsHigher->sectionname,
+                        'teacherid'=>$getSectionsHigher->teacherid,
+                        'teacher_lastname'=>$getSectionsHigher->teacher_lastname,
+                        'teacher_firstname'=>$getSectionsHigher->teacher_firstname,
+                        'teacher_middlename'=>$getSectionsHigher->teacher_middlename,
+                        'teacher_suffix'=>$getSectionsHigher->teacher_suffix,
+                        'sortid'=>$getSectionsHigher->sortid
+                    ));
+            }
+            $higher_level = array();
+            $higher_section = array();
+            $higherLevel = collect($higherLevel)->unique();
+            $higherSection = collect($higherSection)->unique();
+            foreach($higherLevel as $higher){
+                array_push($higher_level,(object) array(
+                    'gradelevelid'=>$higher->gradelevelid,
+                    'gradelevelname'=>$higher->gradelevelname
+                ));
+            }
+            foreach($higherSection as $higher){
+                $count_students = DB::table('sh_enrolledstud')
+                    ->where('sectionid',$higher->sectionid)
+                    ->whereIn('studstatus',['1','2','4'])
+                    ->where('deleted','0')
+                    ->count();
+                array_push($higher_section,(object) array(
+                    'gradelevelid'=>$higher->gradelevelid,
+                    'gradelevelname'=>$higher->gradelevelname,
+                    'sectionid'=>$higher->sectionid,
+                    'sectionname'=>$higher->sectionname,
+                    'teacherid'=>$higher->teacherid,
+                    'teacher_lastname'=>$higher->teacher_lastname,
+                    'teacher_firstname'=>$higher->teacher_firstname,
+                    'teacher_middlename'=>$higher->teacher_middlename,
+                    'teacher_suffix'=>$higher->teacher_suffix,
+                    'sortid'=>$higher->sortid,
+                    'students'=>$count_students
+                ));
+            }
+            // return $request->get('syid');
+            if($request->get('selectedform') == 'Student Masterlist'){
+                if($academicprogram == 'preschool'){
+                    return view("registrar.reportsstudentmasterlist")
+                        ->with('grade_levels_lower',$preSchool_level)
+                        ->with('grade_sections_lower',$preSchool_section)
+                        ->with('schoolyear',$request->get('syid'))
+                        ->with('selectedyear',$selectedyear)
+                        ->with('schoolyeardesc',$schoolyear[0]->sydesc)
+                        ->with('academicprogram',$academicprogram)
+                        ->with('selectedform',$request->get('selectedform'));
+                }
+                elseif($academicprogram == 'elementary'){
+                    return view("registrar.reportsstudentmasterlist")
+                        ->with('grade_levels_lower',$lower_level)
+                        ->with('grade_sections_lower',$lower_section)
+                        ->with('schoolyear',$request->get('syid'))
+                        ->with('selectedyear',$selectedyear)
+                        ->with('schoolyeardesc',$schoolyear[0]->sydesc)
+                        ->with('academicprogram',$academicprogram)
+                        ->with('selectedform',$request->get('selectedform'));
+                }
+                elseif($academicprogram == 'juniorhighschool'){
+                    return view("registrar.reportsstudentmasterlist")
+                        ->with('grade_levels_lower',$junior_level)
+                        ->with('grade_sections_lower',$junior_section)
+                        ->with('schoolyear',$request->get('syid'))
+                        ->with('selectedyear',$selectedyear)
+                        ->with('schoolyeardesc',$schoolyear[0]->sydesc)
+                        ->with('academicprogram',$academicprogram)
+                        ->with('selectedform',$request->get('selectedform'));
+                }
+                elseif($academicprogram == 'seniorhighschool'){
+                    return view("registrar.reportsstudentmasterlist")
+                        ->with('grade_levels_higher',$higher_level)
+                        ->with('grade_sections_higher',$higher_section)
+                        ->with('schoolyear',$request->get('syid'))
+                        ->with('selectedyear',$selectedyear)
+                        ->with('schoolyeardesc',$schoolyear[0]->sydesc)
+                        ->with('academicprogram',$academicprogram)
+                        ->with('selectedform',$request->get('selectedform'));
+                }
+            }
+            elseif($request->get('selectedform') == 'School Form 5' ){
+                if($academicprogram == 'elementary'){
+                    // return $lower_level;
+                    return view("registrar.reportsschoolform5")
+                        ->with('grade_levels_lower',$lower_level)
+                        ->with('grade_sections_lower',$lower_section)
+                        ->with('schoolyear',$request->get('syid'))
+                        ->with('selectedyear',$selectedyear)
+                        ->with('schoolyeardesc',$schoolyear[0]->sydesc)
+                        ->with('academicprogram',$academicprogram)
+                        ->with('selectedform',$request->get('selectedform'));
+                }
+                elseif($academicprogram == 'juniorhighschool'){
+                    // return $junior_level;
+                    return view("registrar.reportsschoolform5")
+                        ->with('grade_levels_lower',$junior_level)
+                        ->with('grade_sections_lower',$junior_section)
+                        ->with('schoolyear',$request->get('syid'))
+                        ->with('selectedyear',$selectedyear)
+                        ->with('schoolyeardesc',$schoolyear[0]->sydesc)
+                        ->with('academicprogram',$academicprogram)
+                        ->with('selectedform',$request->get('selectedform'));
+                }
+                // elseif($academicprogram == 'seniorhighschool'){
+                //     return view("registrar.reportsschoolform5")
+                //         ->with('grade_levels_higher',$higher_level)
+                //         ->with('grade_sections_higher',$higher_section)
+                //         ->with('schoolyear',$request->get('syid'))
+                //         ->with('schoolyeardesc',$schoolyear[0]->sydesc)
+                //         ->with('academicprogram',$academicprogram)
+                //         ->with('selectedform',$request->get('selectedform'));
+                // }
+
+            }
+            elseif($request->get('selectedform') == 'School Form 5A'){
+                return view("registrar.reportsschoolform5A")
+                    ->with('grade_levels_lower',$lower_level)
+                    ->with('grade_sections_lower',$lower_section)
+                    ->with('grade_levels_higher',$higher_level)
+                    ->with('grade_sections_higher',$higher_section)
+                    ->with('schoolyear',$request->get('syid'))
+                    ->with('schoolyeardesc',$schoolyear[0]->sydesc)
+                    ->with('academicprogram',$academicprogram)
+                    ->with('selectedform',$request->get('selectedform'));
+            }
+            elseif($request->get('selectedform') == 'School Form 5B'){
+                return view("registrar.reportsschoolform5B")
+                    ->with('grade_levels_lower',$lower_level)
+                    ->with('grade_sections_lower',$lower_section)
+                    ->with('grade_levels_higher',$higher_level)
+                    ->with('grade_sections_higher',$higher_section)
+                    ->with('schoolyear',$request->get('syid'))
+                    ->with('schoolyeardesc',$schoolyear[0]->sydesc)
+                    ->with('academicprogram',$academicprogram)
+                    ->with('selectedform',$request->get('selectedform'));
+            }
+            elseif($request->get('selectedform') == 'School Form 6'){
+                if($academicprogram == 'elementary'){
+                    return view("registrar.reportsschoolform6")
+                    ->with('grade_levels_lower',$lower_level)
+                    ->with('grade_sections_lower',$lower_section)
+                    ->with('schoolyear',$request->get('syid'))
+                    ->with('schoolyeardesc',$schoolyear[0]->sydesc)
+                    ->with('academicprogram',$academicprogram)
+                    ->with('selectedform',$request->get('selectedform'));
+                }
+                elseif($academicprogram == 'juniorhighschool'){
+                    return view("registrar.reportsschoolform6")
+                    ->with('grade_levels_lower',$junior_level)
+                    ->with('grade_sections_lower',$junior_section)
+                    ->with('schoolyear',$request->get('syid'))
+                    ->with('schoolyeardesc',$schoolyear[0]->sydesc)
+                    ->with('academicprogram',$academicprogram)
+                    ->with('selectedform',$request->get('selectedform'));
+                }
+                elseif($academicprogram == 'seniorhighschool'){
+                    return view("registrar.reportsschoolform6")
+                    ->with('grade_levels_higher',$higher_level)
+                    ->with('grade_sections_higher',$higher_section)
+                    ->with('schoolyear',$request->get('syid'))
+                    ->with('schoolyeardesc',$schoolyear[0]->sydesc)
+                    ->with('academicprogram',$academicprogram)
+                    ->with('selectedform',$request->get('selectedform'));
+                }
+
+            }
+            elseif($request->get('selectedform') == 'School Form 10'){
+                if($academicprogram == 'elementary'){
+                    return view("registrar.reportsschoolform10")
+                        ->with('grade_levels_lower',$lower_level)
+                        ->with('grade_sections_lower',$lower_section)
+                        ->with('schoolyear',$request->get('syid'))
+                        ->with('schoolyeardesc',$schoolyear[0]->sydesc)
+                        ->with('academicprogram',$academicprogram)
+                        ->with('selectedform',$request->get('selectedform'));
+                }
+                elseif($academicprogram == 'juniorhighschool'){
+                    return view("registrar.reportsschoolform10")
+                        ->with('grade_levels_lower',$junior_level)
+                        ->with('grade_sections_lower',$junior_section)
+                        ->with('schoolyear',$request->get('syid'))
+                        ->with('schoolyeardesc',$schoolyear[0]->sydesc)
+                        ->with('academicprogram',$academicprogram)
+                        ->with('selectedform',$request->get('selectedform'));
+                }
+                elseif($academicprogram == 'seniorhighschool'){
+                    return view("registrar.reportsschoolform10")
+                        ->with('grade_levels_higher',$higher_level)
+                        ->with('grade_sections_higher',$higher_section)
+                        ->with('schoolyear',$request->get('syid'))
+                        ->with('schoolyeardesc',$schoolyear[0]->sydesc)
+                        ->with('academicprogram',$academicprogram)
+                        ->with('selectedform',$request->get('selectedform'));
+                }
+
+            }
+        }
+        elseif($id == 'studentsform10'){
+            if($request->get('academicprogram') == 'seniorhighschool'){
+                $students = Db::table('sh_enrolledstud')
+                    ->select('studinfo.id','studinfo.firstname','studinfo.middlename','studinfo.lastname','studinfo.suffix','sh_enrolledstud.syid')
+                    ->join('studinfo','sh_enrolledstud.studid','=','studinfo.id')
+                    ->orderByDesc('syid')
+                    ->distinct()
+                    ->get();
+                    return view("registrar.studentsform10senior")
+                        ->with('academicprogram', $request->get('academicprogram'))
+                        ->with('students', $students);
+                
+            }
+            elseif($request->get('academicprogram') == 'juniorhighschool'){
+                $students = Db::table('enrolledstud')
+                    ->select('studinfo.id','studinfo.firstname','studinfo.middlename','studinfo.lastname','studinfo.suffix','enrolledstud.syid')
+                    ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                    ->join('gradelevel','enrolledstud.levelid','=','gradelevel.id')
+                    ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+                    ->where('academicprogram.id','4')
+                    ->orderByDesc('syid')
+                    ->distinct()
+                    ->get();
+                    return view("registrar.studentsform10junior")
+                        ->with('academicprogram', $request->get('academicprogram'))
+                        ->with('students', $students);
+                
+            }
+            elseif($request->get('academicprogram') == 'elementary'){
+                // return 'ad';
+                $students = Db::table('enrolledstud')
+                    ->select('studinfo.id','studinfo.firstname','studinfo.middlename','studinfo.lastname','studinfo.suffix','enrolledstud.syid')
+                    ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                    ->join('gradelevel','enrolledstud.levelid','=','gradelevel.id')
+                    ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+                    ->where('academicprogram.id','3')
+                    ->orderByDesc('syid')
+                    ->distinct()
+                    ->get();
+                    return view("registrar.studentsform10elem")
+                        ->with('academicprogram', $request->get('academicprogram'))
+                        ->with('students', $students);
+                
+            }
+                // return $students;
+        }
+        else{
+            return view("registrar.reportsforms")
+                ->with('academicprogram', $id);
+        }
+    }
+    public function reportstudentmasterlist(Request $request, $id, $syid, $sectionid)
+    {
+        // return $request->all();
+        
+        $academicprogram = $request->get('academicprogram');
+        $schoolyear = DB::table('sy')
+            ->where('isactive','1')
+            ->get();
+        $acadProg = DB::table('sections')
+            ->select('academicprogram.progname')
+            ->join('gradelevel','sections.levelid','=','gradelevel.id')
+            ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+            ->where('sections.id',$sectionid)
+            ->get();
+        $getSection = DB::table('sections')
+            ->where('id', $sectionid)
+            ->get();
+        if($syid == $schoolyear[0]->id){
+            // return 'asd';
+            // return $request->get('esc');
+            if($request->get('esc')==true){
+                // return 'sd';
+                if($acadProg[0]->progname == 'SENIOR HIGH SCHOOL'){
+                    $data = DB::table('sectiondetail')
+                        ->select('studinfo.id as studentid','studinfo.firstname as student_firstname','studinfo.middlename as student_middlename','studinfo.lastname as student_lastname','studinfo.suffix as student_suffix','studinfo.gender as student_gender','teacher.firstname as teacher_firstname','teacher.middlename as teacher_middlename','teacher.lastname as teacher_lastname','teacher.suffix as teacher_suffix','sections.id as sectionid','sections.sectionname as sectionname','gradelevel.levelname as gradelevelname')
+                        ->join('sections','sectiondetail.sectionid','=','sections.id')
+                        ->join('gradelevel','sections.levelid','=','gradelevel.id')
+                        ->join('teacher','sections.teacherid','=','teacher.id')
+                        ->join('studinfo','sections.id','=','studinfo.sectionid')
+                        ->join('sh_enrolledstud','studinfo.id','=','sh_enrolledstud.studid')
+                        ->join('sy','sh_enrolledstud.syid','=','sy.id')
+                        ->whereIn('sh_enrolledstud.studstatus',['1','2','4'])
+                        ->where('sy.id',$schoolyear[0]->id)
+                        ->where('sections.deleted','0')
+                        ->where('sections.id',$sectionid)
+                        ->where('sh_enrolledstud.deleted','0')
+                        ->where('sh_enrolledstud.studstatus','!=','0')
+                        ->where('studinfo.esc',$request->get('esc'))
+                        ->orderBy('studinfo.lastname','asc')
+                        ->distinct()
+                        ->get();
+                }
+                else{
+                    // return 'asdf';
+                    $data = DB::table('sectiondetail')
+                        ->select('sections.id as sectionid','sections.sectionname as sectionname','studinfo.id as studentid','studinfo.firstname as student_firstname','studinfo.middlename as student_middlename','studinfo.lastname as student_lastname','studinfo.suffix as student_suffix','studinfo.gender as student_gender','teacher.firstname as teacher_firstname','teacher.middlename as teacher_middlename','teacher.lastname as teacher_lastname','teacher.suffix as teacher_suffix','gradelevel.levelname as gradelevelname')
+                        ->join('sections','sectiondetail.levelid','=','gradelevel.id')
+                        ->join('gradelevel','sections.levelid','=','gradelevel.id')
+                        ->join('teacher','sections.teacherid','=','teacher.id')
+                        ->join('enrolledstud','sections.id','=','enrolledstud.sectionid')
+                        ->join('sy','enrolledstud.syid','=','sy.id')
+                        ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                        ->whereIn('enrolledstud.studstatus',['1','2','4'])
+                        ->where('enrolledstud.deleted','0')
+                        ->where('enrolledstud.syid',$schoolyear[0]->id)
+                        ->where('sections.deleted','0')
+                        ->where('enrolledstud.studstatus','!=','0')
+                        ->where('studinfo.esc',$request->get('esc'))
+                        ->where('sections.id',$sectionid)
+                        ->orderBy('studinfo.lastname','asc')
+                        ->distinct()
+                        ->get();
+                }
+                // return $sectionid;
+                if(count($data) == 0){
+                    // return 'sad';
+                    return view("registrar.reportsstudentmasterlistpreview")
+                        ->with('schoolyeardesc',$schoolyear[0]->sydesc)
+                        ->with('schoolyear',$syid)
+                        ->with('sectionid',$sectionid)
+                        ->with('selectedsection',$getSection[0]->sectionname)
+                        ->with('selectedform',$request->get('selectedform'))
+                        ->with('academicprogram',$academicprogram)
+                        ->with('escmessage','No ESC Grantees enrolled!');
+                }
+                // return $data;
+            }else{
+                // return 'asf';
+                // if($request->get('esc')==true){
+                    if($acadProg[0]->progname == 'SENIOR HIGH SCHOOL'){
+                        $data = DB::table('sectiondetail')
+                            ->select('studinfo.id as studentid','studinfo.firstname as student_firstname','studinfo.middlename as student_middlename','studinfo.lastname as student_lastname','studinfo.suffix as student_suffix','studinfo.gender as student_gender','teacher.firstname as teacher_firstname','teacher.middlename as teacher_middlename','teacher.lastname as teacher_lastname','teacher.suffix as teacher_suffix','sections.id as sectionid','sections.sectionname as sectionname','gradelevel.levelname as gradelevelname')
+                            ->join('sections','sectiondetail.sectionid','=','sections.id')
+                            ->join('gradelevel','sections.levelid','=','gradelevel.id')
+                            ->join('teacher','sections.teacherid','=','teacher.id')
+                            ->join('studinfo','sections.id','=','studinfo.sectionid')
+                            ->join('sh_enrolledstud','studinfo.id','=','sh_enrolledstud.studid')
+                            ->join('sy','sh_enrolledstud.syid','=','sy.id')
+                            ->whereIn('sh_enrolledstud.studstatus',['1','2','4'])
+                            ->where('sy.id',$schoolyear[0]->id)
+                            ->where('sections.deleted','0')
+                            ->where('sections.id',$sectionid)
+                            ->where('sh_enrolledstud.deleted','0')
+                            // ->where('sh_enrolledstud.studstatus','!=','0')
+                            // ->where('studinfo.esc',$request->get('esc'))
+                            ->orderBy('studinfo.lastname','asc')
+                            ->distinct()
+                            ->get();
+                    }
+                    else{
+                        $data = DB::table('sectiondetail')
+                            ->select('sections.id as sectionid','sections.sectionname as sectionname','studinfo.id as studentid','studinfo.firstname as student_firstname','studinfo.middlename as student_middlename','studinfo.lastname as student_lastname','studinfo.suffix as student_suffix','studinfo.gender as student_gender','teacher.firstname as teacher_firstname','teacher.middlename as teacher_middlename','teacher.lastname as teacher_lastname','teacher.suffix as teacher_suffix','gradelevel.levelname as gradelevelname')
+                            ->join('sections','sectiondetail.sectionid','=','sections.id')
+                            ->join('gradelevel','sections.levelid','=','gradelevel.id')
+                            ->join('teacher','sections.teacherid','=','teacher.id')
+                            ->join('enrolledstud','sections.id','=','enrolledstud.sectionid')
+                            ->join('sy','enrolledstud.syid','=','sy.id')
+                            ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                            ->whereIn('enrolledstud.studstatus',['1','2','4'])
+                            ->where('enrolledstud.deleted','0')
+                            ->where('enrolledstud.syid',$schoolyear[0]->id)
+                            ->where('sections.deleted','0')
+                            // ->where('enrolledstud.studstatus','!=','0')
+                            // ->where('studinfo.esc',$request->get('esc'))
+                            ->where('sections.id',$sectionid)
+                            ->orderBy('studinfo.lastname','asc')
+                            ->distinct()
+                            ->get();
+                    }
+                    // return $data
+                }
+                if(count($data) == 0){
+                    return view("registrar.reportsstudentmasterlistpreview")
+                        ->with('schoolyeardesc',$schoolyear[0]->sydesc)
+                        ->with('selectedsection',$getSection[0]->sectionname)
+                        ->with('schoolyear',$syid)
+                        ->with('sectionid',$sectionid)
+                        ->with('selectedform',$request->get('selectedform'))
+                        ->with('academicprogram',$academicprogram)
+                        ->with('escmessage','No ESC Students enrolled!');
+                }
+            // return count($data);
+        }
+        else{
+            
+            if($request->get('esc')==true){
+                if($acadProg[0]->progname == 'SENIOR HIGH SCHOOL'){
+                    $data = DB::table('sectiondetail')
+                        ->select('sections.id as sectionid','sections.sectionname as sectionname','studinfo.id as studentid','studinfo.firstname as student_firstname','studinfo.middlename as student_middlename','studinfo.lastname as student_lastname','studinfo.suffix as student_suffix','studinfo.gender as student_gender','teacher.firstname as teacher_firstname','teacher.middlename as teacher_middlename','teacher.lastname as teacher_lastname','teacher.suffix as teacher_suffix','gradelevel.levelname as gradelevelname')
+                        ->join('sections','sectiondetail.sectionid','=','sections.id')
+                        ->join('gradelevel','sections.levelid','=','gradelevel.id')
+                        ->join('teacher','sectiondetail.teacherid','=','teacher.id')
+                        ->join('sh_enrolledstud','sections.id','=','sh_enrolledstud.sectionid')
+                        ->join('sy','sh_enrolledstud.syid','=','sy.id')
+                        ->join('studinfo','sh_enrolledstud.studid','=','studinfo.id')
+                        ->whereIn('sh_enrolledstud.studstatus',['1','2','4'])
+                        ->where('sh_enrolledstud.deleted','0')
+                        ->where('sh_enrolledstud.syid',$syid)
+                        ->where('sections.deleted','0')
+                        // ->where('studinfo.studstatus','!=','0')
+                        ->where('sections.id',$sectionid)
+                        ->where('studinfo.esc',$request->get('esc'))
+                        ->orderBy('studinfo.lastname','asc')
+                        ->distinct()
+                        ->get();
+                        // return $data;
+                }
+                else{
+                    $data = DB::table('sectiondetail')
+                        ->select('sections.id as sectionid','sections.sectionname as sectionname','studinfo.id as studentid','studinfo.firstname as student_firstname','studinfo.middlename as student_middlename','studinfo.lastname as student_lastname','studinfo.suffix as student_suffix','studinfo.gender as student_gender','teacher.firstname as teacher_firstname','teacher.middlename as teacher_middlename','teacher.lastname as teacher_lastname','teacher.suffix as teacher_suffix','gradelevel.levelname as gradelevelname')
+                        ->join('sections','sectiondetail.sectionid','=','sections.id')
+                        ->join('gradelevel','sections.levelid','=','gradelevel.id')
+                        ->join('teacher','sections.teacherid','=','teacher.id')
+                        ->join('enrolledstud','sections.id','=','enrolledstud.sectionid')
+                        ->join('sy','enrolledstud.syid','=','sy.id')
+                        ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                        ->whereIn('enrolledstud.studstatus',['1','2','4'])
+                        ->where('enrolledstud.deleted','0')
+                        ->where('enrolledstud.syid',$schoolyear[0]->id)
+                        ->where('sections.deleted','0')
+                        // ->where('studinfo.studstatus','!=','0')
+                        ->where('studinfo.esc',$request->get('esc'))
+                        ->where('sections.id',$sectionid)
+                        ->orderBy('studinfo.lastname','asc')
+                        ->distinct()
+                        ->get();
+                }
+                // return $sectionid;
+                if(count($data) == 0){
+                    // return 'sad';
+                    return view("registrar.reportsstudentmasterlistpreview")
+                        ->with('schoolyeardesc',$schoolyear[0]->sydesc)
+                        ->with('schoolyear',$syid)
+                        ->with('sectionid',$sectionid)
+                        ->with('selectedsection',$getSection[0]->sectionname)
+                        ->with('selectedform',$request->get('selectedform'))
+                        ->with('academicprogram',$academicprogram)
+                        ->with('escmessage','No ESC Grantees enrolled!');
+                }
+            }
+            else{
+                // return $syid;
+                if($acadProg[0]->progname == 'SENIOR HIGH SCHOOL'){
+                    // return $sectionid;
+                    $data = DB::table('sectiondetail')
+                        ->select('sections.id as sectionid','sections.sectionname as sectionname','studinfo.id as studentid','studinfo.firstname as student_firstname','studinfo.middlename as student_middlename','studinfo.lastname as student_lastname','studinfo.suffix as student_suffix','studinfo.gender as student_gender','teacher.firstname as teacher_firstname','teacher.middlename as teacher_middlename','teacher.lastname as teacher_lastname','teacher.suffix as teacher_suffix','gradelevel.levelname as gradelevelname')
+                        ->join('sections','sectiondetail.sectionid','=','sections.id')
+                        ->join('gradelevel','sections.levelid','=','gradelevel.id')
+                        ->join('teacher','sectiondetail.teacherid','=','teacher.id')
+                        ->join('sh_enrolledstud','sections.id','=','sh_enrolledstud.sectionid')
+                        ->join('sy','sh_enrolledstud.syid','=','sy.id')
+                        ->join('studinfo','sh_enrolledstud.studid','=','studinfo.id')
+                        ->whereIn('sh_enrolledstud.studstatus',['1','2','4'])
+                        ->where('sh_enrolledstud.deleted','0')
+                        ->where('sh_enrolledstud.syid',$syid)
+                        ->where('sections.deleted','0')
+                        // ->where('studinfo.studstatus','!=','0')
+                        ->where('sections.id',$sectionid)
+                        ->orderBy('studinfo.lastname','asc')
+                        ->distinct()
+                        ->get();
+                        // return $data;
+                }
+                else{
+                    // return 'sf';
+                    $data = DB::table('sectiondetail')
+                        ->select('sections.id as sectionid','sections.sectionname as sectionname','studinfo.id as studentid','studinfo.firstname as student_firstname','studinfo.middlename as student_middlename','studinfo.lastname as student_lastname','studinfo.suffix as student_suffix','studinfo.gender as student_gender','teacher.firstname as teacher_firstname','teacher.middlename as teacher_middlename','teacher.lastname as teacher_lastname','teacher.suffix as teacher_suffix','gradelevel.levelname as gradelevelname')
+                        ->join('sections','sectiondetail.sectionid','=','sections.id')
+                        ->join('gradelevel','sections.levelid','=','gradelevel.id')
+                        ->join('teacher','sectiondetail.teacherid','=','teacher.id')
+                        ->join('enrolledstud','sections.id','=','enrolledstud.sectionid')
+                        ->join('sy','enrolledstud.syid','=','sy.id')
+                        ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                        ->whereIn('enrolledstud.studstatus',['1','2','4'])
+                        ->where('enrolledstud.deleted','0')
+                        ->where('enrolledstud.syid',$syid)
+                        ->where('sections.deleted','0')
+                        // ->where('studinfo.studstatus','!=','0')
+                        ->where('sections.id',$sectionid)
+                        ->orderBy('studinfo.lastname','asc')
+                        ->distinct()
+                        ->get();
+                }
+            }
+        }
+        $maleCount = 0;
+        $femaleCount = 0;
+        // return count($data);
+    // return $syid;
+        foreach($data as $countGender){
+            if(strtoupper($countGender->student_gender) == "MALE"){
+                $maleCount+=1;
+            }
+            elseif(strtoupper($countGender->student_gender) == "FEMALE"){
+                $femaleCount+=1;
+            }
+        }
+        $genderCount =['maleCount'=> $maleCount,'femaleCount'=>$femaleCount];
+        $schoolinfo = DB::table('schoolinfo')
+            ->get();
+        if($id == 'preview'){
+            // return 'asd';
+            
+            if($request->get('esc')==true){
+                if(count($data) == 0){
+                    // return 'sad';
+                    return view("registrar.reportsstudentmasterlistpreview")
+                        ->with('schoolyeardesc',$schoolyear[0]->sydesc)
+                        ->with('schoolyear',$syid)
+                        ->with('selectedsection',$getSection[0]->sectionname)
+                        ->with('selectedform',$request->get('selectedform'))
+                        ->with('academicprogram',$academicprogram)
+                        ->with('message','No Students enrolled!');
+                }
+                else{
+                    return view("registrar.reportsstudentmasterlistpreview")
+                        ->with('schoolyeardesc',$schoolyear[0]->sydesc)
+                        ->with('selectedform',$request->get('selectedform'))
+                        ->with('schoolyear',$syid)
+                        ->with('sectionid',$sectionid)
+                        ->with('academicprogram',$academicprogram)
+                        ->with('esc', '1')
+                        ->with('selectedsection',$getSection[0]->sectionname)
+                        ->with('data',$data);
+                }
+            }
+            else{
+                if(count($data) == 0){
+                    // return 'sad';
+                    return view("registrar.reportsstudentmasterlistpreview")
+                        ->with('schoolyeardesc',$schoolyear[0]->sydesc)
+                        ->with('schoolyear',$syid)
+                        ->with('selectedsection',$getSection[0]->sectionname)
+                        ->with('selectedform',$request->get('selectedform'))
+                        ->with('academicprogram',$academicprogram)
+                        ->with('message','No Students enrolled!');
+                }
+                else{
+                    return view("registrar.reportsstudentmasterlistpreview")
+                        ->with('schoolyeardesc',$schoolyear[0]->sydesc)
+                        ->with('selectedform',$request->get('selectedform'))
+                        ->with('selectedsection',$getSection[0]->sectionname)
+                        ->with('schoolyear',$syid)
+                        ->with('sectionid',$sectionid)
+                        ->with('academicprogram',$academicprogram)
+                        ->with('selectedsection',$getSection[0]->sectionname)
+                        ->with('data',$data);
+                }
+            }
+        }
+        elseif($id == 'print'){
+            $esc = $request->get('esc');
+            
+           $pdf = PDF::loadview('registrar/pdf/pdf_studentmasterlist',compact('data','schoolinfo','genderCount','schoolyear','esc'))->setPaper('a4');
+            return $pdf->stream('Masterlist - '.$data[0]->sectionname.'.pdf');
+        }
+    }
+    public function reportschoolform_5(Request $request, $id, $selectedform, $syid, $sectionid, $gradelevelid, $teacherid)
+    {
+        // return 'sdfs';
+        $academicprogram = $request->get('academicprogram');
+        $acadProg = DB::table('gradelevel')
+            ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+            ->where('gradelevel.id',$gradelevelid)
+            ->get();
+        $getSectionAndLevel = DB::table('sectiondetail')
+            ->select('teacher.id','sections.levelid','gradelevel.levelname','sections.id as sectionid','sections.sectionname')
+            ->join('sections','sectiondetail.sectionid','=','sections.id')
+            ->join('teacher','sectiondetail.teacherid','=','teacher.id')
+            ->join('gradelevel','sections.levelid','=','gradelevel.id')
+            ->where('teacher.id',$teacherid)
+            ->where('gradelevel.id',$gradelevelid)
+            ->where('sectiondetail.syid',$syid)
+            ->distinct()
+            ->get();
+        // return $getSectionAndLevel;
+        $getSy = DB::table('sy')
+            ->where('id', $syid)
+            ->get();
+        $getSection = DB::table('sections')
+            ->where('id', $sectionid)
+            ->get();
+        if(count($getSectionAndLevel)==0){
+            return view("registrar.reportsschoolform5Apreview")
+                ->with('selectedform',$request->get('selectedform'))
+                ->with('selectedsection',$getSection[0]->sectionname)
+                ->with('schoolyeardesc',$request->get('schoolyeardesc'))
+                ->with('academicprogram',$academicprogram)
+                ->with('message','No Teacher assigned!');
+        }
+        else{
+            $getSchoolInfo = DB::table('schoolinfo')
+                ->select('region','division','district','schoolname','schoolid')
+                ->get();
+    
+            $getSchoolYear = DB::table('sy')
+                ->select('id','sydesc')
+                ->where('id',$syid)
+                ->get();
+            if($selectedform == 'School Form 5A' || $selectedform == 'School Form 5B'){
+                // return 'asd';
+                $getStudents = DB::table('sh_enrolledstud')
+                    ->select('sh_enrolledstud.id as enrollid','studinfo.id','studinfo.lrn','studinfo.lastname','studinfo.firstname','studinfo.middlename','studinfo.suffix','studinfo.gender','academicprogram.id as acadprogid','gradelevel.id as levelid','sections.id as sectionid','sections.blockid','sh_enrolledstud.strandid','sh_enrolledstud.semid','studinfo.sectionid as ensectid','studinfo.levelid as enlevelid')
+                    ->join('studinfo','sh_enrolledstud.studid','=','studinfo.id')
+                    // ->join('sy','sh_enrolledstud.syid','=','sy.id')
+                    ->join('sections','sh_enrolledstud.sectionid','=','sections.id')
+                    ->join('gradelevel','sh_enrolledstud.levelid','=','gradelevel.id')
+                    ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+                    ->where('sections.teacherid',$teacherid)
+                    ->where('sh_enrolledstud.sectionid',$sectionid)
+                    ->where('sh_enrolledstud.levelid',$gradelevelid)
+                    ->where('sh_enrolledstud.syid',$syid)
+                    // ->where('sy.id',$syid)
+                    ->orderBy('studinfo.lastname','asc')
+                    ->distinct()
+                    ->get();
+                    // return $getStudents;
+            }
+            else{
+                // return 'sad';
+                $getStudents = DB::table('enrolledstud')
+                    ->select('studinfo.id','enrolledstud.studid','studinfo.lrn','studinfo.lastname','studinfo.firstname','studinfo.middlename','studinfo.suffix','studinfo.gender','gradelevel.acadprogid','enrolledstud.sectionid','enrolledstud.levelid','studinfo.sectionid as ensectid','studinfo.levelid as enlevelid')
+                    ->join('sy','enrolledstud.syid','=','sy.id')
+                    ->join('sectiondetail','enrolledstud.syid','=','sectiondetail.syid')
+                    ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                    ->join('gradelevel','enrolledstud.levelid','=','gradelevel.id')
+                    ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+                    ->where('sectiondetail.teacherid',$teacherid)
+                    ->where('enrolledstud.sectionid',$sectionid)
+                    ->where('enrolledstud.levelid',$gradelevelid)
+                    ->where('sectiondetail.syid',$syid)
+                    ->distinct()
+                    // ->groupBy('')
+                    ->orderBy('studinfo.lastname','asc')
+                    ->get();
+            }
+            if(count($getStudents)==0){
+                // return 'sdsf';
+                if($selectedform == 'School Form 5A'){
+                    return view("registrar.reportsschoolform5Apreview")
+                        ->with('selectedform',$request->get('selectedform'))
+                        ->with('selectedsection',$getSection[0]->sectionname)
+                        ->with('schoolyeardesc',$request->get('schoolyeardesc'))
+                        ->with('schoolyear',$syid)
+                        ->with('academicprogram',$academicprogram)
+                        ->with('message','No students enrolled!');
+                }
+                elseif($selectedform == 'School Form 5B'){
+                    return view("registrar.reportsschoolform5Bpreview")
+                        ->with('selectedform',$request->get('selectedform'))
+                        ->with('selectedsection',$getSection[0]->sectionname)
+                        ->with('schoolyeardesc',$request->get('schoolyeardesc'))
+                        ->with('schoolyear',$syid)
+                        ->with('academicprogram',$academicprogram)
+                        ->with('message','No students enrolled!');
+                }
+                elseif($selectedform == 'School Form 5'){
+                    // return
+                    return view("registrar.reportsschoolform5preview")
+                        ->with('selectedform',$request->get('selectedform'))
+                        ->with('selectedsection',$getSection[0]->sectionname)
+                        ->with('schoolyeardesc',$request->get('schoolyeardesc'))
+                        ->with('schoolyear',$syid)
+                        ->with('academicprogram',$academicprogram)
+                        ->with('message','No students enrolled!');
+                }
+            }
+            if($selectedform == 'School Form 5'){
+                $finalGrades = array();
+        
+                foreach($getStudents as $student){
+                    $generateGrade = GenerateGrade::generalAverage($student);
+                    array_push($finalGrades,array($generateGrade[0],$student));
+                }
+                // return $finalGrades;
+                $getTeacherName = DB::table('teacher')
+                    ->select('teacher.firstname','teacher.middlename','teacher.lastname','teacher.suffix')
+                    ->where('teacher.id',$teacherid)
+                    ->get();
+        
+                $getPrincipal = DB::table('gradelevel')
+                    ->select('teacher.firstname','teacher.middlename','teacher.lastname','teacher.suffix')
+                    ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+                    ->join('teacher','academicprogram.principalid','=','teacher.id')
+                    ->where('gradelevel.id',$getSectionAndLevel[0]->levelid)
+                    ->get();
+        
+                $getGrades = DB::table('grades')
+                    ->select('gradesdetail.studid','gradesdetail.qg')
+                    ->join('gradesdetail','grades.id','=','gradesdetail.headerid')
+                    ->where('grades.levelid', $getSectionAndLevel[0]->levelid)
+                    ->where('grades.sectionid', $getSectionAndLevel[0]->sectionid)
+                    ->where('grades.syid', $getSchoolYear[0]->id)
+                    ->get();
+                    
+                foreach($finalGrades as $key=>$promotion){ 
+                    $generateGrade = GenerateGrade::finalGrades($promotion[1]);
+        
+                    $numFailed = count(collect($generateGrade)->where('remarks','FAILED'));
+        
+                    if(count($generateGrade)==0){ 
+    
+                        array_push($finalGrades[$key],"");
+        
+                    }
+        
+                    else{
+        
+                        if($numFailed == 0){
+                            
+                            array_push($finalGrades[$key],"PROMOTED");
+                            
+                            $getFailedSubjects = collect($generateGrade)->where('remarks','FAILED');
+        
+                            $failed = array();
+        
+                            foreach($getFailedSubjects as $failedSubjects){
+        
+                                $subjects  = $failedSubjects->subject;
+        
+                                array_push($failed, array($subjects));
+        
+                            }
+        
+                            array_push($finalGrades[$key],$failed);
+        
+                        }
+                        elseif($numFailed == 2 || $numFailed == 1) {
+        
+                            array_push($finalGrades[$key],"CONDITIONAL");
+        
+                        }
+                        elseif($numFailed >= 3){
+                            array_push($finalGrades[$key],"RETAINED");
+        
+                        }
+                    }
+                }
+                
+                // return $request;
+                if($id == 'preview'){ 
+                    // return $finalGrades[0]->grades;
+                    return view("registrar.reportsschoolform5preview")
+                        ->with('school',$getSchoolInfo)
+                        ->with('sy',$getSchoolYear[0]->sydesc)
+                        ->with('gradeAndLevel',$getSectionAndLevel)
+                        ->with('students',$finalGrades)
+                        ->with('gradelevelid',$gradelevelid)
+                        ->with('sectionid',$sectionid)
+                        ->with('teacherid',$teacherid)
+                        ->with('teachername',$getTeacherName)
+                        ->with('selectedform',$request->get('selectedform'))
+                        ->with('selectedsection',$getSection[0]->sectionname)
+                        ->with('schoolyeardesc',$request->get('schoolyeardesc'))
+                        ->with('schoolyear',$syid)
+                        ->with('academicprogram',$academicprogram)
+                        ->with('principalname',$getPrincipal);
+        
+                }
+                elseif($id == 'print'){ 
+                    $pdf = PDF::loadview('registrar/pdf/pdf_schoolform5preview',compact('getSchoolInfo','getSchoolYear','getSectionAndLevel','finalGrades','getTeacherName','getPrincipal'))->setPaper('legal','landscape'); 
+                    return $pdf->stream('School Form 5 - '.$getSectionAndLevel[0]->levelname.' - '.$getSectionAndLevel[0]->sectionname.'.pdf');
+                }
+            }
+            elseif($selectedform == 'School Form 5A'){
+                // return $getStudents;
+                $getSemester = DB::table('semester')
+                    ->select('id','semester')
+                    ->where('isactive','1')
+                    ->get();
+                $getTeacherName = DB::table('users')
+                    ->select('teacher.id','teacher.firstname','teacher.middlename','teacher.lastname','teacher.suffix')
+                    ->join('teacher','users.id','=','teacher.userid')
+                    ->where('teacher.id',$teacherid)
+                    ->get();
+
+                $getPrincipal = DB::table('gradelevel')
+                    ->select('teacher.firstname','teacher.middlename','teacher.lastname','teacher.suffix')
+                    ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+                    ->join('teacher','academicprogram.principalid','=','teacher.id')
+                    ->where('gradelevel.id',$getSectionAndLevel[0]->levelid)
+                    ->get();
+                $strandids = array();
+                foreach($getStudents as $student){
+                    array_push($strandids, array(
+                        'strandid' => $student->strandid
+                    ));
+                }
+                $strandids = collect($strandids)->unique();
+                // return $strandids;
+                $trackAndStrands = array();
+                foreach($strandids as $strandid){
+                    
+                    $strand = DB::table('sh_strand')
+                        ->select('strandcode','trackname')
+                        ->join('sh_track','sh_strand.trackid','=','sh_track.id')
+                        ->where('sh_strand.id',$strandid['strandid'])
+                        ->get();
+                    // return $strand;
+                    array_push($trackAndStrands, array(
+                        'track' => $strand[0]->trackname,
+                        'strand' => $strand[0]->strandcode
+                    ));
+                }
+                // return $trackAndStrands;
+                // return $getStudents;
+                $gradesArray = array();
+                $firstsemgradesArray = array();
+                $secondsemgradesArray = array();
+                foreach($getStudents as $student){
+                    if($student->semid == 1){
+                        $sh_grades = DB::table('grades')
+                            ->select('sh_subjects.subjtitle','gradesdetail.qg','grades.quarter')
+                            ->join('gradesdetail','grades.id','=','gradesdetail.headerid')
+                            ->join('sh_subjects','grades.subjid','=','sh_subjects.id')
+                            ->where('grades.syid',$syid)
+                            ->where('grades.levelid',$getSectionAndLevel[0]->levelid)
+                            ->where('grades.sectionid',$getSectionAndLevel[0]->sectionid)
+                            ->whereIn('grades.quarter',[1,2])
+                            ->where('gradesdetail.enrollid',$student->enrollid)
+                            // ->groupBy('subjtitle','qg')
+                            ->get();
+                            // return $sh_grades;
+                        
+                        $backSubjects = array();
+                        foreach(collect($sh_grades->groupBy('subjtitle')) as $filtergrades){
+                            // return $filtergrades;
+                            if(count($filtergrades)==2){
+                                if((($filtergrades[0]->qg + $filtergrades[1]->qg) / 2) < 75){
+                                    array_push($backSubjects, $filtergrades[0]);
+                                }
+                            }
+                        }
+                        array_push($firstsemgradesArray, array(
+                            'studentdata' =>  $student,
+                            'backsubjects' => $backSubjects
+                        ));
+                    }
+                    elseif($student->semid == 2){
+                        $sh_grades = DB::table('grades')
+                            ->select('sh_subjects.subjtitle','gradesdetail.qg','grades.quarter')
+                            ->join('gradesdetail','grades.id','=','gradesdetail.headerid')
+                            ->join('sh_subjects','grades.subjid','=','sh_subjects.id')
+                            ->where('grades.syid',$syid)
+                            ->where('grades.levelid',$getSectionAndLevel[0]->levelid)
+                            ->where('grades.sectionid',$getSectionAndLevel[0]->sectionid)
+                            ->whereIn('grades.quarter',[3,4])
+                            ->where('gradesdetail.enrollid',$student->enrollid)
+                            // ->groupBy('subjtitle','qg')
+                            ->get();
+                            // return ;
+                        
+                        $backSubjects = array();
+                        foreach(collect($sh_grades->groupBy('subjtitle')) as $filtergrades){
+                            // return $filtergrades;
+                            if(count($filtergrades)==2){
+                                if((($filtergrades[0]->qg + $filtergrades[1]->qg) / 2) < 75){
+                                    array_push($backSubjects, $filtergrades[0]);
+                                }
+                            }
+                        }
+                        array_push($secondsemgradesArray, array(
+                            'studentdata' =>  $student,
+                            'backsubjects' => $backSubjects
+                        ));
+                    }
+                    // return $sh_grades;
+                }
+                array_push($gradesArray,array(
+                    'firstsem' => $firstsemgradesArray,
+                    'secondsem' => $secondsemgradesArray
+                ));
+                // return $id;
+                if($id == 'preview'){
+                    // return $request->get('selectedform');
+                    $generalAverage = array();
+                    // return $getSectionAndLevel[0];
+                    // return $gradesArray[0]['firstsem'][5];
+                    return view('registrar.reportsschoolform5Apreview')
+                        ->with('academicprogram',$request->get('academicprogram'))
+                        ->with('selectedform',$request->get('selectedform'))
+                        ->with('schoolyeardesc',$request->get('schoolyeardesc'))
+                        ->with('selectedsection',$getSection[0]->sectionname)
+                        ->with('school',$getSchoolInfo)
+                        ->with('sy',$getSchoolYear)
+                        ->with('gradeAndLevel',$getSectionAndLevel)
+                        ->with('semester',$getSemester)
+                        ->with('grades',$gradesArray[0])
+                        ->with('students',$getStudents)
+                        ->with('trackAndStrands',$trackAndStrands)
+                        ->with('teachername',$getTeacherName)
+                        ->with('principalname',$getPrincipal);
+                }
+                elseif($id == 'print'){
+                    // return
+                    $divisionrep = $request->get('divisionrep');
+                    $pdf = PDF::loadview('registrar/pdf/pdf_schoolform5a',compact('getSchoolInfo','getSchoolYear','getSectionAndLevel','gradesArray','getTeacherName','getPrincipal','getSemester','trackAndStrands','divisionrep'))->setPaper('legal','landscape');
+        
+                    return $pdf->stream('School Form 5A.pdf');
+                }
+            }
+            elseif($selectedform == 'School Form 5B'){
+                // return 'asd';
+                // return $getStudents;
+                $getSemester = DB::table('semester')
+                    ->select('id','semester')
+                    ->where('isactive','1')
+                    ->get();
+                $getTeacherName = DB::table('users')
+                    ->select('teacher.id','teacher.firstname','teacher.middlename','teacher.lastname','teacher.suffix')
+                    ->join('teacher','users.id','=','teacher.userid')
+                    ->where('teacher.id',$teacherid)
+                    ->get();
+
+                $getPrincipal = DB::table('gradelevel')
+                    ->select('teacher.firstname','teacher.middlename','teacher.lastname','teacher.suffix')
+                    ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+                    ->join('teacher','academicprogram.principalid','=','teacher.id')
+                    ->where('gradelevel.id',$getSectionAndLevel[0]->levelid)
+                    ->get();
+                $strandids = array();
+                foreach($getStudents as $student){
+                    array_push($strandids, array(
+                        'strandid' => $student->strandid
+                    ));
+                }
+                $strandids = collect($strandids)->unique();
+                // return $strandids;
+                $trackAndStrands = array();
+                foreach($strandids as $strandid){
+                    
+                    $strand = DB::table('sh_strand')
+                        ->select('strandcode','trackname')
+                        ->join('sh_track','sh_strand.trackid','=','sh_track.id')
+                        ->where('sh_strand.id',$strandid['strandid'])
+                        ->get();
+                    // return $strand;
+                    array_push($trackAndStrands, array(
+                        'track' => $strand[0]->trackname,
+                        'strand' => $strand[0]->strandcode
+                    ));
+                }
+                // return $trackAndStrands;
+                // return $getStudents;
+                $filterArray = array();
+                foreach($getStudents as $student){
+                    $semcompleted = DB::table('sh_enrolledstud')
+                        ->where('id',$student->enrollid)
+                        ->where('syid',$syid)
+                        ->distinct()
+                        ->get();
+                    // return $semcompleted;
+                    if(count($semcompleted)==4){
+                        foreach($semcompleted as $filtercompleted){
+                            $sh_grades = DB::table('grades')
+                                ->select('sh_subjects.subjtitle','gradesdetail.qg','grades.quarter')
+                                ->join('gradesdetail','grades.id','=','gradesdetail.headerid')
+                                ->join('sh_subjects','grades.subjid','=','sh_subjects.id')
+                                ->where('grades.syid',$syid)
+                                ->where('grades.levelid',$filtercompleted->levelid)
+                                ->where('grades.sectionid',$filtercompleted->sectionid)
+                                ->whereIn('grades.quarter',[1,2,3,4])
+                                ->where('gradesdetail.enrollid',$student->enrollid)
+                                // ->groupBy('subjtitle','qg')
+                                ->get();
+                                // return $sh_grades;
+                                // return ;
+                            
+                            $backSubjects = array();
+                            foreach(collect($sh_grades->groupBy('subjtitle')) as $filtergrades){
+                                // return $filtergrades;
+                                if(count($filtergrades)==4){
+                                    if((($filtergrades[0]->qg + $filtergrades[1]->qg) / 2) < 75){
+                                        array_push($backSubjects, $filtergrades[0]);
+                                    }
+                                    if((($filtergrades[2]->qg + $filtergrades[3]->qg) / 2) < 75){
+                                        array_push($backSubjects, $filtergrades[0]);
+                                    }
+                                }
+                            }
+                            if(count($backSubjects)!=0){
+                                array_push($filterArray, array(
+                                    'studentdata' =>  $student,
+                                    'status' => 'COMPLETED'
+                                ));
+                            }
+                        }
+                    }
+                    elseif(count($semcompleted)>4){
+                        array_push($filterArray, array(
+                            'studentdata' =>  $student,
+                            'status' => 'OVERSTAYING'
+                        ));
+                    }
+                    elseif(count($semcompleted)<4){
+                        array_push($filterArray, array(
+                            'studentdata' =>  $student,
+                            'status' => 'INCOMPLETE'
+                        ));
+                    }
+                    // return $semcompleted;
+                    // return $sh_grades;
+                }
+                if($id == 'preview'){
+                    // return $request->get('selectedform');
+                    $generalAverage = array();
+                    // return $getSectionAndLevel[0];
+                    // return $gradesArray[0]['firstsem'][5];
+                    return view('registrar.reportsschoolform5Bpreview')
+                        ->with('academicprogram',$request->get('academicprogram'))
+                        ->with('selectedform',$request->get('selectedform'))
+                        ->with('schoolyeardesc',$request->get('schoolyeardesc'))
+                        ->with('selectedsection',$getSection[0]->sectionname)
+                        ->with('school',$getSchoolInfo)
+                        ->with('sy',$getSchoolYear)
+                        ->with('gradeAndLevel',$getSectionAndLevel)
+                        ->with('semester',$getSemester)
+                        ->with('filter',$filterArray)
+                        ->with('students',$getStudents)
+                        ->with('trackAndStrands',$trackAndStrands)
+                        ->with('teachername',$getTeacherName)
+                        ->with('principalname',$getPrincipal);
+                }
+                elseif($id == 'print'){
+                    $certificationattained = array();
+                    foreach($request->except('curriculum','teacher','schoolhead','divisionrep','nciiimale','nciiifemale','nciiitotal','nciimale','nciifemale','nciitotal','ncimale','ncifemale','ncitotal','nctotalmale','nctotalfemale','nctotal') as $key => $value){
+                        // return $key;
+                        array_push($certificationattained, (object) array(
+                            'name' => $key,
+                            'certificate' => $value
+                        ));
+                    }
+                    $ncArray = array();
+                    array_push($ncArray,(object)array(
+                        'nciiimale' => $request->get('nciiimale'),
+                        'nciiifemale' => $request->get('nciiifemale'),
+                        'nciiitotal' => $request->get('nciiitotal'),
+                        'nciimale' => $request->get('nciimale'),
+                        'nciifemale' => $request->get('nciifemale'),
+                        'nciitotal' => $request->get('nciitotal'),
+                        'ncimale' => $request->get('ncimale'),
+                        'ncifemale' => $request->get('ncifemale'),
+                        'ncitotal' => $request->get('ncitotal'),
+                        'nctotalmale' => $request->get('nctotalmale'),
+                        'nctotalfemale' => $request->get('nctotalfemale'),
+                        'nctotal' => $request->get('nctotal')
+                    ));
+                    // return
+                    $divisionrep = $request->get('divisionrep');
+                    $pdf = PDF::loadview('registrar/pdf/pdf_schoolform5b',compact('getSchoolInfo','getSchoolYear','getSectionAndLevel','getTeacherName','getPrincipal','getSemester','trackAndStrands','divisionrep','filterArray','certificationattained','ncArray'))->setPaper('legal','landscape');
+        
+                    return $pdf->stream('School Form 5B.pdf');
+                }
+            }
+    
+        }
+    }
+    function reportschoolform_6(Request $request, $id,$syid,$sectionid,$gradelevelid,$teacherid){ 
+        $academicprogram = $request->get('academicprogram');
+        $getSchoolInfo = DB::table('schoolinfo')
+            ->select('region','division','district','schoolname','schoolid')
+            ->get();
+        $getSchoolYear = DB::table('sy')
+            ->select('id','sydesc')
+            ->where('id',$syid)
+            ->get();
+        $getSectionAndLevel = DB::table('sectiondetail')
+            ->select('teacher.id','sections.levelid','gradelevel.levelname','sections.id as sectionid','sections.sectionname','academicprogram.progname')
+            ->join('teacher','sectiondetail.teacherid','=','teacher.id')
+            ->join('sections','sectiondetail.sectionid','=','sections.id')
+            ->join('gradelevel','sections.levelid','=','gradelevel.id')
+            ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+            ->where('teacher.id',$teacherid)
+            ->where('gradelevel.id',$gradelevelid)
+            ->where('sectiondetail.syid',$syid)
+            ->get();
+        if(count($getSectionAndLevel)==0){
+            return view("registrar.reportsschoolform6preview")
+                ->with('school',$getSchoolInfo)
+                ->with('gradelevelid',$gradelevelid)
+                ->with('sectionid',$sectionid)
+                ->with('selectedform',$request->get('selectedform'))
+                ->with('schoolyeardesc',$request->get('schoolyeardesc'))
+                ->with('selectedsection',$getSectionAndLevel[0]->sectionname)
+                ->with('teacherid',$teacherid)
+                ->with('sy',$syid)
+                ->with('academicprogram',$academicprogram)
+                ->with('gradeAndLevel',$getSectionAndLevel);
+        }else{ 
+            if($getSectionAndLevel[0]->progname == "SENIOR HIGH SCHOOL"){
+                $getStudents = DB::table('sh_enrolledstud')
+                    ->select('studinfo.id','sh_enrolledstud.studid','studinfo.lrn','studinfo.lastname','studinfo.firstname','studinfo.middlename','studinfo.suffix','studinfo.gender','gradelevel.acadprogid','sh_enrolledstud.sectionid','sh_enrolledstud.levelid','sections.blockid','studinfo.sectionid as ensectid','studinfo.levelid as enlevelid')
+                    ->join('studinfo','sh_enrolledstud.studid','=','studinfo.id')
+                    ->join('sections','sh_enrolledstud.sectionid','=','sections.id')
+                    ->join('gradelevel','sh_enrolledstud.levelid','=','gradelevel.id')
+                    ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+                    ->where('sections.teacherid',$teacherid)
+                    ->where('sh_enrolledstud.sectionid',$sectionid)
+                    ->where('sh_enrolledstud.levelid',$gradelevelid)
+                    ->where('sh_enrolledstud.studstatus','1')
+                    // ->where('studinfo.studstatus','!=', '0')
+                    ->orderBy('studinfo.lastname','asc')
+                    ->distinct()
+                    ->get();
+            }
+            else{
+                // return $sectionid;
+                $getStudents = DB::table('enrolledstud')
+                    ->select('studinfo.id','enrolledstud.studid','studinfo.lrn','studinfo.lastname','studinfo.firstname','studinfo.middlename','studinfo.suffix','studinfo.gender','gradelevel.acadprogid','enrolledstud.sectionid','enrolledstud.levelid','sections.blockid','studinfo.sectionid as ensectid','studinfo.levelid as enlevelid')
+                    ->join('sy','enrolledstud.syid','=','sy.id')
+                    ->join('sectiondetail','enrolledstud.syid','=','sectiondetail.syid')
+                    ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                    ->join('gradelevel','enrolledstud.levelid','=','gradelevel.id')
+                    ->join('sections','sectiondetail.sectionid','=','sections.id')
+                    ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+                    ->where('sectiondetail.teacherid',$teacherid)
+                    ->where('enrolledstud.sectionid',$sectionid)
+                    ->where('enrolledstud.levelid',$gradelevelid)
+                    ->where('sectiondetail.syid',$syid)
+                    ->where('enrolledstud.studstatus','1')
+                    // ->where('studinfo.studstatus','!=', '0')
+                    ->orderBy('studinfo.lastname','asc')
+                    ->distinct()
+                    ->get();
+                    // return count($getStudents);
+            } 
+            $finalGrades = array();
+            foreach($getStudents as $student){
+                $generalAve = GenerateGrade::generalAverage($student);
+                array_push($finalGrades,array($generalAve[0],$student));
+            }
+            $getTeacherName = DB::table('teacher')
+                ->select('teacher.firstname','teacher.middlename','teacher.lastname','teacher.suffix')
+                ->where('teacher.id',$teacherid)
+                ->get();
+            $getPrincipal = DB::table('gradelevel')
+                ->select('teacher.firstname','teacher.middlename','teacher.lastname','teacher.suffix')
+                ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+                ->join('teacher','academicprogram.principalid','=','teacher.id')
+                ->where('gradelevel.id',$getSectionAndLevel[0]->levelid)
+                ->get();
+            $getGrades = DB::table('grades')
+                ->select('gradesdetail.studid','gradesdetail.qg')
+                ->join('gradesdetail','grades.id','=','gradesdetail.headerid')
+                ->where('grades.levelid', $getSectionAndLevel[0]->levelid)
+                ->where('grades.sectionid', $getSectionAndLevel[0]->sectionid)
+                ->where('grades.syid', $getSchoolYear[0]->id)
+                ->get();
+            foreach($finalGrades as $key=>$promotion){
+                
+                $generateGrade = GenerateGrade::finalGrades($promotion[1]);
+                
+                $numFailed = count(collect($generateGrade)->where('remarks','FAILED'));
+                
+                if($numFailed == 0){
+                    array_push($finalGrades[$key],"PROMOTED");
+                    $getFailedSubjects = collect($generateGrade)->where('remarks','FAILED');
+                    $failed = array();
+                    foreach($getFailedSubjects as $failedSubjects){
+                        $subjects  = $failedSubjects->subject;
+                        array_push($failed, array($subjects));
+                    }
+                    array_push($finalGrades[$key],$failed);
+                }
+                elseif($numFailed == 2 || $numFailed == 1) {
+                    array_push($finalGrades[$key],"CONDITIONAL");
+                }
+                elseif($numFailed >= 3){
+                    array_push($finalGrades[$key],"RETAINED");
+                }
+            }
+            if($id == 'preview'){
+                // return count($finalGrades);
+                return view("registrar.reportsschoolform6preview")
+                    ->with('school',$getSchoolInfo)
+                    ->with('gradelevelid',$gradelevelid)
+                    ->with('sectionid',$sectionid)
+                    ->with('selectedform',$request->get('selectedform'))
+                    ->with('schoolyeardesc',$request->get('schoolyeardesc'))
+                    ->with('selectedsection',$getSectionAndLevel[0]->sectionname)
+                    ->with('teacherid',$teacherid)
+                    ->with('sy',$getSchoolYear[0]->sydesc)
+                    ->with('schoolyear',$syid)
+                    ->with('gradeAndLevel',$getSectionAndLevel)
+                    ->with('students',$finalGrades)
+                    ->with('teachername',$getTeacherName)
+                    ->with('academicprogram',$academicprogram)
+                    ->with('principalname',$getPrincipal);
+            }
+            elseif($id == 'print'){
+                $pdf = PDF::loadview('registrar/pdf/pdf_schoolform6preview',compact('getSchoolInfo','getSchoolYear','getSectionAndLevel','finalGrades','getTeacherName','getPrincipal'))->setPaper('legal','landscape');
+    
+                return $pdf->stream('School Form 6 - '.$getSectionAndLevel[0]->levelname.' - '.$getSectionAndLevel[0]->sectionname.'.pdf');
+            }
+        }
+    }
+    function reportschoolform_10(Request $request,$id,$syid,$sectionid,$gradelevelid,$userid){
+        $currentDate = Carbon::now()->isoFormat('MMMM DD, YYYY');
+        $academicprogram = $request->get('academicprogram');
+        // return 'AD';
+        $schoolinfo = Db::table('schoolinfo')->get();
+            // return $gradelevelid;
+        // $schoolyear = DB::table('sy')
+        //     ->select('id','sydesc')
+        //     ->where('isactive',1)
+        //     ->get();
+        $schoolyear = DB::table('sy')
+            ->select('id','sydesc')
+            ->where('sy.isactive',1)
+            ->get();
+        $acadProg = DB::table('gradelevel')
+            ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+            ->where('gradelevel.id',$gradelevelid)
+            ->get();
+        $getSection = DB::table('sections')
+            ->where('id', $sectionid)
+            ->get();
+        if($acadProg[0]->progname == "SENIOR HIGH SCHOOL"){
+            $data = DB::table('sh_enrolledstud')
+                ->select('studinfo.id','studinfo.lastname','studinfo.firstname','studinfo.middlename','studinfo.suffix','studinfo.gender','studinfo.dob','studinfo.mothername','studinfo.moccupation','studinfo.fathername','studinfo.foccupation','studinfo.guardianname','studinfo.street','studinfo.barangay','studinfo.city','studinfo.province','academicprogram.id as acadprogid','gradelevel.id as levelid')
+                ->join('studinfo','sh_enrolledstud.studid','=','studinfo.id')
+                ->join('gradelevel','sh_enrolledstud.levelid','=','gradelevel.id')
+                ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+                ->where('sh_enrolledstud.syid',$syid)
+                ->where('sh_enrolledstud.deleted','0')
+                ->where('sh_enrolledstud.sectionid',$sectionid)
+                ->where('sh_enrolledstud.levelid',$gradelevelid)
+                ->distinct()
+                ->orderBy('studinfo.lastname','asc')
+                ->get();
+        }
+        else{
+            $data = DB::table('enrolledstud')
+                ->select('studinfo.id','studinfo.lastname','studinfo.firstname','studinfo.middlename','studinfo.suffix','studinfo.gender','studinfo.dob','studinfo.mothername','studinfo.moccupation','studinfo.fathername','studinfo.foccupation','studinfo.guardianname','studinfo.street','studinfo.barangay','studinfo.city','studinfo.province','academicprogram.id as acadprogid','gradelevel.id as levelid')
+                ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                ->join('gradelevel','enrolledstud.levelid','=','gradelevel.id')
+                ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+                ->where('enrolledstud.syid',$syid)
+                ->where('enrolledstud.deleted','0')
+                ->where('enrolledstud.sectionid',$sectionid)
+                ->where('enrolledstud.levelid',$gradelevelid)
+                ->distinct()
+                ->orderBy('studinfo.lastname','asc')
+                ->get();
+                // return $data;
+        }
+
+        if($id == 'students'){
+            // return $syid;
+            return view("registrar.reportsschoolform10students")
+                ->with('data',$data)
+                ->with('gradelevelid',$gradelevelid)
+                ->with('sectionid',$sectionid)
+                ->with('section',$getSection[0]->sectionname)
+                ->with('schoolyeardesc',$request->get('schoolyeardesc'))
+                ->with('selectedsection',$request->get('selectedsection'))
+                ->with('selectedform',$request->get('selectedform'))
+                ->with('schoolyear',$syid)
+                ->with('schoolyeardesc',$request->get('schoolyeardesc'))
+                ->with('academicprogram',$academicprogram)
+                ->with('selectedform',$request->get('selectedform'));
+
+        } 
+        elseif($id == 'students_preview'){
+            // return $syid;
+            if($academicprogram == "elementary"){
+                // return $syid;
+                $info = DB::table('sy')
+                    ->select('gradelevel.id as glevelid','gradelevel.levelname','sections.id as sectionid','sections.sectionname','sections.teacherid')
+                    ->join('enrolledstud','sy.id','=','enrolledstud.syid')
+                    ->join('gradelevel','enrolledstud.levelid','=','gradelevel.id')
+                    ->join('sections','enrolledstud.sectionid','=','sections.id')
+                    ->where('sy.id',$syid)
+                    ->where('enrolledstud.studid',$userid)
+                    ->where('enrolledstud.deleted','0')
+                    ->where('sections.deleted','0')
+                    ->get();
+                $enrolledStud = DB::table('enrolledstud')
+                    ->join('gradelevel','enrolledstud.levelid','=','gradelevel.id')
+                    ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+                    ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                    ->where('enrolledstud.studid', $userid)
+                    ->where('enrolledstud.levelid', $gradelevelid)
+                    ->where('enrolledstud.deleted','0')
+                    ->get();
+            }
+            elseif($academicprogram == "juniorhighschool"){
+                $information = DB::table('sy')
+                    ->select('gradelevel.id as glevelid','gradelevel.levelname','sections.id as sectionid','sections.sectionname','sections.teacherid')
+                    ->join('enrolledstud','sy.id','=','enrolledstud.syid')
+                    ->join('gradelevel','enrolledstud.levelid','=','gradelevel.id')
+                    ->join('sections','enrolledstud.sectionid','=','sections.id')
+                    ->where('sy.id',$syid)
+                    ->where('enrolledstud.studid',$userid)
+                    ->where('enrolledstud.deleted','0')
+                    ->where('sections.deleted','0')
+                    ->get();
+                    // return $info;
+                $enrolledStud = DB::table('enrolledstud')
+                    ->select('enrolledstud.studid','enrolledstud.levelid','studinfo.firstname','studinfo.middlename','studinfo.lastname','studinfo.suffix','studinfo.dob','studinfo.gender','studinfo.lrn')
+                    ->join('gradelevel','enrolledstud.levelid','=','gradelevel.id')
+                    ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+                    ->join('studinfo','enrolledstud.studid','=','studinfo.id')
+                    ->where('enrolledstud.studid', $userid)
+                    ->where('enrolledstud.levelid', $gradelevelid)
+                    ->where('enrolledstud.deleted','0')
+                    ->get();
+                    // return $enrolledStud;
+            }
+            elseif($academicprogram == "seniorhighschool"){
+                // return $userid;
+                $information = DB::table('sy')
+                    ->select('gradelevel.id as glevelid','gradelevel.levelname','sections.id as sectionid','sections.sectionname','sections.teacherid')
+                    ->join('sh_enrolledstud','sy.id','=','sh_enrolledstud.syid')
+                    ->join('gradelevel','sh_enrolledstud.levelid','=','gradelevel.id')
+                    ->join('sections','sh_enrolledstud.sectionid','=','sections.id')
+                    ->where('sy.id',$syid)
+                    ->where('sh_enrolledstud.studid',$userid)
+                    ->where('sh_enrolledstud.deleted','0')
+                    ->where('sections.deleted','0')
+                    ->get();
+                $enrolledStud = DB::table('sh_enrolledstud')
+                    ->join('gradelevel','sh_enrolledstud.levelid','=','gradelevel.id')
+                    ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+                    ->join('studinfo','sh_enrolledstud.studid','=','studinfo.id')
+                    ->where('sh_enrolledstud.studid', $userid)
+                    ->where('sh_enrolledstud.levelid', $gradelevelid)
+                    ->where('sh_enrolledstud.deleted','0')
+                    ->get();
+                    // return $enrolledStud;
+            }
+            $studentData = $data->where('id',$userid)->values()->all();
+            // return $studentData;
+            $recordsArray = array();
+            $generateGrade = GenerateGrade::generateFinalGradesByGradeLevel($enrolledStud[0]->studid,$gradelevelid, $syid); 
+
+             $studentData[0]->syid = $syid;
+            //  return $generateGrade;
+            $attendance = AttendanceReport::schoolYearBasedAttendanceReport($studentData[0]);
+            // return $attendance
+            if(count($attendance)==0 && count($attendance)==0){
+                // return $studentData;
+                return view("registrar.reportsschoolform10studentspreview")
+                    ->with('studentdata',$studentData[0])
+                    ->with('studentRecords',$recordsArray)
+                    ->with('gradelevels',$gradelevels)
+                    ->with('gradelevelid',$gradelevelid)
+                    ->with('sectionid',$sectionid)
+                    ->with('schoolyeardesc',$request->get('schoolyeardesc'))
+                    ->with('selectedsection',$request->get('selectedsection'))
+                    ->with('selectedform',$request->get('selectedform'))
+                    ->with('academicprogram',$academicprogram)
+                    ->with('studentid',$userid)
+                    ->with('info',$info[0]);
+            }
+
+            $formQuery = DB::table('sf10parent')
+                ->select('sf10parent.id','sf10parent.studid','sf10parent.gradelevelid')
+                // ->join('sf10schoolinfo','sf10parent.id','=','sf10schoolinfo.parentid')
+                ->where('sf10parent.studid',$userid)
+                ->where('sf10parent.deleted','0')
+                ->get();
+            // return $formQuery;
+            $byLevel = $formQuery->where('gradelevelid',$gradelevelid);
+            // return $byLevel;
+            
+            if(count($byLevel) == 0){
+                $parent_id = DB::table('sf10parent')
+                    ->insertGetId([
+                            'studid' => $userid,
+                            'gradelevelid' => $gradelevelid,
+                            'operation' => 0,
+                            'deleted' => 0
+                ]);
+                $schoolid = DB::table('sf10schoolinfo')
+                    ->insertGetId([
+                            'parentid' => $parent_id,
+                            'schoolyear' => $generateGrade[0]->schoolyear,
+                            'schoolid' => $schoolinfo[0]->schoolid,
+                            'schoolname' => $schoolinfo[0]->schoolname,
+                            'district' => $schoolinfo[0]->district,
+                            'division' => $schoolinfo[0]->division,
+                            'region' => $schoolinfo[0]->region,
+                            'operation' => 0,
+                            'semester' => 1
+                ]);
+                if($academicprogram == 'elementary'){
+                    foreach($generateGrade[0]->grades as $grades){
+                        $finalRating = ($grades->quarter1 + $grades->quarter2 + $grades->quarter3 + $grades->quarter4) / 4;
+                        if($finalRating>75){
+                            $remarks = 'PASSED';
+                        }else{
+                            $remarks = 'FAILED';
+                        }
+                        DB::insert('insert into sf10childgrades (headerid, subj_desc, quarter1, quarter2, quarter3, quarter4, finalrating, action) values (?,?,?,?,?,?,?,?)',[$schoolid,$grades->subject,$grades->quarter1,$grades->quarter2,$grades->quarter3,$grades->quarter4,$finalRating,$remarks]);
+
+                    }
+                    foreach($attendance[0]->monthly as $monthly_attendance){
+                        DB::insert('insert into sf10childattendance (headerid, month, numofschooldays, numofdayspresent, numofdaysabsent) values (?,?,?,?,?)',[$schoolid,$monthly_attendance->month,$monthly_attendance->numDays,$monthly_attendance->present,$monthly_attendance->absent]);
+                    }
+                    $getFormRecords = DB::table('sf10parent')
+                        ->where('studid',$userid)
+                        ->where('sf10parent.deleted','0')
+                        ->get();
+                    $gradelevelArray = array();
+                    $gradelevelsss = DB::table('gradelevel')
+                        ->select('gradelevel.id','gradelevel.levelname')
+                        ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+                        ->where('academicprogram.progname','ELEMENTARY')
+                        ->where('gradelevel.deleted','0')
+                        ->orderBy('gradelevel.sortid','asc')
+                        ->get();
+                        // return $gradelevelsss;
+                    foreach($getFormRecords as $gradelevel){
+                        foreach($gradelevelsss as $level){
+                            
+                            if($gradelevel->gradelevelid == $level->id){
+                                
+                            }if($gradelevel->gradelevelid != $level->id){
+                                array_push($gradelevelArray, (object )array('id' => $level->id, 'levelname' => $level->levelname));
+                            }
+                        }
+                    }
+                    return view("registrar.reportsschoolform10studentspreview")
+                        ->with('studentdata',$studentData[0])
+                        ->with('studentRecords',$recordsArray)
+                        ->with('gradelevels',$gradelevelArray)
+                        ->with('gradelevelid',$gradelevelid)
+                        ->with('sectionid',$sectionid)
+                        ->with('schoolyeardesc',$request->get('schoolyeardesc'))
+                        ->with('selectedsection',$request->get('selectedsection'))
+                        ->with('selectedform',$request->get('selectedform'))
+                        ->with('studentid',$userid)
+                        ->with('schoolyear',$syid)
+                        ->with('academicprogram',$academicprogram)
+                        ->with('info',$info[0]);
+                }
+                elseif($academicprogram == 'juniorhighschool'){
+                    foreach($generateGrade[0]->grades as $grades){
+                        $finalRating = ($grades->quarter1 + $grades->quarter2 + $grades->quarter3 + $grades->quarter4) / 4;
+                        // return $finalRating;
+                        if($finalRating>75){
+                            $remarks = 'PASSED';
+                        }else{
+                            $remarks = 'FAILED';
+                        }
+                        DB::insert('insert into sf10childgrades (headerid, subj_desc, quarter1, quarter2, quarter3, quarter4, finalrating, action) values (?,?,?,?,?,?,?,?)',[$schoolid,$grades->subject,$grades->quarter1,$grades->quarter2,$grades->quarter3,$grades->quarter4,$finalRating,$remarks]);
+                    }
+                    $getFormRecords = DB::table('sf10parent')
+                        ->where('studid',$userid)
+                        ->where('sf10parent.deleted','0')
+                        ->get();
+                    $gradelevelArray = array();
+        
+                    $gradelevelsss = DB::table('gradelevel')
+                        ->select('gradelevel.id','gradelevel.levelname')
+                        ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+                        ->where('academicprogram.progname','HIGH SCHOOL')
+                        ->where('gradelevel.deleted','0')
+                        // ->distinct()
+                        ->orderBy('gradelevel.sortid','asc')
+                        ->get();
+                    // return $getFormRecords;
+                    foreach($getFormRecords as $gradelevel){
+                        foreach($gradelevelsss as $level){
+                            if($gradelevel->gradelevelid != $level->id){
+                                array_push($gradelevelArray, (object )array('id' => $level->id, 'levelname' => $level->levelname));
+                            }
+                        }
+                    }
+                    $acadprogid = DB::table('academicprogram')
+                        ->where('acadprogcode', 'HS')
+                        ->get();
+                    $eligibility = DB::table('sf10eligibility')
+                        ->where('studid', $userid)
+                        ->where('acadprogid', $acadprogid[0]->id)
+                        ->get();
+                    // return collect($gradelevelArray)->unique();
+                    // return count($recordsArray);
+                    return view("registrar.reportsschoolform10juniorpreview")
+                        ->with('studentdata',$studentData[0])
+                        ->with('studentRecords',$recordsArray)
+                        ->with('eligibility',$eligibility)
+                        ->with('gradelevels',collect($gradelevelArray)->unique()->sort())
+                        ->with('gradelevelid',$gradelevelid)
+                        ->with('sectionid',$sectionid)
+                        ->with('schoolyeardesc',$request->get('schoolyeardesc'))
+                        ->with('selectedsection',$request->get('selectedsection'))
+                        ->with('selectedform',$request->get('selectedform'))
+                        ->with('studentid',$userid)
+                        ->with('schoolyear',$syid)
+                        ->with('academicprogram',$academicprogram)
+                        ->with('info',$information[0]);
+                }
+                elseif($academicprogram == 'seniorhighschool'){
+                    foreach($generateGrade[0]->grades as $grades){
+                        $finalRating = ($grades->quarter1 + $grades->quarter2) / 2;
+                        $finalRating2 = ($grades->quarter3 + $grades->quarter4) / 2;
+                        if($finalRating>75){
+                            $remarks = 'PASSED';
+                        }else{
+                            $remarks = 'FAILED';
+                        }
+                        if($finalRating2>75){
+                            $remarks2 = 'PASSED';
+                        }else{
+                            $remarks2 = 'FAILED';
+                        }
+                        DB::insert('insert into sf10childgrades (headerid, studid, subj_desc, quarter1, quarter2, finalrating, action, semester) values (?,?,?,?,?,?,?,?)',[$schoolid,$userid,$grades->subject,$grades->quarter1,$grades->quarter2,$finalRating,$remarks,1]);
+                        DB::insert('insert into sf10childgrades (headerid, studid, subj_desc, quarter3, quarter4, finalrating, action, semester) values (?,?,?,?,?,?,?,?)',[$schoolid,$userid,$grades->subject,$grades->quarter3,$grades->quarter4,$finalRating2,$remarks2,2]);
+                    }
+                    $getFormRecords = DB::table('sf10parent')
+                        ->where('studid',$userid)
+                        ->where('sf10parent.deleted','0')
+                        ->get();
+                    $gradelevelArray = array();
+        
+                    $gradelevelsss = DB::table('gradelevel')
+                        ->select('gradelevel.id','gradelevel.levelname')
+                        ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+                        ->where('academicprogram.progname','SENIOR HIGH SCHOOL')
+                        ->where('gradelevel.deleted','0')
+                        // ->distinct()
+                        ->orderBy('gradelevel.sortid','asc')
+                        ->get();
+                    foreach($getFormRecords as $gradelevel){
+                        foreach($gradelevelsss as $level){
+                            
+                            if($gradelevel->gradelevelid == $level->id){
+                                
+                            }if($gradelevel->gradelevelid != $level->id){
+                                array_push($gradelevelArray, (object )array('id' => $level->id, 'levelname' => $level->levelname));
+                            }
+                        }
+                    }
+                    $acadprogid = DB::table('academicprogram')
+                        ->where('acadprogcode', 'SHS')
+                        ->get();
+                    $eligibility = DB::table('sf10eligibility')
+                        ->where('studid', $userid)
+                        ->where('acadprogid', $acadprogid[0]->id)
+                        ->get();
+                    
+                    return view("registrar.reportsschoolform10seniorpreview")
+                        ->with('studentdata',$studentData[0])
+                        ->with('studentRecords',$recordsArray)
+                        ->with('eligibility',$eligibility)
+                        ->with('gradelevels',$gradelevelArray)
+                        ->with('gradelevelid',$gradelevelid)
+                        ->with('sectionid',$sectionid)
+                        ->with('schoolyeardesc',$request->get('schoolyeardesc'))
+                        ->with('selectedsection',$request->get('selectedsection'))
+                        ->with('selectedform',$request->get('selectedform'))
+                        ->with('studentid',$userid)
+                        ->with('schoolyear',$syid)
+                        ->with('academicprogram',$academicprogram)
+                        ->with('info',$information[0]);
+                }
+                
+            }
+            else{
+                $recordsArray = array();
+                foreach($formQuery as $all){
+                    $records = array();
+                    $levelname = DB::table('gradelevel')
+                        ->where('id',$all->gradelevelid)
+                        ->where('deleted',0)
+                        ->get();
+                    if($academicprogram == 'elementary'){
+                        $schoolinfoid = DB::table('sf10schoolinfo')
+                            ->where('parentid',$all->id)
+                            ->get();
+                        // return $schoolinfoid;
+                        array_push($records, collect([
+                            'gradelevelname' => $levelname[0]->levelname,
+                            'schoolyear' => $schoolinfoid[0]->schoolyear,
+                            'schoolname' => $schoolinfoid[0]->schoolname,
+                            'numUnits' => $schoolinfoid[0]->numUnits,
+                            'numYears' => $schoolinfoid[0]->numYears,
+                            'operation' => $schoolinfoid[0]->operation
+                            ]));
+                        $grades = DB::table('sf10childgrades')
+                            ->select('sf10childgrades.core','sf10childgrades.subj_desc','sf10childgrades.quarter1','sf10childgrades.quarter2','sf10childgrades.quarter3','sf10childgrades.quarter4','sf10childgrades.finalrating','sf10childgrades.action','sf10childgrades.credits')
+                            ->where('sf10childgrades.headerid',$schoolinfoid[0]->id)
+                            ->get();
+                            // return $grades;
+                        array_push($records, $grades);
+                        $attendance = DB::table('sf10childattendance')
+                            ->where('headerid',$schoolinfoid[0]->id)
+                            ->get();
+                            
+            // return $records;
+                        array_push($records, $attendance);
+                        array_push($records, $all->id);
+                        array_push($recordsArray,$records);
+                        // return $records;
+                    }
+                    elseif($academicprogram == 'juniorhighschool'){
+                        $schoolinfoid = DB::table('sf10schoolinfo')
+                            ->where('parentid',$all->id)
+                            ->get();
+                        // return $schoolinfoid;
+
+                        foreach($schoolinfoid as $info){
+                            array_push($records, collect([
+                                'gradelevelname' => $levelname[0]->levelname,
+                                'schoolyear' => $info->schoolyear,
+                                'schoolname' => $info->schoolname,
+                                'numUnits' => $info->numUnits,
+                                'numYears' => $info->numYears,
+                                'operation' => $info->operation
+                                ]));
+                            $grades = DB::table('sf10childgrades')
+                                ->select('sf10childgrades.core','sf10childgrades.subj_desc','sf10childgrades.quarter1','sf10childgrades.quarter2','sf10childgrades.quarter3','sf10childgrades.quarter4','sf10childgrades.finalrating','sf10childgrades.action','sf10childgrades.semester','sf10childgrades.credits')
+                                // ->join('subjects','sf10childgrades.subj_desc','=','subjects.id')
+                                ->where('sf10childgrades.headerid',$schoolinfoid[0]->id)
+                                ->get();
+                            array_push($records, $grades);
+                        // $attendance = DB::table('sf10childattendance')
+                        //     ->where('headerid',$schoolinfoid[0]->id)
+                        //     ->get();
+
+                        // array_push($records, $attendance);
+                        array_push($records, $all->id);
+                        // return $records;
+                        array_push($recordsArray,$records);
+                    }
+                }
+                elseif($academicprogram == 'seniorhighschool'){
+                    $first = array();
+                    $second = array();
+                    $firstSum = array();
+                    $secondSum = array();
+                    // return $all->id;
+                    $schoolinfoid = DB::table('sf10schoolinfo')
+                        ->where('parentid',$all->id)
+                        ->whereIn('semester',[1,2])
+                        ->get();
+                    array_push($records, collect([
+                        'gradelevelname' => $levelname[0]->levelname,
+                        ]));
+                    // return $schoolinfoid;
+                    foreach($schoolinfoid as $info){
+                        
+                        if($info->semester == 1){
+                            $grades = DB::table('sf10childgrades')
+                                ->select('sf10childgrades.core','sf10childgrades.subj_desc','sf10childgrades.quarter1','sf10childgrades.quarter2','sf10childgrades.quarter3','sf10childgrades.quarter4','sf10childgrades.finalrating','sf10childgrades.action','sf10childgrades.semester','sf10childgrades.credits')
+                                ->where('sf10childgrades.headerid',$info->id)
+                                // ->where('sf10childgrades.semfinal_1','1')
+                                ->get();
+                                array_push($first,array(
+                                    'info' => $info,
+                                    'grades' =>$grades
+                                ));
+                        }
+                        elseif($info->semester == 2){
+                            $grades = DB::table('sf10childgrades')
+                                ->select('sf10childgrades.core','sf10childgrades.subj_desc','sf10childgrades.quarter1','sf10childgrades.quarter2','sf10childgrades.quarter3','sf10childgrades.quarter4','sf10childgrades.finalrating','sf10childgrades.action','sf10childgrades.semester','sf10childgrades.credits')
+                                ->where('sf10childgrades.headerid',$info->id)
+                                // ->where('sf10childgrades.semester','2')
+                                ->get();
+                                array_push($second,array(
+                                    'info' => $info,
+                                    'grades' =>$grades
+                                ));
+                        }
+                    }
+                    $schoolinfoidsummer = DB::table('sf10schoolinfo')
+                        ->where('parentid',$all->id)
+                        ->whereIn('semester',[3,4])
+                        ->get();
+                        // return $schoolinfoidsummer;
+                        if(count($schoolinfoidsummer)!=0){
+                            foreach($schoolinfoidsummer as $infosummer){
+                                
+                                if($infosummer->semester == 3){
+                                    $remedial = DB::table('sf10remedial')
+                                        ->select('sf10remedial.core','sf10remedial.subjects','sf10remedial.semfinal','sf10remedial.classmark','sf10remedial.recomputedgrade','sf10remedial.action')
+                                        ->where('sf10remedial.headerid',$infosummer->id)
+                                        // ->where('sf10remedial.semester','1')
+                                        ->get();
+                                    array_push($firstSum,array(
+                                        'infoid' => $infosummer->id,
+                                        'grades' => $remedial
+                                    ));
+                                }
+                                elseif($infosummer->semester == 4){
+                                    $remedial = DB::table('sf10remedial')
+                                        ->select('sf10remedial.core','sf10remedial.subjects','sf10remedial.semfinal','sf10remedial.classmark','sf10remedial.recomputedgrade','sf10remedial.action')
+                                        ->where('sf10remedial.headerid',$infosummer->id)
+                                        ->where('sf10remedial.semester','2')
+                                        ->get();
+                                        // return $remedial;
+                                        array_push($secondSum,array(
+                                            'infoid' => $infosummer->id,
+                                            'grades' => $remedial
+                                        ));
+                                }
+                            }
+                        }
+                    // return $schoolinfoidsummer;
+                        
+                        array_push($recordsArray,array(
+                            'parentid' => $all->id,
+                            'gradelevelname' => $levelname[0]->levelname,
+                            'firstsem' => $first,
+                            'secondsem' => $second,
+                            'firstsum' => $firstSum,
+                            'secondsum' => $secondSum
+                        ));
+                }
+            }
+            // return $records;
+            $getFormRecords = DB::table('sf10parent')
+                ->where('studid',$userid)
+                ->where('sf10parent.deleted','0')
+                ->get();
+            $gradelevelArray = array();
+            if($academicprogram == 'elementary'){
+                // return 'asd';
+                // return $recordsArray;
+                $gradelevelsss = DB::table('gradelevel')
+                    ->select('gradelevel.id','gradelevel.levelname')
+                    ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+                    ->where('academicprogram.progname','ELEMENTARY')
+                    ->where('gradelevel.deleted','0')
+                    ->orderBy('gradelevel.sortid','asc')
+                    ->get();
+                    // return $gradelevelsss;
+                foreach($getFormRecords as $gradelevel){
+                    foreach($gradelevelsss as $level){
+                        
+                        if($gradelevel->gradelevelid == $level->id){
+                            
+                        }if($gradelevel->gradelevelid != $level->id){
+                            array_push($gradelevelArray, (object )array('id' => $level->id, 'levelname' => $level->levelname));
+                        }
+                    }
+                }
+                // return $recordsArray;
+                return view("registrar.reportsschoolform10studentspreview")
+                    ->with('studentdata',$studentData[0])
+                    ->with('studentRecords',$recordsArray)
+                    ->with('gradelevels',$gradelevelArray)
+                    ->with('gradelevelid',$gradelevelid)
+                    ->with('sectionid',$sectionid)
+                    ->with('schoolyeardesc',$request->get('schoolyeardesc'))
+                    ->with('selectedsection',$request->get('selectedsection'))
+                    ->with('selectedform',$request->get('selectedform'))
+                    ->with('studentid',$userid)
+                    ->with('schoolyear',$syid)
+                    ->with('academicprogram',$academicprogram)
+                    ->with('info',$info[0]);
+            }
+            elseif($academicprogram == 'juniorhighschool'){
+                $gradelevelsss = DB::table('gradelevel')
+                    ->select('gradelevel.id','gradelevel.levelname')
+                    ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+                    ->where('academicprogram.progname','HIGH SCHOOL')
+                    ->where('gradelevel.deleted','0')
+                    // ->distinct()
+                    ->orderBy('gradelevel.sortid','asc')
+                    ->get();
+                // return $getFormRecords;
+                foreach($getFormRecords as $gradelevel){
+                    foreach($gradelevelsss as $level){
+                        if($gradelevel->gradelevelid != $level->id){
+                            array_push($gradelevelArray, (object )array('id' => $level->id, 'levelname' => $level->levelname));
+                        }
+                    }
+                }
+                $acadprogid = DB::table('academicprogram')
+                    ->where('acadprogcode', 'HS')
+                    ->get();
+                $eligibility = DB::table('sf10eligibility')
+                    ->where('studid', $userid)
+                    ->where('acadprogid', $acadprogid[0]->id)
+                    ->get();
+                // return collect($gradelevelArray)->unique();
+                // return count($recordsArray);
+                return view("registrar.reportsschoolform10juniorpreview")
+                    ->with('studentdata',$studentData[0])
+                    ->with('studentRecords',$recordsArray)
+                    ->with('eligibility',$eligibility)
+                    ->with('gradelevels',collect($gradelevelArray)->unique()->sort())
+                    ->with('gradelevelid',$gradelevelid)
+                    ->with('sectionid',$sectionid)
+                    ->with('schoolyeardesc',$request->get('schoolyeardesc'))
+                    ->with('selectedsection',$request->get('selectedsection'))
+                    ->with('selectedform',$request->get('selectedform'))
+                    ->with('studentid',$userid)
+                    ->with('schoolyear',$syid)
+                    ->with('academicprogram',$academicprogram)
+                    ->with('info',$information[0]);
+            }
+            elseif($academicprogram == 'seniorhighschool'){
+
+                // return $recordsArray[1]['firstsum'];
+                $gradelevelsss = DB::table('gradelevel')
+                    ->select('gradelevel.id','gradelevel.levelname')
+                    ->join('academicprogram','gradelevel.acadprogid','=','academicprogram.id')
+                    ->where('academicprogram.progname','SENIOR HIGH SCHOOL')
+                    ->where('gradelevel.deleted','0')
+                    // ->distinct()
+                    ->orderBy('gradelevel.sortid','asc')
+                    ->get();
+                foreach($getFormRecords as $gradelevel){
+                    foreach($gradelevelsss as $level){
+                        
+                        if($gradelevel->gradelevelid == $level->id){
+                            
+                        }if($gradelevel->gradelevelid != $level->id){
+                            array_push($gradelevelArray, (object )array('id' => $level->id, 'levelname' => $level->levelname));
+                        }
+                    }
+                }
+                $acadprogid = DB::table('academicprogram')
+                    ->where('acadprogcode', 'SHS')
+                    ->get();
+                $eligibility = DB::table('sf10eligibility')
+                    ->where('studid', $userid)
+                    ->where('acadprogid', $acadprogid[0]->id)
+                    ->get();
+                
+                return view("registrar.reportsschoolform10seniorpreview")
+                    ->with('studentdata',$studentData[0])
+                    ->with('studentRecords',$recordsArray)
+                    ->with('eligibility',$eligibility)
+                    ->with('gradelevels',$gradelevelArray)
+                    ->with('gradelevelid',$gradelevelid)
+                    ->with('sectionid',$sectionid)
+                    ->with('schoolyeardesc',$request->get('schoolyeardesc'))
+                    ->with('selectedsection',$request->get('selectedsection'))
+                    ->with('selectedform',$request->get('selectedform'))
+                    ->with('studentid',$userid)
+                    ->with('schoolyear',$syid)
+                    ->with('academicprogram',$academicprogram)
+                    ->with('info',$information[0]);
+            }
+        }
+                
+        } 
+        elseif($id == 'print'){
+            // return 'asdas';
+            $student_info = DB::table('studinfo')
+                ->where('id',$userid)
+                ->get();
+            // return $student_info;
+            
+            if($academicprogram == 'elementary'){
+                // return 'sdf';
+                $student_res_data = DB::table('sf10parent')
+                    ->select('sf10parent.id','sf10parent.gradelevelid','sf10schoolinfo.schoolyear','sf10schoolinfo.schoolname','sf10schoolinfo.schoolid','sf10schoolinfo.numUnits','sf10schoolinfo.numYears','gradelevel.levelname','sf10parent.operation','sf10schoolinfo.section','sf10schoolinfo.teacher','sf10schoolinfo.district','sf10schoolinfo.division','sf10schoolinfo.region','sf10schoolinfo.id as schooltableid')
+                    // ->join('sf10schooltable','sf10parenttable.schooltableid','=','sf10schooltable.id')
+                    // ->join('sf10childgrades','sf10parenttable.id','=','sf10childgrades.headerid')
+                    ->join('sf10schoolinfo','sf10parent.id','=','sf10schoolinfo.parentid')
+                    ->join('gradelevel','sf10parent.gradelevelid','=','gradelevel.id')
+                    ->where('sf10parent.studid',$userid)
+                    ->where('sf10parent.deleted','0')
+                    // ->where('sf10parenttable.semester','0')
+                    ->orderByDesc('sf10schoolinfo.schoolyear')
+                    ->get();
+                    // return $student_res_data_first;
+            }
+            elseif($academicprogram == 'juniorhighschool'){
+                // return 'sdf';
+                $student_res_data = DB::table('sf10parent')
+                    ->select('sf10parent.id','sf10parent.studid','sf10parent.gradelevelid','sf10schoolinfo.schoolyear','sf10schoolinfo.schoolname','sf10schoolinfo.schoolid','sf10schoolinfo.numUnits','sf10schoolinfo.numYears','gradelevel.levelname','sf10parent.operation','sf10schoolinfo.section','sf10schoolinfo.teacher','sf10schoolinfo.district','sf10schoolinfo.division','sf10schoolinfo.region','sf10schoolinfo.id as schooltableid')
+                    // ->join('sf10schooltable','sf10parenttable.schooltableid','=','sf10schooltable.id')
+                    // ->join('sf10childgrades','sf10parenttable.id','=','sf10childgrades.headerid')
+                    ->join('sf10schoolinfo','sf10parent.id','=','sf10schoolinfo.parentid')
+                    ->join('gradelevel','sf10parent.gradelevelid','=','gradelevel.id')
+                    ->where('sf10parent.studid',$userid)
+                    ->where('sf10parent.deleted','0')
+                    // ->where('sf10parenttable.semester','0')
+                    ->orderByDesc('sf10schoolinfo.schoolyear')
+                    ->get();
+            }
+            elseif($academicprogram == 'seniorhighschool'){
+                // return $userid;
+                $student_res_data = DB::table('sf10parent')
+                ->select('sf10parent.id','sf10parent.studid','sf10parent.gradelevelid','gradelevel.levelname','sf10parent.operation')
+                // ->join('sf10schooltable','sf10parenttable.schooltableid','=','sf10schooltable.id')
+                // ->join('sf10childgrades','sf10parenttable.id','=','sf10childgrades.headerid')
+                // ->join('sf10schoolinfo','sf10parent.id','=','sf10schoolinfo.parentid')
+                ->join('gradelevel','sf10parent.gradelevelid','=','gradelevel.id')
+                ->where('sf10parent.studid',$userid)
+                ->where('sf10parent.deleted','0')
+                // ->where('sf10parenttable.semester','0')
+                ->orderByDesc('gradelevel.sortid')
+                ->get();
+            }
+                
+                // return $student_res_data;
+            $res_data = array();
+            // array_push($res_data, $student_res_data);
+            // $firstSemArray = array();
+            // $secondSemArray = array();
+
+            foreach($student_res_data as $studresdata){
+
+                $batch = array();
+                    // return $resGrades;
+                if($academicprogram == 'elementary'){
+                    $resGrades = DB::table('sf10childgrades')
+                        ->where('headerid',$studresdata->schooltableid)
+                        ->get();
+                    // return $resGrades;
+                    $resAttendance = DB::table('sf10childattendance')
+                        ->where('headerid',$studresdata->schooltableid)
+                        ->get();
+                    array_push($res_data, (object) array('levelname' => $studresdata->levelname,'schoolname' => $studresdata->schoolname, 'sy' => $studresdata->schoolyear,'numUnits' => $studresdata->numUnits, 'numYears' => $studresdata->numYears,'grades' => $resGrades,'attendance' => $resAttendance));
+                    // return $resGrades;
+                }
+                elseif($academicprogram == 'juniorhighschool'){
+                    // return $student_res_data;
+                    $resGrades = DB::table('sf10childgrades')
+                        ->where('headerid',$studresdata->schooltableid)
+                        ->get();
+                    array_push($res_data, (object) array('levelname' => $studresdata->levelname,'schoolname' => $studresdata->schoolname, 'district' => $studresdata->district, 'division' => $studresdata->division, 'region' => $studresdata->region, 'sy' => $studresdata->schoolyear,'numUnits' => $studresdata->numUnits, 'numYears' => $studresdata->numYears,'grades' => $resGrades,'teacher' => $studresdata->teacher));
+                    // $eligibilityArray = array();
+                    $eligibility = DB::table('sf10eligibility')
+                        ->join('academicprogram','sf10eligibility.acadprogid','=','academicprogram.id')
+                        ->where('sf10eligibility.studid',$studresdata->studid)
+                        ->where('academicprogram.acadprogcode','HS')
+                        ->where('sf10eligibility.completer','elem')
+                        ->get();
+                        if(count($eligibility)!=0){
+                            foreach($eligibility[0] as $key => $value){
+                                if($key == 'exam_date'){
+                                    $eligibility[0]->exam_date = Carbon::create($value)->isoFormat('MM/DD/YYYY');
+                                }
+                            }
+                        }
+                        // return $eligibility;
+                }
+                elseif($academicprogram == 'seniorhighschool'){
+                    $schoolinfo = DB::table('sf10schoolinfo')
+                        ->select('sf10schoolinfo.id','sf10schoolinfo.schoolid','sf10schoolinfo.schoolname','sf10schoolinfo.schooladdress','sf10schoolinfo.district','sf10schoolinfo.division','sf10schoolinfo.region','sf10schoolinfo.schoolyear','sf10schoolinfo.teacher','sf10schoolinfo.section','sf10schoolinfo.track','sf10schoolinfo.strand','sf10schoolinfo.semester','gradelevel.levelname','gradelevel.sortid')
+                        ->join('sf10parent','sf10schoolinfo.parentid','=','sf10parent.id')
+                        ->join('gradelevel','sf10parent.gradelevelid','=','gradelevel.id')
+                        ->where('sf10schoolinfo.parentid',$studresdata->id)
+                        ->orderByDesc('gradelevel.sortid')
+                        ->get();
+                    // $schoolinfo->push($studresdata->levelname);
+                    // return $schoolinfo;
+                    $firstsem = array();
+                    $firstsum = array();
+                    $secondsem = array();
+                    $secondsum = array();
+                    foreach($schoolinfo as $grades){
+                        if($grades->semester == 1){
+                            $first = DB::table('sf10childgrades')
+                                ->where('headerid',$grades->id)
+                                ->where('semester','1')
+                                ->get();
+                            
+                            array_push($firstsem, array(
+                                'schoolinfo' => $grades,
+                                'grades' => $first
+                            ));
+                        }
+                        if($grades->semester == 3){
+                            // return 'asd';
+                            // return 
+                            $summer1 = DB::table('sf10remedial')
+                                ->where('headerid',$grades->id)
+                                ->where('semester','1')
+                                ->get();
+                            // return $summer1;
+                            // array_push($firstsum, $summer1);
+                            array_push($firstsum, array(
+                                'schoolinfo' => $grades,
+                                'grades' => $summer1
+                            ));
+                            // return $firstsum;
+                        }
+                        if($grades->semester == 2){
+                            $second = DB::table('sf10childgrades')
+                                ->where('headerid',$grades->id)
+                                ->where('semester','2')
+                                ->get();
+                            array_push($secondsem, array(
+                                'schoolinfo' => $grades,
+                                'grades' => $second
+                            ));
+                            // array_push($secondsem, $second);
+                        }
+                        if($grades->semester == 4){
+                            $summer2 = DB::table('sf10remedial')
+                            ->where('headerid',$grades->id)
+                                ->where('semester','2')
+                                ->get();
+                            array_push($secondsum, array(
+                                'schoolinfo' => $grades,
+                                'grades' => $summer2
+                            ));
+                            // array_push($secondsum, $summer2);
+                        }
+                    }
+                    // return $firstsum;
+                    
+                array_push($res_data, array(
+                    'schoolinfo' => $studresdata,
+                    'first' => $firstsem,
+                    'firstsum' => $firstsum,
+                    'second' => $secondsem,
+                    'secondsum' => $secondsum
+                ));
+                }
+            }
+            // return $res_data;
+            // return $firstSemArray[0]->second;
+            if($academicprogram == 'elementary'){
+                // return $res_data;
+                $pdf = PDF::loadview('registrar/pdf/pdf_schoolform10_elem',compact('schoolinfo','schoolyear','student_info','student_res_data','res_data'))->setPaper('letter');
+
+                return $pdf->stream('School Form 10 - '.strtoupper($student_info[0]->lastname).'.pdf');
+            }
+            elseif($academicprogram == 'juniorhighschool'){
+                // return $res_data;
+                foreach($student_info as $student){
+                    foreach($student as $key => $value){
+                        // return $key;
+                        if($key=='dob'){
+                            // return $value;
+                            $student->dob = Carbon::create($value)->isoFormat('MM/DD/YYYY');
+                            // return $student->dob;
+                        }
+                    }
+                }
+                $getTeacher = DB::table('sectiondetail')
+                    ->select('teacher.lastname', 'teacher.firstname','teacher.middlename','teacher.suffix')
+                    ->join('teacher', 'sectiondetail.teacherid','=','teacher.id')
+                    ->where('sectiondetail.sectionid', $sectionid)
+                    ->where('sectiondetail.syid', $syid)
+                    ->where('sectiondetail.deleted', '0')
+                    ->get();
+                    // return $getTeacher;
+                // return $student_info;
+                $pdf = PDF::loadview('registrar/pdf/pdf_schoolform10_junior',compact('schoolinfo','schoolyear','student_info','student_res_data','res_data','getTeacher','currentDate','eligibility'))->setPaper('letter');
+
+                return $pdf->stream('School Form 10 - '.strtoupper($student_info[0]->lastname).'.pdf');
+            }
+            elseif($academicprogram == 'seniorhighschool'){
+                foreach($student_info as $student){
+                    foreach($student as $key => $value){
+                        // return $key;
+                        if($key=='dob'){
+                            // return $value;
+                            $student->dob = Carbon::create($value)->isoFormat('MM/DD/YYYY');
+                            // return $student->dob;
+                        }
+                    }
+                }
+                $acadprogid = DB::table('academicprogram')
+                    ->where('acadprogcode', 'SHS')
+                    ->get();
+                $eligibility = DB::table('sf10eligibility')
+                    ->where('studid', $userid)
+                    ->where('acadprogid', $acadprogid[0]->id)
+                    ->get();
+                // if(count())
+                // return $eligibility;
+                // return $res_data[0][1]['first'];
+                $pdf = PDF::loadview('registrar/pdf/pdf_schoolform10_senior',compact('schoolinfo','schoolyear','student_info','student_res_data','res_data','eligibility','currentDate','eligibility'))->setPaper('letter');
+
+                return $pdf->stream('School Form 10 - '.strtoupper($student_info[0]->lastname).'.pdf');
+            }
+        }
+    }
+}

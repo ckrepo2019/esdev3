@@ -1,0 +1,1357 @@
+<?php
+
+namespace App\Http\Controllers\HRControllers;
+
+use App\Http\Controllers\Controller;
+use \NumberFormatter\NumberFormatter;
+use Illuminate\Http\Request;
+use DB;
+use Crypt;
+use \Carbon\Carbon;
+use \Carbon\CarbonPeriod;
+use App\MoneyCurrency;
+use PDF;
+use Conversion;
+class HRController extends Controller
+{
+    public function invoices()
+    {
+
+        return view('hr.invoices');
+
+    }
+    public function taxes($action, Request $request)
+    {
+
+        if($action == 'dashboard'){
+
+            
+            return view('hr.taxes');
+
+        }
+
+    }
+    public function employeesalary($id, Request $request)
+    {
+
+        date_default_timezone_set('Asia/Manila');
+
+        // ====================================================================================
+        // ================    DASHBOARD         ==============================================
+        // ====================================================================================
+
+        if($id == 'dashboard'){
+            $employeeslist = Db::table('teacher')
+                ->select(
+                'teacher.firstname',
+                'teacher.middlename',
+                'teacher.lastname',
+                'teacher.suffix',
+                'teacher.id',
+                'teacher.usertypeid',
+                'usertype.utype',
+                'teacher.picurl'
+                )
+                ->join('usertype','teacher.usertypeid','=','usertype.id')
+                ->where('teacher.deleted','0')
+                ->where('teacher.isactive','1')
+                ->where('usertype.utype','!=','PARENT')
+                ->where('usertype.utype','!=','STUDENT')
+                ->get();
+
+            foreach($employeeslist as $employee){
+                foreach($employee as $key => $value){
+                    if($key == 'id'){
+                        $getallsalaryinfo = Db::table('employee_basicsalaryinfo')
+                            ->join('employee_salary','employee_basicsalaryinfo.employeesalaryid','=','employee_salary.id')
+                            ->where('employee_basicsalaryinfo.employeeid',$value)
+                            ->get();
+                        $totalsalary = 0;
+                        if(count($getallsalaryinfo)>0){
+                            foreach($getallsalaryinfo as $salary){
+                                $totalsalary+=$salary->amount;
+                            }
+                        }
+                        $employee->totalsalary = number_format($totalsalary, 2, '.', ',');
+                    }
+                }
+            }
+
+            
+            return view('hr.employeesalary')
+                ->with('employees',$employeeslist);
+
+        }
+
+        // ====================================================================================
+        // ================    UPDATE EMPLOYEE DEDUCTIONS     =================================
+        // ====================================================================================
+
+        elseif($id == 'deductions'){
+
+            $date_submitted = date('Y-m-d');
+            // return $request->get('status');
+            if($request->get('status') == '1'){
+
+                $checkIfExists = Db::table('payrolldeductiondetail')
+                    ->where('employeeid',$request->get('employee_id'))
+                    ->where('deductionid',$request->get('deductionid'))
+                    ->where('payrollid',$getpayroll[0]->id)
+                    // ->where('payrolldeductiondetail',$getpayroll[0]->id)
+                    ->get();
+                // return $checkIfExists;
+                if(count($checkIfExists)==0){
+
+                    DB::insert('insert into payrolldeductiondetail (deductionid, employeeid,payrollid,date_filed, deleted) values(?,?,?,?,?)',[$request->get('deductionid'),$request->get('employee_id'),$getpayroll[0]->id,$date_submitted,'0']);
+
+                    return back();
+
+                }else{
+                    // return $request->all();
+                    DB::update('update payrolldeductiondetail set deleted = ? where deductionid = ? and employeeid = ?',[0,$request->get('deductionid'),$request->get('employee_id')]);
+                    // if($hwy){
+                    //     return 'asd';
+                    // }else{
+                    //     return 'adasdas';
+                    // }
+                    return back();
+
+                }
+
+            }
+            elseif($request->get('status') == '0'){
+
+                    DB::update('update payrolldeductiondetail set deleted = ? where deductionid = ? and employeeid = ?',['1',$request->get('deductionid'),$request->get('employee_id')]);
+
+                    return back();
+
+            }
+        }
+    }
+    public function employeesalarydetail(Request $request)
+    {
+        // return $request->all();
+        date_default_timezone_set('Asia/Manila');
+        // return date('Y-m-t');
+        
+        $employee = Db::table('teacher')
+            ->select(
+            'teacher.firstname',
+            'teacher.middlename',
+            'teacher.lastname',
+            'teacher.suffix',
+            'teacher.id',
+            'teacher.usertypeid',
+            'usertype.utype',
+            'teacher.picurl'
+            )
+            ->join('usertype','teacher.usertypeid','=','usertype.id')
+            ->where('teacher.deleted','0')
+            ->where('teacher.id',$request->get('employeeid'))
+            ->where('teacher.isactive','1')
+            ->where('usertype.utype','!=','PARENT')
+            ->where('usertype.utype','!=','STUDENT')
+            ->get();
+        $basicsalary = 0;
+        $totalsalary = 0;
+        $allowance = array();
+        foreach($employee as $emp){
+            foreach($emp as $key => $value){
+                if($key == 'id'){
+                    $getallsalaryinfo = Db::table('employee_basicsalaryinfo')
+                        ->select(
+                            'employee_basicsalaryinfo.id',
+                            'employee_basicsalaryinfo.amount',
+                            'employee_basicsalaryinfo.paymenttype',
+                            'employee_basicsalaryinfo.salarybasistype as salarybasistypeid',
+                            'employee_basistype.type'
+                        )
+                        ->join('employee_basistype','employee_basicsalaryinfo.salarybasistype','=','employee_basistype.id')
+                        ->where('employee_basicsalaryinfo.employeeid',$value)
+                        ->where('employee_basistype.deleted','0')
+                        ->get();
+                    $totalsalary = 0;
+                    if(count($getallsalaryinfo)>0){
+                        foreach($getallsalaryinfo as $salary){
+                            if($salary->type == '15 days'){
+                                if($request->get('releasetype') == 'fifteendays'){
+                                    $basicsalary+=$salary->amount;
+                                }
+                                elseif($request->get('releasetype') == 'monthly'){
+                                    $basicsalary+=($salary->amount * 2);
+                                }
+                            }
+                            elseif($salary->type == 'Monthly'){
+                                if($request->get('releasetype') == 'fifteendays'){
+                                    $basicsalary+=($salary->amount)/2;
+                                }
+                                elseif($request->get('releasetype') == 'monthly'){
+                                    $basicsalary+=$salary->amount;
+                                }
+                            }
+                            elseif($salary->type == 'Daily'){
+                                if($request->get('releasetype') == 'fifteendays'){
+                                    $totalsalary+=($salary->amount * 15);
+                                }
+                                elseif($request->get('releasetype') == 'monthly'){
+                                    $basicsalary+=($salary->amount * 26);
+                                }
+                            }
+                            elseif($salary->type == 'Weekly'){
+                                if($request->get('releasetype') == 'fifteendays'){
+                                    $basicsalary+=($salary->amount * 2);
+                                }
+                                elseif($request->get('releasetype') == 'monthly'){
+                                    $basicsalary+=($salary->amount * 4);
+                                }
+                            }
+                        }
+                    }
+                    $emp->totalsalary = number_format($basicsalary, 2, '.', ',');
+                    // $totalsalary = number_format($totalsalary, 2, '.', ',');
+                    $getallowance = Db::table('employee_allowanceother')
+                        ->select(
+                            'employee_allowanceother.id',
+                            'employee_allowanceother.description',
+                            'employee_allowanceother.amount'
+                        )
+                        ->where('employee_allowanceother.employeeid',$value)
+                        ->where('employee_allowanceother.deleted','0')
+                        ->get();
+                    if(count($getallowance) > 0){
+                        foreach($getallowance as $allowanceget){
+                            $checkifreceived = Db::table('employee_allowanceinfodetail')
+                                ->where('headerid',$allowanceget->id)
+                                ->where('status','0')
+                                ->get();
+                            if(count($checkifreceived) == 0){
+                                if($request->get('releasetype') == 'fifteendays'){
+                                    array_push($allowance, (object)array(
+                                        'id' => $allowanceget->id,
+                                        'description' => $allowanceget->description,
+                                        'amount' => number_format(($allowanceget->amount/2), 2, '.', ',')
+                                    ));
+                                    $totalsalary+=($allowanceget->amount/2);
+                                }
+                                elseif($request->get('releasetype') == 'monthly'){
+                                    array_push($allowance, (object)array(
+                                        'id' => $allowanceget->id,
+                                        'description' => $allowanceget->description,
+                                        'amount' => number_format($allowanceget->amount, 2, '.', ',')
+                                    ));
+                                    $totalsalary+=$allowanceget->amount;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // return $basicsalary;
+        $workdays = array();
+
+        $type = CAL_GREGORIAN;
+
+        $day_count = cal_days_in_month($type, date('m'), date('Y')); // Get the amount of days
+
+        for ($i = 1; $i <= date('d'); $i++) {
+
+            $date = date('Y').'/'.date('m').'/'.date('d'); //format date
+
+            $get_name = Carbon::create($date)->isoFormat('ddd'); //get week day
+
+            $day_name = substr($get_name, 0, 3); // Trim day name to 3 chars
+
+            //if not a weekend add day to array
+            if($day_name != 'Sun'){
+
+                $workdays[] = date('Y').'-'.date('m').'-'.$i;
+                
+            }
+
+        }
+        // return $basicsalary;
+        $salarydaily = number_format((int)$basicsalary/count($workdays), 2, '.', ',');
+        // return $salarydaily;
+        $salaryhourly = number_format((int)$salarydaily/8, 2, '.', ',');
+        // foreach($workdays as $workday){
+
+        // }
+        $getAttendance = Db::table('teacherattendance') 
+            ->where('teacher_id',$request->get('employeeid'))
+            ->whereMonth('tdate',date('m'))
+            ->whereYear('tdate',date('Y'))
+            ->where('deleted','0')
+            ->get();
+        // return $getAttendance;
+        if(count($getAttendance) > 0){
+
+            $dailynumofhours = 0;
+
+            foreach($getAttendance as $attendance){
+                        
+                if($attendance->in_am == null){
+    
+                    $am_in = explode(':', date('h:m:s')); 
+    
+                }
+                else{
+    
+                    $am_in = explode(':', $attendance->in_am); 
+    
+                }
+                if($attendance->out_am == null){
+    
+                    $am_out = explode(':', date('h:m:s')); 
+    
+                }
+                else{
+    
+                    $am_out = explode(':', $attendance->out_am); 
+    
+                }
+    
+                $totalam = (int)$am_out[0] - (int)$am_in[0] - (int)($am_out[1] < (int)$am_in[1]);
+                
+                if($attendance->in_pm == null){
+    
+                    $pm_in = explode(':', date('h:m:s')); 
+    
+                }
+                else{
+    
+                    $pm_in = explode(':', $attendance->in_pm); 
+    
+                }
+                if($attendance->out_pm == null){
+    
+                    $pm_out = explode(':', date('h:m:s')); 
+    
+                }
+                else{
+    
+                    $pm_out = explode(':', $attendance->out_pm); 
+    
+                }
+    
+                $totalpm = (int)$pm_out[0] - (int)$pm_in[0] - (int)($pm_out[1] < (int)$pm_in[1]);
+                
+                $dailynumofhours += $totalam + $totalpm;
+                
+            }
+            // return $dailynumofhours;
+            $totalsalary+=$dailynumofhours*$salaryhourly;
+        }
+        // return $totalsalary;
+        // foreach()
+        $totaldeduction = 0;
+        $deductionstandard = Db::table('employee_deductionstandard')
+            ->select(
+                'employee_deductionstandard.id',
+                'deduction_type.description',
+                'employee_deductionstandard.deduction_typeid',
+                'employee_deductionstandard.ersamount',
+                'employee_deductionstandard.eesamount',
+                'employee_deductionstandard.status'
+                )
+            ->join('deduction_type','employee_deductionstandard.deduction_typeid','=','deduction_type.id')
+            ->where('employee_deductionstandard.status','0')
+            ->where('employee_deductionstandard.employeeid',$request->get('employeeid'))
+            ->get();
+        foreach($deductionstandard as $standard){
+            foreach($standard as $standardkey => $standardvalue){
+                if($standardkey == 'eesamount'){
+                    
+                    if($request->get('releasetype') == 'fifteendays'){
+                        $totaldeduction+= ($standardvalue/2);
+                        $standard->eesamount = number_format(($standardvalue/2), 2, '.', ',');
+                    }
+                    elseif($request->get('releasetype') == 'monthly'){
+                        $totaldeduction+= $standardvalue;
+                        $standard->eesamount = number_format($standardvalue, 2, '.', ',');
+                    }
+                }
+            }
+        }
+        $otherdeductions = Db::table('employee_deductionother')
+            ->select(
+                'employee_deductionother.id',
+                'employee_deductionother.employeeid',
+                'employee_deductionother.description',
+                'employee_deductionother.amount',
+                'employee_deductionother.term',
+                'employee_deductionother.status'
+                )
+            ->where('employee_deductionother.status','0')
+            ->where('employee_deductionother.employeeid',$request->get('employeeid'))
+            ->get();
+            
+        $deductionothers = array();
+        foreach($otherdeductions as $otherdeduction){
+            $otherdeductiondetails = Db::table('employee_deductionotherdetail')
+                ->select(
+                    'employee_deductionotherdetail.id as deductionotherdetailid',
+                    'employee_deductionotherdetail.amountpaid',
+                    'employee_deductionotherdetail.datepaid'
+                    )
+                ->where('employee_deductionotherdetail.headerid',$otherdeduction->id)
+                ->get();
+                
+                $monthlydeduction = $otherdeduction->amount/$otherdeduction->term;
+                if($request->get('releasetype') == 'fifteendays'){
+                    if(count($otherdeductiondetails) > 0){
+                        $unpaid = ($otherdeduction->amount)/2;
+                        foreach($otherdeductiondetails as $otherdeductiondetail){
+                            $unpaid-=$otherdeductiondetail->amountpaid;
+    
+                        }
+                        $totaldeduction+= ($monthlydeduction)/2;
+                        // return $monthlydeduction;
+                        $otherdeduction->amount = ($otherdeduction->amount)/2;
+                        array_push($deductionothers,(object)array(
+                            'otherdeduction'        => $otherdeduction,
+                            'otherdeductiondetail'  => $otherdeductiondetails,
+                            'monthlydeduction'  =>  number_format(($monthlydeduction)/2, 2, '.', ','),
+                            'unpaid'  => $unpaid
+                        ));
+                    }
+                }
+                elseif($request->get('releasetype') == 'monthly'){
+                    if(count($otherdeductiondetails) > 0){
+                        $unpaid = $otherdeduction->amount;
+                        foreach($otherdeductiondetails as $otherdeductiondetail){
+                            $unpaid-=$otherdeductiondetail->amountpaid;
+    
+                        }
+                        $totaldeduction+= $monthlydeduction;
+                        // return $monthlydeduction;
+                        array_push($deductionothers,(object)array(
+                            'otherdeduction'        => $otherdeduction,
+                            'otherdeductiondetail'  => $otherdeductiondetails,
+                            'monthlydeduction'  =>  number_format($monthlydeduction, 2, '.', ','),
+                            'unpaid'  => $unpaid
+                        ));
+                    }
+                }
+        }
+        // return $deductionothers;
+        // $cashadvances = Db::table('employee_cashadvanceinfo')
+        //     ->where('employee_cashadvanceinfo.deleted','0')
+        //     ->where('employee_cashadvanceinfo.paid','0')
+        //     ->where('employee_cashadvanceinfo.employeeid',$request->get('employeeid'))
+        //     ->get();
+        
+        // foreach($cashadvances as $cashadvance){
+        //     foreach($cashadvance as $cashadvancekey => $cashadvancevalue){
+        //         if($cashadvancekey == 'amount'){
+        //             $totaldeduction+= $cashadvancevalue;
+        //             $cashadvance->amount = number_format($cashadvancevalue, 2, '.', ',');
+        //         }
+        //         if($cashadvancekey == 'dateissued'){
+        //             $cashadvance->dateissued = date('F d, Y',strtotime($cashadvancevalue));
+        //         }
+        //     }
+        // }
+        // return $totalsalary;
+        $employeesalaryinfo = array();
+        array_push($employeesalaryinfo, (object)array(
+            'employee_info' => $employee,
+            'deductionstandards' => $deductionstandard,
+            'deductionothers' => $deductionothers,
+            'allowances' => $allowance,
+            // 'deductions' => $deductionslist,
+            // 'cashadvances' => $cashadvances,
+            'totaldeduction' => number_format($totaldeduction, 2, '.', ','),
+            'totalsalary' => number_format($totalsalary, 2, '.', ','),
+            'netpay' => number_format(($totalsalary - $totaldeduction), 2, '.', ','),
+            'releasetype' => $request->get('releasetype')
+        ));
+        return $employeesalaryinfo;
+    
+    }
+    public function employeesalaryupdate(Request $request)
+    {
+        
+        date_default_timezone_set('Asia/Manila');
+
+        $getpayroll = Db::table('payroll')
+            ->where('status','1')
+            ->first();
+        Db::table('payrollearnings')
+            ->insert([
+                'payrollid' => $getpayroll->id,
+                'employeeid' => $request->get('user_id'),
+                'description' => $request->get('description'),
+                'amount' => $request->get('amount'),
+                'date' => $request->get('date'),
+                'type' => $request->get('type')
+            ]);
+            return back();
+    }
+    public function employeedeleteearning(Request $request)
+    {
+        
+        date_default_timezone_set('Asia/Manila');
+        
+        Db::table('payrollearnings')
+            ->where('id',$request->get('earningid'))
+            ->update([
+                'deleted' => 1
+            ]);
+            return back();
+    }
+    public function employeeeditearning(Request $request)
+    {
+        
+        date_default_timezone_set('Asia/Manila');
+        
+        Db::table('payrollearnings')
+            ->where('id',$request->get('earningid'))
+            ->update([
+                'description' => $request->get('description'),
+                'amount' => $request->get('amount'),
+                'date' => $request->get('date'),
+                'type' => $request->get('type')
+            ]);
+        return back();
+    }
+    public function employeeotherdeductiondelete(Request $request)
+    {
+        
+        Db::table('payrollearnings')
+        ->where('id',$request->get('earningid'))
+        ->update([
+            'deleted' => 1
+        ]);
+        return back();
+    }
+    public function employeeotherdeductionedit(Request $request)
+    {
+        // return $request->all();
+        date_default_timezone_set('Asia/Manila');
+        
+        Db::table('payrollearnings')
+            ->where('id',$request->get('earningid'))
+            ->update([
+                'description' => $request->get('description'),
+                'amount' => $request->get('amount'),
+                'date' => $request->get('date'),
+                'type' => $request->get('type')
+            ]);
+        return back();
+    }
+    public function payrollitems($id, Request $request)
+    {
+
+        date_default_timezone_set('Asia/Manila');
+
+        $my_id = DB::table('teacher')
+            ->select('id')
+            ->where('userid',auth()->user()->id)
+            ->where('isactive','1')
+            ->first();
+
+        if($id == 'dashboard'){
+
+            $job_positions = Db::table('usertype')
+                ->where('utype','!=','PARENT')
+                ->get();
+
+            $job_positions_array = array();
+
+            foreach($job_positions as $job_position){
+
+                $job_description = Db::table('job_description')
+                    ->where('usertype_id',$job_position->id)
+                    ->get();
+
+                if(count($job_description)==0){
+
+                    Db::insert('insert into job_description (usertype_id,hourly_rate,daily_rate,deleted) values(?,?,?,?)',[$job_position->id,'','','0']);
+
+                    array_push($job_positions_array, (object)array(
+                        'id' => $job_position->id,
+                        'description' => $job_position->utype,
+                        'hourly_rate' => '',
+                        'daily_rate' => ''
+                    ));
+
+                }
+                else{
+
+                    array_push($job_positions_array, (object)array(
+                        'id' => $job_position->id,
+                        'description' => $job_position->utype,
+                        'hourly_rate' => $job_description[0]->hourly_rate,
+                        'daily_rate' => $job_description[0]->daily_rate
+                    ));
+
+                }
+
+            }
+
+            $deductions = Db::table('job_deduction')
+                ->where('deleted','0')
+                ->get();
+
+            return view('hr.payrollitems')
+                ->with('positions',$job_positions)
+                ->with('job_positions_array',$job_positions_array)
+                ->with('deductions',$deductions);
+
+        }
+        elseif($id =='addposition'){
+
+            $checkIfExists = Db::table('job_description')
+                ->where('description','like','%'.$request->get('position_name'))
+                ->where('deleted','0')
+                ->get();
+
+            if(count($checkIfExists) == 0){
+
+                DB::insert('insert into job_description (description,hourly_rate,daily_rate,deleted) values(?,?,?,?)',[$request->get('position_name'),$request->get('hourly_rate'),$request->get('daily_rate'),'0']);
+
+                return redirect()->back()->with("messageAdded", 'Position: '.$request->get('position_name').' added successfully!');
+
+            }else{
+
+                return redirect()->back()->with("messageExists", 'Position: '.$request->get('position_name').' already exists!');
+
+            }
+
+        }
+        elseif($id =='editrate'){
+
+            DB::update('update job_description set hourly_rate = ?, daily_rate = ? where usertype_id = ?',[$request->get('hourly_rate'),$request->get('daily_rate'),$request->get('id')]);
+
+            return redirect()->back()->with("messageAdded", 'Position: '.$request->get('position_name').' rates updated successfully!');
+
+        }
+        elseif($id =='adddeduction'){
+
+            $checkIfExists = Db::table('job_deduction')
+                ->where('description','like','%'.$request->get('deduction'))
+                ->where('deleted','0')
+                ->get();
+
+            if(count($checkIfExists) == 0){
+
+                Db::insert('insert into job_deduction (description, amount, deleted) values(?,?,?)',[$request->get('deduction'),$request->get('amount'),'0']);
+
+                return redirect()->back()->with("messageAdded", 'Deduction: '.$request->get('deduction').' added successfully!');
+
+            }
+            else{
+
+                return redirect()->back()->with("messageExists", 'Deduction: '.$request->get('deduction').' already exists!');
+
+            }
+
+        }
+        elseif($id =='editdeduction'){
+            
+            $checkIfExists = Db::table('job_deduction')
+                ->where('description','like','%'.$request->get('deduction'))
+                ->get();
+
+            if(count($checkIfExists) == 0){
+
+                Db::insert('update job_deduction set description = ?, amount = ?, updated_by = ?, updated_on = ? where id = ?',[$request->get('deduction'),$request->get('amount'),$my_id->id, date('Y-m-d H:i:s'),$request->get('deductionid')]);
+
+                return redirect()->back()->with("messageAdded", 'Deduction: '.$request->get('deduction').' updated successfully!');
+
+            }
+            else{
+
+                Db::insert('update job_deduction set amount = ?, updated_by = ?, updated_on = ? where id = ?',[$request->get('amount'),$my_id->id, date('Y-m-d H:i:s'),$request->get('deductionid')]);
+
+                return redirect()->back()->with("messageExists", 'Deduction: '.$request->get('deduction').' already exists!');
+
+            }
+
+        }
+        elseif($id =='deletededuction'){
+            
+                Db::insert('update job_deduction set deleted = ?, updated_by = ?, updated_on = ? where id = ?',['1',$my_id->id, date('Y-m-d H:i:s'),$request->get('deductionid')]);
+
+                return redirect()->back()->with("messageDeleted", 'Deduction: '.$request->get('deduction').' deleted successfully!');
+
+        }
+
+    }
+    public function payroll($id, Request $request)
+    {
+        date_default_timezone_set('Asia/Manila');
+
+        $my_id = DB::table('teacher')
+            ->select('id')
+            ->where('userid',auth()->user()->id)
+            ->where('isactive','1')
+            ->first();
+
+        if($id == 'dashboard'){
+            $getpayroll = DB::table('payroll')
+                ->where('status','1')
+                ->get();
+            // return back()
+            if(count($getpayroll)>0){
+                $lastpayrollid = Db::table('payroll')
+                    ->where('status','1')
+                    ->where('id','!=',$payrollid->id)
+                    ->orderBy('id','desc')
+                    ->take(1)
+                    ->get();
+                    
+                $employeeslist = Db::table('teacher')
+                ->select(
+                'teacher.firstname',
+                'teacher.middlename',
+                'teacher.lastname',
+                'teacher.suffix',
+                'teacher.id',
+                'teacher.usertypeid',
+                'usertype.utype',
+                'teacher.picurl'
+                )
+                ->join('usertype','teacher.usertypeid','=','usertype.id')
+                ->where('teacher.deleted','0')
+                ->where('teacher.isactive','1')
+                ->where('usertype.utype','!=','PARENT')
+                ->get();
+                
+                $employeesarray = array();
+                
+                $deductionslist = Db::table('job_deduction')
+                    ->where('deleted','0')
+                    ->get();
+
+                foreach($employeeslist as $employee){
+                    
+                    
+                    if(count($lastpayrollid)==0){
+                        $getAttendance = DB::table('teacherattendance')
+                            ->where('teacher_id', $employee_id)
+                            ->where('tdate','<=',$getpayroll[0]->id)
+                            ->get();
+                    }else{
+                        $getAttendance = DB::table('teacherattendance')
+                            ->where('teacher_id', $employee_id)
+                            ->whereBetween('tdate',[$getpayroll[0]->payrolldate,$lastpayrollid[0]->payrolldate])
+                            ->get();
+                    }
+                    // return $getAttendance;
+                    $dailynumofhours = 0;
+
+                    foreach($getAttendance as $attendance){
+                        
+                        if($attendance->in_am == null){
+
+                            $am_in = explode(':', date('h:m:s')); 
+
+                        }
+                        else{
+
+                            $am_in = explode(':', $attendance->in_am); 
+
+                        }
+                        if($attendance->out_am == null){
+
+                            $am_out = explode(':', date('h:m:s')); 
+
+                        }
+                        else{
+
+                            $am_out = explode(':', $attendance->out_am); 
+
+                        }
+
+                        $totalam = (int)$am_out[0] - (int)$am_in[0] - (int)($am_out[1] < (int)$am_in[1]);
+                        
+                        if($attendance->in_pm == null){
+
+                            $pm_in = explode(':', date('h:m:s')); 
+
+                        }
+                        else{
+
+                            $pm_in = explode(':', $attendance->in_pm); 
+
+                        }
+                        if($attendance->out_pm == null){
+
+                            $pm_out = explode(':', date('h:m:s')); 
+
+                        }
+                        else{
+
+                            $pm_out = explode(':', $attendance->out_pm); 
+
+                        }
+
+                        $totalpm = (int)$pm_out[0] - (int)$pm_in[0] - (int)($pm_out[1] < (int)$pm_in[1]);
+                        
+                        $dailynumofhours += $totalam + $totalpm;
+                        
+                    }
+                    
+                    $rate = Db::table('job_description')
+                        ->select(
+                        'hourly_rate'
+                        )
+                        ->where('usertype_id',$employee->usertypeid)
+                        ->where('deleted','0')
+                        ->first();
+
+                    $salary = $dailynumofhours*$rate->hourly_rate;
+                    
+                    $deductionarray = array();
+
+                    $dailynumofhoursarray = array();
+
+                    foreach ($deductionslist as $deduction) {
+                        
+                        $deductions = Db::table('job_deductiondetail')
+                            ->select(
+                            'job_deductiondetail.id',
+                            'job_deduction.description',
+                            'job_deduction.amount'
+                            )
+                            ->join('job_deduction','job_deductiondetail.headerid','=','job_deduction.id')
+                            ->where('employee_id',$employee->id)
+                            ->where('job_deductiondetail.deleted','0')
+                            ->where('job_deductiondetail.headerid',$deduction->id)
+                            ->where('date_filed','<=', $getpayroll[0]->payrolldate)
+                            ->get();
+                            
+                        if(count($deductions)==0){
+                            array_push($deductionarray,(object)array(
+                                'employee_id' => $employee->id,
+                                'deductionid' => $deduction->id,
+                                'description' => $deduction->description,
+                                'amount' => $deduction->amount,
+                                'status' => '0'
+                            ));
+                        }
+                        else{
+                            array_push($deductionarray, (object)array(
+                                'employee_id' => $employee->id,
+                                'deductionid' => $deduction->id,
+                                'description' => $deduction->description,
+                                'amount' => $deduction->amount,
+                                'status' => '1'
+                            ));
+                            foreach($deductions as $deduction){
+                                $salary = $salary - $deduction->amount;
+                            }
+
+                        }
+
+                    }
+
+                    $leavesarray = array();
+
+                    $leaves = DB::table('job_leavesdetail')
+                        ->select(
+                        'job_leavesdetail.date_from',
+                        'job_leavesdetail.date_to',
+                        'job_leavesdetail.status',
+                        'hr_leaves.leave_type',
+                        'hr_leaves.withpay',
+                        'job_description.hourly_rate',
+                        'job_description.daily_rate'
+                        )
+                        ->join('hr_leaves','job_leavesdetail.headerid','hr_leaves.id')
+                        ->join('teacher','job_leavesdetail.employee_id','teacher.id')
+                        ->join('job_description','teacher.usertypeid','job_description.usertype_id')
+                        ->where('job_leavesdetail.employee_id',$employee->id)
+                        ->where('job_leavesdetail.date_submitted','>=', $getpayroll[0]->payrolldate)
+                        ->where('job_leavesdetail.status','approved')
+                        ->where('job_description.deleted','0')
+                        ->get();
+                        
+                    if(count($leaves) > 0){
+                        
+                        foreach($leaves as $leave){
+
+                            $datediff = strtotime($leave->date_to) - strtotime($leave->date_from);
+
+                            $numdays = round((int)$datediff / (60 * 60 * 24));
+
+                            $leave->numDays = $numdays;
+
+                            array_push($leavesarray, $leave);
+
+                            if($leave->withpay == '1'){
+
+                                $salary = $salary + ($leave->numDays*$leave->daily_rate);
+
+                            }
+                            elseif($leave->withpay == '0'){
+
+                                $salary = $salary - ($leave->numDays*$leave->daily_rate);
+
+                            }
+
+                        }
+
+                    }
+
+                    array_push($employeesarray, (object)array(
+                        'employee_info' => $employee,
+                        'salary' => $salary,
+                        // 'leaves' => $leavesarray,
+                        'deductions' => $deductionarray));
+                        
+                }
+                
+            }
+            
+            return view('hr.payroll')
+                ->with('employees',$employeesarray)
+                ->with('payroll',$getpayroll);
+        }
+        elseif($id == 'setpaydate'){
+            $checkIfExists = DB::table('payroll')
+                ->where('payrolldate',$request->get('date'))
+                ->get();
+            if(count($checkIfExists)==0){
+                Db::table('payroll')
+                    ->insert([
+                        'payrolldate' => $request->get('date'),
+                        'updatedby' => $my_id->id,
+                        'updatedon' => date('Y-m-d H:i:s')
+                    ]);
+                return back();
+            }
+            else{
+                return back();
+            }
+            
+        }
+    }
+    public function payslip($id, Request $request)
+    {
+        date_default_timezone_set('Asia/Manila');
+            
+        $payrollid = Db::table('payroll')
+            ->where('status','1')
+            ->first();
+            
+        $lastpayrollid = Db::table('payroll')
+            ->where('status','1')
+            ->where('id','!=',$payrollid->id)
+            ->orderBy('id','desc')
+            ->take(1)
+            ->get();
+        $my_id = DB::table('teacher')
+            ->select('id')
+            ->where('userid',auth()->user()->id)
+            ->where('isactive','1')
+            ->first();
+        if($id == 'generate'){
+            
+            $netpay = $request->get('netpay');
+
+            $payslip_number = rand(1, 100000);
+            
+            $employee_id = $request->get('employeeid');
+            
+            $checkifexists = Db::table('payrolldetail')
+                ->where('employeeid', $employee_id)
+                ->where('headerid',$payrollid->id)
+                ->get();
+                
+            if(count($checkifexists)==0){
+
+                DB::insert('insert into payrolldetail (headerid,employeeid,netpay,payslipnumber,releasedby,releaseddatetime,status) value(?,?,?,?,?,?,?)',[ $payrollid->id,$employee_id,$netpay,$payslip_number,$my_id->id,date('Y-m-d H:i:s'),1]);
+                
+            }
+
+        }
+        else{
+
+            $employee_id = Crypt::decrypt($id);
+
+        }
+        
+        $employee_info = Db::table('teacher')
+            ->select(
+            'teacher.firstname',
+            'teacher.middlename',
+            'teacher.lastname',
+            'teacher.suffix',
+            'teacher.id',
+            'teacher.usertypeid',
+            'usertype.utype',
+            'teacher.picurl',
+            'teacher.licno'
+            )
+            ->join('usertype','teacher.usertypeid','=','usertype.id')
+            ->where('teacher.deleted','0')
+            ->where('teacher.isactive','1')
+            ->where('usertype.utype','!=','PARENT')
+            ->where('teacher.id',$employee_id)
+            ->first();
+            
+        //salarycomputation -------------------------------------------------
+
+        $deductionslist = Db::table('job_deduction')
+            ->where('deleted','0')
+            ->get();
+
+        if(count($lastpayrollid)==0){
+            $getAttendance = DB::table('teacherattendance')
+                ->where('teacher_id', $employee_id)
+                ->where('tdate','<=',$payrollid->payrolldate)
+                ->get();
+
+        }else{
+            $getAttendance = DB::table('teacherattendance')
+                ->where('teacher_id', $employee_id)
+                ->whereBetween('tdate',[$payrollid->payrolldate,$lastpayrollid[0]->payrolldate])
+                ->get();
+        }
+        
+        $dailynumofhours = 0;
+
+        foreach($getAttendance as $attendance){
+                    
+            if($attendance->in_am == null){
+
+                $am_in = explode(':', date('h:m:s')); 
+
+            }
+            else{
+
+                $am_in = explode(':', $attendance->in_am); 
+
+            }
+            if($attendance->out_am == null){
+
+                $am_out = explode(':', date('h:m:s')); 
+
+            }
+            else{
+
+                $am_out = explode(':', $attendance->out_am); 
+
+            }
+
+            $totalam = (int)$am_out[0] - (int)$am_in[0] - (int)($am_out[1] < (int)$am_in[1]);
+            
+            if($attendance->in_pm == null){
+
+                $pm_in = explode(':', date('h:m:s')); 
+
+            }
+            else{
+
+                $pm_in = explode(':', $attendance->in_pm); 
+
+            }
+            if($attendance->out_pm == null){
+
+                $pm_out = explode(':', date('h:m:s')); 
+
+            }
+            else{
+
+                $pm_out = explode(':', $attendance->out_pm); 
+
+            }
+
+            $totalpm = (int)$pm_out[0] - (int)$pm_in[0] - (int)($pm_out[1] < (int)$pm_in[1]);
+            
+            $dailynumofhours += $totalam + $totalpm;
+            
+        }
+        
+        $rate = Db::table('job_description')
+            ->select(
+            'hourly_rate'
+            )
+            ->where('usertype_id',$employee_info->usertypeid)
+            ->where('deleted','0')
+            ->first();
+            
+        $salary = $dailynumofhours*$rate->hourly_rate;
+        
+        $deductionarray = array();
+
+        $dailynumofhoursarray = array();
+
+        $totaldeduction = 0;
+
+        $basicsalary = $salary;
+
+        $totalearnings = $basicsalary;
+
+        foreach ($deductionslist as $deduction) {
+            if(count($lastpayrollid)==0){
+                $deductions = Db::table('payrolldeductiondetail')
+                    ->select(
+                    'payrolldeductiondetail.id',
+                    'job_deduction.description',
+                    'job_deduction.amount'
+                    )
+                    ->join('job_deduction','payrolldeductiondetail.deductionid','=','job_deduction.id')
+                    ->where('payrolldeductiondetail.employeeid',$employee_id)
+                    ->where('payrolldeductiondetail.deleted','0')
+                    ->where('payrolldeductiondetail.deductionid',$deduction->id)
+                    ->where('payrolldeductiondetail.payrollid',$payrollid->id)
+                    ->where('payrolldeductiondetail.date_filed','<=',$payrollid->payrolldate)
+                    ->get();
+            }else{
+                $deductions = Db::table('payrolldeductiondetail')
+                    ->select(
+                    'payrolldeductiondetail.id',
+                    'job_deduction.description',
+                    'job_deduction.amount'
+                    )
+                    ->join('job_deduction','payrolldeductiondetail.deductionid','=','job_deduction.id')
+                    ->where('payrolldeductiondetail.employeeid',$employee_id)
+                    ->where('payrolldeductiondetail.deleted','0')
+                    ->where('payrolldeductiondetail.deductionid',$deduction->id)
+                    ->where('payrolldeductiondetail.payrollid',$payrollid->id)
+                    ->whereBetween('date_filed',[$payrollid->payrolldate,$lastpayrollid[0]->payrolldate])
+                    ->get();
+            }
+                
+            if(count($deductions)==0){
+
+                // array_push($deductionarray,(object)array(
+                //     'employee_id' => $employee_id,
+                //     'deductionid' => $deduction->id,
+                //     'description' => $deduction->description,
+                //     'amount' => $deduction->amount,
+                //     'status' => '0'
+                // ));
+
+            }
+            else{
+
+                array_push($deductionarray, (object)array(
+                    'employee_id' => $employee_id,
+                    'deductionid' => $deduction->id,
+                    'description' => $deduction->description,
+                    'amount' => $deduction->amount,
+                    'status' => '1'
+                ));
+                foreach($deductions as $deduction){
+
+                    $salary = $salary - $deduction->amount;
+
+                    $totaldeduction+=$deduction->amount;
+
+                }
+
+            }
+
+        }
+    
+        $payrollearnings = Db::table('payrollearnings')
+            ->where('payrollid',$payrollid->id)
+            ->where('employeeid',$employee_id)
+            ->where('deleted','0')
+            ->get();
+            
+        foreach($payrollearnings as $earnings){
+
+            if($earnings->type=='earning'){
+
+                $salary+=$earnings->amount;
+                $totalearnings+=$earnings->amount;
+
+            }
+            elseif($earnings->type=='deduction'){
+
+                $salary-=$earnings->amount;
+                $totaldeduction+=$earnings->amount;
+
+            }
+
+        }
+        
+        
+        $employeesarray = array();
+
+        //salarycomputation -------------------------------------------------
+
+    
+        //basicsalarycomputation -------------------------------------------------
+
+        $workdays = array();
+
+        $type = CAL_GREGORIAN;
+
+        $day_count = cal_days_in_month($type, date('m'), date('Y')); // Get the amount of days
+
+        for ($i = 1; $i <= date('d'); $i++) {
+
+            $date = date('Y').'/'.date('m').'/'.date('d'); //format date
+
+            $get_name = Carbon::create($date)->isoFormat('ddd'); //get week day
+
+            $day_name = substr($get_name, 0, 3); // Trim day name to 3 chars
+
+            //if not a weekend add day to array
+            if($day_name != 'Sun'){
+
+                $workdays[] = date('Y').'-'.date('m').'-'.$i;
+                
+            }
+
+        }
+
+        $holidays = DB::table('schoolcal')
+            ->select(
+            'datefrom',
+            'dateto'
+            )
+            ->where('noclass','1')
+            ->where('deleted','0')
+            ->get();
+            
+        $holidaysArray = array();
+
+        if(count($lastpayrollid) == 0){
+            
+            $getAtt = DB::table('teacherattendance')
+                ->where('teacher_id', $employee_id)
+                ->where('tdate','<=',$payrollid->id)
+                ->orderByDesc('tdate')
+                ->get();
+                
+            if(count($getAtt) == 0){
+                array_push($employeesarray, (object)array(
+                    'employee_info' => $employee_info,
+                    'netsalary' => number_format($salary,2),
+                    'netsalarydescription' => ucwords(Conversion::make($salary,' pesos')),
+                    'basicsalary' => number_format($basicsalary,2),
+                    'deductions' => $deductionarray,
+                    'totalearnings' => number_format($totalearnings,2),
+                    'totaldeduction' => number_format($totaldeduction,2)
+                ));
+            }
+            else{
+                //basicsalarycomputation -------------------------------------------------
+    
+                
+                array_push($employeesarray, (object)array(
+                    'employee_info' => $employee_info,
+                    'netsalary' => number_format($salary,2),
+                    'netsalarydescription' => ucwords(Conversion::make($salary,' pesos')),
+                    'basicsalary' => number_format($basicsalary,2),
+                    'deductions' => $deductionarray,
+                    'totalearnings' => number_format($totalearnings,2),
+                    'totaldeduction' => number_format($totaldeduction,2)
+                ));
+            }
+        }else{
+            foreach($holidays as $twodates){
+    
+                $period = CarbonPeriod::create(date('Y-m-d',strtotime($lastpayrollid[0]->payrolldate)), date('Y-m-d',strtotime($payrollid->payrolldate)));
+    
+                $daysarray = array();
+    
+                foreach ($period as $dateperiod) {
+    
+                    $dateperiod = $dateperiod->format('Y-m-d');
+    
+                    array_push($daysarray, $dateperiod);
+    
+                }
+    
+                array_push($holidaysArray, $daysarray);
+    
+            }
+            $days_num = array();
+    
+            $days_str = array();
+    
+            $daysMonth = array();
+    
+            foreach ($workdays as $date) {
+    
+                $noMatch = true;
+    
+                foreach($holidaysArray as $holi){
+    
+                    foreach($holi as $holiday){
+    
+                        if(date('M d Y',strtotime($date)) == date('M d Y',strtotime($holiday))){
+    
+                            $noMatch = false;
+    
+                        }
+    
+                    }
+    
+                }
+    
+                if($noMatch){
+    
+                    array_push($days_num,date('d',strtotime($date)));
+    
+                    array_push($days_str,date('D',strtotime($date)));
+    
+                    array_push($daysMonth,date('M d Y',strtotime($date)));
+    
+                }
+    
+            }
+    
+            $basicsalary = 0;
+    
+            foreach($days_num as $days){
+    
+                $basicsalary+=(8*$rate->hourly_rate);
+    
+            }
+        
+        //basicsalarycomputation -------------------------------------------------
+            array_push($employeesarray, (object)array(
+                'employee_info' => $employee_info,
+                'netsalary' => number_format($salary,2),
+                'netsalarydescription' => ucwords(Conversion::make($salary,' pesos')),
+                'basicsalary' => number_format($basicsalary,2),
+                'deductions' => $deductionarray,
+                'totalearnings' => number_format($totalearnings,2),
+                'totaldeduction' => number_format($totaldeduction,2)
+            ));
+        }
+            
+        // return $payrollearnings;
+        $schoolinfo = DB::table('schoolinfo')
+            ->first();
+            
+        if($id == 'generate'){
+
+            $GLOBALS['bodyHeight'] = 0;
+
+            $slipnum = Db::table('payrolldetail')
+                ->select(
+                'payslipnumber',
+                'releaseddatetime'
+                )
+                ->where('employeeid',$employee_id)
+                ->where('headerid',$payrollid->id)
+                ->first();
+            $slipnum->releaseddate = date('F d, Y', strtotime($slipnum->releaseddatetime));
+            $payrollid->asof = date('F d, Y', strtotime($payrollid->payrolldate));
+            // return $payrollid->asof;
+            $pdf = PDF::loadview('hr/pdf/job_payslip',compact('employeesarray','schoolinfo','slipnum','payrollearnings','payrollid'))->setPaper(array(0,0,600,$GLOBALS['bodyHeight']+550));
+
+            return $pdf->stream('Payslip.pdf');
+
+        }else{
+            // return $payrollearnings;
+
+            return view('hr.payslip')
+                ->with('payslip',$employeesarray)
+                ->with('payrollearnings',$payrollearnings)
+                ->with('schoolinfo',$schoolinfo);
+        }
+        
+    }
+}

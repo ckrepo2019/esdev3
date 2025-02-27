@@ -1,0 +1,107 @@
+<style>
+    @page{
+        size: 13in 8.5in;
+    }
+</style>
+@php
+    $countMale = 0;
+    $countFemale = 0;
+    $init = 21;
+    $firstsemcompletemale = 0;
+    $firstsemcompletefemale = 0;
+    $firstsemincompletemale = 0;   
+    $firstsemincompletefemale = 0;   
+    $secondsemcompletemale = 0;
+    $secondsemcompletefemale = 0;
+    $secondsemincompletemale = 0;  
+    $secondsemincompletefemale = 0;  
+@endphp
+<table style="width: 100%; table-layout: fixed; ">
+    <tr style="font-size: 17px;">
+        <th colspan="10" style="text-align: center; font-weight: bold;">School Form 1 (SF 1) School Register
+        </th>
+    </tr>
+    <tr style="font-size: 9px;">
+        <th colspan="10" style="text-align: center;"><em>(This replaces Fom 1, Master List & STS Form 2-Family Background and Profile)</em>
+        </th>
+    </tr>
+</table>
+<div style="line-height: 15px;">&nbsp;</div>
+<table style="width: 100%; font-size: 12px; table-layout: fixed;" class="header">
+    <thead>
+        <tr>
+            <td style="text-align: right; width: 17%;">School ID</td>
+            <td style="border: 1px solid black; text-align: center: width: 8%;">{{$getSchoolInfo[0]->schoolid}}</td>
+            <td style="text-align: right; width: 7%;">Region</td>
+            <td style="border: 1px solid black; text-align: center; width: 9%;">{{str_replace('REGION', '', $getSchoolInfo[0]->region)}}</td>
+            <td style="text-align: right; width: 8%; ">Division</td>
+            <td style="border: 1px solid black; text-align: center; width: 22%;">{{$getSchoolInfo[0]->division}}</td>
+            <td style="text-align: right; width: 8%; ">District</td>
+            <td style="border: 1px solid black;; text-align: center; width: 16%;">{{$getSchoolInfo[0]->district}}</td>
+        </tr>
+    </thead>
+</table>
+<table style="width: 100%; font-size: 12px;" class="header">
+    <thead>
+        <tr>
+            <td style="text-align: right; width: 17%;">School Name</td>
+            <td style="text-align: center; width: 28.5%; font-size: 10px; border: 1px solid black;">{{$getSchoolInfo[0]->schoolname}}</td>
+            <td style="text-align: right; width: 8%; ">School Year</td>
+            <td style="text-align: center; width: 7.33%; border: 1px solid black;">{{$syid->sydesc}}</td>
+            <td style="text-align: right; width: 7.33%; ">Grade Level</td>
+            <td style="text-align: center; width: 7.33%; border: 1px solid black;">{{$acadprog->levelname}}</td>
+            <td style="text-align: right; width: 8%; ">Section</td>
+            <td style="border: 1px solid black; text-align: center; width: 16%;">{{$section->sectionname}}</td>
+        </tr>
+    </thead>
+</table>
+<div style="line-height: 10px;">&nbsp;</div>
+<table style="width: 100%; font-size: 10px;" border="1" class="header">
+    <thead>
+        <tr>
+            <th rowspan="2" style="width: 8%;">LRN</th>
+            <th rowspan="2" style="width: 15%;">NAME</th>
+            <th rowspan="2" style="width: 3%;">Sex</th>
+            <th rowspan="2" style="width: 7%;">BIRTH DATE</th>
+            <th rowspan="2" style="width: 5%;">AGE as<br/>of Oct<br/>31</th>
+            <th rowspan="2" style="width: 7%;">MOTHER TONGUE</th>
+            <th rowspan="2" style="width: 7%;">IP</th>
+            <th rowspan="2" style="width: 7%;">RELIGION</th>
+            <th colspan="4" style="width: 17%;">ADDRESS</th>
+            <th colspan="2" style="width: 7%;">PARENTS</th>
+            <th colspan="2" style="width: 5%;">GUARDIAN</th>
+            <th rowspan="2" style="width: 5%;">Contact Number of Parent or Guardian</th>
+            <th rowspan="2" style="width: 4%;">Learning Modality</th>
+            <th>REMARKS</th>
+        </tr>
+        <tr>
+            <th>House #/Street/<br>Sitio/Purok</th>
+            <th>Barangay</th>
+            <th>Municipality/<br>City</th>
+            <th>Province</th>
+            <th>Father's Name (Last Name,<br>
+                First Name, Middle Name)</th>
+            <th>Mother's Maiden Name (Last<br>
+                Name, First Name, Middle<br>
+                Name)</th>
+            <th>Name</th>
+            <th>Relation-ship</th>
+            <th>(Please refer to the<br>
+                legend on last page)</th>
+        </tr>
+    </thead>
+</table>
+{{-- <table style="width: 100%; font-size: 9px;">
+    <thead>
+        <tr>
+            <td style="text-align: right; width: 10%;">Semester</td>
+            <td style="text-align: center; border: 1px solid black; width: 13%;">{{$sem->semester}}</td>
+            <td style="text-align: right; width: 10%;">School Year</td>
+            <td style="text-align: center; border: 1px solid black; width: 13%;">{{$sy->sydesc}}</td>
+            <td style="text-align: right; width: 10%;">Grade Level</td>
+            <td style="text-align: center; border: 1px solid black; width: 13%;">{{$getSectionAndLevel[0]->levelname}}</td>
+            <td style="text-align: right; width: 10%;">Section</td>
+            <td style="text-align: center; border: 1px solid black; width: 21%;">{{$getSectionAndLevel[0]->sectionname}}</td>
+        </tr>
+    </thead>
+</table> --}}
